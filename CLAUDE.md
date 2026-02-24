@@ -81,22 +81,40 @@ Enrichers are the core business logic. Each enricher:
 
 The `WalletProfiler` is the most complex enricher — it orchestrates Helius, Birdeye, Jupiter, and Solana RPC in parallel, then feeds results through the labeler and risk scorer.
 
-### Entrypoint Pattern (Lucid SDK)
+### Entrypoint Pattern (Lucid SDK — Actual API)
 
-Every API endpoint is a Lucid entrypoint registered on the agent:
+The actual Lucid SDK API differs from the PRD. The real pattern (from the scaffold):
 
 ```typescript
-agent.entrypoint({
-  name: 'enrich-wallet',
+// src/lib/agent.ts — agent setup
+import { createAgent } from "@lucid-agents/core";
+import { createAgentApp } from "@lucid-agents/hono";
+import { http } from "@lucid-agents/http";
+import { payments, paymentsFromEnv } from "@lucid-agents/payments";
+
+const agent = await createAgent({ name, version, description })
+  .use(http())
+  .use(payments({ config: paymentsFromEnv() }))
+  .build();
+
+const { app, addEntrypoint } = await createAgentApp(agent);
+
+// Registering an entrypoint — uses `key` not `name`, price is decimal string
+addEntrypoint({
+  key: "enrich-wallet",
+  description: "Full wallet profile with holdings, DeFi positions, labels, and risk score",
   input: EnrichWalletInput,        // Zod schema
   output: WalletEnrichmentSchema,  // Zod schema
-  price: { amount: '5000', currency: 'USDC' },
-  handler: async ({ input }) => {
+  price: "0.005",                  // USDC decimal string, NOT base units
+  handler: async (ctx) => {
+    const input = ctx.input as z.infer<typeof EnrichWalletInput>;
     const data = await profiler.enrich(input.address, input.depth);
-    return formatResponse(data, input.format, formatWalletBriefing);
+    return { output: formatResponse(data, input.format, formatWalletBriefing) };
   },
 });
 ```
+
+Key differences from PRD: `key` not `name`, price is `"0.005"` not `5000`, handler returns `{ output: {...} }`, handler receives `ctx` object with `ctx.input`.
 
 ### Dependency Injection
 
@@ -156,3 +174,41 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 10. **Phase 9:** Premium endpoints (whale-watch, batch, graph, copy-trade, due-diligence, query)
 11. **Phase 10:** MCP server wrapper
 12. **Phase 11-12:** Deployment + launch checklist
+
+## Current Progress
+
+### Phase 0: Scaffold and setup — IN PROGRESS
+- [x] Lucid-agent-creator skill installed (`.claude/skills/lucid-agent-creator/`)
+- [x] Solana-dev-skill installed (`.claude/skills/solana-dev-skill/`)
+- [x] Scaffolded with `bunx @lucid-agents/cli` (blank template, Hono adapter, Solana network)
+- [x] Dependencies installed (`@lucid-agents/core`, `@lucid-agents/hono`, `@lucid-agents/http`, `@lucid-agents/payments`, `@upstash/redis`, `helius-sdk`, `@solana/web3.js`, `zod`, `wrangler`)
+- [x] `.env` configured with Helius API key, Solana private key, wallet address (`66Qvhr1xnwqbCT36KfHfZF1JpoWdmCQ3uFYTN335CGXe`), Lucid payment vars
+- [x] `tsconfig.json` updated (outDir, rootDir, declaration, path aliases)
+- [x] Directory structure created (`src/{entrypoints,enrichers,formatters,sources,cache,schemas,utils,realtime}`, `identity/`, `mcp/`, `deploy/`)
+- [x] Server starts without errors (`bun run dev` → "Starting agent server on port 3000...")
+- [ ] **NEXT: Debug health endpoint hang** — server starts but `/health` never responds. Likely IPv6/binding issue on Windows or payments middleware blocking. Try `127.0.0.1` or check if the Hono adapter is binding correctly. The echo entrypoint was removed to simplify debugging.
+- [ ] Still need: Birdeye API key, Upstash Redis credentials (optional for dev)
+
+### Phase 1: Core infrastructure — NOT STARTED
+- [ ] `src/config.ts` — central config with PRICING and CACHE_TTL
+- [ ] `src/schemas/common.ts` — shared Zod schemas (Format, Depth, SolanaAddress, TxSignature)
+- [ ] `src/cache/index.ts` — Upstash Redis with in-memory fallback
+- [ ] `src/utils/parallel.ts` — parallel fetch with timeouts
+- [ ] `src/utils/normalize.ts` — formatting helpers
+
+### Phase 2: Data source clients — NOT STARTED
+- [ ] `src/sources/helius.ts`
+- [ ] `src/sources/birdeye.ts`
+- [ ] `src/sources/defi-llama.ts`
+- [ ] `src/sources/jupiter.ts`
+- [ ] `src/sources/solana-rpc.ts`
+
+### Phase 3: Enrichment engine — NOT STARTED
+- [ ] `src/enrichers/labeler.ts`
+- [ ] `src/enrichers/risk-scorer.ts`
+- [ ] `src/enrichers/wallet-profiler.ts`
+- [ ] `src/enrichers/token-analyzer.ts`
+- [ ] `src/enrichers/tx-parser.ts`
+
+### Phase 4-6: Formatters, entrypoints, agent assembly — NOT STARTED
+### Phase 7: Verification — NOT STARTED
