@@ -177,7 +177,7 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 
 ## Current Progress
 
-### Phase 0: Scaffold and setup — IN PROGRESS
+### Phase 0: Scaffold and setup — DONE
 - [x] Lucid-agent-creator skill installed (`.claude/skills/lucid-agent-creator/`)
 - [x] Solana-dev-skill installed (`.claude/skills/solana-dev-skill/`)
 - [x] Scaffolded with `bunx @lucid-agents/cli` (blank template, Hono adapter, Solana network)
@@ -186,7 +186,7 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] `tsconfig.json` updated (outDir, rootDir, declaration, path aliases)
 - [x] Directory structure created (`src/{entrypoints,enrichers,formatters,sources,cache,schemas,utils,realtime}`, `identity/`, `mcp/`, `deploy/`)
 - [x] Server starts without errors (`bun run dev` → "Starting agent server on port 3000...")
-- [ ] **NEXT: Debug health endpoint hang** — server starts but `/health` never responds. Likely IPv6/binding issue on Windows or payments middleware blocking. Try `127.0.0.1` or check if the Hono adapter is binding correctly. The echo entrypoint was removed to simplify debugging.
+- [x] All routes responding: `/health` (200), `/entrypoints` (200), `/.well-known/agent.json` (200). Fix was `hostname: '127.0.0.1'` in `src/index.ts` to avoid Windows IPv6 dual-stack issue.
 - [ ] Still need: Birdeye API key, Upstash Redis credentials (optional for dev)
 
 ### Phase 1: Core infrastructure — NOT STARTED
