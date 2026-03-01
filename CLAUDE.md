@@ -2,6 +2,10 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Workflow Rules
+
+- **Commit and push after each feature or modular change.** Don't let work accumulate uncommitted — each phase, feature, or logical unit of work should be committed and pushed before moving on.
+
 ## Project Overview
 
 **SolEnrich** is a Solana onchain data enrichment agent. It accepts USDC micropayments via x402 protocol and returns enriched wallet/token/transaction data in JSON (for agents) or natural language (for LLMs).
@@ -189,12 +193,13 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] All routes responding: `/health` (200), `/entrypoints` (200), `/.well-known/agent.json` (200). Fix was `hostname: '127.0.0.1'` in `src/index.ts` to avoid Windows IPv6 dual-stack issue.
 - [ ] Still need: Birdeye API key, Upstash Redis credentials (optional for dev)
 
-### Phase 1: Core infrastructure — NOT STARTED
-- [ ] `src/config.ts` — central config with PRICING and CACHE_TTL
-- [ ] `src/schemas/common.ts` — shared Zod schemas (Format, Depth, SolanaAddress, TxSignature)
-- [ ] `src/cache/index.ts` — Upstash Redis with in-memory fallback
-- [ ] `src/utils/parallel.ts` — parallel fetch with timeouts
-- [ ] `src/utils/normalize.ts` — formatting helpers
+### Phase 1: Core infrastructure — DONE
+- [x] `src/config.ts` — CONFIG (env vars), PRICING (USDC decimal strings), CACHE_TTL (seconds)
+- [x] `src/schemas/common.ts` — FormatSchema, DepthSchema, SolanaAddressSchema, TxSignatureSchema, TimestampSchema
+- [x] `src/cache/index.ts` — Cache class with Upstash Redis (prod) / in-memory Map (dev), auto-detect, all ops try/catch
+- [x] `src/utils/parallel.ts` — parallelFetch() with Promise.allSettled + 10s per-task timeout
+- [x] `src/utils/normalize.ts` — shortenAddress, formatUsd, formatNumber, formatPercent, formatTimestamp, lamportsToSol, tokenAmountToDecimal
+- [x] `test/test-phase1.ts` — smoke test covering all modules (all passing)
 
 ### Phase 2: Data source clients — NOT STARTED
 - [ ] `src/sources/helius.ts`
