@@ -201,12 +201,14 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] `src/utils/normalize.ts` — shortenAddress, formatUsd, formatNumber, formatPercent, formatTimestamp, lamportsToSol, tokenAmountToDecimal
 - [x] `test/test-phase1.ts` — smoke test covering all modules (all passing)
 
-### Phase 2: Data source clients — NOT STARTED
-- [ ] `src/sources/helius.ts`
-- [ ] `src/sources/birdeye.ts`
-- [ ] `src/sources/defi-llama.ts`
-- [ ] `src/sources/jupiter.ts`
-- [ ] `src/sources/solana-rpc.ts`
+### Phase 2: Data source clients — DONE
+- [x] `src/sources/helius.ts` — DAS API (getAssetsByOwner, getTokenAccounts, searchAssets), enhanced tx parsing, signatures
+- [x] `src/sources/birdeye.ts` — token price/overview/security/holders, wallet portfolio, OHLCV
+- [x] `src/sources/defi-llama.ts` — protocol TVL, Solana protocols list, yield pools
+- [x] `src/sources/jupiter.ts` — batch price lookup (v2 + x-api-key auth), token metadata
+- [x] `src/sources/solana-rpc.ts` — SOL balance, account info, parsed transactions, blockhash
+- [x] `test/test-phase2.ts` — live smoke tests (Helius DAS, DeFi Llama, Solana RPC all passing)
+- [ ] Still need: Jupiter API key (free at portal.jup.ag), Birdeye API key
 
 ### Phase 3: Enrichment engine — NOT STARTED
 - [ ] `src/enrichers/labeler.ts`

@@ -20,8 +20,8 @@ export const CONFIG = {
     yieldsUrl: 'https://yields.llama.fi',
   },
   jupiter: {
+    apiKey: process.env.JUPITER_API_KEY ?? '',
     baseUrl: 'https://api.jup.ag',
-    priceUrl: 'https://price.jup.ag/v6',
   },
   cache: {
     url: process.env.UPSTASH_REDIS_REST_URL ?? '',
