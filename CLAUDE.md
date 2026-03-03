@@ -226,5 +226,15 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] `src/utils/normalize.ts` — improved `formatUsd()` to handle micro-prices (e.g. $0.0000234)
 - [x] `test/test-phase4.ts` — all 3 formatters + format router assertions passing
 
-### Phase 5-6: Entrypoints, agent assembly — NOT STARTED
+### Phase 5-6: Entrypoints + agent assembly — DONE
+- [x] `src/schemas/wallet.ts` — EnrichWalletInput + WalletEnrichmentSchema (Zod)
+- [x] `src/schemas/token.ts` — EnrichTokenInput + TokenEnrichmentSchema (Zod)
+- [x] `src/entrypoints/wallet.ts` — enrich-wallet-light + enrich-wallet-full (registers via addEntrypoint)
+- [x] `src/entrypoints/token.ts` — enrich-token-light + enrich-token-full
+- [x] `src/entrypoints/transaction.ts` — parse-transaction
+- [x] `src/lib/agent.ts` — full dependency injection: Cache → clients → enrichers → entrypoint registration
+- [x] All 5 entrypoints visible at `/entrypoints`, invoke works for json + llm + both formats
+- **Note:** x402 pricing commented out — `@x402/solana` package doesn't exist yet. PRICING config is ready to enable.
+- **Note:** Birdeye API key needs upgraded plan for wallet portfolio endpoint. Enrichment still works via Helius fallback.
+
 ### Phase 7: Verification — NOT STARTED
