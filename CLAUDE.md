@@ -218,5 +218,13 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] `src/enrichers/tx-parser.ts` — maps Helius EnhancedTransaction to clean structure, protocol detection
 - [x] `test/test-phase3.ts` — unit tests for labeler+risk-scorer, live integration for wallet-profiler+tx-parser
 
-### Phase 4-6: Formatters, entrypoints, agent assembly — NOT STARTED
+### Phase 4: LLM Formatters — DONE
+- [x] `src/formatters/index.ts` — `formatResponse()` router: json (raw), llm (briefing+content_type), both (data+llm_summary)
+- [x] `src/formatters/llm-wallet.ts` — wallet briefing: age, holdings, DeFi, labels, risk, connected wallets
+- [x] `src/formatters/llm-token.ts` — token briefing: price, market cap, liquidity assessment, risk flags, verification
+- [x] `src/formatters/llm-transaction.ts` — tx briefing: type, protocol, transfers, accounts
+- [x] `src/utils/normalize.ts` — improved `formatUsd()` to handle micro-prices (e.g. $0.0000234)
+- [x] `test/test-phase4.ts` — all 3 formatters + format router assertions passing
+
+### Phase 5-6: Entrypoints, agent assembly — NOT STARTED
 ### Phase 7: Verification — NOT STARTED

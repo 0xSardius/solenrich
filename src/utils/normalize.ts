@@ -4,8 +4,15 @@ export function shortenAddress(addr: string): string {
   return `${addr.slice(0, 4)}...${addr.slice(-3)}`;
 }
 
-/** Locale-formatted USD with $ prefix */
+/** Locale-formatted USD with $ prefix — handles fractional token prices */
 export function formatUsd(value: number): string {
+  if (value === 0) return '$0.00';
+  const abs = Math.abs(value);
+  if (abs < 0.01) {
+    // Show enough decimals for micro-prices (e.g. $0.0000234)
+    const decimals = Math.max(2, -Math.floor(Math.log10(abs)) + 2);
+    return `$${value.toFixed(Math.min(decimals, 10))}`;
+  }
   return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
