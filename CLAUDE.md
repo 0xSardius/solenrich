@@ -210,12 +210,13 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] `test/test-phase2.ts` — live smoke tests (Helius DAS, DeFi Llama, Solana RPC all passing)
 - [ ] Still need: Jupiter API key (free at portal.jup.ag), Birdeye API key
 
-### Phase 3: Enrichment engine — NOT STARTED
-- [ ] `src/enrichers/labeler.ts`
-- [ ] `src/enrichers/risk-scorer.ts`
-- [ ] `src/enrichers/wallet-profiler.ts`
-- [ ] `src/enrichers/token-analyzer.ts`
-- [ ] `src/enrichers/tx-parser.ts`
+### Phase 3: Enrichment engine — DONE
+- [x] `src/enrichers/labeler.ts` — pure function, 10 label rules (whale, active_trader, defi_user, etc.)
+- [x] `src/enrichers/risk-scorer.ts` — pure function, 7-factor additive scoring clamped to 0.0-1.0
+- [x] `src/enrichers/wallet-profiler.ts` — orchestrates Helius+Birdeye+Jupiter+RPC via parallelFetch, light/full modes
+- [x] `src/enrichers/token-analyzer.ts` — cross-references Birdeye overview/security + Jupiter verified status, 7 risk flags
+- [x] `src/enrichers/tx-parser.ts` — maps Helius EnhancedTransaction to clean structure, protocol detection
+- [x] `test/test-phase3.ts` — unit tests for labeler+risk-scorer, live integration for wallet-profiler+tx-parser
 
 ### Phase 4-6: Formatters, entrypoints, agent assembly — NOT STARTED
 ### Phase 7: Verification — NOT STARTED
