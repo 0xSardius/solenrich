@@ -10,9 +10,11 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "8004-solana": "^0.7.9",
     "@lucid-agents/core": "latest",
     "@lucid-agents/hono": "latest",
     "@lucid-agents/http": "latest",
+    "@lucid-agents/identity": "^2.5.0",
     "@lucid-agents/payments": "latest",
     "@solana/web3.js": "^1.98.4",
     "@upstash/redis": "^1.34.0",

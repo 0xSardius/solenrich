@@ -244,4 +244,15 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] Agent card uses `skills` key (Lucid SDK convention, not `entrypoints`)
 - [x] Acceptance criteria met: server starts, health 200, agent card generated, all enrichers return data, LLM briefings readable, cache hits confirmed
 
-### Phase 8-12: Identity, premium endpoints, MCP, deployment — NOT STARTED
+### Phase 8: Identity & Discovery — DONE
+- [x] `8004-solana@0.7.9` + `@lucid-agents/identity@2.5.0` installed
+- [x] `identity/register.ts` — 3-step registration: create collection (IPFS), register agent with metadata, set operational wallet
+- [x] `deploy/seed-reputation.ts` — seeds initial feedback (quality, speed) on 8004-solana registry
+- [x] `src/config.ts` — added `CONFIG.identity` (agentAsset, operationalWallet)
+- [x] `src/lib/agent.ts` — added `/agent-card-extended` endpoint with capabilities, chains, formats, pricing, and 8004 identity
+- [x] Type check passes, server starts, all endpoints respond
+- **Note:** PINATA_JWT is still placeholder — set real JWT before running `bun run identity/register.ts`
+- **Note:** Wallet needs SOL funding on devnet/mainnet before registration
+- **Note:** `@lucid-agents/identity` is EVM-focused (ERC-8004); we use `8004-solana` SDK directly for Solana registration
+
+### Phase 9-12: Premium endpoints, MCP, deployment — NOT STARTED

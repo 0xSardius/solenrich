@@ -19,6 +19,7 @@ import { TxParser } from "../enrichers/tx-parser";
 import { registerWalletEntrypoints } from "../entrypoints/wallet";
 import { registerTokenEntrypoints } from "../entrypoints/token";
 import { registerTransactionEntrypoint } from "../entrypoints/transaction";
+import { CONFIG, PRICING } from "../config";
 
 // --- Agent setup ---
 
@@ -52,5 +53,32 @@ const txParser = new TxParser(helius, cache);
 registerWalletEntrypoints(addEntrypoint, walletProfiler);
 registerTokenEntrypoints(addEntrypoint, tokenAnalyzer);
 registerTransactionEntrypoint(addEntrypoint, txParser);
+
+// --- Agent Card discovery metadata ---
+// Supplements Lucid's auto-generated /.well-known/agent.json with 8004 identity
+
+app.get("/agent-card-extended", (c) => {
+  return c.json({
+    capabilities: [
+      "wallet-enrichment",
+      "token-analysis",
+      "transaction-parsing",
+      "risk-scoring",
+      "llm-optimized-data",
+    ],
+    chains: ["solana"],
+    formats: ["json", "llm", "both"],
+    pricing: {
+      currency: "USDC",
+      min: "0.001",
+      max: "0.025",
+      entrypoints: PRICING,
+    },
+    identity: {
+      registry: "8004-solana",
+      asset: CONFIG.identity.agentAsset || null,
+    },
+  });
+});
 
 export { app, addEntrypoint, agent };

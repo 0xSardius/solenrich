@@ -6,6 +6,10 @@ export const CONFIG = {
     privateKey: process.env.SOLANA_PRIVATE_KEY ?? '',
     walletAddress: process.env.AGENT_WALLET_ADDRESS ?? '',
   },
+  identity: {
+    agentAsset: process.env.AGENT_ASSET ?? '',
+    operationalWallet: process.env.OPERATIONAL_WALLET_ADDRESS ?? '',
+  },
   helius: {
     apiKey: process.env.HELIUS_API_KEY ?? '',
     baseUrl: 'https://api.helius.xyz/v0',
