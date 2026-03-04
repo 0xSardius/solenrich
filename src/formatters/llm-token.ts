@@ -36,9 +36,8 @@ export function formatTokenBriefing(data: TokenEnrichment): string {
   lines.push('');
 
   // Holders
-  if (data.top_holders && data.top_holders.length > 0) {
-    const top = data.top_holders[0];
-    lines.push(`Top holder controls ${top.pct_supply.toFixed(1)}% of supply.`);
+  if (data.top_holders && data.top_holders.length > 0 && data.top_holders[0].pct_supply != null) {
+    lines.push(`Top holder controls ${data.top_holders[0].pct_supply.toFixed(1)}% of supply.`);
   } else {
     lines.push('Holder distribution data not available.');
   }

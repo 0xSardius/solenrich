@@ -237,4 +237,11 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - **Note:** x402 pricing commented out — `@x402/solana` package doesn't exist yet. PRICING config is ready to enable.
 - **Note:** Birdeye API key needs upgraded plan for wallet portfolio endpoint. Enrichment still works via Helius fallback.
 
-### Phase 7: Verification — NOT STARTED
+### Phase 7: Verification — DONE
+- [x] `test/test-enrichment.ts` — 37/37 passing: wallet/token/tx enrichment + LLM briefings + cache hit + format modes
+- [x] `test/test-server.ts` — 26/26 passing: /health, agent card, /entrypoints, invoke (json/llm/both), input validation
+- [x] Fixed `llm-token.ts` formatter crash on null holder data
+- [x] Agent card uses `skills` key (Lucid SDK convention, not `entrypoints`)
+- [x] Acceptance criteria met: server starts, health 200, agent card generated, all enrichers return data, LLM briefings readable, cache hits confirmed
+
+### Phase 8-12: Identity, premium endpoints, MCP, deployment — NOT STARTED
