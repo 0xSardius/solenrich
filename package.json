@@ -16,6 +16,7 @@
     "@lucid-agents/http": "latest",
     "@lucid-agents/identity": "^2.5.0",
     "@lucid-agents/payments": "latest",
+    "@modelcontextprotocol/sdk": "^1.27.1",
     "@solana/web3.js": "^1.98.4",
     "@upstash/redis": "^1.34.0",
     "helius-sdk": "^1.3.0",

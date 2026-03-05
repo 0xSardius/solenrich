@@ -268,4 +268,13 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - **Note:** `query` endpoint (NL inference via Daydreams Router) deferred — lowest priority per PRD
 - **Note:** Batch endpoint uses concurrency limit of 5 to prevent overwhelming data sources
 
-### Phase 10-12: MCP, deployment, launch — NOT STARTED
+### Phase 10: MCP Server Wrapper — DONE
+- [x] `@modelcontextprotocol/sdk@1.27.1` installed
+- [x] `mcp/server.ts` — MCP server with 7 tools (wallet, token, tx, whale-watch, due-diligence, graph, copy-trade)
+- [x] `mcp/README.md` — Claude Desktop config instructions
+- [x] Transport: stdio (standard for Claude Desktop integration)
+- [x] All tools call running SolEnrich agent via HTTP, return LLM-formatted briefings
+- [x] Type check passes, server loads without crash
+- **Usage:** Start `bun run dev`, then configure `mcp/server.ts` in Claude Desktop MCP settings
+
+### Phase 11-12: Deployment, launch — NOT STARTED
