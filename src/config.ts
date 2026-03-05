@@ -57,4 +57,8 @@ export const CACHE_TTL = {
   defiProtocol: 600,
   jupiterPrice: 60,
   holderData: 300,
+  whaleWatch: 300,
+  graph: 1800,
+  copyTrade: 600,
+  dueDiligence: 600,
 } as const;

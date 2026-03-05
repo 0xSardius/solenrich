@@ -255,4 +255,17 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - **Note:** Wallet needs SOL funding on devnet/mainnet before registration
 - **Note:** `@lucid-agents/identity` is EVM-focused (ERC-8004); we use `8004-solana` SDK directly for Solana registration
 
-### Phase 9-12: Premium endpoints, MCP, deployment — NOT STARTED
+### Phase 9: Premium Endpoints — DONE
+- [x] `src/schemas/{whale-watch,batch,graph,copy-trade,due-diligence}.ts` — Zod input schemas
+- [x] `src/enrichers/whale-watch.ts` — WhaleWatcher: tracks large token transfers, accumulation/distribution patterns
+- [x] `src/enrichers/graph-mapper.ts` — GraphMapper: maps wallet connections, detects clusters, depth-1/2 hops
+- [x] `src/enrichers/copy-trade-analyzer.ts` — CopyTradeAnalyzer: trade PnL, win rate, consistency, smart_money labeling
+- [x] `src/enrichers/due-diligence.ts` — DueDiligenceAnalyzer: composite (token + whales + holders), risk scoring, SAFE/CAUTION/RISKY
+- [x] `src/formatters/llm-{whale-watch,graph,copy-trade,due-diligence}.ts` — LLM briefing generators
+- [x] `src/entrypoints/{whale-watch,batch,graph,copy-trade,due-diligence}.ts` — entrypoint handlers
+- [x] `src/lib/agent.ts` — all 10 entrypoints registered (5 core + 5 premium)
+- [x] Type check passes, server starts, all endpoints respond and return data
+- **Note:** `query` endpoint (NL inference via Daydreams Router) deferred — lowest priority per PRD
+- **Note:** Batch endpoint uses concurrency limit of 5 to prevent overwhelming data sources
+
+### Phase 10-12: MCP, deployment, launch — NOT STARTED

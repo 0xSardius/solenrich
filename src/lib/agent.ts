@@ -14,11 +14,20 @@ import { SolanaRpcClient } from "../sources/solana-rpc";
 import { WalletProfiler } from "../enrichers/wallet-profiler";
 import { TokenAnalyzer } from "../enrichers/token-analyzer";
 import { TxParser } from "../enrichers/tx-parser";
+import { WhaleWatcher } from "../enrichers/whale-watch";
+import { GraphMapper } from "../enrichers/graph-mapper";
+import { CopyTradeAnalyzer } from "../enrichers/copy-trade-analyzer";
+import { DueDiligenceAnalyzer } from "../enrichers/due-diligence";
 
 // Entrypoint registration
 import { registerWalletEntrypoints } from "../entrypoints/wallet";
 import { registerTokenEntrypoints } from "../entrypoints/token";
 import { registerTransactionEntrypoint } from "../entrypoints/transaction";
+import { registerWhaleWatchEntrypoint } from "../entrypoints/whale-watch";
+import { registerBatchEntrypoint } from "../entrypoints/batch";
+import { registerGraphEntrypoint } from "../entrypoints/graph";
+import { registerCopyTradeEntrypoint } from "../entrypoints/copy-trade";
+import { registerDueDiligenceEntrypoint } from "../entrypoints/due-diligence";
 import { CONFIG, PRICING } from "../config";
 
 // --- Agent setup ---
@@ -47,12 +56,24 @@ const solanaRpc = new SolanaRpcClient();
 const walletProfiler = new WalletProfiler(helius, birdeye, solanaRpc, jupiter, cache);
 const tokenAnalyzer = new TokenAnalyzer(helius, birdeye, jupiter, cache);
 const txParser = new TxParser(helius, cache);
+const whaleWatcher = new WhaleWatcher(helius, birdeye, cache);
+const graphMapper = new GraphMapper(helius, cache);
+const copyTradeAnalyzer = new CopyTradeAnalyzer(helius, birdeye, cache);
+const dueDiligenceAnalyzer = new DueDiligenceAnalyzer(tokenAnalyzer, whaleWatcher, birdeye, cache);
 
 // --- Register entrypoints ---
 
+// Core (Phase 5-6)
 registerWalletEntrypoints(addEntrypoint, walletProfiler);
 registerTokenEntrypoints(addEntrypoint, tokenAnalyzer);
 registerTransactionEntrypoint(addEntrypoint, txParser);
+
+// Premium (Phase 9)
+registerWhaleWatchEntrypoint(addEntrypoint, whaleWatcher);
+registerBatchEntrypoint(addEntrypoint, walletProfiler, tokenAnalyzer);
+registerGraphEntrypoint(addEntrypoint, graphMapper);
+registerCopyTradeEntrypoint(addEntrypoint, copyTradeAnalyzer);
+registerDueDiligenceEntrypoint(addEntrypoint, dueDiligenceAnalyzer);
 
 // --- Agent Card discovery metadata ---
 // Supplements Lucid's auto-generated /.well-known/agent.json with 8004 identity
