@@ -6,7 +6,7 @@ import { payments, paymentsFromEnv } from "@lucid-agents/payments";
 // Data source clients
 import { Cache } from "../cache";
 import { HeliusClient } from "../sources/helius";
-import { BirdeyeClient } from "../sources/birdeye";
+import { DexScreenerClient } from "../sources/dexscreener";
 import { JupiterClient } from "../sources/jupiter";
 import { SolanaRpcClient } from "../sources/solana-rpc";
 
@@ -49,17 +49,17 @@ const { app, addEntrypoint } = await createAgentApp(agent);
 
 const cache = new Cache();
 const helius = new HeliusClient(cache);
-const birdeye = new BirdeyeClient(cache);
+const dexscreener = new DexScreenerClient(cache);
 const jupiter = new JupiterClient(cache);
 const solanaRpc = new SolanaRpcClient();
 
-const walletProfiler = new WalletProfiler(helius, birdeye, solanaRpc, jupiter, cache);
-const tokenAnalyzer = new TokenAnalyzer(helius, birdeye, jupiter, cache);
+const walletProfiler = new WalletProfiler(helius, solanaRpc, dexscreener, cache);
+const tokenAnalyzer = new TokenAnalyzer(helius, dexscreener, solanaRpc, jupiter, cache);
 const txParser = new TxParser(helius, cache);
-const whaleWatcher = new WhaleWatcher(helius, birdeye, cache);
+const whaleWatcher = new WhaleWatcher(helius, dexscreener, cache);
 const graphMapper = new GraphMapper(helius, cache);
-const copyTradeAnalyzer = new CopyTradeAnalyzer(helius, birdeye, cache);
-const dueDiligenceAnalyzer = new DueDiligenceAnalyzer(tokenAnalyzer, whaleWatcher, birdeye, cache);
+const copyTradeAnalyzer = new CopyTradeAnalyzer(helius, dexscreener, cache);
+const dueDiligenceAnalyzer = new DueDiligenceAnalyzer(tokenAnalyzer, whaleWatcher, cache);
 
 // --- Register entrypoints ---
 

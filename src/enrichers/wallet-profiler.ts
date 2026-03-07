@@ -1,7 +1,6 @@
 import type { HeliusClient, HeliusAssetList, EnhancedTransaction } from '../sources/helius';
-import type { BirdeyeClient, WalletPortfolio } from '../sources/birdeye';
 import type { SolanaRpcClient } from '../sources/solana-rpc';
-import type { JupiterClient } from '../sources/jupiter';
+import type { DexScreenerClient } from '../sources/dexscreener';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { parallelFetch, type ParallelTask } from '../utils/parallel';
@@ -29,6 +28,7 @@ const STABLECOIN_MINTS = new Set([
   '2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo', // PYUSD
 ]);
 
+const SOL_MINT = 'So11111111111111111111111111111111111111112';
 const THIRTY_DAYS_S = 30 * 24 * 60 * 60;
 
 // --- Types ---
@@ -64,9 +64,8 @@ export interface WalletEnrichment {
 export class WalletProfiler {
   constructor(
     private helius: HeliusClient,
-    private birdeye: BirdeyeClient,
     private solanaRpc: SolanaRpcClient,
-    private jupiter: JupiterClient,
+    private dexscreener: DexScreenerClient,
     private cache: Cache,
   ) {}
 
@@ -80,7 +79,6 @@ export class WalletProfiler {
     const tasks: ParallelTask<any>[] = [
       { name: 'sol_balance', fn: () => this.solanaRpc.getBalance(address) },
       { name: 'assets', fn: () => this.helius.getAssetsByOwner(address) },
-      { name: 'portfolio', fn: () => this.birdeye.getWalletPortfolio(address) },
       { name: 'signatures', fn: () => this.helius.getSignaturesForAddress(address, 100) },
     ];
 
@@ -88,7 +86,6 @@ export class WalletProfiler {
 
     const solBalance = (fetched.sol_balance as number) ?? 0;
     const assets = fetched.assets as HeliusAssetList | null;
-    const portfolio = fetched.portfolio as WalletPortfolio | null;
     const signatures = (fetched.signatures as Array<{ signature: string; slot: number; blockTime: number | null }>) ?? [];
 
     // Fetch enhanced txs for full depth (need signatures first)
@@ -102,39 +99,56 @@ export class WalletProfiler {
       }
     }
 
-    // Step 3-4: portfolio stats
-    const portfolioItems = portfolio?.items ?? [];
-    const solValueUsd = solBalance * (portfolioItems.find((i) => i.symbol === 'SOL')?.priceUsd ?? 0);
+    // Step 3-4: Build portfolio from Helius assets + Jupiter prices
+    const assetItems = assets?.items ?? [];
+    const fungibleAssets = assetItems.filter(
+      (a) => a.interface === 'FungibleToken' || a.interface === 'FungibleAsset',
+    );
 
-    const portfolioValueUsd = portfolio?.totalUsd ?? solValueUsd;
+    // Use Helius price_info if available, otherwise fetch from DexScreener
+    // Helius DAS often includes price_info for fungible tokens
+    const solPrice = await this.dexscreener.getTokenPrice(SOL_MINT).catch(() => 0);
+    const solValueUsd = solBalance * solPrice;
 
-    // Build holdings from Birdeye portfolio (has USD values)
-    const holdingsRaw = portfolioItems
-      .filter((i) => i.valueUsd > 0)
-      .sort((a, b) => b.valueUsd - a.valueUsd);
+    // Build holdings with USD values
+    const holdingsRaw: Array<{ mint: string; symbol: string; balance: number; usd_value: number }> = [];
+
+    for (const asset of fungibleAssets) {
+      const mint = asset.id;
+      const symbol = asset.token_info?.symbol ?? asset.content?.metadata?.symbol ?? mint.slice(0, 6);
+      const decimals = asset.token_info?.decimals ?? 0;
+      const rawBalance = asset.token_info?.balance ?? 0;
+      const balance = decimals > 0 ? rawBalance / 10 ** decimals : rawBalance;
+
+      // Use Helius price_info first (free, already in response), then DexScreener fallback
+      const heliusPrice = asset.token_info?.price_info?.price_per_token ?? 0;
+      const usdValue = heliusPrice > 0
+        ? balance * heliusPrice
+        : balance * (await this.dexscreener.getTokenPrice(mint).catch(() => 0));
+
+      holdingsRaw.push({ mint, symbol, balance, usd_value: usdValue });
+    }
+
+    // Sort by USD value descending
+    holdingsRaw.sort((a, b) => b.usd_value - a.usd_value);
+
+    const tokenPortfolioUsd = holdingsRaw.reduce((sum, h) => sum + h.usd_value, 0);
+    const portfolioValueUsd = solValueUsd + tokenPortfolioUsd;
 
     const topLimit = depth === 'full' ? 10 : 5;
-    const topHoldings = holdingsRaw.slice(0, topLimit).map((h) => ({
-      mint: h.address,
-      symbol: h.symbol,
-      balance: h.uiAmount,
-      usd_value: h.valueUsd,
-    }));
+    const topHoldings = holdingsRaw.slice(0, topLimit);
 
-    // Count tokens and NFTs from Helius assets
-    const assetItems = assets?.items ?? [];
-    const tokenCount = assetItems.filter(
-      (a) => a.interface === 'FungibleToken' || a.interface === 'FungibleAsset',
-    ).length;
+    // Count tokens and NFTs
+    const tokenCount = fungibleAssets.length;
     const nftCount = assetItems.filter(
       (a) => a.interface === 'V1_NFT' || a.interface === 'ProgrammableNFT' ||
              (a.interface !== 'FungibleToken' && a.interface !== 'FungibleAsset' && !a.burnt),
     ).length;
 
     // Stablecoin percentage
-    const stablecoinValue = portfolioItems
-      .filter((i) => STABLECOIN_MINTS.has(i.address))
-      .reduce((sum, i) => sum + i.valueUsd, 0);
+    const stablecoinValue = holdingsRaw
+      .filter((h) => STABLECOIN_MINTS.has(h.mint))
+      .reduce((sum, h) => sum + h.usd_value, 0);
     const stablecoinPct = portfolioValueUsd > 0 ? (stablecoinValue / portfolioValueUsd) * 100 : 0;
 
     // Step 5: activity stats
@@ -205,10 +219,10 @@ export class WalletProfiler {
       tx_count_30d: txCount30d,
       first_tx_date: firstTxDate,
       defi_positions: defiPositions,
-      top_holdings: holdingsRaw.slice(0, topLimit).map((h) => ({
+      top_holdings: topHoldings.map((h) => ({
         symbol: h.symbol,
-        usd_value: h.valueUsd,
-        pct_portfolio: portfolioValueUsd > 0 ? (h.valueUsd / portfolioValueUsd) * 100 : 0,
+        usd_value: h.usd_value,
+        pct_portfolio: portfolioValueUsd > 0 ? (h.usd_value / portfolioValueUsd) * 100 : 0,
       })),
       swap_count_30d: swapCount30d,
       daily_tx_counts: dailyCounts,
@@ -220,7 +234,7 @@ export class WalletProfiler {
 
     // Step 8: risk score
     const topHoldingPct = portfolioValueUsd > 0 && holdingsRaw.length > 0
-      ? (holdingsRaw[0].valueUsd / portfolioValueUsd) * 100
+      ? (holdingsRaw[0].usd_value / portfolioValueUsd) * 100
       : 0;
 
     const uniqueProgramCount = new Set(enhancedTxs.flatMap((tx) => tx.accountData.map((a) => a.account))).size;

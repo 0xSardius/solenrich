@@ -1,5 +1,5 @@
 import type { DueDiligenceEnrichment } from '../enrichers/due-diligence';
-import { formatUsd, formatNumber, formatPercent, shortenAddress } from '../utils/normalize';
+import { formatUsd, formatNumber } from '../utils/normalize';
 
 function priceDirection(change: number): string {
   if (change > 0) return `up ${change.toFixed(2)}%`;
@@ -17,8 +17,9 @@ export function formatDueDiligenceBriefing(data: DueDiligenceEnrichment): string
   // Token basics
   lines.push('### Token Overview');
   lines.push(
-    `${t.symbol} is trading at ${formatUsd(t.price_usd)} (${priceDirection(t.price_change_24h)} 24h). Market cap: ${formatUsd(t.market_cap)}. 24h volume: ${formatUsd(t.volume_24h)}. ${formatNumber(t.holder_count)} holders.`,
+    `${t.symbol} is trading at ${formatUsd(t.price_usd)} (${priceDirection(t.price_change_24h)} 24h). Market cap: ${formatUsd(t.market_cap)}. 24h volume: ${formatUsd(t.volume_24h)}.`,
   );
+  lines.push(`Liquidity: ${formatUsd(t.liquidity)}.`);
   lines.push('');
 
   // Security
@@ -27,6 +28,12 @@ export function formatDueDiligenceBriefing(data: DueDiligenceEnrichment): string
     lines.push('Verified on Jupiter.');
   } else {
     lines.push('Not verified on Jupiter — exercise caution.');
+  }
+  if (t.mint_authority) {
+    lines.push('Mint authority is **active** — token supply can be inflated.');
+  }
+  if (t.freeze_authority) {
+    lines.push('Freeze authority is **active** — accounts can be frozen.');
   }
   if (t.risk_flags.length > 0) {
     lines.push(`Risk flags: ${t.risk_flags.join(', ')}.`);
@@ -46,18 +53,6 @@ export function formatDueDiligenceBriefing(data: DueDiligenceEnrichment): string
   }
   lines.push('');
 
-  // Holder concentration
-  lines.push('### Holder Concentration');
-  lines.push(
-    `Top 10 holders: ${formatPercent(data.holder_concentration.top_10_percent)}. Top 50 holders: ${formatPercent(data.holder_concentration.top_50_percent)}. Risk: **${data.holder_concentration.risk_level}**.`,
-  );
-
-  if (data.top_holders.length > 0) {
-    const topHolder = data.top_holders[0];
-    lines.push(`Largest holder (${shortenAddress(topHolder.address)}) controls ${formatPercent(topHolder.percentage)}.`);
-  }
-  lines.push('');
-
   // Verdict
   lines.push('### Verdict');
   lines.push(
@@ -66,7 +61,8 @@ export function formatDueDiligenceBriefing(data: DueDiligenceEnrichment): string
 
   const risks: string[] = [];
   if (!t.verified) risks.push('unverified token');
-  if (data.holder_concentration.risk_level === 'high') risks.push('high holder concentration');
+  if (t.mint_authority) risks.push('active mint authority');
+  if (t.freeze_authority) risks.push('active freeze authority');
   if (data.whales.net_flow_direction === 'distributing') risks.push('whale distribution detected');
   if (t.risk_flags.length > 0) risks.push(`${t.risk_flags.length} risk flag(s)`);
 

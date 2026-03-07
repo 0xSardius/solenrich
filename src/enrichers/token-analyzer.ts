@@ -1,6 +1,7 @@
 import type { HeliusClient } from '../sources/helius';
-import type { BirdeyeClient, TokenOverview, TokenSecurity, Holder } from '../sources/birdeye';
-import type { JupiterClient, JupiterToken, JupiterPrice } from '../sources/jupiter';
+import type { DexScreenerClient } from '../sources/dexscreener';
+import type { SolanaRpcClient } from '../sources/solana-rpc';
+import type { JupiterClient, JupiterToken } from '../sources/jupiter';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { parallelFetch, type ParallelTask } from '../utils/parallel';
@@ -27,6 +28,8 @@ export interface TokenEnrichment {
   liquidity: number;
   risk_flags: string[];
   verified: boolean;
+  mint_authority: string | null;
+  freeze_authority: string | null;
   last_updated: string;
 }
 
@@ -35,7 +38,8 @@ export interface TokenEnrichment {
 export class TokenAnalyzer {
   constructor(
     private helius: HeliusClient,
-    private birdeye: BirdeyeClient,
+    private dexscreener: DexScreenerClient,
+    private solanaRpc: SolanaRpcClient,
     private jupiter: JupiterClient,
     private cache: Cache,
   ) {}
@@ -46,78 +50,61 @@ export class TokenAnalyzer {
     const cached = await this.cache.get<TokenEnrichment>(cacheKey);
     if (cached) return cached;
 
-    // Step 2: parallel fetch
+    // Step 2: parallel fetch from DexScreener + Jupiter + on-chain mint info
     const tasks: ParallelTask<any>[] = [
-      { name: 'overview', fn: () => this.birdeye.getTokenOverview(mint) },
-      { name: 'security', fn: () => this.birdeye.getTokenSecurity(mint) },
+      { name: 'dexData', fn: () => this.dexscreener.getTokenData(mint) },
+      { name: 'mintInfo', fn: () => this.solanaRpc.getMintInfo(mint) },
       { name: 'jupiterToken', fn: () => this.jupiter.getTokenInfo(mint) },
-      { name: 'jupiterPrice', fn: () => this.jupiter.getPrice([mint]) },
     ];
-
-    if (includeHolders) {
-      tasks.push({ name: 'holders', fn: () => this.birdeye.getTokenHolders(mint, 20) });
-    }
 
     const fetched = await parallelFetch(tasks);
 
-    const overview = fetched.overview as TokenOverview | null;
-    const security = fetched.security as TokenSecurity | null;
+    const dexData = fetched.dexData as Awaited<ReturnType<DexScreenerClient['getTokenData']>>;
+    const mintInfo = fetched.mintInfo as Awaited<ReturnType<SolanaRpcClient['getMintInfo']>>;
     const jupiterToken = fetched.jupiterToken as JupiterToken | null;
-    const jupiterPrices = fetched.jupiterPrice as Record<string, JupiterPrice> | null;
-    const holders = (fetched.holders as Holder[] | null) ?? [];
 
-    // Use Birdeye for primary data, Jupiter for cross-reference
-    const price = overview?.price ?? jupiterPrices?.[mint]?.price ?? 0;
+    const price = dexData?.price ?? 0;
+    const decimals = mintInfo?.decimals ?? jupiterToken?.decimals ?? 0;
+    const rawSupply = mintInfo?.supply ?? 0;
+    const supply = decimals > 0 ? rawSupply / 10 ** decimals : rawSupply;
 
     // Step 3: risk flags
     const riskFlags: string[] = [];
 
-    if (security && security.top10HolderPercent > 40) {
-      riskFlags.push('high_concentration');
-    }
-    if (overview && overview.liquidity < 50_000) {
+    if (dexData && dexData.liquidity < 50_000) {
       riskFlags.push('low_liquidity');
     }
-    if (security && security.mintAuthority !== null) {
+    if (mintInfo && mintInfo.mintAuthority !== null) {
       riskFlags.push('mint_authority_active');
     }
-    if (security && security.freezeAuthority !== null) {
+    if (mintInfo && mintInfo.freezeAuthority !== null) {
       riskFlags.push('freeze_authority_active');
     }
     if (jupiterToken?.verified !== true) {
       riskFlags.push('unverified');
     }
-    if (overview && overview.holder < 100) {
-      riskFlags.push('low_holder_count');
-    }
-    if (overview && Math.abs(overview.priceChange24h) > 20) {
+    if (dexData && Math.abs(dexData.priceChange24h) > 20) {
       riskFlags.push('high_volatility');
     }
 
     // Step 4: assemble
-    const topHolders = includeHolders && holders.length > 0
-      ? holders.map((h) => ({
-          address: h.address,
-          balance: h.uiAmount,
-          pct_supply: h.percentage,
-        }))
-      : undefined;
-
     const enrichment: TokenEnrichment = {
       mint,
-      symbol: overview?.symbol ?? jupiterToken?.symbol ?? '',
-      name: overview?.name ?? jupiterToken?.name ?? '',
-      decimals: overview?.decimals ?? jupiterToken?.decimals ?? 0,
-      supply: overview?.supply ?? 0,
-      holder_count: overview?.holder ?? 0,
+      symbol: dexData?.symbol ?? jupiterToken?.symbol ?? '',
+      name: dexData?.name ?? jupiterToken?.name ?? '',
+      decimals,
+      supply,
+      holder_count: 0, // Not available without Birdeye — can add later
       price_usd: price,
-      market_cap: overview?.marketCap ?? 0,
-      volume_24h: overview?.volume24h ?? 0,
-      price_change_24h: overview?.priceChange24h ?? 0,
-      top_holders: topHolders,
-      liquidity: overview?.liquidity ?? 0,
+      market_cap: dexData?.marketCap ?? (price * supply),
+      volume_24h: dexData?.volume24h ?? 0,
+      price_change_24h: dexData?.priceChange24h ?? 0,
+      top_holders: undefined, // Not available without Birdeye — can add later
+      liquidity: dexData?.liquidity ?? 0,
       risk_flags: riskFlags,
       verified: jupiterToken?.verified === true,
+      mint_authority: mintInfo?.mintAuthority ?? null,
+      freeze_authority: mintInfo?.freezeAuthority ?? null,
       last_updated: formatTimestamp(),
     };
 

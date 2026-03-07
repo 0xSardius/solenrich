@@ -1,5 +1,5 @@
 import type { HeliusClient, EnhancedTransaction } from '../sources/helius';
-import type { BirdeyeClient } from '../sources/birdeye';
+import type { DexScreenerClient } from '../sources/dexscreener';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { formatTimestamp } from '../utils/normalize';
@@ -48,7 +48,7 @@ const SWAP_TYPES = new Set(['SWAP', 'TOKEN_SWAP', 'EXCHANGE']);
 export class CopyTradeAnalyzer {
   constructor(
     private helius: HeliusClient,
-    private birdeye: BirdeyeClient,
+    private dexscreener: DexScreenerClient,
     private cache: Cache,
   ) {}
 
@@ -72,6 +72,26 @@ export class CopyTradeAnalyzer {
       }
     }
 
+    // Collect unique mints from swaps for batch pricing
+    const swapMints = new Set<string>();
+    for (const tx of txs) {
+      if (!SWAP_TYPES.has(tx.type.toUpperCase())) continue;
+      for (const transfer of tx.tokenTransfers ?? []) {
+        swapMints.add(transfer.mint);
+      }
+    }
+
+    // Batch fetch prices from DexScreener
+    const mintPrices = new Map<string, number>();
+    for (const mint of swapMints) {
+      try {
+        const price = await this.dexscreener.getTokenPrice(mint);
+        mintPrices.set(mint, price);
+      } catch {
+        mintPrices.set(mint, 0);
+      }
+    }
+
     // Extract swap trades
     const trades: TradeEntry[] = [];
     for (const tx of txs) {
@@ -79,14 +99,8 @@ export class CopyTradeAnalyzer {
       if (!tx.tokenTransfers || tx.tokenTransfers.length < 2) continue;
 
       for (const transfer of tx.tokenTransfers) {
-        // Try to get USD value from token price
-        let amountUsd = transfer.tokenAmount;
-        try {
-          const price = await this.birdeye.getTokenPrice(transfer.mint);
-          amountUsd = transfer.tokenAmount * price.value;
-        } catch {
-          // Use raw amount as fallback
-        }
+        const price = mintPrices.get(transfer.mint) ?? 0;
+        const amountUsd = price > 0 ? transfer.tokenAmount * price : transfer.tokenAmount;
 
         const side: 'buy' | 'sell' =
           transfer.toUserAccount === address ? 'buy' : 'sell';

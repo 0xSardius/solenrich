@@ -35,6 +35,27 @@ export class SolanaRpcClient {
     return blockhash;
   }
 
+  /** Get parsed mint account info (supply, decimals, authorities) */
+  async getMintInfo(mint: string): Promise<{
+    supply: number;
+    decimals: number;
+    mintAuthority: string | null;
+    freezeAuthority: string | null;
+  } | null> {
+    const pubkey = new PublicKey(mint);
+    const info = await this.connection.getParsedAccountInfo(pubkey);
+    const parsed = (info.value?.data as any)?.parsed;
+    if (!parsed || parsed.type !== 'mint') return null;
+
+    const data = parsed.info;
+    return {
+      supply: Number(data.supply ?? 0),
+      decimals: data.decimals ?? 0,
+      mintAuthority: data.mintAuthority ?? null,
+      freezeAuthority: data.freezeAuthority ?? null,
+    };
+  }
+
   /** Expose connection for direct use by enrichers if needed */
   getConnection(): Connection {
     return this.connection;

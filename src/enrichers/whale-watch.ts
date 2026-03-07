@@ -1,5 +1,5 @@
 import type { HeliusClient, EnhancedTransaction } from '../sources/helius';
-import type { BirdeyeClient } from '../sources/birdeye';
+import type { DexScreenerClient } from '../sources/dexscreener';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { parallelFetch, type ParallelTask } from '../utils/parallel';
@@ -28,7 +28,7 @@ export interface WhaleWatchEnrichment {
 export class WhaleWatcher {
   constructor(
     private helius: HeliusClient,
-    private birdeye: BirdeyeClient,
+    private dexscreener: DexScreenerClient,
     private cache: Cache,
   ) {}
 
@@ -43,12 +43,12 @@ export class WhaleWatcher {
 
     // Fetch token price and recent signatures in parallel
     const tasks: ParallelTask<any>[] = [
-      { name: 'price', fn: () => this.birdeye.getTokenPrice(mint), fallback: { value: 0 } },
+      { name: 'price', fn: () => this.dexscreener.getTokenPrice(mint), fallback: 0 },
       { name: 'signatures', fn: () => this.helius.getSignaturesForAddress(mint, 100) },
     ];
     const fetched = await parallelFetch(tasks);
 
-    const tokenPrice = (fetched.price as { value: number } | null)?.value ?? 0;
+    const tokenPrice = (fetched.price as number) ?? 0;
     const signatures = (fetched.signatures as Array<{ signature: string; blockTime: number | null }> | null) ?? [];
 
     // Filter to lookback window

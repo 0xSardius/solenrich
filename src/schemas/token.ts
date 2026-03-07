@@ -26,5 +26,7 @@ export const TokenEnrichmentSchema = z.object({
   liquidity: z.number(),
   risk_flags: z.array(z.string()),
   verified: z.boolean(),
+  mint_authority: z.string().nullable(),
+  freeze_authority: z.string().nullable(),
   last_updated: z.string(),
 });
