@@ -3,3 +3,4 @@ node_modules/
 dist/
 bun.lockb
 .wrangler/
+.data/

@@ -6,6 +6,6 @@ console.log(`Starting agent server on port ${port}...`);
 
 export default {
   port,
-  hostname: '127.0.0.1',
+  hostname: '0.0.0.0',
   fetch: app.fetch,
 };
