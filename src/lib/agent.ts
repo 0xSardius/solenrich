@@ -3,6 +3,13 @@ import { createAgent } from "@lucid-agents/core";
 import { http } from "@lucid-agents/http";
 import { payments, paymentsFromEnv } from "@lucid-agents/payments";
 
+// x402 payment middleware
+import { paymentMiddleware } from "@x402/hono";
+import { x402ResourceServer } from "@x402/hono";
+import { ExactSvmScheme } from "@x402/svm/exact/server";
+import { HTTPFacilitatorClient } from "@x402/core/server";
+import type { RoutesConfig } from "@x402/core/server";
+
 // Data source clients
 import { Cache } from "../cache";
 import { HeliusClient } from "../sources/helius";
@@ -45,6 +52,55 @@ const agent = await createAgent({
 
 const { app, addEntrypoint } = await createAgentApp(agent);
 
+// --- x402 Payment Middleware (Solana USDC) ---
+
+const PAYMENT_NETWORK = (
+  process.env.PAYMENT_NETWORK === "devnet"
+    ? "solana:EtWTRABZaYq6iMfeYKouRu166VU2xqa1"
+    : "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
+) as `${string}:${string}`;
+const PAY_TO = process.env.AGENT_WALLET_ADDRESS ?? CONFIG.solana.walletAddress;
+const PAYMENTS_ENABLED = process.env.PAYMENTS_ENABLED !== "false" && PAY_TO !== "";
+
+if (PAYMENTS_ENABLED) {
+  const facilitatorUrl = process.env.FACILITATOR_URL ?? "https://facilitator.payai.network";
+  const facilitatorClient = new HTTPFacilitatorClient({ url: facilitatorUrl });
+
+  const resourceServer = new x402ResourceServer(facilitatorClient)
+    .register(PAYMENT_NETWORK, new ExactSvmScheme());
+
+  // Build per-route pricing config
+  // Lucid registers invoke routes as POST /entrypoints/{key}/invoke
+  const routeConfig = (price: string) => ({
+    accepts: [{
+      scheme: "exact" as const,
+      price,
+      network: PAYMENT_NETWORK,
+      payTo: PAY_TO,
+    }],
+    description: "SolEnrich enrichment endpoint",
+    mimeType: "application/json",
+  });
+
+  const x402Routes: RoutesConfig = {
+    "POST /entrypoints/enrich-wallet-light/invoke": routeConfig(PRICING["enrich-wallet-light"]),
+    "POST /entrypoints/enrich-wallet-full/invoke": routeConfig(PRICING["enrich-wallet-full"]),
+    "POST /entrypoints/enrich-token-light/invoke": routeConfig(PRICING["enrich-token-light"]),
+    "POST /entrypoints/enrich-token-full/invoke": routeConfig(PRICING["enrich-token-full"]),
+    "POST /entrypoints/parse-transaction/invoke": routeConfig(PRICING["parse-transaction"]),
+    "POST /entrypoints/whale-watch/invoke": routeConfig(PRICING["whale-watch"]),
+    "POST /entrypoints/batch-enrich/invoke": routeConfig(PRICING["batch-enrich"]),
+    "POST /entrypoints/wallet-graph/invoke": routeConfig(PRICING["wallet-graph"]),
+    "POST /entrypoints/copy-trade-signals/invoke": routeConfig(PRICING["copy-trade-signals"]),
+    "POST /entrypoints/due-diligence/invoke": routeConfig(PRICING["due-diligence"]),
+  };
+
+  app.use(paymentMiddleware(x402Routes, resourceServer));
+  console.log(`[x402] Payment middleware enabled — ${PAYMENT_NETWORK}, payTo: ${PAY_TO}`);
+} else {
+  console.log("[x402] Payments disabled — set AGENT_WALLET_ADDRESS and PAYMENTS_ENABLED=true to enable");
+}
+
 // --- Dependency injection ---
 
 const cache = new Cache();
@@ -76,7 +132,6 @@ registerCopyTradeEntrypoint(addEntrypoint, copyTradeAnalyzer);
 registerDueDiligenceEntrypoint(addEntrypoint, dueDiligenceAnalyzer);
 
 // --- Agent Card discovery metadata ---
-// Supplements Lucid's auto-generated /.well-known/agent.json with 8004 identity
 
 app.get("/agent-card-extended", (c) => {
   return c.json({
@@ -91,9 +146,14 @@ app.get("/agent-card-extended", (c) => {
     formats: ["json", "llm", "both"],
     pricing: {
       currency: "USDC",
-      min: "0.001",
-      max: "0.025",
+      network: PAYMENT_NETWORK,
+      payTo: PAY_TO,
       entrypoints: PRICING,
+    },
+    x402: {
+      enabled: PAYMENTS_ENABLED,
+      network: PAYMENT_NETWORK,
+      facilitator: process.env.FACILITATOR_URL ?? "https://facilitator.payai.network",
     },
     identity: {
       registry: "8004-solana",

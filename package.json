@@ -19,6 +19,9 @@
     "@modelcontextprotocol/sdk": "^1.27.1",
     "@solana/web3.js": "^1.98.4",
     "@upstash/redis": "^1.34.0",
+    "@x402/core": "^2.6.0",
+    "@x402/hono": "^2.6.0",
+    "@x402/svm": "^2.6.0",
     "helius-sdk": "^1.3.0",
     "zod": "^4.1.12"
   },
