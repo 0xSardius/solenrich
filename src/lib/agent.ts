@@ -95,7 +95,7 @@ if (PAYMENTS_ENABLED) {
     "POST /entrypoints/due-diligence/invoke": routeConfig(PRICING["due-diligence"]),
   };
 
-  app.use(paymentMiddleware(x402Routes, resourceServer));
+  app.use("/entrypoints/*", paymentMiddleware(x402Routes, resourceServer));
   console.log(`[x402] Payment middleware enabled — ${PAYMENT_NETWORK}, payTo: ${PAY_TO}`);
 } else {
   console.log("[x402] Payments disabled — set AGENT_WALLET_ADDRESS and PAYMENTS_ENABLED=true to enable");
