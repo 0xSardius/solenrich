@@ -194,10 +194,17 @@
       66% { transform: translate(-20px, 15px); }
     }
 
+    .hero .container {
+      display: flex;
+      align-items: center;
+      gap: 48px;
+    }
+
     .hero-content {
       position: relative;
       z-index: 1;
-      max-width: 800px;
+      flex: 1;
+      min-width: 0;
     }
 
     .hero-badge {
@@ -299,11 +306,9 @@
 
     /* Terminal preview */
     .hero-terminal {
-      position: absolute;
-      right: -40px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 480px;
+      position: relative;
+      flex-shrink: 0;
+      width: 440px;
       background: var(--bg-panel);
       border: 1px solid var(--border-dim);
       border-radius: 12px;
@@ -825,6 +830,7 @@
 
     /* ==================== RESPONSIVE ==================== */
     @media (max-width: 1024px) {
+      .hero .container { flex-direction: column; }
       .hero-terminal { display: none; }
       .hero-content { max-width: 100%; }
       .steps { grid-template-columns: 1fr; gap: 48px; }
@@ -871,7 +877,7 @@
       <div class="orb orb-2"></div>
       <div class="grid-lines"></div>
     </div>
-    <div class="container" style="position: relative;">
+    <div class="container">
       <div class="hero-content">
         <div class="hero-badge">
           <span class="protocol-tag">x402</span>
