@@ -1,0 +1,1274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolEnrich — Solana Onchain Data Enrichment for Agents & LLMs</title>
+  <meta name="description" content="Solana onchain data enrichment agent. Wallet profiling, token analysis, risk scoring. USDC micropayments via x402. JSON for agents, natural language for LLMs.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sol-green: #00FFA3;
+      --sol-purple: #9945FF;
+      --sol-blue: #14F195;
+      --bg-void: #06060A;
+      --bg-panel: #0C0C14;
+      --bg-card: #111119;
+      --bg-card-hover: #16161F;
+      --border-dim: #1A1A2E;
+      --border-glow: #2A2A4A;
+      --text-primary: #E8E8F0;
+      --text-secondary: #8888A8;
+      --text-muted: #555570;
+      --accent-warm: #FF6B35;
+      --glow-green: rgba(0, 255, 163, 0.12);
+      --glow-purple: rgba(153, 69, 255, 0.12);
+    }
+
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg-void);
+      color: var(--text-primary);
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* Scanline overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0, 0, 0, 0.03) 2px,
+        rgba(0, 0, 0, 0.03) 4px
+      );
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* Noise texture */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .heading { font-family: 'Space Grotesk', sans-serif; }
+
+    /* Layout */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    section { padding: 100px 0; }
+
+    /* ==================== NAV ==================== */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      background: rgba(6, 6, 10, 0.85);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-dim);
+    }
+
+    nav .container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 64px;
+    }
+
+    .nav-logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--sol-green);
+      text-decoration: none;
+      letter-spacing: -0.5px;
+    }
+
+    .nav-logo span { color: var(--text-muted); font-weight: 400; }
+
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+
+    .nav-links a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+      text-decoration: none;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--sol-green); }
+
+    .nav-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--sol-green);
+    }
+
+    .nav-status .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--sol-green);
+      animation: pulse-dot 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--sol-green); }
+      50% { opacity: 0.5; box-shadow: 0 0 8px var(--sol-green); }
+    }
+
+    /* ==================== HERO ==================== */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      padding-top: 64px;
+    }
+
+    .hero-bg {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      overflow: hidden;
+    }
+
+    .hero-bg .orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(120px);
+      animation: float 20s ease-in-out infinite;
+    }
+
+    .hero-bg .orb-1 {
+      width: 600px; height: 600px;
+      background: var(--glow-purple);
+      top: -200px; right: -100px;
+    }
+
+    .hero-bg .orb-2 {
+      width: 400px; height: 400px;
+      background: var(--glow-green);
+      bottom: -100px; left: -100px;
+      animation-delay: -10s;
+    }
+
+    .hero-bg .grid-lines {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image:
+        linear-gradient(var(--border-dim) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border-dim) 1px, transparent 1px);
+      background-size: 80px 80px;
+      opacity: 0.3;
+      mask-image: radial-gradient(ellipse at 50% 50%, black 20%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse at 50% 50%, black 20%, transparent 70%);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0); }
+      33% { transform: translate(30px, -20px); }
+      66% { transform: translate(-20px, 15px); }
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+      max-width: 800px;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border: 1px solid var(--border-glow);
+      border-radius: 100px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 32px;
+      background: rgba(153, 69, 255, 0.05);
+      animation: fadeUp 0.8s ease-out;
+    }
+
+    .hero-badge .protocol-tag {
+      color: var(--sol-purple);
+      font-weight: 600;
+    }
+
+    .hero h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(48px, 7vw, 80px);
+      font-weight: 700;
+      line-height: 1.05;
+      letter-spacing: -2px;
+      margin-bottom: 24px;
+      animation: fadeUp 0.8s ease-out 0.1s both;
+    }
+
+    .hero h1 .gradient-text {
+      background: linear-gradient(135deg, var(--sol-green) 0%, var(--sol-purple) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: 18px;
+      color: var(--text-secondary);
+      max-width: 560px;
+      line-height: 1.7;
+      margin-bottom: 40px;
+      animation: fadeUp 0.8s ease-out 0.2s both;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      animation: fadeUp 0.8s ease-out 0.3s both;
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: var(--sol-green);
+      color: var(--bg-void);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      border-radius: 8px;
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-primary:hover {
+      background: #33FFB8;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 30px rgba(0, 255, 163, 0.2);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      text-decoration: none;
+      border-radius: 8px;
+      border: 1px solid var(--border-glow);
+      transition: all 0.2s;
+      letter-spacing: 0.5px;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--sol-purple);
+      background: rgba(153, 69, 255, 0.05);
+    }
+
+    /* Terminal preview */
+    .hero-terminal {
+      position: absolute;
+      right: -40px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 480px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      overflow: hidden;
+      animation: fadeUp 1s ease-out 0.5s both;
+      box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5);
+    }
+
+    .terminal-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-dim);
+      background: rgba(0, 0, 0, 0.3);
+    }
+
+    .terminal-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+
+    .terminal-dot.r { background: #FF5F57; }
+    .terminal-dot.y { background: #FEBC2E; }
+    .terminal-dot.g { background: #28C840; }
+
+    .terminal-title {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-left: 8px;
+    }
+
+    .terminal-body {
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--text-secondary);
+      max-height: 360px;
+      overflow: hidden;
+    }
+
+    .terminal-body .cmd { color: var(--sol-green); }
+    .terminal-body .url { color: var(--sol-purple); }
+    .terminal-body .key { color: var(--accent-warm); }
+    .terminal-body .val { color: var(--sol-blue); }
+    .terminal-body .dim { color: var(--text-muted); }
+    .terminal-body .str { color: #E8D44D; }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ==================== ENDPOINTS ==================== */
+    .endpoints { background: var(--bg-panel); }
+
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--sol-purple);
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+    }
+
+    .section-desc {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 560px;
+      margin-bottom: 56px;
+    }
+
+    .endpoint-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      gap: 16px;
+    }
+
+    .endpoint-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      padding: 24px;
+      transition: all 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .endpoint-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--sol-green), var(--sol-purple));
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+
+    .endpoint-card:hover {
+      background: var(--bg-card-hover);
+      border-color: var(--border-glow);
+      transform: translateY(-2px);
+    }
+
+    .endpoint-card:hover::before { opacity: 1; }
+
+    .endpoint-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .endpoint-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .endpoint-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--sol-green);
+      background: rgba(0, 255, 163, 0.08);
+      padding: 4px 10px;
+      border-radius: 6px;
+      white-space: nowrap;
+    }
+
+    .endpoint-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .endpoint-card .tag-row {
+      display: flex;
+      gap: 6px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(153, 69, 255, 0.08);
+      color: var(--sol-purple);
+      border: 1px solid rgba(153, 69, 255, 0.15);
+    }
+
+    .tag.premium {
+      background: rgba(255, 107, 53, 0.08);
+      color: var(--accent-warm);
+      border-color: rgba(255, 107, 53, 0.15);
+    }
+
+    /* ==================== HOW IT WORKS ==================== */
+    .how-it-works { position: relative; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 32px;
+      margin-top: 64px;
+      position: relative;
+    }
+
+    .steps::before {
+      content: '';
+      position: absolute;
+      top: 48px;
+      left: calc(16.66% + 24px);
+      right: calc(16.66% + 24px);
+      height: 1px;
+      background: linear-gradient(90deg, var(--sol-green), var(--sol-purple), var(--sol-green));
+      opacity: 0.3;
+    }
+
+    .step {
+      text-align: center;
+      position: relative;
+    }
+
+    .step-number {
+      width: 96px; height: 96px;
+      margin: 0 auto 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 36px;
+      font-weight: 700;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step:nth-child(1) .step-number {
+      background: rgba(0, 255, 163, 0.06);
+      border: 1px solid rgba(0, 255, 163, 0.15);
+      color: var(--sol-green);
+    }
+
+    .step:nth-child(2) .step-number {
+      background: rgba(153, 69, 255, 0.06);
+      border: 1px solid rgba(153, 69, 255, 0.15);
+      color: var(--sol-purple);
+    }
+
+    .step:nth-child(3) .step-number {
+      background: rgba(20, 241, 149, 0.06);
+      border: 1px solid rgba(20, 241, 149, 0.15);
+      color: var(--sol-blue);
+    }
+
+    .step-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .step-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      max-width: 280px;
+      margin: 0 auto;
+    }
+
+    .step-code {
+      margin-top: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: var(--bg-panel);
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid var(--border-dim);
+      text-align: left;
+      display: inline-block;
+    }
+
+    /* ==================== DATA SOURCES ==================== */
+    .sources { background: var(--bg-panel); }
+
+    .source-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+    }
+
+    .source-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      padding: 32px 20px;
+      text-align: center;
+      transition: all 0.25s;
+    }
+
+    .source-card:hover {
+      border-color: var(--border-glow);
+      transform: translateY(-2px);
+    }
+
+    .source-icon {
+      font-size: 32px;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .source-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 15px;
+      margin-bottom: 6px;
+    }
+
+    .source-detail {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* ==================== VALUE PROPS ==================== */
+    .value-props { position: relative; }
+
+    .value-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .value-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      padding: 40px;
+      transition: all 0.25s;
+    }
+
+    .value-card:hover {
+      border-color: var(--border-glow);
+    }
+
+    .value-icon {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--sol-green);
+      background: rgba(0, 255, 163, 0.06);
+      border: 1px solid rgba(0, 255, 163, 0.12);
+      padding: 8px 14px;
+      border-radius: 8px;
+      display: inline-block;
+      margin-bottom: 20px;
+    }
+
+    .value-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .value-desc {
+      font-size: 15px;
+      color: var(--text-secondary);
+      line-height: 1.7;
+    }
+
+    /* ==================== FORMATS ==================== */
+    .formats-section { background: var(--bg-panel); }
+
+    .format-tabs {
+      display: flex;
+      gap: 0;
+      margin-bottom: 0;
+      border-bottom: 1px solid var(--border-dim);
+    }
+
+    .format-tab {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      padding: 14px 24px;
+      color: var(--text-muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      background: none;
+      border-top: none;
+      border-left: none;
+      border-right: none;
+    }
+
+    .format-tab:hover { color: var(--text-secondary); }
+
+    .format-tab.active {
+      color: var(--sol-green);
+      border-bottom-color: var(--sol-green);
+    }
+
+    .format-showcase {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 32px;
+      align-items: start;
+    }
+
+    .format-info { padding: 40px 0; }
+
+    .format-info h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .format-info p {
+      color: var(--text-secondary);
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 24px;
+    }
+
+    .format-code-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .format-code-header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-dim);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .format-code-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .format-code-body {
+      padding: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--text-secondary);
+      overflow-x: auto;
+    }
+
+    /* ==================== CTA ==================== */
+    .cta-section {
+      text-align: center;
+      padding: 120px 0;
+      position: relative;
+    }
+
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, var(--glow-purple) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-section h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 700;
+      letter-spacing: -1px;
+      margin-bottom: 16px;
+      position: relative;
+    }
+
+    .cta-section p {
+      font-size: 18px;
+      color: var(--text-secondary);
+      margin-bottom: 40px;
+      position: relative;
+    }
+
+    .cta-section .hero-actions {
+      justify-content: center;
+      position: relative;
+    }
+
+    /* ==================== FOOTER ==================== */
+    footer {
+      border-top: 1px solid var(--border-dim);
+      padding: 48px 0;
+    }
+
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .footer-brand {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .footer-brand a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+
+    .footer-brand a:hover { color: var(--sol-green); }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    .footer-links a {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .footer-links a:hover { color: var(--text-secondary); }
+
+    /* ==================== ANIMATIONS ==================== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ==================== RESPONSIVE ==================== */
+    @media (max-width: 1024px) {
+      .hero-terminal { display: none; }
+      .hero-content { max-width: 100%; }
+      .steps { grid-template-columns: 1fr; gap: 48px; }
+      .steps::before { display: none; }
+      .source-grid { grid-template-columns: repeat(3, 1fr); }
+      .format-showcase { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 768px) {
+      section { padding: 64px 0; }
+      .endpoint-grid { grid-template-columns: 1fr; }
+      .source-grid { grid-template-columns: repeat(2, 1fr); }
+      .value-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .footer-inner { flex-direction: column; gap: 24px; text-align: center; }
+      .hero-actions { flex-direction: column; }
+      .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== NAV ===== -->
+  <nav>
+    <div class="container">
+      <a href="#" class="nav-logo">SolEnrich<span>.agent</span></a>
+      <div class="nav-links">
+        <a href="#endpoints">Endpoints</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#formats">Formats</a>
+        <a href="https://solenrich-production.up.railway.app/.well-known/agent.json" target="_blank">Agent Card</a>
+      </div>
+      <div class="nav-status">
+        <div class="dot"></div>
+        LIVE ON MAINNET
+      </div>
+    </div>
+  </nav>
+
+  <!-- ===== HERO ===== -->
+  <section class="hero">
+    <div class="hero-bg">
+      <div class="orb orb-1"></div>
+      <div class="orb orb-2"></div>
+      <div class="grid-lines"></div>
+    </div>
+    <div class="container" style="position: relative;">
+      <div class="hero-content">
+        <div class="hero-badge">
+          <span class="protocol-tag">x402</span>
+          <span>Pay-per-request Solana data enrichment</span>
+        </div>
+        <h1>
+          Onchain intelligence<br>
+          <span class="gradient-text">for agents & LLMs</span>
+        </h1>
+        <p class="hero-sub">
+          Enrich any Solana wallet, token, or transaction with a single API call.
+          Structured JSON for agents. Natural language briefings for LLMs.
+          Micropayments in USDC via x402.
+        </p>
+        <div class="hero-actions">
+          <a href="https://solenrich-production.up.railway.app/entrypoints" class="btn-primary" target="_blank">
+            Explore API &rarr;
+          </a>
+          <a href="https://github.com/0xSardius/solenrich" class="btn-secondary" target="_blank">
+            View Source
+          </a>
+        </div>
+      </div>
+
+      <div class="hero-terminal">
+        <div class="terminal-header">
+          <div class="terminal-dot r"></div>
+          <div class="terminal-dot y"></div>
+          <div class="terminal-dot g"></div>
+          <span class="terminal-title">enrich-wallet-light</span>
+        </div>
+        <div class="terminal-body">
+<span class="dim">$ curl -X POST \</span>
+<span class="url">  /entrypoints/enrich-wallet-light/invoke</span>
+<br><br>
+<span class="dim">{</span>
+  <span class="key">"address"</span>: <span class="str">"vines1vzr...PTg"</span>,
+  <span class="key">"sol_balance"</span>: <span class="val">0.015</span>,
+  <span class="key">"portfolio_value_usd"</span>: <span class="val">1.45</span>,
+  <span class="key">"token_count"</span>: <span class="val">6</span>,
+  <span class="key">"labels"</span>: [<span class="str">"early_adopter"</span>],
+  <span class="key">"risk_score"</span>: <span class="val">0.12</span>,
+  <span class="key">"risk_level"</span>: <span class="str">"low"</span>,
+  <span class="key">"wallet_age_days"</span>: <span class="val">1847</span>,
+  <span class="key">"top_holdings"</span>: [
+    {
+      <span class="key">"symbol"</span>: <span class="str">"SMOG"</span>,
+      <span class="key">"usd_value"</span>: <span class="val">0.13</span>
+    }
+  ]
+<span class="dim">}</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== ENDPOINTS ===== -->
+  <section class="endpoints" id="endpoints">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label">Endpoints</div>
+        <h2 class="section-title">10 enrichment endpoints</h2>
+        <p class="section-desc">
+          From quick wallet lookups to full due diligence reports.
+          Every endpoint returns data in your choice of format.
+        </p>
+      </div>
+
+      <div class="endpoint-grid">
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">enrich-wallet-light</span>
+            <span class="endpoint-price">$0.002</span>
+          </div>
+          <p class="endpoint-desc">SOL balance, token holdings, behavioral labels, risk score.</p>
+          <div class="tag-row"><span class="tag">core</span><span class="tag">wallet</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">enrich-wallet-full</span>
+            <span class="endpoint-price">$0.005</span>
+          </div>
+          <p class="endpoint-desc">Full profile with DeFi positions, connected wallets, and transaction history.</p>
+          <div class="tag-row"><span class="tag">core</span><span class="tag">wallet</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">enrich-token-light</span>
+            <span class="endpoint-price">$0.002</span>
+          </div>
+          <p class="endpoint-desc">Price, market cap, liquidity assessment, risk flags, verified status.</p>
+          <div class="tag-row"><span class="tag">core</span><span class="tag">token</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">enrich-token-full</span>
+            <span class="endpoint-price">$0.004</span>
+          </div>
+          <p class="endpoint-desc">Full token analysis with top holders and concentration metrics.</p>
+          <div class="tag-row"><span class="tag">core</span><span class="tag">token</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">parse-transaction</span>
+            <span class="endpoint-price">$0.001</span>
+          </div>
+          <p class="endpoint-desc">Type detection, protocol identification, transfer details, fee breakdown.</p>
+          <div class="tag-row"><span class="tag">core</span><span class="tag">transaction</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">whale-watch</span>
+            <span class="endpoint-price">$0.008</span>
+          </div>
+          <p class="endpoint-desc">Track large holders. Detect accumulation and distribution patterns.</p>
+          <div class="tag-row"><span class="tag premium">premium</span><span class="tag">token</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">batch-enrich</span>
+            <span class="endpoint-price">$0.015</span>
+          </div>
+          <p class="endpoint-desc">Enrich multiple wallets or tokens in a single parallel request.</p>
+          <div class="tag-row"><span class="tag premium">premium</span><span class="tag">batch</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">wallet-graph</span>
+            <span class="endpoint-price">$0.010</span>
+          </div>
+          <p class="endpoint-desc">Map transaction connections. Detect suspicious wallet clusters.</p>
+          <div class="tag-row"><span class="tag premium">premium</span><span class="tag">wallet</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">copy-trade-signals</span>
+            <span class="endpoint-price">$0.010</span>
+          </div>
+          <p class="endpoint-desc">PnL analysis, win rate, consistency scoring, smart money detection.</p>
+          <div class="tag-row"><span class="tag premium">premium</span><span class="tag">wallet</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">due-diligence</span>
+            <span class="endpoint-price">$0.020</span>
+          </div>
+          <p class="endpoint-desc">Comprehensive research: security, whales, holders. SAFE / CAUTION / RISKY verdict.</p>
+          <div class="tag-row"><span class="tag premium">premium</span><span class="tag">token</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HOW IT WORKS ===== -->
+  <section class="how-it-works" id="how-it-works">
+    <div class="container">
+      <div class="reveal" style="text-align: center;">
+        <div class="section-label">How it works</div>
+        <h2 class="section-title">Three steps. Sub-second enrichment.</h2>
+      </div>
+
+      <div class="steps">
+        <div class="step reveal">
+          <div class="step-number">1</div>
+          <h3 class="step-title">Send a request</h3>
+          <p class="step-desc">POST to any endpoint with a Solana address, token mint, or transaction signature.</p>
+          <div class="step-code">
+            <span style="color: var(--sol-green);">POST</span> /entrypoints/<wbr>enrich-wallet-light/<wbr>invoke
+          </div>
+        </div>
+
+        <div class="step reveal">
+          <div class="step-number">2</div>
+          <h3 class="step-title">x402 payment</h3>
+          <p class="step-desc">Pay USDC micropayments on Solana. The x402 protocol handles verification and settlement automatically.</p>
+          <div class="step-code">
+            <span style="color: var(--accent-warm);">402</span> Payment Required<br>
+            <span style="color: var(--text-muted);">price: $0.002 USDC</span>
+          </div>
+        </div>
+
+        <div class="step reveal">
+          <div class="step-number">3</div>
+          <h3 class="step-title">Get enriched data</h3>
+          <p class="step-desc">Receive structured JSON for programmatic use, or natural language briefings optimized for LLM context windows.</p>
+          <div class="step-code">
+            <span style="color: var(--sol-green);">200</span> { "risk_score": 0.12,<br>
+            <span style="color: var(--text-muted);">&nbsp;&nbsp;&nbsp;&nbsp;"labels": ["whale"] }</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== DATA SOURCES ===== -->
+  <section class="sources" id="sources">
+    <div class="container">
+      <div class="reveal" style="text-align: center;">
+        <div class="section-label">Data sources</div>
+        <h2 class="section-title">Cross-referenced from 5 sources</h2>
+        <p class="section-desc" style="margin: 16px auto 56px;">
+          Every enrichment cross-references multiple data sources in parallel for accuracy and completeness.
+        </p>
+      </div>
+
+      <div class="source-grid reveal">
+        <div class="source-card">
+          <span class="source-icon">&#9790;</span>
+          <div class="source-name">Helius</div>
+          <div class="source-detail">DAS API + Enhanced TX</div>
+        </div>
+        <div class="source-card">
+          <span class="source-icon">&#9783;</span>
+          <div class="source-name">DexScreener</div>
+          <div class="source-detail">Prices + Liquidity</div>
+        </div>
+        <div class="source-card">
+          <span class="source-icon">&#9850;</span>
+          <div class="source-name">DeFi Llama</div>
+          <div class="source-detail">TVL + Yield Data</div>
+        </div>
+        <div class="source-card">
+          <span class="source-icon">&#9795;</span>
+          <div class="source-name">Jupiter</div>
+          <div class="source-detail">Metadata + Verified</div>
+        </div>
+        <div class="source-card">
+          <span class="source-icon">&#9672;</span>
+          <div class="source-name">Solana RPC</div>
+          <div class="source-detail">Balances + Accounts</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== OUTPUT FORMATS ===== -->
+  <section class="formats-section" id="formats">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label">Output formats</div>
+        <h2 class="section-title">Built for agents. Readable by LLMs.</h2>
+      </div>
+
+      <div class="format-showcase reveal" style="margin-top: 48px;">
+        <div class="format-info">
+          <h3>Three output modes</h3>
+          <p>
+            Every endpoint accepts a <code class="mono" style="color: var(--sol-green); background: rgba(0,255,163,0.08); padding: 2px 6px; border-radius: 4px;">format</code> parameter.
+            Get structured data for programmatic consumption, natural language briefings optimized for LLM context windows, or both at once.
+          </p>
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div>
+              <strong class="mono" style="color: var(--sol-green); font-size: 14px;">format: "json"</strong>
+              <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Structured data for agent-to-agent pipelines</p>
+            </div>
+            <div>
+              <strong class="mono" style="color: var(--sol-purple); font-size: 14px;">format: "llm"</strong>
+              <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">Natural language briefing for LLM context injection</p>
+            </div>
+            <div>
+              <strong class="mono" style="color: var(--sol-blue); font-size: 14px;">format: "both"</strong>
+              <p style="color: var(--text-muted); font-size: 13px; margin-top: 4px;">JSON data with an llm_summary field appended</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="format-code-block">
+          <div class="format-code-header">
+            <span class="format-code-label">format: "llm" — wallet briefing</span>
+          </div>
+          <div class="format-code-body">
+<span style="color: var(--sol-green);">WALLET ENRICHMENT BRIEFING</span>
+<span style="color: var(--text-muted);">═══════════════════════════</span>
+
+<span style="color: var(--accent-warm);">Address:</span> vines1vzr...YbzLMRdu58ou5X
+
+<span style="color: var(--accent-warm);">Overview:</span>
+  SOL Balance: 0.015 SOL
+  Portfolio Value: $1.45
+  Tokens Held: 6
+  Wallet Age: 1,847 days
+
+<span style="color: var(--accent-warm);">Labels:</span> early_adopter
+<span style="color: var(--accent-warm);">Risk:</span> <span style="color: var(--sol-green);">LOW</span> (0.12)
+
+<span style="color: var(--accent-warm);">Top Holdings:</span>
+  1. SMOG — $0.13
+  2. SOL — staked
+
+<span style="color: var(--text-muted);">This wallet shows characteristics of
+an early Solana participant with low
+activity and minimal risk indicators.</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== VALUE PROPS ===== -->
+  <section class="value-props">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label">Why SolEnrich</div>
+        <h2 class="section-title">Purpose-built for the agent economy</h2>
+        <p class="section-desc" style="margin-bottom: 48px;">
+          Not another block explorer. A data enrichment layer designed for autonomous agents and LLM pipelines.
+        </p>
+      </div>
+
+      <div class="value-grid">
+        <div class="value-card reveal">
+          <div class="value-icon">&gt;_ agent-native</div>
+          <h3 class="value-title">Agent-native API</h3>
+          <p class="value-desc">A2A-compatible agent card, discoverable via 8004-solana registry. Agents find and pay SolEnrich without human setup.</p>
+        </div>
+
+        <div class="value-card reveal">
+          <div class="value-icon">&gt;_ micropay</div>
+          <h3 class="value-title">USDC micropayments</h3>
+          <p class="value-desc">No API keys. No subscriptions. Pay per request with USDC on Solana via the x402 protocol. Costs start at $0.001.</p>
+        </div>
+
+        <div class="value-card reveal">
+          <div class="value-icon">&gt;_ parallel</div>
+          <h3 class="value-title">Cross-referenced data</h3>
+          <p class="value-desc">Every enrichment hits 5 data sources in parallel with 10s timeouts. One slow API never blocks your response.</p>
+        </div>
+
+        <div class="value-card reveal">
+          <div class="value-icon">&gt;_ format</div>
+          <h3 class="value-title">Dual-format output</h3>
+          <p class="value-desc">Structured JSON for programmatic pipelines. Natural language briefings for LLM context windows. Same data, your format.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== CTA ===== -->
+  <section class="cta-section">
+    <div class="container">
+      <h2 class="reveal">Start enriching</h2>
+      <p class="reveal">Send your first request in seconds. No signup required.</p>
+      <div class="hero-actions reveal">
+        <a href="https://solenrich-production.up.railway.app/entrypoints" class="btn-primary" target="_blank">
+          Explore Endpoints &rarr;
+        </a>
+        <a href="https://solenrich-production.up.railway.app/.well-known/agent.json" class="btn-secondary" target="_blank">
+          View Agent Card
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer>
+    <div class="container">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          Built by <a href="https://github.com/0xSardius" target="_blank">Parallax Labs</a>
+          &nbsp;&middot;&nbsp; Powered by Solana
+        </div>
+        <div class="footer-links">
+          <a href="https://github.com/0xSardius/solenrich" target="_blank">GitHub</a>
+          <a href="https://solenrich-production.up.railway.app/health" target="_blank">Status</a>
+          <a href="https://solenrich-production.up.railway.app/.well-known/agent.json" target="_blank">Agent Card</a>
+          <a href="https://x402.org" target="_blank">x402</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== SCROLL REVEAL ===== -->
+  <script>
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          // Stagger siblings
+          const siblings = entry.target.parentElement.querySelectorAll('.reveal');
+          let idx = Array.from(siblings).indexOf(entry.target);
+          entry.target.style.transitionDelay = `${idx * 80}ms`;
+          entry.target.classList.add('visible');
+          observer.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+
+</body>
+</html>
