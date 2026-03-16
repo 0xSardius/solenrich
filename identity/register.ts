@@ -26,7 +26,7 @@ import type { SolanaSDKConfig } from '8004-solana';
 
 // --- Config ---
 
-const CLUSTER = (process.env.REGISTRY_CLUSTER ?? 'devnet') as 'devnet' | 'mainnet-beta';
+const CLUSTER = (process.env.REGISTRY_CLUSTER ?? 'mainnet-beta') as 'devnet' | 'mainnet-beta';
 const PRIVATE_KEY = process.env.SOLANA_PRIVATE_KEY;
 const PINATA_JWT = process.env.PINATA_JWT;
 
@@ -87,7 +87,7 @@ console.log(`Collection pointer: ${collectionResult.pointer}`);
 // ============================================================
 console.log('\n=== Step 2: Register Agent ===');
 
-const DEPLOY_URL = process.env.AGENT_URL ?? 'https://solenrich.parallaxlabs.xyz';
+const DEPLOY_URL = process.env.AGENT_URL ?? 'https://solenrich-production.up.railway.app';
 
 const registrationFile = buildRegistrationFileJson({
   name: 'SolEnrich',
@@ -96,8 +96,10 @@ const registrationFile = buildRegistrationFileJson({
   services: [
     { type: ServiceType.A2A, value: `${DEPLOY_URL}/.well-known/agent.json` },
   ],
-  skills: ['data_analysis/blockchain_analysis/blockchain_analysis'],
-  domains: ['technology/blockchain/blockchain'],
+  skills: [
+    'data_engineering/data_engineering',
+    'natural_language_processing/information_retrieval_synthesis/information_retrieval_synthesis',
+  ],
   walletAddress: signer.publicKey.toBase58(),
   x402Support: true,
   active: true,
