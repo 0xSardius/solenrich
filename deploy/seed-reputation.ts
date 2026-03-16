@@ -18,7 +18,7 @@ import type { GiveFeedbackParams } from '8004-solana';
 
 // --- Config ---
 
-const CLUSTER = (process.env.REGISTRY_CLUSTER ?? 'devnet') as 'devnet' | 'mainnet-beta';
+const CLUSTER = (process.env.REGISTRY_CLUSTER ?? 'mainnet-beta') as 'devnet' | 'mainnet-beta';
 const PRIVATE_KEY = process.env.SOLANA_PRIVATE_KEY;
 const AGENT_ASSET = process.env.AGENT_ASSET;
 
