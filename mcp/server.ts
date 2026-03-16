@@ -11,8 +11,8 @@
  *   - whale_watch: large holder tracking and accumulation/distribution
  *   - due_diligence: comprehensive token research briefing
  *
- * The MCP server makes HTTP requests to the running SolEnrich agent.
- * x402 payment will happen automatically once @x402/solana ships.
+ * The MCP server makes HTTP requests to the SolEnrich agent (production by default).
+ * Endpoints require x402 USDC payment — 402 errors include payment details.
  *
  * Transport: stdio (for Claude Desktop / MCP client integration)
  *
@@ -26,7 +26,7 @@ import { z } from 'zod';
 
 // --- Config ---
 
-const AGENT_URL = process.env.SOLENRICH_URL ?? 'http://127.0.0.1:3000';
+const AGENT_URL = process.env.SOLENRICH_URL ?? 'https://solenrich-production.up.railway.app';
 
 // --- Helper: invoke a SolEnrich entrypoint ---
 
@@ -38,6 +38,21 @@ async function invoke(entrypointKey: string, input: Record<string, unknown>): Pr
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ input }),
   });
+
+  if (res.status === 402) {
+    const paymentHeader = res.headers.get('Payment-Required');
+    let paymentInfo = '';
+    if (paymentHeader) {
+      try {
+        const decoded = JSON.parse(atob(paymentHeader));
+        const accept = decoded.accepts?.[0];
+        if (accept) {
+          paymentInfo = `\n\nPayment details:\n- Amount: ${accept.amount} USDC base units ($${(Number(accept.amount) / 1_000_000).toFixed(4)})\n- Network: ${accept.network}\n- Pay to: ${accept.payTo}`;
+        }
+      } catch { /* ignore decode errors */ }
+    }
+    throw new Error(`SolEnrich ${entrypointKey} requires x402 payment. This endpoint is pay-per-request via USDC on Solana.${paymentInfo}`);
+  }
 
   if (!res.ok) {
     const text = await res.text();
@@ -79,20 +94,12 @@ server.registerTool(
     },
   },
   async (args) => {
-    const briefing = await invoke('enrich-wallet-light', {
+    const key = args.depth === 'full' ? 'enrich-wallet-full' : 'enrich-wallet-light';
+    const briefing = await invoke(key, {
       address: args.address,
       depth: args.depth ?? 'light',
       format: 'llm',
     });
-    // Use full variant if depth=full
-    if (args.depth === 'full') {
-      const fullBriefing = await invoke('enrich-wallet-full', {
-        address: args.address,
-        depth: 'full',
-        format: 'llm',
-      });
-      return { content: [{ type: 'text' as const, text: fullBriefing }] };
-    }
     return { content: [{ type: 'text' as const, text: briefing }] };
   },
 );

@@ -1,18 +1,46 @@
 # SolEnrich MCP Server
 
-MCP (Model Context Protocol) wrapper for SolEnrich. Exposes Solana enrichment tools to Claude Desktop and other MCP clients.
+MCP (Model Context Protocol) wrapper for SolEnrich. Exposes Solana enrichment tools to Claude Desktop, Claude Code, and other MCP clients.
+
+By default, the MCP server connects to the **production API** at `https://solenrich-production.up.railway.app`. Endpoints require x402 USDC payment on Solana — if payment is missing, the tool returns pricing details.
 
 ## Setup
 
-### 1. Start the SolEnrich agent
-
-```bash
-bun run dev
-```
-
-### 2. Configure Claude Desktop
+### Claude Desktop
 
 Add to your Claude Desktop MCP config (`claude_desktop_config.json`):
+
+```json
+{
+  "mcpServers": {
+    "solenrich": {
+      "command": "bun",
+      "args": ["run", "mcp/server.ts"],
+      "cwd": "/path/to/solenrich"
+    }
+  }
+}
+```
+
+### Claude Code
+
+Add to `.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "solenrich": {
+      "command": "bun",
+      "args": ["run", "mcp/server.ts"],
+      "cwd": "/path/to/solenrich"
+    }
+  }
+}
+```
+
+### Local Development
+
+To point at a local SolEnrich instance instead of production:
 
 ```json
 {
@@ -29,20 +57,20 @@ Add to your Claude Desktop MCP config (`claude_desktop_config.json`):
 }
 ```
 
-### 3. Use in Claude Desktop
+Then start the agent locally with `bun run dev`.
 
-Once configured, Claude can use these tools:
+## Available Tools
 
-- **enrich_wallet** — Wallet profiling (holdings, labels, risk score)
-- **enrich_token** — Token analysis (price, security, holders)
+- **enrich_wallet** — Wallet profiling (holdings, labels, risk score, DeFi positions)
+- **enrich_token** — Token analysis (price, security, holders, risk flags)
 - **parse_transaction** — Transaction parsing (type, protocol, transfers)
-- **whale_watch** — Large holder tracking and flow patterns
+- **whale_watch** — Large holder tracking and accumulation/distribution patterns
 - **due_diligence** — Comprehensive token research briefing
 - **wallet_graph** — Wallet connection mapping and cluster detection
-- **copy_trade_signals** — Trading performance analysis
+- **copy_trade_signals** — Trading performance analysis (win rate, PnL)
 
 ## Environment Variables
 
 | Variable | Default | Description |
 |---|---|---|
-| `SOLENRICH_URL` | `http://127.0.0.1:3000` | URL of the running SolEnrich agent |
+| `SOLENRICH_URL` | `https://solenrich-production.up.railway.app` | SolEnrich agent URL |
