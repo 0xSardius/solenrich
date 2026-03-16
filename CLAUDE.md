@@ -277,4 +277,51 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] Type check passes, server loads without crash
 - **Usage:** Start `bun run dev`, then configure `mcp/server.ts` in Claude Desktop MCP settings
 
-### Phase 11-12: Deployment, launch — NOT STARTED
+### Phase 11-12: Deployment & Launch — DONE
+- [x] Railway deployment (Docker + Bun native)
+- [x] x402 paywall live — all 10 endpoints return 402 without payment
+- [x] 8004-solana agent registered on mainnet
+- [x] Landing page deployed to Vercel
+- [x] README with API docs, pricing table, example requests
+
+## Bags Hackathon Submission
+
+- **Hackathon:** [The Bags Hackathon](https://bags.fm/hackathon) — $4M funding, $1M in grants to 100 winners ($10K-$100K each)
+- **Track:** AI Agents (also relevant: Payments, DeFi, Claude Skills)
+- **Status:** In progress — rolling applications through Q1 2026
+- **Requirements:** Working product with real users/transactions, uses Bags token/API/fee-sharing, or is a verified onchain project
+- **Judging:** Product traction (MRR, DAU, GitHub stars) + onchain performance (volume, active traders, revenue)
+- **Partners/Judges:** Solana, Helius, Meteora, Privy, DFlow, Birdeye
+- **Submit at:** https://bags.fm/apply | Questions: apps@bags.fm
+
+## Post-Launch Upgrade Roadmap
+
+### Quick Wins
+- [ ] Upstash Redis for prod caching — currently in-memory only, resets on every deploy
+- [ ] Custom domain (`api.solenrich.xyz` or `solenrich.parallaxlabs.xyz`)
+- [ ] MCP directory submissions (Smithery, mcp.run, Glama) — free distribution to Claude/Cursor users
+- [ ] Richer 402 response body — include human-readable payment instructions + pricing in JSON (not just empty `{}`)
+- [ ] x402 bazaar listing — trigger by making a paid request through the facilitator
+
+### Feature Upgrades
+- [ ] `query` endpoint — accepts freeform NL questions as *input*, routes through LLM to pick enricher and compose answer (note: LLM *output* format already works on all endpoints via `format: "llm"`)
+- [ ] Webhook/SSE streaming — real-time whale alerts, token movement notifications (`src/realtime/` scaffolded but empty)
+- [ ] Portfolio tracker — historical wallet value over time using Helius tx history + price snapshots
+- [ ] Token comparison — side-by-side analysis of 2-3 tokens (liquidity, holder distribution, risk)
+- [ ] Cluster labeling — expand wallet-graph to label known entities (CEX hot wallets, MEV bots, protocol treasuries)
+
+### Infrastructure
+- [ ] Rate limiting — protect upstream APIs, per-IP or per-wallet throttling
+- [ ] Usage analytics — track endpoint calls, response times, error rates (Axiom or simple logging)
+- [ ] Birdeye API key — unlocks wallet portfolio endpoint and richer token data
+- [ ] Test suite in CI — wire existing test files into GitHub Actions
+
+### Distribution / Growth
+- [ ] Agent-to-agent integrations — partner with trading agents that need enrichment data
+- [ ] SDK/client package — `npm install @solenrich/client` for easy integration
+- [ ] Social launch — Twitter thread, Farcaster, Solana ecosystem channels
+
+### Moonshots
+- [ ] Multi-chain expansion — Base/Ethereum enrichment using same architecture
+- [ ] Reputation-gated pricing — cheaper rates for agents with high 8004 reputation scores
+- [ ] On-chain analytics dashboard — frontend showing live usage, top queried wallets/tokens
