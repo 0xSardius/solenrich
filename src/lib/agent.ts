@@ -60,7 +60,7 @@ const PAYMENT_NETWORK = (
     : "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"
 ) as `${string}:${string}`;
 const PAY_TO = process.env.AGENT_WALLET_ADDRESS ?? CONFIG.solana.walletAddress;
-const PAYMENTS_ENABLED = process.env.PAYMENTS_ENABLED === "true" && PAY_TO !== "";
+const PAYMENTS_ENABLED = process.env.PAYMENTS_ENABLED?.toLowerCase() === "true" && PAY_TO !== "";
 
 if (PAYMENTS_ENABLED) {
   const facilitatorUrl = process.env.FACILITATOR_URL ?? "https://facilitator.payai.network";
