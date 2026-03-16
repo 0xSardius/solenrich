@@ -4,6 +4,8 @@ Solana onchain data enrichment agent. Accepts USDC micropayments via x402 and re
 
 **Live:** https://solenrich-production.up.railway.app/
 
+**CA:** 677CpPEoKVo9tyCyBHqtiXZivUPdPXEigd3FspWuBAGS
+
 ## Quick Start
 
 ```bash
