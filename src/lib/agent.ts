@@ -1,7 +1,8 @@
 import { createAgentApp } from "@lucid-agents/hono";
 import { createAgent } from "@lucid-agents/core";
 import { http } from "@lucid-agents/http";
-import { payments, paymentsFromEnv } from "@lucid-agents/payments";
+// NOTE: Lucid's payments plugin only supports EVM (ExactEvmScheme).
+// We handle Solana x402 payments manually with @x402/svm below.
 
 // x402 payment middleware
 import { paymentMiddleware } from "@x402/hono";
@@ -47,7 +48,6 @@ const agent = await createAgent({
     "Solana onchain data enrichment. Wallet profiling, token analysis, risk scoring. JSON for agents, natural language for LLMs.",
 })
   .use(http())
-  .use(payments({ config: paymentsFromEnv() }))
   .build();
 
 const { app, addEntrypoint } = await createAgentApp(agent);
