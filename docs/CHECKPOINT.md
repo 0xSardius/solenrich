@@ -1,7 +1,7 @@
 # Session Checkpoint
 
 ## Last session date
-2026-03-15
+2026-03-17
 
 ## What was completed
 - Phase 12 launch checklist complete
@@ -27,7 +27,7 @@
 - Test MCP server with Claude Desktop
 - x402 bazaar listing (auto-lists on first paid request through facilitator)
 - `query` endpoint (NL inference via Daydreams Router)
-- Upstash Redis for production caching
+- ~~Upstash Redis for production caching~~ ✅ DONE (2026-03-17)
 - Social announcements
 
 ## Key values
