@@ -95,10 +95,10 @@ if (PAYMENTS_ENABLED) {
     "POST /entrypoints/due-diligence/invoke": routeConfig(PRICING["due-diligence"]),
   };
 
-  // Enrich 402 responses with human-readable pricing info (must be registered BEFORE x402 middleware)
+  // Enrich 402 responses with pricing info (registered BEFORE x402 so it wraps the response)
   app.use("/entrypoints/*", async (c, next) => {
     await next();
-    if (c.res.status === 402) {
+    if (c.res && c.res.status === 402) {
       const entrypointKey = c.req.path.split("/entrypoints/")[1]?.split("/")[0] ?? "";
       const price = PRICING[entrypointKey as keyof typeof PRICING] ?? null;
 
@@ -107,6 +107,7 @@ if (PAYMENTS_ENABLED) {
         originalBody = await c.res.clone().json();
       } catch {}
 
+      const paymentHeader = c.res.headers.get("Payment-Required");
       const enrichedBody = {
         ...originalBody,
         error: "Payment Required",
@@ -131,13 +132,12 @@ if (PAYMENTS_ENABLED) {
         ),
       };
 
-      // Preserve original response headers (x402 protocol headers)
-      const headers = new Headers(c.res.headers);
-      headers.set("Content-Type", "application/json");
-      c.res = new Response(JSON.stringify(enrichedBody), {
+      const body = JSON.stringify(enrichedBody);
+      const newRes = new Response(body, {
         status: 402,
-        headers,
+        headers: { "Content-Type": "application/json", ...(paymentHeader ? { "Payment-Required": paymentHeader } : {}) },
       });
+      c.res = newRes;
     }
   });
 
