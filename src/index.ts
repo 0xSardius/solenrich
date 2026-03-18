@@ -7,27 +7,11 @@ const FACILITATOR = process.env.FACILITATOR_URL ?? 'https://facilitator.payai.ne
 
 console.log(`Starting agent server on port ${port}...`);
 
-// Wrap app.fetch to enrich 402 responses with pricing info
-const originalFetch = app.fetch.bind(app);
-
-async function enrichedFetch(request: Request, ...args: any[]): Promise<Response> {
-  const res = await (originalFetch as any)(request, ...args);
-  if (res.status !== 402) return res;
-  console.log(`[402-enrich] Intercepting 402 for ${request.url}`);
-
-  const url = new URL(request.url);
-  if (!url.pathname.startsWith('/entrypoints/')) return res;
-
+function build402Body(url: URL) {
   const entrypointKey = url.pathname.split('/entrypoints/')[1]?.split('/')[0] ?? '';
   const price = PRICING[entrypointKey as keyof typeof PRICING] ?? null;
 
-  let originalBody: Record<string, unknown> = {};
-  try {
-    originalBody = await res.clone().json();
-  } catch {}
-
-  const enrichedBody = {
-    ...originalBody,
+  return {
     error: 'Payment Required',
     message: 'This endpoint requires a USDC micropayment via x402 protocol.',
     endpoint: entrypointKey || undefined,
@@ -49,20 +33,30 @@ async function enrichedFetch(request: Request, ...args: any[]): Promise<Response
         .map(([k, v]) => [k, `$${v} USDC`]),
     ),
   };
-
-  // Preserve x402 protocol headers
-  const headers = new Headers(res.headers);
-  headers.set('Content-Type', 'application/json');
-  headers.delete('Content-Length');
-
-  return new Response(JSON.stringify(enrichedBody), {
-    status: 402,
-    headers,
-  });
 }
 
 export default {
   port,
   hostname: '0.0.0.0',
-  fetch: enrichedFetch,
+  async fetch(request: Request, server: any): Promise<Response> {
+    const res = await app.fetch(request, { IP: server?.requestIP?.(request) });
+    if (res.status !== 402) return res;
+
+    const url = new URL(request.url);
+    if (!url.pathname.startsWith('/entrypoints/')) return res;
+
+    let originalBody: Record<string, unknown> = {};
+    try {
+      originalBody = await res.clone().json();
+    } catch {}
+
+    const enrichedBody = { ...originalBody, ...build402Body(url) };
+
+    // Preserve x402 protocol headers
+    const headers = new Headers(res.headers);
+    headers.set('Content-Type', 'application/json');
+    headers.delete('Content-Length');
+
+    return new Response(JSON.stringify(enrichedBody), { status: 402, headers });
+  },
 };
