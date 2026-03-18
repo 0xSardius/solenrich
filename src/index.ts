@@ -13,6 +13,7 @@ const originalFetch = app.fetch.bind(app);
 async function enrichedFetch(request: Request, ...args: any[]): Promise<Response> {
   const res = await (originalFetch as any)(request, ...args);
   if (res.status !== 402) return res;
+  console.log(`[402-enrich] Intercepting 402 for ${request.url}`);
 
   const url = new URL(request.url);
   if (!url.pathname.startsWith('/entrypoints/')) return res;
