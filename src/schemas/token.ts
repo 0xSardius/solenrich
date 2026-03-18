@@ -23,6 +23,11 @@ export const TokenEnrichmentSchema = z.object({
     balance: z.number(),
     pct_supply: z.number(),
   })).optional(),
+  concentration: z.object({
+    top1_pct: z.number(),
+    top5_pct: z.number(),
+    top10_pct: z.number(),
+  }).optional(),
   liquidity: z.number(),
   risk_flags: z.array(z.string()),
   verified: z.boolean(),

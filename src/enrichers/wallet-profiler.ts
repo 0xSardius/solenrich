@@ -54,6 +54,7 @@ export interface WalletEnrichment {
   first_tx_date: string | null;
   labels: string[];
   risk_score: number;
+  risk_level: string;
   risk_factors: string[];
   connected_wallets: string[];
   last_updated: string;
@@ -279,6 +280,7 @@ export class WalletProfiler {
       first_tx_date: firstTxDate,
       labels,
       risk_score: riskResult.score,
+      risk_level: riskResult.risk_level,
       risk_factors: riskResult.factors,
       connected_wallets: connectedWallets,
       last_updated: formatTimestamp(),

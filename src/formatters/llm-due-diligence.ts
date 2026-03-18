@@ -1,5 +1,5 @@
 import type { DueDiligenceEnrichment } from '../enrichers/due-diligence';
-import { formatUsd, formatNumber } from '../utils/normalize';
+import { formatUsd } from '../utils/normalize';
 
 function priceDirection(change: number): string {
   if (change > 0) return `up ${change.toFixed(2)}%`;
@@ -21,6 +21,20 @@ export function formatDueDiligenceBriefing(data: DueDiligenceEnrichment): string
   );
   lines.push(`Liquidity: ${formatUsd(t.liquidity)}.`);
   lines.push('');
+
+  // Holder concentration
+  if (t.concentration) {
+    lines.push('### Holder Concentration');
+    lines.push(`Top holder: ${t.concentration.top1_pct.toFixed(1)}% of supply. Top 5: ${t.concentration.top5_pct.toFixed(1)}%. Top 10: ${t.concentration.top10_pct.toFixed(1)}%.`);
+    if (t.concentration.top1_pct > 50) {
+      lines.push('⚠ Single holder controls majority of supply — high rug-pull risk.');
+    } else if (t.concentration.top5_pct > 80) {
+      lines.push('⚠ Supply highly concentrated among top holders.');
+    } else if (t.concentration.top10_pct < 30) {
+      lines.push('Supply is well-distributed across holders.');
+    }
+    lines.push('');
+  }
 
   // Security
   lines.push('### Security Assessment');
@@ -46,8 +60,15 @@ export function formatDueDiligenceBriefing(data: DueDiligenceEnrichment): string
   lines.push('### Whale Activity (72h)');
   if (data.whales.whale_count > 0) {
     lines.push(
-      `${data.whales.whale_count} whale(s) detected. Total volume: ${formatUsd(data.whales.total_whale_volume_usd)}. Net flow: **${data.whales.net_flow_direction}**.`,
+      `${data.whales.whale_count} whale(s) tracked. Total volume: ${formatUsd(data.whales.total_whale_volume_usd)}. Net flow: **${data.whales.net_flow_direction}**.`,
     );
+    const topWhales = data.whales.whales.slice(0, 3);
+    for (const w of topWhales) {
+      const activity = w.transaction_count > 0
+        ? `${w.flow_direction} (${formatUsd(w.buy_volume_usd)} in, ${formatUsd(w.sell_volume_usd)} out)`
+        : 'no recent activity';
+      lines.push(`  - ${w.address.slice(0, 8)}...${w.address.slice(-4)}: holds ${w.pct_supply.toFixed(1)}% — ${activity}`);
+    }
   } else {
     lines.push('No significant whale activity detected.');
   }
@@ -56,18 +77,15 @@ export function formatDueDiligenceBriefing(data: DueDiligenceEnrichment): string
   // Verdict
   lines.push('### Verdict');
   lines.push(
-    `Overall risk score: ${(data.overall_risk_score * 100).toFixed(0)}/100. Recommendation: **${data.recommendation}**.`,
+    `Risk score: ${(data.overall_risk_score * 100).toFixed(0)}/100 (${data.risk_level}). Recommendation: **${data.recommendation}**.`,
   );
 
-  const risks: string[] = [];
-  if (!t.verified) risks.push('unverified token');
-  if (t.mint_authority) risks.push('active mint authority');
-  if (t.freeze_authority) risks.push('active freeze authority');
-  if (data.whales.net_flow_direction === 'distributing') risks.push('whale distribution detected');
-  if (t.risk_flags.length > 0) risks.push(`${t.risk_flags.length} risk flag(s)`);
-
-  if (risks.length > 0) {
-    lines.push(`Key risks: ${risks.join(', ')}.`);
+  if (data.risk_factors.length > 0) {
+    lines.push('');
+    lines.push('Key risk factors:');
+    for (const factor of data.risk_factors) {
+      lines.push(`  - ${factor}`);
+    }
   } else {
     lines.push('No significant risks identified.');
   }

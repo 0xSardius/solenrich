@@ -56,6 +56,52 @@ export class SolanaRpcClient {
     };
   }
 
+  /** Get the 20 largest token accounts for a mint (top holders) */
+  async getTokenLargestAccounts(mint: string): Promise<Array<{
+    address: string;
+    amount: number;
+    decimals: number;
+    uiAmount: number;
+  }>> {
+    const pubkey = new PublicKey(mint);
+    // Retry once on transient RPC errors (overloaded index, rate limits)
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const result = await this.connection.getTokenLargestAccounts(pubkey);
+        return result.value
+          .filter((a) => Number(a.amount) > 0)
+          .map((account) => ({
+            address: account.address.toBase58(),
+            amount: Number(account.amount),
+            decimals: account.decimals,
+            uiAmount: account.uiAmount ?? Number(account.amount) / 10 ** account.decimals,
+          }));
+      } catch (err: any) {
+        const msg = err?.message ?? '';
+        // Non-retryable: tokens with millions of holders exceed RPC limits
+        if (msg.includes('Too many accounts')) return [];
+        // Retryable: overloaded index service
+        if (attempt === 0 && msg.includes('overloaded')) {
+          await new Promise((r) => setTimeout(r, 1000));
+          continue;
+        }
+        throw err;
+      }
+    }
+    return [];
+  }
+
+  /** Resolve token account addresses to their owner wallets (batch, single RPC call) */
+  async resolveTokenAccountOwners(addresses: string[]): Promise<Array<{ tokenAccount: string; owner: string | null }>> {
+    const pubkeys = addresses.map((a) => new PublicKey(a));
+    const result = await this.connection.getMultipleParsedAccounts(pubkeys);
+    return addresses.map((addr, i) => {
+      const info = result.value[i];
+      const parsed = (info?.data as any)?.parsed?.info;
+      return { tokenAccount: addr, owner: parsed?.owner ?? null };
+    });
+  }
+
   /** Expose connection for direct use by enrichers if needed */
   getConnection(): Connection {
     return this.connection;

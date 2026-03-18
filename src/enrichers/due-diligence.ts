@@ -4,6 +4,7 @@ import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { formatTimestamp } from '../utils/normalize';
 import { parallelFetch, type ParallelTask } from '../utils/parallel';
+import { scoreTokenRisk, type RiskLevel } from './risk-scorer';
 import type { TokenEnrichment } from './token-analyzer';
 import type { WhaleWatchEnrichment } from './whale-watch';
 
@@ -11,6 +12,8 @@ export interface DueDiligenceEnrichment {
   token: TokenEnrichment;
   whales: WhaleWatchEnrichment;
   overall_risk_score: number;
+  risk_level: RiskLevel;
+  risk_factors: string[];
   recommendation: 'SAFE' | 'CAUTION' | 'RISKY';
   last_updated: string;
 }
@@ -39,26 +42,21 @@ export class DueDiligenceAnalyzer {
 
     if (!token) throw new Error('Token analysis failed');
 
-    // Overall risk score: weighted combination
-    let riskScore = 0;
-    // Token risk flags (each adds 0.1)
-    riskScore += token.risk_flags.length * 0.1;
-    // Not verified on Jupiter
-    if (!token.verified) riskScore += 0.15;
-    // Mint authority active (can inflate supply)
-    if (token.mint_authority) riskScore += 0.2;
-    // Freeze authority active (can freeze accounts)
-    if (token.freeze_authority) riskScore += 0.1;
-    // Low liquidity
-    if (token.liquidity < 50_000) riskScore += 0.15;
-    // Whale distribution activity
-    if (whales?.net_flow_direction === 'distributing') riskScore += 0.1;
-
-    riskScore = Math.min(1, Math.max(0, riskScore));
+    // Use centralized token risk scorer
+    const riskResult = scoreTokenRisk({
+      risk_flags_count: token.risk_flags.length,
+      verified: token.verified,
+      mint_authority_active: token.mint_authority !== null,
+      freeze_authority_active: token.freeze_authority !== null,
+      liquidity: token.liquidity,
+      holder_concentration_top1: token.concentration?.top1_pct,
+      holder_concentration_top5: token.concentration?.top5_pct,
+      whale_distributing: whales?.net_flow_direction === 'distributing',
+    });
 
     const recommendation: DueDiligenceEnrichment['recommendation'] =
-      riskScore > 0.6 ? 'RISKY' :
-      riskScore > 0.3 ? 'CAUTION' : 'SAFE';
+      riskResult.score > 0.6 ? 'RISKY' :
+      riskResult.score > 0.3 ? 'CAUTION' : 'SAFE';
 
     // Default whale data if whale watch failed
     const whaleData: WhaleWatchEnrichment = whales ?? {
@@ -75,7 +73,9 @@ export class DueDiligenceAnalyzer {
     const enrichment: DueDiligenceEnrichment = {
       token,
       whales: whaleData,
-      overall_risk_score: Math.round(riskScore * 100) / 100,
+      overall_risk_score: riskResult.score,
+      risk_level: riskResult.risk_level,
+      risk_factors: riskResult.factors,
       recommendation,
       last_updated: formatTimestamp(),
     };
