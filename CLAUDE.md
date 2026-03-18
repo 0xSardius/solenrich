@@ -191,7 +191,7 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] Directory structure created (`src/{entrypoints,enrichers,formatters,sources,cache,schemas,utils,realtime}`, `identity/`, `mcp/`, `deploy/`)
 - [x] Server starts without errors (`bun run dev` → "Starting agent server on port 3000...")
 - [x] All routes responding: `/health` (200), `/entrypoints` (200), `/.well-known/agent.json` (200). Fix was `hostname: '127.0.0.1'` in `src/index.ts` to avoid Windows IPv6 dual-stack issue.
-- [ ] Still need: Birdeye API key, Upstash Redis credentials (optional for dev)
+- [x] Upstash Redis connected in production (2026-03-17)
 
 ### Phase 1: Core infrastructure — DONE
 - [x] `src/config.ts` — CONFIG (env vars), PRICING (USDC decimal strings), CACHE_TTL (seconds)
@@ -206,15 +206,15 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] `src/sources/birdeye.ts` — token price/overview/security/holders, wallet portfolio, OHLCV
 - [x] `src/sources/defi-llama.ts` — protocol TVL, Solana protocols list, yield pools
 - [x] `src/sources/jupiter.ts` — batch price lookup (v2 + x-api-key auth), token metadata
-- [x] `src/sources/solana-rpc.ts` — SOL balance, account info, parsed transactions, blockhash
+- [x] `src/sources/solana-rpc.ts` — SOL balance, account info, parsed transactions, blockhash, `getTokenLargestAccounts` (with retry/fallback), `resolveTokenAccountOwners`
 - [x] `test/test-phase2.ts` — live smoke tests (Helius DAS, DeFi Llama, Solana RPC all passing)
 - [ ] Still need: Jupiter API key (free at portal.jup.ag), Birdeye API key
 
 ### Phase 3: Enrichment engine — DONE
 - [x] `src/enrichers/labeler.ts` — pure function, 10 label rules (whale, active_trader, defi_user, etc.)
-- [x] `src/enrichers/risk-scorer.ts` — pure function, 7-factor additive scoring clamped to 0.0-1.0
+- [x] `src/enrichers/risk-scorer.ts` — pure function, 7-factor additive scoring clamped to 0.0-1.0 + risk levels (LOW/MODERATE/ELEVATED/HIGH/CRITICAL) + centralized `scoreTokenRisk()`
 - [x] `src/enrichers/wallet-profiler.ts` — orchestrates Helius+Birdeye+Jupiter+RPC via parallelFetch, light/full modes
-- [x] `src/enrichers/token-analyzer.ts` — cross-references Birdeye overview/security + Jupiter verified status, 7 risk flags
+- [x] `src/enrichers/token-analyzer.ts` — cross-references DexScreener + Jupiter + on-chain mint info + top 20 holders via `getTokenLargestAccounts`, holder concentration metrics, 9 risk flags including `high_concentration` and `whale_dominated`
 - [x] `src/enrichers/tx-parser.ts` — maps Helius EnhancedTransaction to clean structure, protocol detection
 - [x] `test/test-phase3.ts` — unit tests for labeler+risk-scorer, live integration for wallet-profiler+tx-parser
 
@@ -257,10 +257,10 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 
 ### Phase 9: Premium Endpoints — DONE
 - [x] `src/schemas/{whale-watch,batch,graph,copy-trade,due-diligence}.ts` — Zod input schemas
-- [x] `src/enrichers/whale-watch.ts` — WhaleWatcher: tracks large token transfers, accumulation/distribution patterns
+- [x] `src/enrichers/whale-watch.ts` — WhaleWatcher: finds top holders via RPC, resolves wallet owners, tracks buy/sell activity per whale with balance and supply context
 - [x] `src/enrichers/graph-mapper.ts` — GraphMapper: maps wallet connections, detects clusters, depth-1/2 hops
 - [x] `src/enrichers/copy-trade-analyzer.ts` — CopyTradeAnalyzer: trade PnL, win rate, consistency, smart_money labeling
-- [x] `src/enrichers/due-diligence.ts` — DueDiligenceAnalyzer: composite (token + whales + holders), risk scoring, SAFE/CAUTION/RISKY
+- [x] `src/enrichers/due-diligence.ts` — DueDiligenceAnalyzer: composite (token + whales + holders), centralized `scoreTokenRisk()` with holder concentration, risk levels, detailed risk factors
 - [x] `src/formatters/llm-{whale-watch,graph,copy-trade,due-diligence}.ts` — LLM briefing generators
 - [x] `src/entrypoints/{whale-watch,batch,graph,copy-trade,due-diligence}.ts` — entrypoint handlers
 - [x] `src/lib/agent.ts` — all 10 entrypoints registered (5 core + 5 premium)
@@ -288,7 +288,7 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 
 - **Hackathon:** [The Bags Hackathon](https://bags.fm/hackathon) — $4M funding, $1M in grants to 100 winners ($10K-$100K each)
 - **Track:** AI Agents (also relevant: Payments, DeFi, Claude Skills)
-- **Status:** In progress — rolling applications through Q1 2026
+- **Status:** SUBMITTED
 - **Requirements:** Working product with real users/transactions, uses Bags token/API/fee-sharing, or is a verified onchain project
 - **Judging:** Product traction (MRR, DAU, GitHub stars) + onchain performance (volume, active traders, revenue)
 - **Partners/Judges:** Solana, Helius, Meteora, Privy, DFlow, Birdeye
@@ -297,11 +297,13 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 ## Post-Launch Upgrade Roadmap
 
 ### Quick Wins
-- [ ] Upstash Redis for prod caching — currently in-memory only, resets on every deploy
+- [x] Upstash Redis for prod caching (2026-03-17)
+- [x] Richer 402 response body — pricing, payment instructions, endpoint menu (2026-03-17)
+- [x] Hardened enrichment — holder concentration, whale-watch rewrite, risk levels (2026-03-17)
 - [ ] Custom domain (`api.solenrich.xyz` or `solenrich.parallaxlabs.xyz`)
 - [ ] MCP directory submissions (Smithery, mcp.run, Glama) — free distribution to Claude/Cursor users
-- [ ] Richer 402 response body — include human-readable payment instructions + pricing in JSON (not just empty `{}`)
 - [ ] x402 bazaar listing — trigger by making a paid request through the facilitator
+- [ ] XGATE registration for agent-to-agent discovery
 
 ### Feature Upgrades
 - [ ] `query` endpoint — accepts freeform NL questions as *input*, routes through LLM to pick enricher and compose answer (note: LLM *output* format already works on all endpoints via `format: "llm"`)
