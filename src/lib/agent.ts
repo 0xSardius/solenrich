@@ -95,52 +95,6 @@ if (PAYMENTS_ENABLED) {
     "POST /entrypoints/due-diligence/invoke": routeConfig(PRICING["due-diligence"]),
   };
 
-  // Enrich 402 responses with pricing info (registered BEFORE x402 so it wraps the response)
-  app.use("/entrypoints/*", async (c, next) => {
-    await next();
-    if (c.res && c.res.status === 402) {
-      const entrypointKey = c.req.path.split("/entrypoints/")[1]?.split("/")[0] ?? "";
-      const price = PRICING[entrypointKey as keyof typeof PRICING] ?? null;
-
-      let originalBody: Record<string, unknown> = {};
-      try {
-        originalBody = await c.res.clone().json();
-      } catch {}
-
-      const paymentHeader = c.res.headers.get("Payment-Required");
-      const enrichedBody = {
-        ...originalBody,
-        error: "Payment Required",
-        message: `This endpoint requires a USDC micropayment via x402 protocol.`,
-        endpoint: entrypointKey || undefined,
-        pricing: {
-          amount: price,
-          currency: "USDC",
-          network: "solana",
-          payTo: PAY_TO,
-        },
-        how_to_pay: {
-          protocol: "x402",
-          header: "X-Payment",
-          facilitator: process.env.FACILITATOR_URL ?? "https://facilitator.payai.network",
-          docs: "https://www.x402.org/",
-        },
-        all_endpoints: Object.fromEntries(
-          Object.entries(PRICING)
-            .filter(([k]) => k !== "query")
-            .map(([k, v]) => [k, `$${v} USDC`])
-        ),
-      };
-
-      const body = JSON.stringify(enrichedBody);
-      const newRes = new Response(body, {
-        status: 402,
-        headers: { "Content-Type": "application/json", ...(paymentHeader ? { "Payment-Required": paymentHeader } : {}) },
-      });
-      c.res = newRes;
-    }
-  });
-
   app.use("/entrypoints/*", paymentMiddleware(x402Routes, resourceServer));
 
   console.log(`[x402] Payment middleware enabled — ${PAYMENT_NETWORK}, payTo: ${PAY_TO}`);
