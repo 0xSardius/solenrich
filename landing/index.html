@@ -617,6 +617,68 @@
       gap: 24px;
     }
 
+    /* ==================== UPDATE BANNER ==================== */
+    .update-banner {
+      background: var(--bg-panel);
+      border-top: 1px solid var(--border-dim);
+      border-bottom: 1px solid var(--border-dim);
+      padding: 20px 0;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .update-banner::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px; height: 100%;
+      background: linear-gradient(180deg, var(--sol-green), var(--sol-purple));
+    }
+
+    .update-banner .container {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .update-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--bg-void);
+      background: var(--sol-green);
+      padding: 4px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+
+    .update-items {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .update-item {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .update-item .check {
+      color: var(--sol-green);
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .update-banner .container { flex-direction: column; align-items: flex-start; gap: 12px; }
+      .update-items { flex-direction: column; gap: 8px; }
+    }
+
     .value-card {
       background: var(--bg-card);
       border: 1px solid var(--border-dim);
@@ -907,32 +969,42 @@
           <div class="terminal-dot r"></div>
           <div class="terminal-dot y"></div>
           <div class="terminal-dot g"></div>
-          <span class="terminal-title">enrich-wallet-light</span>
+          <span class="terminal-title">enrich-token-full</span>
         </div>
         <div class="terminal-body">
 <span class="dim">$ curl -X POST \</span>
-<span class="url">  /entrypoints/enrich-wallet-light/invoke</span>
+<span class="url">  /entrypoints/enrich-token-full/invoke</span>
 <br><br>
 <span class="dim">{</span>
-  <span class="key">"address"</span>: <span class="str">"vines1vzr...PTg"</span>,
-  <span class="key">"sol_balance"</span>: <span class="val">0.015</span>,
-  <span class="key">"portfolio_value_usd"</span>: <span class="val">1.45</span>,
-  <span class="key">"token_count"</span>: <span class="val">6</span>,
-  <span class="key">"labels"</span>: [<span class="str">"early_adopter"</span>],
-  <span class="key">"risk_score"</span>: <span class="val">0.12</span>,
-  <span class="key">"risk_level"</span>: <span class="str">"low"</span>,
-  <span class="key">"wallet_age_days"</span>: <span class="val">1847</span>,
-  <span class="key">"top_holdings"</span>: [
-    {
-      <span class="key">"symbol"</span>: <span class="str">"SMOG"</span>,
-      <span class="key">"usd_value"</span>: <span class="val">0.13</span>
-    }
-  ]
+  <span class="key">"symbol"</span>: <span class="str">"JUP"</span>,
+  <span class="key">"price_usd"</span>: <span class="val">0.1716</span>,
+  <span class="key">"market_cap"</span>: <span class="val">600287744</span>,
+  <span class="key">"liquidity"</span>: <span class="val">374099</span>,
+  <span class="key">"concentration"</span>: {
+    <span class="key">"top1_pct"</span>: <span class="val">12.4</span>,
+    <span class="key">"top5_pct"</span>: <span class="val">38.7</span>,
+    <span class="key">"top10_pct"</span>: <span class="val">51.2</span>
+  },
+  <span class="key">"risk_flags"</span>: [],
+  <span class="key">"verified"</span>: <span class="val">true</span>
 <span class="dim">}</span>
         </div>
       </div>
     </div>
   </section>
+
+  <!-- ===== UPDATE BANNER ===== -->
+  <div class="update-banner">
+    <div class="container">
+      <span class="update-tag">New</span>
+      <div class="update-items">
+        <span class="update-item"><span class="check">&#10003;</span> Holder concentration analysis</span>
+        <span class="update-item"><span class="check">&#10003;</span> Whale activity tracking</span>
+        <span class="update-item"><span class="check">&#10003;</span> Risk levels (LOW &rarr; CRITICAL)</span>
+        <span class="update-item"><span class="check">&#10003;</span> Enriched 402 responses</span>
+      </div>
+    </div>
+  </div>
 
   <!-- ===== ENDPOINTS ===== -->
   <section class="endpoints" id="endpoints">
@@ -952,7 +1024,7 @@
             <span class="endpoint-name">enrich-wallet-light</span>
             <span class="endpoint-price">$0.002</span>
           </div>
-          <p class="endpoint-desc">SOL balance, token holdings, behavioral labels, risk score.</p>
+          <p class="endpoint-desc">SOL balance, token holdings, behavioral labels, risk score with risk level.</p>
           <div class="tag-row"><span class="tag">core</span><span class="tag">wallet</span></div>
         </div>
 
@@ -961,7 +1033,7 @@
             <span class="endpoint-name">enrich-wallet-full</span>
             <span class="endpoint-price">$0.005</span>
           </div>
-          <p class="endpoint-desc">Full profile with DeFi positions, connected wallets, and transaction history.</p>
+          <p class="endpoint-desc">Full profile with DeFi positions, connected wallets, transaction history, and risk level.</p>
           <div class="tag-row"><span class="tag">core</span><span class="tag">wallet</span></div>
         </div>
 
@@ -970,7 +1042,7 @@
             <span class="endpoint-name">enrich-token-light</span>
             <span class="endpoint-price">$0.002</span>
           </div>
-          <p class="endpoint-desc">Price, market cap, liquidity assessment, risk flags, verified status.</p>
+          <p class="endpoint-desc">Price, market cap, liquidity assessment, holder concentration, risk flags.</p>
           <div class="tag-row"><span class="tag">core</span><span class="tag">token</span></div>
         </div>
 
@@ -979,7 +1051,7 @@
             <span class="endpoint-name">enrich-token-full</span>
             <span class="endpoint-price">$0.004</span>
           </div>
-          <p class="endpoint-desc">Full token analysis with top holders and concentration metrics.</p>
+          <p class="endpoint-desc">Full token analysis with top 20 holders, concentration metrics (top 1/5/10%), and rug-pull detection.</p>
           <div class="tag-row"><span class="tag">core</span><span class="tag">token</span></div>
         </div>
 
@@ -997,7 +1069,7 @@
             <span class="endpoint-name">whale-watch</span>
             <span class="endpoint-price">$0.008</span>
           </div>
-          <p class="endpoint-desc">Track large holders. Detect accumulation and distribution patterns.</p>
+          <p class="endpoint-desc">Top holders with balances and % supply. Buy/sell volume tracking. Accumulation vs distribution signals.</p>
           <div class="tag-row"><span class="tag premium">premium</span><span class="tag">token</span></div>
         </div>
 
@@ -1033,7 +1105,7 @@
             <span class="endpoint-name">due-diligence</span>
             <span class="endpoint-price">$0.020</span>
           </div>
-          <p class="endpoint-desc">Comprehensive research: security, whales, holders. SAFE / CAUTION / RISKY verdict.</p>
+          <p class="endpoint-desc">Comprehensive research: security, holder concentration, whale flows, detailed risk factors. SAFE / CAUTION / RISKY verdict.</p>
           <div class="tag-row"><span class="tag premium">premium</span><span class="tag">token</span></div>
         </div>
       </div>
@@ -1074,7 +1146,8 @@
           <p class="step-desc">Receive structured JSON for programmatic use, or natural language briefings optimized for LLM context windows.</p>
           <div class="step-code">
             <span style="color: var(--sol-green);">200</span> { "risk_score": 0.12,<br>
-            <span style="color: var(--text-muted);">&nbsp;&nbsp;&nbsp;&nbsp;"labels": ["whale"] }</span>
+            <span style="color: var(--text-muted);">&nbsp;&nbsp;"risk_level": "LOW",</span><br>
+            <span style="color: var(--text-muted);">&nbsp;&nbsp;"top1_pct": 12.4 }</span>
           </div>
         </div>
       </div>
@@ -1155,30 +1228,27 @@
 
         <div class="format-code-block">
           <div class="format-code-header">
-            <span class="format-code-label">format: "llm" — wallet briefing</span>
+            <span class="format-code-label">format: "llm" — due diligence briefing</span>
           </div>
           <div class="format-code-body">
-<span style="color: var(--sol-green);">WALLET ENRICHMENT BRIEFING</span>
-<span style="color: var(--text-muted);">═══════════════════════════</span>
+<span style="color: var(--sol-green);">DUE DILIGENCE: JUP (Jupiter)</span>
+<span style="color: var(--text-muted);">═══════════════════════════════</span>
 
-<span style="color: var(--accent-warm);">Address:</span> vines1vzr...YbzLMRdu58ou5X
+<span style="color: var(--accent-warm);">Price:</span> $0.17 (&#8593; 1.41% 24h)
+<span style="color: var(--accent-warm);">Market cap:</span> $600M
+<span style="color: var(--accent-warm);">Liquidity:</span> $374K — Thin
 
-<span style="color: var(--accent-warm);">Overview:</span>
-  SOL Balance: 0.015 SOL
-  Portfolio Value: $1.45
-  Tokens Held: 6
-  Wallet Age: 1,847 days
+<span style="color: var(--accent-warm);">Holder Concentration:</span>
+  Top 1: 12.4% | Top 5: 38.7%
+  Top 10: 51.2%
+  Supply is well-distributed.
 
-<span style="color: var(--accent-warm);">Labels:</span> early_adopter
-<span style="color: var(--accent-warm);">Risk:</span> <span style="color: var(--sol-green);">LOW</span> (0.12)
+<span style="color: var(--accent-warm);">Whale Activity (72h):</span>
+  3 accumulating, 1 distributing
 
-<span style="color: var(--accent-warm);">Top Holdings:</span>
-  1. SMOG — $0.13
-  2. SOL — staked
-
-<span style="color: var(--text-muted);">This wallet shows characteristics of
-an early Solana participant with low
-activity and minimal risk indicators.</span>
+<span style="color: var(--accent-warm);">Verdict:</span> <span style="color: var(--sol-green);">SAFE</span> (score: 8/100)
+<span style="color: var(--text-muted);">Verified on Jupiter. No active
+authorities. Well-distributed supply.</span>
           </div>
         </div>
       </div>
@@ -1219,6 +1289,12 @@ activity and minimal risk indicators.</span>
           <div class="value-icon">&gt;_ format</div>
           <h3 class="value-title">Dual-format output</h3>
           <p class="value-desc">Structured JSON for programmatic pipelines. Natural language briefings for LLM context windows. Same data, your format.</p>
+        </div>
+
+        <div class="value-card reveal" style="grid-column: 1 / -1;">
+          <div class="value-icon" style="color: var(--accent-warm); background: rgba(255, 107, 53, 0.06); border-color: rgba(255, 107, 53, 0.12);">&gt;_ depth</div>
+          <h3 class="value-title">Deeper than raw APIs</h3>
+          <p class="value-desc">Holder concentration metrics, on-chain authority checks, whale flow analysis, and risk levels you can't get from a single API call. We cross-reference and compute so your agents don't have to.</p>
         </div>
       </div>
     </div>
