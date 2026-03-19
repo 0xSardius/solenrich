@@ -270,12 +270,14 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 
 ### Phase 10: MCP Server Wrapper — DONE
 - [x] `@modelcontextprotocol/sdk@1.27.1` installed
-- [x] `mcp/server.ts` — MCP server with 7 tools (wallet, token, tx, whale-watch, due-diligence, graph, copy-trade)
-- [x] `mcp/README.md` — Claude Desktop config instructions
-- [x] Transport: stdio (standard for Claude Desktop integration)
-- [x] All tools call running SolEnrich agent via HTTP, return LLM-formatted briefings
-- [x] Type check passes, server loads without crash
-- **Usage:** Start `bun run dev`, then configure `mcp/server.ts` in Claude Desktop MCP settings
+- [x] `src/mcp-tools.ts` — shared tool definitions (7 tools: wallet, token, tx, whale-watch, due-diligence, graph, copy-trade)
+- [x] `mcp/server.ts` — stdio transport for local Claude Desktop/Code integration
+- [x] `/mcp` HTTP endpoint — `WebStandardStreamableHTTPServerTransport` on production server (stateless, no install needed)
+- [x] `mcp/README.md` — setup instructions for remote (URL) and local (stdio) modes
+- [x] CORS configured for MCP protocol headers
+- [x] All tools call SolEnrich agent via HTTP, return LLM-formatted briefings
+- **Remote URL:** `https://solenrich-production.up.railway.app/mcp`
+- **Local:** `bun run mcp/server.ts`
 
 ### Phase 11-12: Deployment & Launch — DONE
 - [x] Railway deployment (Docker + Bun native)

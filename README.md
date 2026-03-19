@@ -160,7 +160,22 @@ Client → x402 Paywall → Entrypoint Router → Enrichment Engine → Format R
 
 ### MCP Server
 
-SolEnrich includes an MCP server for Claude Desktop integration. See [`mcp/README.md`](mcp/README.md) for setup instructions.
+SolEnrich exposes an MCP endpoint for Claude Desktop, Claude Code, and Cursor integration. **No install required** — just add the remote URL:
+
+```json
+{
+  "mcpServers": {
+    "solenrich": {
+      "type": "streamable-http",
+      "url": "https://solenrich-production.up.railway.app/mcp"
+    }
+  }
+}
+```
+
+7 tools: `enrich_wallet`, `enrich_token`, `parse_transaction`, `whale_watch`, `due_diligence`, `wallet_graph`, `copy_trade_signals`.
+
+See [`mcp/README.md`](mcp/README.md) for local setup and full tool descriptions.
 
 ## Development
 

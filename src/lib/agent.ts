@@ -163,4 +163,28 @@ app.get("/agent-card-extended", (c) => {
   });
 });
 
+// --- MCP over HTTP (Streamable HTTP transport) ---
+
+import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
+import { createSolEnrichMcpServer } from '../mcp-tools';
+import { cors } from 'hono/cors';
+
+// CORS for MCP clients
+app.use('/mcp', cors({
+  origin: '*',
+  allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'mcp-session-id', 'Last-Event-ID', 'mcp-protocol-version'],
+  exposeHeaders: ['mcp-session-id', 'mcp-protocol-version'],
+}));
+
+// Stateless MCP endpoint — fresh server per request
+app.all('/mcp', async (c) => {
+  const transport = new WebStandardStreamableHTTPServerTransport();
+  const mcpServer = createSolEnrichMcpServer();
+  await mcpServer.connect(transport);
+  return transport.handleRequest(c.req.raw);
+});
+
+console.log('[mcp] HTTP transport available at /mcp');
+
 export { app, addEntrypoint, agent };
