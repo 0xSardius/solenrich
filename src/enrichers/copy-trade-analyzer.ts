@@ -8,6 +8,7 @@ interface TradeEntry {
   mint: string;
   symbol: string;
   side: 'buy' | 'sell';
+  amount_units: number;
   amount_usd: number;
   timestamp: number;
 }
@@ -109,39 +110,51 @@ export class CopyTradeAnalyzer {
           mint: transfer.mint,
           symbol: transfer.mint.slice(0, 6),
           side,
+          amount_units: transfer.tokenAmount,
           amount_usd: amountUsd,
           timestamp: tx.timestamp,
         });
       }
     }
 
-    // Match buy/sell pairs per token to compute PnL
-    const buysByToken = new Map<string, TradeEntry[]>();
-    const sellsByToken = new Map<string, TradeEntry[]>();
+    // Average cost basis matching — more accurate than FIFO
+    trades.sort((a, b) => a.timestamp - b.timestamp);
+
+    const positions = new Map<string, { units: number; cost_usd: number; first_buy_ts: number }>();
+    const closedTrades: ClosedTrade[] = [];
 
     for (const trade of trades) {
-      const map = trade.side === 'buy' ? buysByToken : sellsByToken;
-      const existing = map.get(trade.mint) ?? [];
-      existing.push(trade);
-      map.set(trade.mint, existing);
-    }
+      const pos = positions.get(trade.mint) ?? { units: 0, cost_usd: 0, first_buy_ts: trade.timestamp };
 
-    const closedTrades: ClosedTrade[] = [];
-    for (const [mint, buys] of buysByToken) {
-      const sells = sellsByToken.get(mint) ?? [];
-      const pairs = Math.min(buys.length, sells.length);
-      for (let i = 0; i < pairs; i++) {
-        const buy = buys[i];
-        const sell = sells[i];
-        const holdTimeDays = Math.abs(sell.timestamp - buy.timestamp) / 86400;
+      if (trade.side === 'buy') {
+        pos.units += trade.amount_units;
+        pos.cost_usd += trade.amount_usd;
+        positions.set(trade.mint, pos);
+      } else if (trade.side === 'sell' && pos.units > 0) {
+        const avgCost = pos.cost_usd / pos.units;
+        const sellUnits = Math.min(trade.amount_units, pos.units);
+        const costOfSold = sellUnits * avgCost;
+        const pnl = trade.amount_usd - costOfSold;
+        const holdDays = Math.max(0, (trade.timestamp - pos.first_buy_ts) / 86400);
+
         closedTrades.push({
-          buy_token: mint,
-          sell_token: mint,
-          entry_usd: buy.amount_usd,
-          exit_usd: sell.amount_usd,
-          pnl_usd: sell.amount_usd - buy.amount_usd,
-          hold_time_days: holdTimeDays,
+          buy_token: trade.mint,
+          sell_token: trade.mint,
+          entry_usd: costOfSold,
+          exit_usd: trade.amount_usd,
+          pnl_usd: pnl,
+          hold_time_days: holdDays,
         });
+
+        // Reduce position proportionally
+        pos.units -= sellUnits;
+        pos.cost_usd -= costOfSold;
+        if (pos.units <= 0) {
+          pos.units = 0;
+          pos.cost_usd = 0;
+          pos.first_buy_ts = trade.timestamp;
+        }
+        positions.set(trade.mint, pos);
       }
     }
 
