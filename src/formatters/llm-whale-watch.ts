@@ -27,8 +27,9 @@ export function formatWhaleWatchBriefing(data: WhaleWatchEnrichment): string {
       const activityStr = whale.transaction_count > 0
         ? `${formatUsd(whale.total_volume_usd)} across ${whale.transaction_count} txs — ${whale.flow_direction}`
         : 'No recent activity';
+      const entityStr = whale.entity_label ? ` [${whale.entity_label}]` : '';
       lines.push(
-        `- ${shortenAddress(whale.address)}${balanceStr} | ${activityStr}`,
+        `- ${shortenAddress(whale.address)}${entityStr}${balanceStr} | ${activityStr}`,
       );
     }
     lines.push('');

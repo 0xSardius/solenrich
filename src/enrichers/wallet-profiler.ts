@@ -7,6 +7,7 @@ import { parallelFetch, type ParallelTask } from '../utils/parallel';
 import { formatTimestamp } from '../utils/normalize';
 import { labelWallet, type WalletData } from './labeler';
 import { scoreWalletRisk } from './risk-scorer';
+import { tagAddresses } from '../utils/entities';
 
 // --- Constants ---
 
@@ -56,7 +57,7 @@ export interface WalletEnrichment {
   risk_score: number;
   risk_level: string;
   risk_factors: string[];
-  connected_wallets: string[];
+  connected_wallets: Array<{ address: string; entity_label?: string; entity_type?: string }>;
   last_updated: string;
 }
 
@@ -251,7 +252,7 @@ export class WalletProfiler {
     });
 
     // Step 9: connected wallets (full depth only)
-    const connectedWallets: string[] = [];
+    const connectedWallets: Array<{ address: string; entity_label?: string; entity_type?: string }> = [];
     if (depth === 'full') {
       const counterparties = new Set<string>();
       for (const tx of enhancedTxs) {
@@ -264,7 +265,7 @@ export class WalletProfiler {
           if (tt.toUserAccount !== address) counterparties.add(tt.toUserAccount);
         }
       }
-      connectedWallets.push(...[...counterparties].slice(0, 20));
+      connectedWallets.push(...tagAddresses([...counterparties].slice(0, 20)));
     }
 
     // Step 10: assemble, cache, return

@@ -73,7 +73,15 @@ export function formatWalletBriefing(data: WalletEnrichment): string {
   }
 
   if (data.connected_wallets.length > 0) {
-    lines.push(`${data.connected_wallets.length} connected wallets identified.`);
+    const labeled = data.connected_wallets.filter((w) => w.entity_label);
+    const unlabeled = data.connected_wallets.length - labeled.length;
+    if (labeled.length > 0) {
+      const names = labeled.map((w) => `${w.entity_label} (${w.entity_type})`).join(', ');
+      lines.push(`Known connections: ${names}.`);
+    }
+    if (unlabeled > 0) {
+      lines.push(`${unlabeled} additional connected wallet(s).`);
+    }
   }
 
   lines.push('');

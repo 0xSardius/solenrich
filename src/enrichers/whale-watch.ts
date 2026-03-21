@@ -5,9 +5,12 @@ import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { parallelFetch, type ParallelTask } from '../utils/parallel';
 import { formatTimestamp } from '../utils/normalize';
+import { lookupEntity } from '../utils/entities';
 
 export interface WhaleActivity {
   address: string;
+  entity_label?: string;
+  entity_type?: string;
   balance_usd: number;
   pct_supply: number;
   transaction_count: number;
@@ -165,8 +168,10 @@ export class WhaleWatcher {
       totalAccumulation += buyVol;
       totalDistribution += sellVol;
 
+      const entity = lookupEntity(holder.walletAddress);
       return {
         address: holder.walletAddress,
+        ...(entity ? { entity_label: entity.label, entity_type: entity.type } : {}),
         balance_usd: holder.balance * tokenPrice,
         pct_supply: Math.round(holder.pctSupply * 100) / 100,
         transaction_count: vol?.count ?? 0,

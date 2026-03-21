@@ -2,9 +2,12 @@ import type { HeliusClient, EnhancedTransaction } from '../sources/helius';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { formatTimestamp, shortenAddress } from '../utils/normalize';
+import { lookupEntity } from '../utils/entities';
 
 export interface GraphNode {
   address: string;
+  entity_label?: string;
+  entity_type?: string;
   interaction_count: number;
   connection_strength: number;
   category: 'dex' | 'whale' | 'bot' | 'unknown';
@@ -135,11 +138,13 @@ export class GraphMapper {
       const maxInteractions = Math.max(...[...edgeMap.values()].map((d) => d.outCount + d.inCount), 1);
       const strength = Math.min(totalInteractions / maxInteractions, 1.0);
 
+      const entity = lookupEntity(counterparty);
       nodes.push({
         address: counterparty,
+        ...(entity ? { entity_label: entity.label, entity_type: entity.type } : {}),
         interaction_count: totalInteractions,
         connection_strength: Math.round(strength * 100) / 100,
-        category,
+        category: entity?.type === 'protocol' ? 'dex' : category,
       });
 
       edges.push({
