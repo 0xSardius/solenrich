@@ -318,11 +318,11 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] Entity labeling — known entities (CEX, protocol, bridge) tagged in wallet-graph, whale-watch, connected wallets (2026-03-21)
 
 ### Critical Bug Fixes
-- [ ] DeFi position values always $0 — calculate actual USD from token balances in wallet-profiler
-- [ ] TX signature schema wrong — `min(87).max(88)` rejects valid sigs, widen to `min(86).max(90)`
-- [ ] Only first 50 enhanced txs fetched — wallet-profiler truncates, causes mismatch with tx_count_30d
-- [ ] Sequential price fetches in copy-trade — parallelize with Promise.all
-- [ ] Holder resolution inconsistency — always return wallet addresses, never token account addresses on RPC failure
+- [x] DeFi position values — estimate USD from token balance changes instead of hardcoded 0 (2026-03-21)
+- [x] TX signature schema — widened to min(86)/max(90) to accept all valid sigs (2026-03-21)
+- [x] Enhanced txs — fetch all sigs in 100-chunk batches instead of truncating at 50 (2026-03-21)
+- [x] Copy-trade prices — parallelized with Promise.allSettled (2026-03-21)
+- [x] Holder resolution — retry once on failure, mark unresolved with is_token_account flag (2026-03-21)
 
 ### High-Value Additions
 - [ ] Multi-source price aggregation — median of Helius + DexScreener + Jupiter
