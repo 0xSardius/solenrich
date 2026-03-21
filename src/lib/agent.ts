@@ -36,6 +36,7 @@ import { registerBatchEntrypoint } from "../entrypoints/batch";
 import { registerGraphEntrypoint } from "../entrypoints/graph";
 import { registerCopyTradeEntrypoint } from "../entrypoints/copy-trade";
 import { registerDueDiligenceEntrypoint } from "../entrypoints/due-diligence";
+import { registerQueryEntrypoint } from "../entrypoints/query";
 import { CONFIG, PRICING } from "../config";
 
 // --- Agent setup ---
@@ -93,6 +94,7 @@ if (PAYMENTS_ENABLED) {
     "POST /entrypoints/wallet-graph/invoke": routeConfig(PRICING["wallet-graph"]),
     "POST /entrypoints/copy-trade-signals/invoke": routeConfig(PRICING["copy-trade-signals"]),
     "POST /entrypoints/due-diligence/invoke": routeConfig(PRICING["due-diligence"]),
+    "POST /entrypoints/query/invoke": routeConfig(PRICING["query"]),
   };
 
   app.use("/entrypoints/*", paymentMiddleware(x402Routes, resourceServer));
@@ -131,6 +133,9 @@ registerBatchEntrypoint(addEntrypoint, walletProfiler, tokenAnalyzer);
 registerGraphEntrypoint(addEntrypoint, graphMapper);
 registerCopyTradeEntrypoint(addEntrypoint, copyTradeAnalyzer);
 registerDueDiligenceEntrypoint(addEntrypoint, dueDiligenceAnalyzer);
+
+// NL query (routes to the right enricher based on keyword matching)
+registerQueryEntrypoint(addEntrypoint, walletProfiler, tokenAnalyzer, txParser, whaleWatcher, dueDiligenceAnalyzer, copyTradeAnalyzer, graphMapper);
 
 // --- Agent Card discovery metadata ---
 
