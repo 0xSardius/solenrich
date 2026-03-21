@@ -302,17 +302,20 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] Upstash Redis for prod caching (2026-03-17)
 - [x] Richer 402 response body — pricing, payment instructions, endpoint menu (2026-03-17)
 - [x] Hardened enrichment — holder concentration, whale-watch rewrite, risk levels (2026-03-17)
+- [x] Entity labeling — known wallets (CEX, protocol, bridge) tagged in all enrichment results (2026-03-21)
+- [x] Copy-trade PnL fix — average cost basis instead of FIFO (2026-03-21)
+- [x] Query endpoint — NL questions routed to enrichers via keyword matching (2026-03-21)
 - [ ] Custom domain (`api.solenrich.xyz` or `solenrich.parallaxlabs.xyz`)
 - [ ] MCP directory submissions (Smithery, mcp.run, Glama) — free distribution to Claude/Cursor users
 - [ ] x402 bazaar listing — trigger by making a paid request through the facilitator
 - [ ] XGATE registration for agent-to-agent discovery
 
 ### Feature Upgrades
-- [ ] `query` endpoint — accepts freeform NL questions as *input*, routes through LLM to pick enricher and compose answer (note: LLM *output* format already works on all endpoints via `format: "llm"`)
+- [x] `query` endpoint — accepts freeform NL questions, routes via keyword matching to the right enricher (2026-03-21)
 - [ ] Webhook/SSE streaming — real-time whale alerts, token movement notifications (`src/realtime/` scaffolded but empty)
 - [ ] Portfolio tracker — historical wallet value over time using Helius tx history + price snapshots
 - [ ] Token comparison — side-by-side analysis of 2-3 tokens (liquidity, holder distribution, risk)
-- [ ] Cluster labeling — expand wallet-graph to label known entities (CEX hot wallets, MEV bots, protocol treasuries)
+- [x] Entity labeling — known entities (CEX, protocol, bridge) tagged in wallet-graph, whale-watch, connected wallets (2026-03-21)
 
 ### Infrastructure
 - [ ] Rate limiting — protect upstream APIs, per-IP or per-wallet throttling

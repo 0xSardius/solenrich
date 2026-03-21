@@ -1,40 +1,39 @@
 # Session Checkpoint
 
 ## Last session date
-2026-03-17
+2026-03-21
 
 ## What was completed
-- **Upstash Redis** connected in production — cache persists across deploys
-- **Enriched 402 response bodies** — every endpoint now returns pricing, payment instructions, facilitator URL, and full endpoint menu on 402
-- **Hardened enrichment endpoints:**
-  - Token analyzer: fetches top 20 holders via `getTokenLargestAccounts`, computes concentration metrics (top1/top5/top10 %), adds `high_concentration` and `whale_dominated` risk flags
-  - Whale watch: **rewritten** from broken mint-signature strategy to holder-based approach — finds top holders, queries their token account activity, tracks buy/sell volumes per whale with balance and supply context
-  - Risk scorer: added risk level labels (LOW/MODERATE/ELEVATED/HIGH/CRITICAL), centralized `scoreTokenRisk()` for token and due-diligence use
-  - Due diligence: uses centralized token risk scoring with holder concentration factors, exposes `risk_level` and detailed `risk_factors`
-  - Wallet profiler: exposes `risk_level` alongside `risk_score`
-  - All formatters updated with holder concentration, risk levels, buy/sell breakdowns
-  - Solana RPC: added `getTokenLargestAccounts` (with retry/fallback) and `resolveTokenAccountOwners`
-  - Graceful degradation: tokens with millions of holders (USDC, SOL) skip concentration; all new RPC calls have fallbacks
+- **Entity labeling** — static map of 20+ known Solana addresses (Binance, Coinbase, OKX, Jupiter, Raydium, Orca, Wormhole, etc.) tagged in wallet connected_wallets, whale-watch holders, and graph nodes
+- **Copy-trade PnL fix** — replaced broken FIFO matching with average cost basis. Tracks per-token position cost and computes PnL on each sell against the running average
+- **Query endpoint** — `/entrypoints/query/invoke` accepts freeform NL questions ("is X safe?", "wallet profile for X", "whales for X"), parses intent via keyword/regex matching, routes to the correct enricher. Returns helpful error with examples if intent unclear. Price: $0.003
+- Social launch: DONE
+- XGATE: not picking up Solana agents yet
 
 ## Current state
 - **Live API:** https://solenrich-production.up.railway.app/
+- **MCP endpoint:** https://solenrich-production.up.railway.app/mcp
 - **Landing page:** https://landing-rho-six.vercel.app
 - **Payments:** ENABLED — enriched 402 responses with pricing info
 - **Cache:** Upstash Redis (production), in-memory (dev)
 - **8004 identity:** Registered on mainnet
-- **All 12 phases COMPLETE + post-launch hardening in progress**
+- **Endpoints:** 11 total (10 original + query)
+- **All 12 phases COMPLETE + post-launch hardening done**
 
 ## Post-launch todo
-- ~~Upstash Redis for production caching~~ DONE
-- ~~Richer 402 response body~~ DONE
-- ~~Harden enrichment endpoints~~ DONE (holder concentration, whale-watch fix, risk levels)
-- MCP directory submissions (Smithery, mcp.run, Glama)
-- Test MCP server with Claude Desktop
-- x402 bazaar listing (auto-lists on first paid request through facilitator)
-- XGATE registration for agent-to-agent discovery
-- `query` endpoint (NL inference via Daydreams Router)
-- Social announcements
-- Bags hackathon submission
+- ~~Upstash Redis~~ DONE
+- ~~Enriched 402 responses~~ DONE
+- ~~Hardened endpoints~~ DONE
+- ~~Entity labeling~~ DONE
+- ~~Copy-trade FIFO fix~~ DONE
+- ~~Query endpoint~~ DONE
+- ~~Social launch~~ DONE
+- MCP directory submissions (Smithery had connection issues, try again)
+- XGATE registration (not picking up Solana yet)
+- Webhook/SSE streaming — real-time whale alerts
+- Rate limiting
+- Usage analytics
+- Test suite in CI (GitHub Actions)
 
 ## Key values
 - **Agent Asset:** 5rsdgYL8mETFm785mXpEMYftjSE3H4JSqFANhJ4BoTHk
