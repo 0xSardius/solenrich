@@ -317,6 +317,20 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [ ] Token comparison — side-by-side analysis of 2-3 tokens (liquidity, holder distribution, risk)
 - [x] Entity labeling — known entities (CEX, protocol, bridge) tagged in wallet-graph, whale-watch, connected wallets (2026-03-21)
 
+### Critical Bug Fixes
+- [ ] DeFi position values always $0 — calculate actual USD from token balances in wallet-profiler
+- [ ] TX signature schema wrong — `min(87).max(88)` rejects valid sigs, widen to `min(86).max(90)`
+- [ ] Only first 50 enhanced txs fetched — wallet-profiler truncates, causes mismatch with tx_count_30d
+- [ ] Sequential price fetches in copy-trade — parallelize with Promise.all
+- [ ] Holder resolution inconsistency — always return wallet addresses, never token account addresses on RPC failure
+
+### High-Value Additions
+- [ ] Multi-source price aggregation — median of Helius + DexScreener + Jupiter
+- [ ] Holder concentration entropy — Herfindahl index alongside top-N percentages
+- [ ] Price volatility metrics — 7d rolling volatility, not just 24h change
+- [ ] Risk-adjusted returns for copy-trade — Sharpe ratio, max drawdown
+- [ ] Liquidity depth analysis — bid/ask depth, slippage estimates
+
 ### Infrastructure
 - [ ] Rate limiting — protect upstream APIs, per-IP or per-wallet throttling
 - [ ] Usage analytics — track endpoint calls, response times, error rates (Axiom or simple logging)
