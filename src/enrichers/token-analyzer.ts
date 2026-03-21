@@ -88,15 +88,26 @@ export class TokenAnalyzer {
           largestAccounts.map((a) => a.address),
         );
       } catch {
-        // Fallback: use token account addresses directly
-        ownerMap = largestAccounts.map((a) => ({ tokenAccount: a.address, owner: null }));
+        // Retry once — owner resolution is important for data consistency
+        try {
+          ownerMap = await this.solanaRpc.resolveTokenAccountOwners(
+            largestAccounts.map((a) => a.address),
+          );
+        } catch {
+          ownerMap = largestAccounts.map((a) => ({ tokenAccount: a.address, owner: null }));
+        }
       }
 
-      topHolders = largestAccounts.map((account, i) => ({
-        address: ownerMap[i]?.owner ?? account.address,
-        balance: account.uiAmount,
-        pct_supply: (account.uiAmount / supply) * 100,
-      }));
+      topHolders = largestAccounts.map((account, i) => {
+        const owner = ownerMap[i]?.owner;
+        return {
+          address: owner ?? account.address,
+          balance: account.uiAmount,
+          pct_supply: (account.uiAmount / supply) * 100,
+          // Mark if we couldn't resolve the owner — consumers can filter on this
+          ...(owner ? {} : { is_token_account: true }),
+        };
+      });
 
       const top1 = topHolders[0]?.pct_supply ?? 0;
       const top5 = topHolders.slice(0, 5).reduce((sum, h) => sum + h.pct_supply, 0);

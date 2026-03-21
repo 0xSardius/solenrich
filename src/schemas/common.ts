@@ -18,8 +18,8 @@ export type SolanaAddress = z.infer<typeof SolanaAddressSchema>;
 
 export const TxSignatureSchema = z
   .string()
-  .min(87)
-  .max(88)
+  .min(86)
+  .max(90)
   .regex(BASE58_REGEX, 'Invalid transaction signature: must be base58');
 export type TxSignature = z.infer<typeof TxSignatureSchema>;
 

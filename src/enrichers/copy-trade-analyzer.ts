@@ -82,15 +82,15 @@ export class CopyTradeAnalyzer {
       }
     }
 
-    // Batch fetch prices from DexScreener
+    // Parallel price fetch from DexScreener
+    const mintList = [...swapMints];
     const mintPrices = new Map<string, number>();
-    for (const mint of swapMints) {
-      try {
-        const price = await this.dexscreener.getTokenPrice(mint);
-        mintPrices.set(mint, price);
-      } catch {
-        mintPrices.set(mint, 0);
-      }
+    const priceResults = await Promise.allSettled(
+      mintList.map((mint) => this.dexscreener.getTokenPrice(mint)),
+    );
+    for (let i = 0; i < mintList.length; i++) {
+      const result = priceResults[i];
+      mintPrices.set(mintList[i], result.status === 'fulfilled' ? result.value : 0);
     }
 
     // Extract swap trades

@@ -90,14 +90,21 @@ export class WalletProfiler {
     const assets = fetched.assets as HeliusAssetList | null;
     const signatures = (fetched.signatures as Array<{ signature: string; slot: number; blockTime: number | null }>) ?? [];
 
-    // Fetch enhanced txs for full depth (need signatures first)
+    // Fetch enhanced txs for full depth — batch in chunks of 100 (Helius limit)
     let enhancedTxs: EnhancedTransaction[] = [];
     if (depth === 'full' && signatures.length > 0) {
-      const sigs = signatures.slice(0, 50).map((s) => s.signature);
-      try {
-        enhancedTxs = await this.helius.getEnhancedTransactions(sigs);
-      } catch (e) {
-        console.warn('[wallet-profiler] Enhanced txs fetch failed:', e);
+      const allSigs = signatures.map((s) => s.signature);
+      const chunks: string[][] = [];
+      for (let i = 0; i < allSigs.length; i += 100) {
+        chunks.push(allSigs.slice(i, i + 100));
+      }
+      const chunkResults = await Promise.allSettled(
+        chunks.map((chunk) => this.helius.getEnhancedTransactions(chunk)),
+      );
+      for (const result of chunkResults) {
+        if (result.status === 'fulfilled') {
+          enhancedTxs.push(...result.value);
+        }
       }
     }
 
@@ -190,21 +197,43 @@ export class WalletProfiler {
       protocolsInteracted.push(...programIds);
     }
 
-    // Step 6: DeFi positions (full depth only)
+    // Step 6: DeFi positions (full depth only) — estimate USD values from token balance changes
     const defiPositions: Array<{ protocol: string; type: string; value_usd: number }> = [];
     if (depth === 'full') {
-      const protocolInteractions = new Map<string, string>();
+      const protocolData = new Map<string, { type: string; volumeUsd: number }>();
       for (const tx of enhancedTxs) {
         for (const ad of tx.accountData ?? []) {
           const proto = KNOWN_PROTOCOLS[ad.account];
-          if (proto) {
-            const txType = tx.type === 'SWAP' ? 'swap' : 'stake';
-            protocolInteractions.set(proto, txType);
+          if (!proto) continue;
+
+          const txType = tx.type === 'SWAP' ? 'swap' : tx.type === 'TRANSFER' ? 'transfer' : 'stake';
+          const existing = protocolData.get(proto) ?? { type: txType, volumeUsd: 0 };
+
+          // Sum absolute token balance changes as a proxy for protocol interaction value
+          for (const tbc of ad.tokenBalanceChanges ?? []) {
+            const rawAmount = Math.abs(Number((tbc as any).rawTokenAmount?.tokenAmount ?? 0));
+            const decimals = Number((tbc as any).rawTokenAmount?.decimals ?? 0);
+            const units = decimals > 0 ? rawAmount / 10 ** decimals : rawAmount;
+            const mint = (tbc as any).mint as string | undefined;
+            if (mint && units > 0) {
+              // Use holdings price if we have it, otherwise skip
+              const holding = holdingsRaw.find((h) => h.mint === mint);
+              if (holding && holding.balance > 0) {
+                const pricePerUnit = holding.usd_value / holding.balance;
+                existing.volumeUsd += units * pricePerUnit;
+              }
+            }
           }
+
+          protocolData.set(proto, existing);
         }
       }
-      for (const [protocol, type] of protocolInteractions) {
-        defiPositions.push({ protocol, type, value_usd: 0 });
+      for (const [protocol, data] of protocolData) {
+        defiPositions.push({
+          protocol,
+          type: data.type,
+          value_usd: Math.round(data.volumeUsd * 100) / 100,
+        });
       }
     }
 
