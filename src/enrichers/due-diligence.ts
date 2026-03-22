@@ -51,6 +51,7 @@ export class DueDiligenceAnalyzer {
       liquidity: token.liquidity,
       holder_concentration_top1: token.concentration?.top1_pct,
       holder_concentration_top5: token.concentration?.top5_pct,
+      herfindahl_index: token.concentration?.herfindahl_index,
       whale_distributing: whales?.net_flow_direction === 'distributing',
     });
 

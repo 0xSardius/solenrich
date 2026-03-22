@@ -95,6 +95,7 @@ export interface TokenRiskInput {
   liquidity: number;
   holder_concentration_top1?: number;
   holder_concentration_top5?: number;
+  herfindahl_index?: number;
   whale_distributing?: boolean;
 }
 
@@ -148,6 +149,15 @@ export function scoreTokenRisk(data: TokenRiskInput): RiskResult {
   if (data.holder_concentration_top5 != null && data.holder_concentration_top5 > 80) {
     score += 0.15;
     factors.push(`Top 5 holders control ${data.holder_concentration_top5.toFixed(1)}% of supply`);
+  }
+
+  // Herfindahl index — captures concentration shape better than top-N alone
+  if (data.herfindahl_index != null && data.herfindahl_index > 2500) {
+    score += 0.15;
+    factors.push(`Highly concentrated ownership (HHI: ${data.herfindahl_index})`);
+  } else if (data.herfindahl_index != null && data.herfindahl_index > 1500) {
+    score += 0.05;
+    factors.push(`Moderately concentrated ownership (HHI: ${data.herfindahl_index})`);
   }
 
   // Whale distribution

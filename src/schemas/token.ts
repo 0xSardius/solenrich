@@ -27,6 +27,7 @@ export const TokenEnrichmentSchema = z.object({
     top1_pct: z.number(),
     top5_pct: z.number(),
     top10_pct: z.number(),
+    herfindahl_index: z.number(),
   }).optional(),
   liquidity: z.number(),
   risk_flags: z.array(z.string()),

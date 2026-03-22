@@ -38,11 +38,14 @@ export function formatTokenBriefing(data: TokenEnrichment): string {
   // Holder concentration
   if (data.concentration) {
     lines.push('### Holder Concentration');
+    const hhi = data.concentration.herfindahl_index;
+    const hhiLabel = hhi > 2500 ? 'Highly concentrated' : hhi > 1500 ? 'Moderately concentrated' : 'Well distributed';
     lines.push(`Top holder: ${data.concentration.top1_pct.toFixed(1)}% of supply. Top 5: ${data.concentration.top5_pct.toFixed(1)}%. Top 10: ${data.concentration.top10_pct.toFixed(1)}%.`);
-    if (data.concentration.top1_pct > 50) {
+    lines.push(`HHI: ${hhi} — ${hhiLabel}.`);
+    if (hhi > 2500) {
+      lines.push('⚠ Ownership is highly concentrated — elevated rug-pull risk.');
+    } else if (data.concentration.top1_pct > 50) {
       lines.push('⚠ Single holder controls majority of supply.');
-    } else if (data.concentration.top5_pct > 80) {
-      lines.push('⚠ Supply highly concentrated among top 5 holders.');
     }
     if (data.top_holders && data.top_holders.length > 0) {
       const top3 = data.top_holders.slice(0, 3);

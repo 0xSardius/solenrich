@@ -25,12 +25,15 @@ export function formatDueDiligenceBriefing(data: DueDiligenceEnrichment): string
   // Holder concentration
   if (t.concentration) {
     lines.push('### Holder Concentration');
+    const hhi = t.concentration.herfindahl_index;
+    const hhiLabel = hhi > 2500 ? 'Highly concentrated' : hhi > 1500 ? 'Moderately concentrated' : 'Well distributed';
     lines.push(`Top holder: ${t.concentration.top1_pct.toFixed(1)}% of supply. Top 5: ${t.concentration.top5_pct.toFixed(1)}%. Top 10: ${t.concentration.top10_pct.toFixed(1)}%.`);
-    if (t.concentration.top1_pct > 50) {
-      lines.push('⚠ Single holder controls majority of supply — high rug-pull risk.');
-    } else if (t.concentration.top5_pct > 80) {
-      lines.push('⚠ Supply highly concentrated among top holders.');
-    } else if (t.concentration.top10_pct < 30) {
+    lines.push(`Concentration index (HHI): ${hhi} — ${hhiLabel}.`);
+    if (hhi > 2500) {
+      lines.push('⚠ Ownership is highly concentrated — elevated rug-pull risk.');
+    } else if (t.concentration.top1_pct > 50) {
+      lines.push('⚠ Single holder controls majority of supply.');
+    } else if (hhi < 1500) {
       lines.push('Supply is well-distributed across holders.');
     }
     lines.push('');

@@ -13,6 +13,7 @@ export interface HolderConcentration {
   top1_pct: number;
   top5_pct: number;
   top10_pct: number;
+  herfindahl_index: number;  // 0-10000: <1500 = distributed, 1500-2500 = moderate, >2500 = concentrated
 }
 
 export interface TokenEnrichment {
@@ -113,10 +114,14 @@ export class TokenAnalyzer {
       const top5 = topHolders.slice(0, 5).reduce((sum, h) => sum + h.pct_supply, 0);
       const top10 = topHolders.slice(0, 10).reduce((sum, h) => sum + h.pct_supply, 0);
 
+      // Herfindahl-Hirschman Index: sum of squared percentages (0-10000 scale)
+      const hhi = topHolders.reduce((sum, h) => sum + h.pct_supply ** 2, 0);
+
       concentration = {
         top1_pct: Math.round(top1 * 100) / 100,
         top5_pct: Math.round(top5 * 100) / 100,
         top10_pct: Math.round(top10 * 100) / 100,
+        herfindahl_index: Math.round(hhi),
       };
     }
 
