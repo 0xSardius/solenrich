@@ -1,21 +1,21 @@
 # Session Checkpoint
 
 ## Last session date
-2026-03-21
+2026-03-22
 
 ## What was completed
-- **Entity labeling** — static map of 20+ known Solana addresses (Binance, Coinbase, OKX, Jupiter, Raydium, Orca, Wormhole, etc.) tagged in wallet connected_wallets, whale-watch holders, and graph nodes
-- **Copy-trade FIFO fix** — replaced broken FIFO matching with average cost basis. Tracks per-token position cost and computes PnL on each sell against running average
-- **Query endpoint** — `/entrypoints/query/invoke` accepts freeform NL questions, parses intent via keyword matching, routes to correct enricher. Price: $0.003. 11 endpoints total now.
-- **5 critical bug fixes:**
-  1. DeFi position values: estimate USD from token balance changes instead of hardcoded $0
-  2. TX signature schema: widened to min(86)/max(90) to accept all valid sigs
-  3. Enhanced txs: fetch all sigs in 100-chunk batches instead of truncating at 50
-  4. Copy-trade prices: parallelized with Promise.allSettled (10-50x faster)
-  5. Holder resolution: retry once on failure, mark unresolved with is_token_account flag
-- **Comprehensive code review** completed — identified data accuracy gaps and high-value additions
-- Social launch: DONE
-- XGATE: not picking up Solana agents yet
+- **Multi-source price aggregation** — new PriceAggregator utility fetches DexScreener + Jupiter in parallel, combines with Helius DAS price_info, returns median. Integrated into wallet-profiler (batch), whale-watch, and copy-trade. All USD figures across all endpoints now use aggregated prices.
+- **Herfindahl-Hirschman Index (HHI)** — measures ownership concentration shape (0-10000 scale). <1500 = distributed, 1500-2500 = moderate, >2500 = concentrated. Added to token enrichment, due-diligence risk scoring, and LLM formatters.
+
+## Test results (2026-03-22)
+- Health + 11 entrypoints: PASS
+- Token + HHI (JTO: HHI=567, top1=21.2%): PASS
+- Query → due-diligence with HHI in briefing: PASS
+- Wallet enrichment (portfolio $3.51, risk LOW): PASS
+- MCP HTTP transport: PASS
+- Input validation (short sig rejected): PASS
+- Unknown query (helpful error): PASS
+- Type check: PASS
 
 ## Current state
 - **Live API:** https://solenrich-production.up.railway.app/
@@ -25,21 +25,8 @@
 - **Cache:** Upstash Redis (production), in-memory (dev)
 - **8004 identity:** Registered on mainnet
 - **Endpoints:** 11 total (10 original + query)
-- **All 12 phases COMPLETE + post-launch hardening + critical bugs fixed**
 
-## Test results (2026-03-21)
-- Health + 11 entrypoints: PASS
-- Holder concentration (JTO): PASS — top1=21.2%, top5=36.7%, top10=46.8%
-- Entity labeling: PASS — Binance Hot Wallet tagged in JTO whale results
-- Query endpoint routing: PASS — "whales for X" → whale-watch, "is X safe?" → due-diligence
-- TX schema validation: PASS — valid sigs accepted, short sigs rejected
-- Copy-trade parallelization: PASS — 0.8s response
-- MCP HTTP transport: PASS — 7 tools registered
-- DeFi positions: PARTIAL — code runs but test wallet has no active DeFi to validate USD values
-
-## Next up: High-Value Additions
-- [ ] Multi-source price aggregation (Helius + DexScreener + Jupiter median)
-- [ ] Holder concentration entropy (Herfindahl index)
+## Next up: Remaining High-Value Additions
 - [ ] Price volatility metrics (7d rolling)
 - [ ] Risk-adjusted returns for copy-trade (Sharpe ratio, max drawdown)
 - [ ] Liquidity depth analysis (bid/ask depth, slippage)
