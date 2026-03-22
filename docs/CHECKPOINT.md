@@ -4,18 +4,22 @@
 2026-03-22
 
 ## What was completed
-- **Multi-source price aggregation** — new PriceAggregator utility fetches DexScreener + Jupiter in parallel, combines with Helius DAS price_info, returns median. Integrated into wallet-profiler (batch), whale-watch, and copy-trade. All USD figures across all endpoints now use aggregated prices.
-- **Herfindahl-Hirschman Index (HHI)** — measures ownership concentration shape (0-10000 scale). <1500 = distributed, 1500-2500 = moderate, >2500 = concentrated. Added to token enrichment, due-diligence risk scoring, and LLM formatters.
+- **Multi-source price aggregation** — PriceAggregator fetches DexScreener + Jupiter in parallel, combines with Helius DAS price_info, returns median. Integrated into wallet-profiler (batch), whale-watch, copy-trade.
+- **Herfindahl-Hirschman Index (HHI)** — ownership concentration shape (0-10000). <1500 = distributed, 1500-2500 = moderate, >2500 = concentrated. Feeds into due-diligence risk scoring.
+- **Price volatility metrics** — daily std dev, 7d high/low range, LOW/MODERATE/HIGH/EXTREME classification. Computed from DexScreener multi-timeframe data (zero extra API calls).
+- **Risk-adjusted returns** — Sharpe ratio, Sortino ratio, max drawdown (% and USD), profit factor. Added to copy-trade endpoint. New labels: high_risk, strong_edge.
 
 ## Test results (2026-03-22)
-- Health + 11 entrypoints: PASS
-- Token + HHI (JTO: HHI=567, top1=21.2%): PASS
-- Query → due-diligence with HHI in briefing: PASS
-- Wallet enrichment (portfolio $3.51, risk LOW): PASS
-- MCP HTTP transport: PASS
-- Input validation (short sig rejected): PASS
-- Unknown query (helpful error): PASS
-- Type check: PASS
+1. Health endpoint: PASS
+2. 11 entrypoints registered: PASS
+3. Token + HHI + volatility (JTO: HHI=567, 2.87% std LOW): PASS
+4. Query → due-diligence with HHI: PASS
+5. Wallet enrichment ($3.52, risk LOW): PASS
+6. Copy-trade risk-adjusted (0 trades = N/A, graceful): PASS
+7. MCP HTTP transport: PASS
+8. Entity labeling (Binance tagged in whale results): PASS
+9. Input validation (short sig rejected): PASS
+10. Type check: PASS
 
 ## Current state
 - **Live API:** https://solenrich-production.up.railway.app/
@@ -26,16 +30,15 @@
 - **8004 identity:** Registered on mainnet
 - **Endpoints:** 11 total (10 original + query)
 
-## Next up: Remaining High-Value Additions
-- [ ] Price volatility metrics (7d rolling)
-- [ ] Risk-adjusted returns for copy-trade (Sharpe ratio, max drawdown)
-- [ ] Liquidity depth analysis (bid/ask depth, slippage)
+## Remaining high-value additions
+- [ ] Liquidity depth analysis (bid/ask depth, slippage estimates)
 
 ## Other remaining items
 - MCP directory submissions (Smithery had connection issues)
 - XGATE registration (not picking up Solana yet)
 - Rate limiting, usage analytics, CI tests
 - Webhook/SSE streaming
+- Landing page update (new features not reflected yet)
 
 ## Key values
 - **Agent Asset:** 5rsdgYL8mETFm785mXpEMYftjSE3H4JSqFANhJ4BoTHk
