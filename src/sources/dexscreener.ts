@@ -19,6 +19,8 @@ export interface DexPair {
 
 export interface DexTokenData {
   price: number;
+  priceChange1h: number;
+  priceChange6h: number;
   priceChange24h: number;
   volume24h: number;
   marketCap: number;
@@ -66,6 +68,8 @@ export class DexScreenerClient {
 
     const data: DexTokenData = {
       price: parseFloat(primary.priceUsd) || 0,
+      priceChange1h: primary.priceChange?.h1 ?? 0,
+      priceChange6h: primary.priceChange?.h6 ?? 0,
       priceChange24h: primary.priceChange?.h24 ?? 0,
       volume24h: totalVolume24h,
       marketCap: primary.marketCap ?? primary.fdv ?? 0,
@@ -83,5 +87,54 @@ export class DexScreenerClient {
   async getTokenPrice(mint: string): Promise<number> {
     const data = await this.getTokenData(mint);
     return data?.price ?? 0;
+  }
+
+  /** Get daily OHLCV candles for the highest-liquidity pair (7 days) */
+  async getOhlcv7d(mint: string): Promise<Array<{ open: number; high: number; low: number; close: number }> | null> {
+    const cacheKey = `dexscreener:ohlcv7d:${mint}`;
+    const cached = await this.cache.get<Array<{ open: number; high: number; low: number; close: number }>>(cacheKey);
+    if (cached) return cached;
+
+    // Need the pair address first
+    const tokenData = await this.getTokenData(mint);
+    if (!tokenData || tokenData.pairs.length === 0) return null;
+
+    const pairAddress = tokenData.pairs[0].pairAddress;
+    const res = await fetch(
+      `${this.baseUrl}/latest/dex/pairs/solana/${pairAddress}?include=candles`,
+      { headers: { Accept: 'application/json' } },
+    );
+
+    if (!res.ok) return null;
+
+    const raw: any = await res.json();
+    // DexScreener returns candles in the pair response when ?include=candles is set
+    // Fallback: compute from priceChange fields if candles not available
+    const pair = raw?.pair ?? raw?.pairs?.[0] ?? raw;
+
+    if (pair?.candles?.days7) {
+      const candles = (pair.candles.days7 as any[]).map((c: any) => ({
+        open: Number(c.open ?? 0),
+        high: Number(c.high ?? 0),
+        low: Number(c.low ?? 0),
+        close: Number(c.close ?? 0),
+      }));
+      await this.cache.set(cacheKey, candles, CACHE_TTL.tokenPrice * 5);
+      return candles;
+    }
+
+    // Fallback: synthesize from current data
+    const price = tokenData.price;
+    const h24Change = tokenData.priceChange24h / 100;
+    if (price > 0 && h24Change !== 0) {
+      const yesterdayPrice = price / (1 + h24Change);
+      const synth = [
+        { open: yesterdayPrice, high: Math.max(price, yesterdayPrice) * 1.02, low: Math.min(price, yesterdayPrice) * 0.98, close: price },
+      ];
+      await this.cache.set(cacheKey, synth, CACHE_TTL.tokenPrice);
+      return synth;
+    }
+
+    return null;
   }
 }

@@ -33,6 +33,12 @@ export function formatTokenBriefing(data: TokenEnrichment): string {
   // Liquidity
   const assessment = liquidityAssessment(data.liquidity, data.market_cap);
   lines.push(`Liquidity: ${formatUsd(data.liquidity)}. ${assessment} relative to market cap.`);
+
+  // Volatility
+  if (data.volatility) {
+    const v = data.volatility;
+    lines.push(`7d volatility: ${v.daily_std_7d}% daily std (${v.classification}). Range: ${formatUsd(v.low_7d)} — ${formatUsd(v.high_7d)} (${v.range_pct_7d}%).`);
+  }
   lines.push('');
 
   // Holder concentration

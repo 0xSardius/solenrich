@@ -18,6 +18,13 @@ export const TokenEnrichmentSchema = z.object({
   market_cap: z.number(),
   volume_24h: z.number(),
   price_change_24h: z.number(),
+  volatility: z.object({
+    daily_std_7d: z.number(),
+    high_7d: z.number(),
+    low_7d: z.number(),
+    range_pct_7d: z.number(),
+    classification: z.enum(['LOW', 'MODERATE', 'HIGH', 'EXTREME']),
+  }).optional(),
   top_holders: z.array(z.object({
     address: z.string(),
     balance: z.number(),

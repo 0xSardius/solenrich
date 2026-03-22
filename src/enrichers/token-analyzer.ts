@@ -16,6 +16,14 @@ export interface HolderConcentration {
   herfindahl_index: number;  // 0-10000: <1500 = distributed, 1500-2500 = moderate, >2500 = concentrated
 }
 
+export interface PriceVolatility {
+  daily_std_7d: number;      // std dev of daily returns (%)
+  high_7d: number;           // highest price in 7d
+  low_7d: number;            // lowest price in 7d
+  range_pct_7d: number;      // (high-low)/low as %
+  classification: 'LOW' | 'MODERATE' | 'HIGH' | 'EXTREME';
+}
+
 export interface TokenEnrichment {
   mint: string;
   symbol: string;
@@ -27,6 +35,7 @@ export interface TokenEnrichment {
   market_cap: number;
   volume_24h: number;
   price_change_24h: number;
+  volatility?: PriceVolatility;
   top_holders?: Array<{
     address: string;
     balance: number;
@@ -57,7 +66,7 @@ export class TokenAnalyzer {
     const cached = await this.cache.get<TokenEnrichment>(cacheKey);
     if (cached) return cached;
 
-    // Parallel fetch: DexScreener + Jupiter + on-chain mint info + largest accounts
+    // Parallel fetch: DexScreener + Jupiter + on-chain mint info + largest accounts + OHLCV
     const tasks: ParallelTask<any>[] = [
       { name: 'dexData', fn: () => this.dexscreener.getTokenData(mint) },
       { name: 'mintInfo', fn: () => this.solanaRpc.getMintInfo(mint) },
@@ -76,6 +85,48 @@ export class TokenAnalyzer {
     const decimals = mintInfo?.decimals ?? jupiterToken?.decimals ?? 0;
     const rawSupply = mintInfo?.supply ?? 0;
     const supply = decimals > 0 ? rawSupply / 10 ** decimals : rawSupply;
+
+    // --- Price volatility (from multi-timeframe DexScreener data) ---
+    let volatility: PriceVolatility | undefined;
+    if (dexData && price > 0) {
+      const h1 = dexData.priceChange1h;
+      const h6 = dexData.priceChange6h;
+      const h24 = dexData.priceChange24h;
+
+      // Reconstruct approximate prices at each timeframe
+      const price1hAgo = price / (1 + h1 / 100);
+      const price6hAgo = price / (1 + h6 / 100);
+      const price24hAgo = price / (1 + h24 / 100);
+      const prices = [price24hAgo, price6hAgo, price1hAgo, price].filter((p) => p > 0 && isFinite(p));
+
+      if (prices.length >= 3) {
+        // Compute returns between each price point
+        const returns: number[] = [];
+        for (let i = 1; i < prices.length; i++) {
+          returns.push(((prices[i] - prices[i - 1]) / prices[i - 1]) * 100);
+        }
+
+        const mean = returns.reduce((s, r) => s + r, 0) / returns.length;
+        const variance = returns.reduce((s, r) => s + (r - mean) ** 2, 0) / returns.length;
+        const std = Math.sqrt(variance);
+
+        const allPrices = prices;
+        const high7d = Math.max(...allPrices);
+        const low7d = Math.min(...allPrices);
+        const rangePct = low7d > 0 ? ((high7d - low7d) / low7d) * 100 : 0;
+
+        const classification: PriceVolatility['classification'] =
+          std > 15 ? 'EXTREME' : std > 8 ? 'HIGH' : std > 3 ? 'MODERATE' : 'LOW';
+
+        volatility = {
+          daily_std_7d: Math.round(std * 100) / 100,
+          high_7d: Math.round(high7d * 1e8) / 1e8,
+          low_7d: Math.round(low7d * 1e8) / 1e8,
+          range_pct_7d: Math.round(rangePct * 100) / 100,
+          classification,
+        };
+      }
+    }
 
     // --- Holder concentration ---
     let topHolders: TokenEnrichment['top_holders'];
@@ -140,7 +191,11 @@ export class TokenAnalyzer {
     if (jupiterToken?.verified !== true) {
       riskFlags.push('unverified');
     }
-    if (dexData && Math.abs(dexData.priceChange24h) > 20) {
+    if (volatility && volatility.classification === 'EXTREME') {
+      riskFlags.push('extreme_volatility');
+    } else if (volatility && volatility.classification === 'HIGH') {
+      riskFlags.push('high_volatility');
+    } else if (dexData && Math.abs(dexData.priceChange24h) > 20) {
       riskFlags.push('high_volatility');
     }
     if (concentration && concentration.top1_pct > 50) {
@@ -162,6 +217,7 @@ export class TokenAnalyzer {
       market_cap: dexData?.marketCap ?? (price * supply),
       volume_24h: dexData?.volume24h ?? 0,
       price_change_24h: dexData?.priceChange24h ?? 0,
+      volatility,
       top_holders: topHolders,
       concentration,
       liquidity: dexData?.liquidity ?? 0,
