@@ -30,6 +30,15 @@ export function formatCopyTradeBriefing(data: CopyTradeEnrichment): string {
   lines.push(`Trade frequency: ${data.trade_frequency_per_day} trades/day.`);
   lines.push('');
 
+  // Risk-adjusted returns
+  if (data.risk_adjusted) {
+    const ra = data.risk_adjusted;
+    lines.push('### Risk-Adjusted Returns');
+    lines.push(`Sharpe ratio: ${ra.sharpe_ratio} ${ra.sharpe_ratio > 1 ? '(good)' : ra.sharpe_ratio > 0.5 ? '(decent)' : '(poor)'}. Sortino: ${ra.sortino_ratio}.`);
+    lines.push(`Max drawdown: ${ra.max_drawdown_pct}% (${formatUsd(ra.max_drawdown_usd)}). Profit factor: ${ra.profit_factor}.`);
+    lines.push('');
+  }
+
   // Labels
   if (data.labels.length > 0) {
     lines.push(`Labels: ${data.labels.join(', ')}.`);

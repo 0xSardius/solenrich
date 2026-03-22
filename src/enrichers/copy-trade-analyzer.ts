@@ -30,6 +30,14 @@ export interface TopPair {
   avg_pnl: number;
 }
 
+export interface RiskAdjustedReturns {
+  sharpe_ratio: number;       // return per unit of risk (>1 = good, >2 = excellent)
+  sortino_ratio: number;      // like sharpe but only penalizes downside
+  max_drawdown_pct: number;   // worst peak-to-trough decline (%)
+  max_drawdown_usd: number;   // worst peak-to-trough decline ($)
+  profit_factor: number;      // gross profit / gross loss (>1 = profitable)
+}
+
 export interface CopyTradeEnrichment {
   address: string;
   lookback_days: number;
@@ -39,6 +47,7 @@ export interface CopyTradeEnrichment {
   avg_pnl_per_trade_usd: number;
   avg_hold_time_days: number;
   consistency_score: number;
+  risk_adjusted?: RiskAdjustedReturns;
   trade_frequency_per_day: number;
   top_performing_pairs: TopPair[];
   labels: string[];
@@ -190,6 +199,51 @@ export class CopyTradeAnalyzer {
 
     const tradeFrequency = lookbackDays > 0 ? trades.length / lookbackDays : 0;
 
+    // Risk-adjusted returns
+    let riskAdjusted: RiskAdjustedReturns | undefined;
+    if (totalTrades >= 3) {
+      const pnls = closedTrades.map((t) => t.pnl_usd);
+      const mean = totalPnl / totalTrades;
+
+      // Sharpe: mean return / stddev of all returns
+      const allVariance = pnls.reduce((s, r) => s + (r - mean) ** 2, 0) / totalTrades;
+      const allStd = Math.sqrt(allVariance);
+      const sharpe = allStd > 0 ? mean / allStd : 0;
+
+      // Sortino: mean return / stddev of negative returns only
+      const negReturns = pnls.filter((r) => r < 0);
+      const downVariance = negReturns.length > 0
+        ? negReturns.reduce((s, r) => s + r ** 2, 0) / negReturns.length
+        : 0;
+      const downStd = Math.sqrt(downVariance);
+      const sortino = downStd > 0 ? mean / downStd : (mean > 0 ? 999 : 0);
+
+      // Max drawdown: worst peak-to-trough decline
+      let peak = 0;
+      let cumulative = 0;
+      let maxDdUsd = 0;
+      for (const pnl of pnls) {
+        cumulative += pnl;
+        if (cumulative > peak) peak = cumulative;
+        const dd = peak - cumulative;
+        if (dd > maxDdUsd) maxDdUsd = dd;
+      }
+      const maxDdPct = peak > 0 ? (maxDdUsd / peak) * 100 : 0;
+
+      // Profit factor: gross profit / gross loss
+      const grossProfit = pnls.filter((r) => r > 0).reduce((s, r) => s + r, 0);
+      const grossLoss = Math.abs(pnls.filter((r) => r < 0).reduce((s, r) => s + r, 0));
+      const profitFactor = grossLoss > 0 ? grossProfit / grossLoss : (grossProfit > 0 ? 999 : 0);
+
+      riskAdjusted = {
+        sharpe_ratio: Math.round(sharpe * 100) / 100,
+        sortino_ratio: Math.round(Math.min(sortino, 999) * 100) / 100,
+        max_drawdown_pct: Math.round(maxDdPct * 100) / 100,
+        max_drawdown_usd: Math.round(maxDdUsd * 100) / 100,
+        profit_factor: Math.round(Math.min(profitFactor, 999) * 100) / 100,
+      };
+    }
+
     // Top performing pairs
     const pairMap = new Map<string, { wins: number; totalPnl: number; count: number }>();
     for (const ct of closedTrades) {
@@ -211,11 +265,17 @@ export class CopyTradeAnalyzer {
       .sort((a, b) => b.avg_pnl - a.avg_pnl)
       .slice(0, 5);
 
-    // Labels
+    // Labels — use risk-adjusted metrics when available
     const labels: string[] = [];
-    if (winRate > 0.55 && totalPnl > 500) labels.push('smart_money');
+    if (riskAdjusted && riskAdjusted.sharpe_ratio > 1.0 && totalPnl > 0) {
+      labels.push('smart_money');
+    } else if (winRate > 0.55 && totalPnl > 500) {
+      labels.push('smart_money');
+    }
     if (tradeFrequency > 5) labels.push('high_frequency');
     if (consistency > 0.7) labels.push('consistent_trader');
+    if (riskAdjusted && riskAdjusted.max_drawdown_pct > 50) labels.push('high_risk');
+    if (riskAdjusted && riskAdjusted.profit_factor > 2.0) labels.push('strong_edge');
 
     const enrichment: CopyTradeEnrichment = {
       address,
@@ -226,6 +286,7 @@ export class CopyTradeAnalyzer {
       avg_pnl_per_trade_usd: Math.round(avgPnl * 100) / 100,
       avg_hold_time_days: Math.round(avgHoldTime * 10) / 10,
       consistency_score: Math.round(consistency * 100) / 100,
+      risk_adjusted: riskAdjusted,
       trade_frequency_per_day: Math.round(tradeFrequency * 100) / 100,
       top_performing_pairs: topPairs,
       labels,
