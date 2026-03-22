@@ -327,7 +327,7 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 ### High-Value Additions
 - [x] Multi-source price aggregation — median of Helius + DexScreener + Jupiter (2026-03-22)
 - [x] Holder concentration entropy — Herfindahl-Hirschman Index (HHI) alongside top-N percentages (2026-03-22)
-- [ ] Price volatility metrics — 7d rolling volatility, not just 24h change
+- [x] Price volatility metrics — daily std, 7d range, LOW/MODERATE/HIGH/EXTREME classification (2026-03-22)
 - [ ] Risk-adjusted returns for copy-trade — Sharpe ratio, max drawdown
 - [ ] Liquidity depth analysis — bid/ask depth, slippage estimates
 
