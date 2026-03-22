@@ -1,6 +1,7 @@
 import type { HeliusClient, EnhancedTransaction } from '../sources/helius';
 import type { DexScreenerClient } from '../sources/dexscreener';
 import type { SolanaRpcClient } from '../sources/solana-rpc';
+import type { PriceAggregator } from '../utils/price-aggregator';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { parallelFetch, type ParallelTask } from '../utils/parallel';
@@ -39,6 +40,7 @@ export class WhaleWatcher {
     private dexscreener: DexScreenerClient,
     private solanaRpc: SolanaRpcClient,
     private cache: Cache,
+    private priceAggregator?: PriceAggregator,
   ) {}
 
   async enrich(
@@ -52,7 +54,7 @@ export class WhaleWatcher {
 
     // Phase 1: Fetch token price + top holders in parallel
     const phase1Tasks: ParallelTask<any>[] = [
-      { name: 'price', fn: () => this.dexscreener.getTokenPrice(mint), fallback: 0 },
+      { name: 'price', fn: () => this.priceAggregator ? this.priceAggregator.getPrice(mint).then((r) => r.price) : this.dexscreener.getTokenPrice(mint), fallback: 0 },
       { name: 'largestAccounts', fn: () => this.solanaRpc.getTokenLargestAccounts(mint) },
       { name: 'mintInfo', fn: () => this.solanaRpc.getMintInfo(mint) },
     ];

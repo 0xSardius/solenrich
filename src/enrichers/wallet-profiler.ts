@@ -1,6 +1,7 @@
 import type { HeliusClient, HeliusAssetList, EnhancedTransaction } from '../sources/helius';
 import type { SolanaRpcClient } from '../sources/solana-rpc';
 import type { DexScreenerClient } from '../sources/dexscreener';
+import type { PriceAggregator } from '../utils/price-aggregator';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { parallelFetch, type ParallelTask } from '../utils/parallel';
@@ -69,6 +70,7 @@ export class WalletProfiler {
     private solanaRpc: SolanaRpcClient,
     private dexscreener: DexScreenerClient,
     private cache: Cache,
+    private priceAggregator?: PriceAggregator,
   ) {}
 
   async enrich(address: string, depth: 'light' | 'full'): Promise<WalletEnrichment> {
@@ -114,12 +116,37 @@ export class WalletProfiler {
       (a) => a.interface === 'FungibleToken' || a.interface === 'FungibleAsset',
     );
 
-    // Use Helius price_info if available, otherwise fetch from DexScreener
-    // Helius DAS often includes price_info for fungible tokens
-    const solPrice = await this.dexscreener.getTokenPrice(SOL_MINT).catch(() => 0);
+    // Multi-source price aggregation: Helius DAS + DexScreener + Jupiter
+    // Collect Helius prices from DAS response, then batch-fetch remaining from aggregator
+    const heliusPrices = new Map<string, number>();
+    const mintsNeedingPrice: string[] = [SOL_MINT];
+
+    for (const asset of fungibleAssets) {
+      const heliusPrice = asset.token_info?.price_info?.price_per_token ?? 0;
+      if (heliusPrice > 0) {
+        heliusPrices.set(asset.id, heliusPrice);
+      }
+      mintsNeedingPrice.push(asset.id);
+    }
+
+    // Batch aggregate prices (Helius + DexScreener + Jupiter median)
+    let aggregatedPrices = new Map<string, { price: number }>();
+    if (this.priceAggregator) {
+      const agg = await this.priceAggregator.getBatchPrices(mintsNeedingPrice, heliusPrices);
+      aggregatedPrices = agg;
+    } else {
+      // Fallback: use DexScreener only (backward compatible if no aggregator injected)
+      for (const mint of mintsNeedingPrice) {
+        const helius = heliusPrices.get(mint) ?? 0;
+        const price = helius > 0 ? helius : await this.dexscreener.getTokenPrice(mint).catch(() => 0);
+        aggregatedPrices.set(mint, { price });
+      }
+    }
+
+    const solPrice = aggregatedPrices.get(SOL_MINT)?.price ?? 0;
     const solValueUsd = solBalance * solPrice;
 
-    // Build holdings with USD values
+    // Build holdings with aggregated USD values
     const holdingsRaw: Array<{ mint: string; symbol: string; balance: number; usd_value: number }> = [];
 
     for (const asset of fungibleAssets) {
@@ -129,13 +156,8 @@ export class WalletProfiler {
       const rawBalance = asset.token_info?.balance ?? 0;
       const balance = decimals > 0 ? rawBalance / 10 ** decimals : rawBalance;
 
-      // Use Helius price_info first (free, already in response), then DexScreener fallback
-      const heliusPrice = asset.token_info?.price_info?.price_per_token ?? 0;
-      const usdValue = heliusPrice > 0
-        ? balance * heliusPrice
-        : balance * (await this.dexscreener.getTokenPrice(mint).catch(() => 0));
-
-      holdingsRaw.push({ mint, symbol, balance, usd_value: usdValue });
+      const price = aggregatedPrices.get(mint)?.price ?? 0;
+      holdingsRaw.push({ mint, symbol, balance, usd_value: balance * price });
     }
 
     // Sort by USD value descending

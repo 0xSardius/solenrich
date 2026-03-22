@@ -106,18 +106,21 @@ if (PAYMENTS_ENABLED) {
 
 // --- Dependency injection ---
 
+import { PriceAggregator } from "../utils/price-aggregator";
+
 const cache = new Cache();
 const helius = new HeliusClient(cache);
 const dexscreener = new DexScreenerClient(cache);
 const jupiter = new JupiterClient(cache);
 const solanaRpc = new SolanaRpcClient();
+const priceAggregator = new PriceAggregator(dexscreener, jupiter);
 
-const walletProfiler = new WalletProfiler(helius, solanaRpc, dexscreener, cache);
+const walletProfiler = new WalletProfiler(helius, solanaRpc, dexscreener, cache, priceAggregator);
 const tokenAnalyzer = new TokenAnalyzer(helius, dexscreener, solanaRpc, jupiter, cache);
 const txParser = new TxParser(helius, cache);
-const whaleWatcher = new WhaleWatcher(helius, dexscreener, solanaRpc, cache);
+const whaleWatcher = new WhaleWatcher(helius, dexscreener, solanaRpc, cache, priceAggregator);
 const graphMapper = new GraphMapper(helius, cache);
-const copyTradeAnalyzer = new CopyTradeAnalyzer(helius, dexscreener, cache);
+const copyTradeAnalyzer = new CopyTradeAnalyzer(helius, dexscreener, cache, priceAggregator);
 const dueDiligenceAnalyzer = new DueDiligenceAnalyzer(tokenAnalyzer, whaleWatcher, cache);
 
 // --- Register entrypoints ---

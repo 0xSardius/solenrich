@@ -1,5 +1,6 @@
 import type { HeliusClient, EnhancedTransaction } from '../sources/helius';
 import type { DexScreenerClient } from '../sources/dexscreener';
+import type { PriceAggregator } from '../utils/price-aggregator';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { formatTimestamp } from '../utils/normalize';
@@ -51,6 +52,7 @@ export class CopyTradeAnalyzer {
     private helius: HeliusClient,
     private dexscreener: DexScreenerClient,
     private cache: Cache,
+    private priceAggregator?: PriceAggregator,
   ) {}
 
   async enrich(address: string, lookbackDays: number): Promise<CopyTradeEnrichment> {
@@ -82,15 +84,22 @@ export class CopyTradeAnalyzer {
       }
     }
 
-    // Parallel price fetch from DexScreener
+    // Multi-source price aggregation (DexScreener + Jupiter median)
     const mintList = [...swapMints];
     const mintPrices = new Map<string, number>();
-    const priceResults = await Promise.allSettled(
-      mintList.map((mint) => this.dexscreener.getTokenPrice(mint)),
-    );
-    for (let i = 0; i < mintList.length; i++) {
-      const result = priceResults[i];
-      mintPrices.set(mintList[i], result.status === 'fulfilled' ? result.value : 0);
+    if (this.priceAggregator && mintList.length > 0) {
+      const agg = await this.priceAggregator.getBatchPrices(mintList);
+      for (const [mint, data] of agg) {
+        mintPrices.set(mint, data.price);
+      }
+    } else {
+      const priceResults = await Promise.allSettled(
+        mintList.map((mint) => this.dexscreener.getTokenPrice(mint)),
+      );
+      for (let i = 0; i < mintList.length; i++) {
+        const result = priceResults[i];
+        mintPrices.set(mintList[i], result.status === 'fulfilled' ? result.value : 0);
+      }
     }
 
     // Extract swap trades
