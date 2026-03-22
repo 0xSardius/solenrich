@@ -325,7 +325,7 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] Holder resolution — retry once on failure, mark unresolved with is_token_account flag (2026-03-21)
 
 ### High-Value Additions
-- [ ] Multi-source price aggregation — median of Helius + DexScreener + Jupiter
+- [x] Multi-source price aggregation — median of Helius + DexScreener + Jupiter (2026-03-22)
 - [ ] Holder concentration entropy — Herfindahl index alongside top-N percentages
 - [ ] Price volatility metrics — 7d rolling volatility, not just 24h change
 - [ ] Risk-adjusted returns for copy-trade — Sharpe ratio, max drawdown
