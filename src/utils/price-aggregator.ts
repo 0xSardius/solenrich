@@ -14,7 +14,7 @@ export interface AggregatedPrice {
   source_prices: Record<string, number>;
 }
 
-function median(values: number[]): number {
+export function median(values: number[]): number {
   if (values.length === 0) return 0;
   const sorted = [...values].sort((a, b) => a - b);
   const mid = Math.floor(sorted.length / 2);
@@ -23,7 +23,7 @@ function median(values: number[]): number {
     : sorted[mid];
 }
 
-function spreadPct(values: number[]): number {
+export function spreadPct(values: number[]): number {
   if (values.length < 2) return 0;
   const min = Math.min(...values);
   const max = Math.max(...values);

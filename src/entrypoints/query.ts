@@ -42,7 +42,7 @@ const INTENT_RULES: Array<{ pattern: RegExp; intent: Intent }> = [
   { pattern: /\b(wallet|profile|balance|portfolio|holdings|enrich)\b/i, intent: 'wallet' },
 ];
 
-function parseIntent(question: string): ParsedIntent {
+export function parseIntent(question: string): ParsedIntent {
   // Check for transaction signature first (longer than addresses)
   const sigMatch = question.match(SIG_RE);
   if (sigMatch) {
