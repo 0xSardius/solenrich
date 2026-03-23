@@ -1,44 +1,37 @@
 # Session Checkpoint
 
 ## Last session date
-2026-03-22
+2026-03-23
 
 ## What was completed
-- **Multi-source price aggregation** — PriceAggregator fetches DexScreener + Jupiter in parallel, combines with Helius DAS price_info, returns median. Integrated into wallet-profiler (batch), whale-watch, copy-trade.
-- **Herfindahl-Hirschman Index (HHI)** — ownership concentration shape (0-10000). <1500 = distributed, 1500-2500 = moderate, >2500 = concentrated. Feeds into due-diligence risk scoring.
-- **Price volatility metrics** — daily std dev, 7d high/low range, LOW/MODERATE/HIGH/EXTREME classification. Computed from DexScreener multi-timeframe data (zero extra API calls).
-- **Risk-adjusted returns** — Sharpe ratio, Sortino ratio, max drawdown (% and USD), profit factor. Added to copy-trade endpoint. New labels: high_risk, strong_edge.
+- **Multi-source price aggregation** — median of Helius + DexScreener + Jupiter across all endpoints
+- **Herfindahl-Hirschman Index (HHI)** — ownership concentration shape, feeds into risk scoring
+- **Price volatility metrics** — daily std dev, 7d range, LOW/MODERATE/HIGH/EXTREME classification
+- **Risk-adjusted returns** — Sharpe, Sortino, max drawdown, profit factor for copy-trade
+- **Comprehensive unit tests** — 138 tests, 161 assertions, 0 failures covering all pure functions
 
-## Test results (2026-03-22)
-1. Health endpoint: PASS
-2. 11 entrypoints registered: PASS
-3. Token + HHI + volatility (JTO: HHI=567, 2.87% std LOW): PASS
-4. Query → due-diligence with HHI: PASS
-5. Wallet enrichment ($3.52, risk LOW): PASS
-6. Copy-trade risk-adjusted (0 trades = N/A, graceful): PASS
-7. MCP HTTP transport: PASS
-8. Entity labeling (Binance tagged in whale results): PASS
-9. Input validation (short sig rejected): PASS
-10. Type check: PASS
+## Test results (2026-03-23)
+- `bun test test/unit.test.ts`: 138 pass, 0 fail, 79ms
+- Covers: labeler (22), risk scorer (28), normalize (18), entities (8), price aggregator (15), formatters (3), query parser (24)
+- Plus 10 manual integration tests from previous session all passing
 
 ## Current state
 - **Live API:** https://solenrich-production.up.railway.app/
 - **MCP endpoint:** https://solenrich-production.up.railway.app/mcp
 - **Landing page:** https://landing-rho-six.vercel.app
-- **Payments:** ENABLED — enriched 402 responses with pricing info
-- **Cache:** Upstash Redis (production), in-memory (dev)
-- **8004 identity:** Registered on mainnet
-- **Endpoints:** 11 total (10 original + query)
+- **Payments:** ENABLED
+- **Cache:** Upstash Redis (prod)
+- **Endpoints:** 11 total
+- **Tests:** 138 unit tests + 10 integration tests
 
-## Remaining high-value additions
-- [ ] Liquidity depth analysis (bid/ask depth, slippage estimates)
-
-## Other remaining items
-- MCP directory submissions (Smithery had connection issues)
-- XGATE registration (not picking up Solana yet)
-- Rate limiting, usage analytics, CI tests
-- Webhook/SSE streaming
-- Landing page update (new features not reflected yet)
+## Remaining items
+- [ ] Liquidity depth analysis (tabled — needs AMM model or Jupiter quote API)
+- [ ] CI pipeline (GitHub Actions — wire unit tests + type check)
+- [ ] Landing page update (doesn't reflect recent features)
+- [ ] MCP directory submissions (Smithery had connection issues)
+- [ ] XGATE registration (not picking up Solana)
+- [ ] Rate limiting, usage analytics
+- [ ] Webhook/SSE streaming
 
 ## Key values
 - **Agent Asset:** 5rsdgYL8mETFm785mXpEMYftjSE3H4JSqFANhJ4BoTHk
