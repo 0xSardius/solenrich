@@ -800,6 +800,52 @@
       overflow-x: auto;
     }
 
+    /* ==================== MCP ==================== */
+    .mcp-section { background: var(--bg-panel); }
+
+    .mcp-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+      margin-top: 48px;
+    }
+
+    .mcp-info h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .mcp-info p {
+      color: var(--text-secondary);
+      font-size: 15px;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .mcp-tools {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 16px;
+    }
+
+    .mcp-tool-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      padding: 4px 10px;
+      background: rgba(0, 255, 163, 0.06);
+      border: 1px solid rgba(0, 255, 163, 0.12);
+      border-radius: 4px;
+      color: var(--sol-green);
+    }
+
+    @media (max-width: 1024px) {
+      .mcp-layout { grid-template-columns: 1fr; }
+    }
+
     /* ==================== CTA ==================== */
     .cta-section {
       text-align: center;
@@ -977,13 +1023,14 @@
 <br><br>
 <span class="dim">{</span>
   <span class="key">"symbol"</span>: <span class="str">"JUP"</span>,
-  <span class="key">"price_usd"</span>: <span class="val">0.1716</span>,
-  <span class="key">"market_cap"</span>: <span class="val">600287744</span>,
-  <span class="key">"liquidity"</span>: <span class="val">374099</span>,
+  <span class="key">"price_usd"</span>: <span class="val">0.2861</span>,
+  <span class="key">"volatility"</span>: {
+    <span class="key">"daily_std_7d"</span>: <span class="val">2.87</span>,
+    <span class="key">"classification"</span>: <span class="str">"LOW"</span>
+  },
   <span class="key">"concentration"</span>: {
-    <span class="key">"top1_pct"</span>: <span class="val">12.4</span>,
-    <span class="key">"top5_pct"</span>: <span class="val">38.7</span>,
-    <span class="key">"top10_pct"</span>: <span class="val">51.2</span>
+    <span class="key">"herfindahl_index"</span>: <span class="val">567</span>,
+    <span class="key">"top1_pct"</span>: <span class="val">21.2</span>
   },
   <span class="key">"risk_flags"</span>: [],
   <span class="key">"verified"</span>: <span class="val">true</span>
@@ -998,10 +1045,11 @@
     <div class="container">
       <span class="update-tag">New</span>
       <div class="update-items">
-        <span class="update-item"><span class="check">&#10003;</span> Holder concentration analysis</span>
-        <span class="update-item"><span class="check">&#10003;</span> Whale activity tracking</span>
-        <span class="update-item"><span class="check">&#10003;</span> Risk levels (LOW &rarr; CRITICAL)</span>
-        <span class="update-item"><span class="check">&#10003;</span> Enriched 402 responses</span>
+        <span class="update-item"><span class="check">&#10003;</span> Multi-source price aggregation</span>
+        <span class="update-item"><span class="check">&#10003;</span> Herfindahl concentration index</span>
+        <span class="update-item"><span class="check">&#10003;</span> Price volatility metrics</span>
+        <span class="update-item"><span class="check">&#10003;</span> Sharpe ratio &amp; risk-adjusted returns</span>
+        <span class="update-item"><span class="check">&#10003;</span> Natural language query endpoint</span>
       </div>
     </div>
   </div>
@@ -1011,7 +1059,7 @@
     <div class="container">
       <div class="reveal">
         <div class="section-label">Endpoints</div>
-        <h2 class="section-title">10 enrichment endpoints</h2>
+        <h2 class="section-title">11 enrichment endpoints</h2>
         <p class="section-desc">
           From quick wallet lookups to full due diligence reports.
           Every endpoint returns data in your choice of format.
@@ -1096,7 +1144,7 @@
             <span class="endpoint-name">copy-trade-signals</span>
             <span class="endpoint-price">$0.010</span>
           </div>
-          <p class="endpoint-desc">PnL analysis, win rate, consistency scoring, smart money detection.</p>
+          <p class="endpoint-desc">Sharpe ratio, Sortino, max drawdown, profit factor, win rate. Separates skilled traders from lucky ones.</p>
           <div class="tag-row"><span class="tag premium">premium</span><span class="tag">wallet</span></div>
         </div>
 
@@ -1107,6 +1155,15 @@
           </div>
           <p class="endpoint-desc">Comprehensive research: security, holder concentration, whale flows, detailed risk factors. SAFE / CAUTION / RISKY verdict.</p>
           <div class="tag-row"><span class="tag premium">premium</span><span class="tag">token</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">query</span>
+            <span class="endpoint-price">$0.003</span>
+          </div>
+          <p class="endpoint-desc">Ask in plain English: "is X safe?", "whales for X", "wallet profile for X". Routes to the right enricher automatically.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">NL</span><span class="tag">any</span></div>
         </div>
       </div>
     </div>
@@ -1161,7 +1218,7 @@
         <div class="section-label">Data sources</div>
         <h2 class="section-title">Cross-referenced from 5 sources</h2>
         <p class="section-desc" style="margin: 16px auto 56px;">
-          Every enrichment cross-references multiple data sources in parallel for accuracy and completeness.
+          Prices use the median of all available sources. Every enrichment cross-references data in parallel for accuracy.
         </p>
       </div>
 
@@ -1234,21 +1291,21 @@
 <span style="color: var(--sol-green);">DUE DILIGENCE: JUP (Jupiter)</span>
 <span style="color: var(--text-muted);">═══════════════════════════════</span>
 
-<span style="color: var(--accent-warm);">Price:</span> $0.17 (&#8593; 1.41% 24h)
+<span style="color: var(--accent-warm);">Price:</span> $0.29 (median of 3 sources)
+<span style="color: var(--accent-warm);">Volatility:</span> 2.87% daily std (<span style="color: var(--sol-green);">LOW</span>)
 <span style="color: var(--accent-warm);">Market cap:</span> $600M
-<span style="color: var(--accent-warm);">Liquidity:</span> $374K — Thin
 
 <span style="color: var(--accent-warm);">Holder Concentration:</span>
-  Top 1: 12.4% | Top 5: 38.7%
-  Top 10: 51.2%
-  Supply is well-distributed.
+  HHI: 567 — Well distributed
+  Top 1: 21.2% | Top 5: 36.7%
 
 <span style="color: var(--accent-warm);">Whale Activity (72h):</span>
+  9WzD...WWM <span style="color: var(--sol-purple);">[Binance]</span> 2.2%
   3 accumulating, 1 distributing
 
-<span style="color: var(--accent-warm);">Verdict:</span> <span style="color: var(--sol-green);">SAFE</span> (score: 8/100)
-<span style="color: var(--text-muted);">Verified on Jupiter. No active
-authorities. Well-distributed supply.</span>
+<span style="color: var(--accent-warm);">Verdict:</span> <span style="color: var(--sol-green);">SAFE</span> (23/100, MODERATE)
+<span style="color: var(--text-muted);">Verified. No active authorities.
+Well-distributed supply.</span>
           </div>
         </div>
       </div>
@@ -1294,7 +1351,56 @@ authorities. Well-distributed supply.</span>
         <div class="value-card reveal" style="grid-column: 1 / -1;">
           <div class="value-icon" style="color: var(--accent-warm); background: rgba(255, 107, 53, 0.06); border-color: rgba(255, 107, 53, 0.12);">&gt;_ depth</div>
           <h3 class="value-title">Deeper than raw APIs</h3>
-          <p class="value-desc">Holder concentration metrics, on-chain authority checks, whale flow analysis, and risk levels you can't get from a single API call. We cross-reference and compute so your agents don't have to.</p>
+          <p class="value-desc">Herfindahl concentration index, multi-source median pricing, 7-day volatility classification, Sharpe ratios, entity-labeled whale tracking, and risk levels from LOW to CRITICAL. Analysis you can't get from any single API call.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== MCP ===== -->
+  <section class="mcp-section">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label">MCP Integration</div>
+        <h2 class="section-title">Works with Claude Desktop &amp; Cursor</h2>
+      </div>
+
+      <div class="mcp-layout reveal">
+        <div class="mcp-info">
+          <h3>Zero-install setup</h3>
+          <p>
+            SolEnrich exposes an MCP endpoint that works with Claude Desktop, Claude Code, and Cursor.
+            No cloning, no dependencies. Just paste the URL.
+          </p>
+          <p style="color: var(--text-muted); font-size: 13px;">
+            7 tools available: wallet profiling, token analysis, transaction parsing,
+            whale tracking, due diligence, wallet graph, and copy-trade signals.
+          </p>
+          <div class="mcp-tools">
+            <span class="mcp-tool-tag">enrich_wallet</span>
+            <span class="mcp-tool-tag">enrich_token</span>
+            <span class="mcp-tool-tag">whale_watch</span>
+            <span class="mcp-tool-tag">due_diligence</span>
+            <span class="mcp-tool-tag">wallet_graph</span>
+            <span class="mcp-tool-tag">copy_trade</span>
+            <span class="mcp-tool-tag">parse_tx</span>
+          </div>
+        </div>
+
+        <div class="format-code-block">
+          <div class="format-code-header">
+            <span class="format-code-label">claude_desktop_config.json</span>
+          </div>
+          <div class="format-code-body">
+<span class="dim">{</span>
+  <span class="key">"mcpServers"</span>: {
+    <span class="key">"solenrich"</span>: {
+      <span class="key">"type"</span>: <span class="str">"streamable-http"</span>,
+      <span class="key">"url"</span>: <span class="str">"https://solenrich-production<wbr>.up.railway.app/mcp"</span>
+    }
+  }
+<span class="dim">}</span>
+          </div>
         </div>
       </div>
     </div>
