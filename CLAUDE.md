@@ -342,6 +342,51 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [ ] SDK/client package — `npm install @solenrich/client` for easy integration
 - [ ] Social launch — Twitter thread, Farcaster, Solana ecosystem channels
 
+### Considered Expansions (assessed 2026-03-26)
+
+Six features to deepen SolEnrich's core value prop: getting solid Solana data to agents/LLMs.
+
+**Priority 1 — Multi-Entity Comparison** (1 session, no blockers)
+- `compare-tokens`, `compare-wallets` endpoints
+- Runs 2-3 enrichments in parallel, returns structured diff + recommendation
+- Reuses: token-analyzer, due-diligence, batch-enrich pattern
+- Feasibility: Very High — straightforward wrapper over existing enrichers
+
+**Priority 2 — Temporal Context / "What changed?"** (2-3 sessions)
+- `wallet-history`, `token-trend` endpoints
+- Store daily snapshots in Upstash Redis with timestamped keys, return deltas on request
+- Reuses: wallet-profiler, token-analyzer, whale-watch (snapshot their output)
+- Blocker: Needs scheduled snapshot job (Railway cron or external trigger)
+- Feasibility: High — unique differentiator, no one else does this on Solana
+
+**Priority 3 — New Token Discovery** (2 sessions)
+- `new-launches`, `token-screener` endpoints
+- DexScreener recently created pairs → filter by creation time → run due-diligence pipeline → ranked list
+- Reuses: due-diligence, token-analyzer, whale-watch, risk-scorer
+- Blocker: No direct "new pools" API — DexScreener search or Helius searchAssets with creation filter needed
+- Feasibility: Medium-High — killer feature for trading agents
+
+**Priority 4 — Protocol Analytics** (1-2 sessions)
+- `protocol-profile` endpoint
+- DeFi Llama TVL + yields, Helius signature scanning on program IDs for user/tx counts
+- Reuses: DeFi Llama client, Helius, risk-scorer
+- Blocker: Rate-heavy on popular programs — needs aggressive caching (30min+ TTL)
+- Feasibility: High
+
+**Priority 5 — Aggregated Intelligence / Smart Money** (2-3 sessions)
+- `trending-signals`, `smart-money-flow` endpoints
+- Scan top holders across multiple tokens, aggregate whale-watch data, rank by activity
+- Reuses: whale-watch, due-diligence, DeFi Llama, PriceAggregator
+- Blocker: No "scan all tokens" API — needs curated watchlist or DexScreener trending as input
+- Feasibility: Medium — builds on temporal + discovery features
+
+**Priority 6 — Event-Driven Data / Alerts** (3-4 sessions)
+- `subscribe-alerts` (SSE) or `check-alerts` (poll-based) endpoints
+- Build realtime infra in `src/realtime/` (currently empty) — polling loop + threshold detection + SSE streaming
+- Reuses: whale-watch, token-analyzer
+- Blocker: Realtime infrastructure from scratch. Start with poll-based, upgrade to SSE later.
+- Feasibility: Medium — highest effort, stickiest feature, save for after core expansions
+
 ### Moonshots
 - [ ] Multi-chain expansion — Base/Ethereum enrichment using same architecture
 - [ ] Reputation-gated pricing — cheaper rates for agents with high 8004 reputation scores

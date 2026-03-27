@@ -924,6 +924,232 @@
 
     .footer-links a:hover { color: var(--text-secondary); }
 
+    /* ==================== DEMO ==================== */
+    .demo-section { background: var(--bg-void); position: relative; }
+
+    .demo-search {
+      display: flex;
+      gap: 0;
+      max-width: 640px;
+      margin: 0 auto 16px;
+      border: 1px solid var(--border-dim);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.2s;
+    }
+
+    .demo-search:focus-within { border-color: var(--sol-green); box-shadow: 0 0 20px var(--glow-green); }
+
+    .demo-search input {
+      flex: 1;
+      background: var(--bg-card);
+      border: none;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      padding: 14px 20px;
+      outline: none;
+    }
+
+    .demo-search input::placeholder { color: var(--text-muted); }
+
+    .demo-search button {
+      background: var(--sol-green);
+      color: var(--bg-void);
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      padding: 14px 28px;
+      cursor: pointer;
+      transition: background 0.2s;
+      white-space: nowrap;
+    }
+
+    .demo-search button:hover { background: var(--sol-blue); }
+    .demo-search button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .demo-examples {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .demo-examples-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .demo-example-btn {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-secondary);
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 6px;
+      padding: 6px 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .demo-example-btn:hover {
+      border-color: var(--sol-green);
+      color: var(--sol-green);
+      box-shadow: 0 0 12px var(--glow-green);
+    }
+
+    .demo-counter {
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+
+    .demo-counter .count { color: var(--sol-green); }
+
+    .demo-loading {
+      text-align: center;
+      padding: 48px 0;
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+
+    .demo-spinner {
+      width: 28px; height: 28px;
+      border: 3px solid var(--border-dim);
+      border-top-color: var(--sol-green);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 16px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .demo-result {
+      max-width: 720px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .demo-result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-bottom: 1px solid var(--border-dim);
+      background: linear-gradient(90deg, rgba(0,255,163,0.04), rgba(153,69,255,0.04));
+    }
+
+    .demo-result-type {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--bg-void);
+      background: var(--sol-green);
+      padding: 4px 10px;
+      border-radius: 4px;
+    }
+
+    .demo-result-type.token { background: var(--sol-purple); color: #fff; }
+
+    .demo-result-tabs { display: flex; gap: 0; }
+
+    .demo-tab {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: none;
+      border: 1px solid var(--border-dim);
+      padding: 6px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .demo-tab:first-child { border-radius: 6px 0 0 6px; }
+    .demo-tab:last-child { border-radius: 0 6px 6px 0; border-left: none; }
+
+    .demo-tab.active {
+      color: var(--sol-green);
+      border-color: var(--sol-green);
+      background: rgba(0,255,163,0.06);
+    }
+
+    .demo-formatted {
+      padding: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--text-secondary);
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .demo-formatted .line-header {
+      color: var(--sol-green);
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .demo-formatted .line-section {
+      color: var(--text-primary);
+      font-weight: 500;
+      margin-top: 8px;
+    }
+
+    .demo-formatted .line-label {
+      color: var(--sol-purple);
+    }
+
+    .demo-json {
+      padding: 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      max-height: 500px;
+      overflow-y: auto;
+      white-space: pre;
+    }
+
+    .demo-json .json-key { color: var(--accent-warm); }
+    .demo-json .json-str { color: #E5C07B; }
+    .demo-json .json-num { color: var(--sol-blue); }
+    .demo-json .json-bool { color: var(--sol-purple); }
+    .demo-json .json-null { color: var(--text-muted); }
+
+    .demo-error {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 16px 24px;
+      background: rgba(255, 107, 53, 0.06);
+      border: 1px solid rgba(255, 107, 53, 0.3);
+      border-radius: 10px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent-warm);
+      text-align: center;
+    }
+
+    @media (max-width: 768px) {
+      .demo-search { flex-direction: column; }
+      .demo-search button { padding: 14px; }
+      .demo-examples { flex-direction: column; }
+    }
+
     /* ==================== ANIMATIONS ==================== */
     .reveal {
       opacity: 0;
@@ -966,6 +1192,7 @@
     <div class="container">
       <a href="#" class="nav-logo">SolEnrich<span>.agent</span></a>
       <div class="nav-links">
+        <a href="#demo">Try It</a>
         <a href="#endpoints">Endpoints</a>
         <a href="#how-it-works">How it works</a>
         <a href="#formats">Formats</a>
@@ -1053,6 +1280,54 @@
       </div>
     </div>
   </div>
+
+  <!-- ===== DEMO ===== -->
+  <section class="demo-section" id="demo">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label">Try It</div>
+        <h2 class="section-title">See it in action</h2>
+        <p class="section-desc" style="max-width:560px; margin:0 auto 32px; text-align:center;">Paste any Solana wallet address or token mint. Free, no signup.</p>
+      </div>
+
+      <div class="reveal">
+        <div class="demo-search">
+          <input type="text" id="demo-input" placeholder="Paste a Solana address or token mint..." autocomplete="off" spellcheck="false">
+          <button id="demo-submit">Enrich</button>
+        </div>
+
+        <div class="demo-examples">
+          <span class="demo-examples-label">Try:</span>
+          <button class="demo-example-btn" data-address="JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN">JUP Token</button>
+          <button class="demo-example-btn" data-address="DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263">BONK Token</button>
+          <button class="demo-example-btn" data-address="vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg">Solana Foundation</button>
+        </div>
+
+        <div class="demo-counter" id="demo-counter">
+          <span class="count" id="demo-remaining">10</span>/10 free queries remaining
+        </div>
+      </div>
+
+      <div id="demo-loading" style="display:none;" class="demo-loading">
+        <div class="demo-spinner"></div>
+        <span id="demo-loading-text">Enriching onchain data...</span>
+      </div>
+
+      <div id="demo-result" style="display:none;" class="demo-result">
+        <div class="demo-result-header">
+          <span class="demo-result-type" id="demo-result-type">WALLET</span>
+          <div class="demo-result-tabs">
+            <button class="demo-tab active" data-view="formatted">Formatted</button>
+            <button class="demo-tab" data-view="json">JSON</button>
+          </div>
+        </div>
+        <div id="demo-formatted" class="demo-formatted"></div>
+        <div id="demo-json" class="demo-json" style="display:none;"></div>
+      </div>
+
+      <div id="demo-error" style="display:none;" class="demo-error"></div>
+    </div>
+  </section>
 
   <!-- ===== ENDPOINTS ===== -->
   <section class="endpoints" id="endpoints">
@@ -1456,6 +1731,185 @@ Well-distributed supply.</span>
     }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
 
     document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+  </script>
+
+  <!-- ===== DEMO LOGIC ===== -->
+  <script>
+  (function() {
+    const API = 'https://solenrich-production.up.railway.app';
+    const MAX_QUERIES = 10;
+    const STORAGE_KEY = 'solenrich_demo';
+
+    const els = {
+      input: document.getElementById('demo-input'),
+      submit: document.getElementById('demo-submit'),
+      loading: document.getElementById('demo-loading'),
+      loadingText: document.getElementById('demo-loading-text'),
+      result: document.getElementById('demo-result'),
+      resultType: document.getElementById('demo-result-type'),
+      formatted: document.getElementById('demo-formatted'),
+      json: document.getElementById('demo-json'),
+      error: document.getElementById('demo-error'),
+      remaining: document.getElementById('demo-remaining'),
+      counter: document.getElementById('demo-counter'),
+    };
+
+    // --- State ---
+    function loadState() {
+      try {
+        const s = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        if (s && s.resetAt > Date.now()) return s;
+      } catch {}
+      return { remaining: MAX_QUERIES, resetAt: Date.now() + 3600000 };
+    }
+    function saveState(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+
+    let state = loadState();
+    els.remaining.textContent = state.remaining;
+
+    // --- Validation ---
+    function isValid(addr) { return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(addr); }
+
+    // --- UI helpers ---
+    function hide() { els.loading.style.display = 'none'; els.result.style.display = 'none'; els.error.style.display = 'none'; }
+    function showLoading() { hide(); els.loading.style.display = 'block'; els.submit.disabled = true; }
+    function showError(msg) { hide(); els.error.textContent = msg; els.error.style.display = 'block'; els.submit.disabled = false; }
+    function updateCounter() { els.remaining.textContent = state.remaining; }
+
+    // --- Formatted view ---
+    function renderFormatted(summary) {
+      if (!summary) return '<span style="color:var(--text-muted)">No summary available</span>';
+      return summary.split('\n').map(function(line) {
+        if (line.match(/^(WALLET PROFILE|TOKEN ANALYSIS|ENRICHMENT)/i))
+          return '<span class="line-header">' + esc(line) + '</span>';
+        if (line.match(/^(Holdings|DeFi|Labels|Risk|Activity|Price|Market|Liquidity|Holders|Volatility|Flags|Verification)/i))
+          return '<span class="line-section">' + esc(line) + '</span>';
+        if (line.match(/^\s*-\s/))
+          return '  ' + esc(line);
+        return esc(line);
+      }).join('\n');
+    }
+
+    function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+    // --- JSON view ---
+    function renderJson(data) {
+      var copy = Object.assign({}, data);
+      delete copy._demo;
+      delete copy.llm_summary;
+      var str = JSON.stringify(copy, null, 2);
+      return str
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+        .replace(/: "([^"]*)"/g, ': <span class="json-str">"$1"</span>')
+        .replace(/: (-?\d+\.?\d*)/g, ': <span class="json-num">$1</span>')
+        .replace(/: (true|false)/g, ': <span class="json-bool">$1</span>')
+        .replace(/: (null)/g, ': <span class="json-null">$1</span>');
+    }
+
+    // --- Tabs ---
+    document.querySelectorAll('.demo-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.demo-tab').forEach(function(t) { t.classList.remove('active'); });
+        tab.classList.add('active');
+        if (tab.dataset.view === 'formatted') {
+          els.formatted.style.display = 'block';
+          els.json.style.display = 'none';
+        } else {
+          els.formatted.style.display = 'none';
+          els.json.style.display = 'block';
+        }
+      });
+    });
+
+    // --- Main enrich ---
+    async function enrich(address) {
+      if (!isValid(address)) { showError('Invalid Solana address. Paste a 32-44 character base58 string.'); return; }
+
+      state = loadState();
+      if (state.remaining <= 0) {
+        showError('Rate limit reached. Resets ' + new Date(state.resetAt).toLocaleTimeString());
+        return;
+      }
+
+      showLoading();
+
+      // Warm-up message after 5s
+      var warmup = setTimeout(function() {
+        els.loadingText.textContent = 'Fetching from multiple sources...';
+      }, 5000);
+
+      try {
+        var res = await fetch(API + '/demo/enrich', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: address }),
+        });
+
+        clearTimeout(warmup);
+
+        if (res.status === 429) {
+          state.remaining = 0;
+          try { var b = await res.json(); state.resetAt = new Date(b.resets_at).getTime(); } catch {}
+          saveState(state); updateCounter();
+          showError('Rate limit reached. Try again later.');
+          return;
+        }
+
+        if (!res.ok) {
+          var err = {};
+          try { err = await res.json(); } catch {}
+          showError(err.error || 'Enrichment failed. Try again.');
+          return;
+        }
+
+        var data = await res.json();
+
+        // Update rate limit
+        if (data._demo) {
+          state.remaining = data._demo.queries_remaining;
+          if (data._demo.resets_at) state.resetAt = new Date(data._demo.resets_at).getTime();
+        } else {
+          state.remaining = Math.max(0, state.remaining - 1);
+        }
+        saveState(state);
+        updateCounter();
+
+        // Render
+        var type = data._demo ? data._demo.type : 'wallet';
+        els.resultType.textContent = type.toUpperCase();
+        els.resultType.className = 'demo-result-type' + (type === 'token' ? ' token' : '');
+
+        els.formatted.innerHTML = renderFormatted(data.llm_summary);
+        els.json.innerHTML = renderJson(data);
+
+        // Reset to formatted tab
+        document.querySelectorAll('.demo-tab').forEach(function(t) { t.classList.remove('active'); });
+        document.querySelector('.demo-tab[data-view="formatted"]').classList.add('active');
+        els.formatted.style.display = 'block';
+        els.json.style.display = 'none';
+
+        hide();
+        els.result.style.display = 'block';
+        els.submit.disabled = false;
+        els.loadingText.textContent = 'Enriching onchain data...';
+
+      } catch (e) {
+        clearTimeout(warmup);
+        showError('Network error. The API may be warming up — try again in a few seconds.');
+      }
+    }
+
+    // --- Event wiring ---
+    els.submit.addEventListener('click', function() { enrich(els.input.value.trim()); });
+    els.input.addEventListener('keydown', function(e) { if (e.key === 'Enter') enrich(els.input.value.trim()); });
+    document.querySelectorAll('.demo-example-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        els.input.value = btn.dataset.address;
+        enrich(btn.dataset.address);
+      });
+    });
+  })();
   </script>
 
 </body>

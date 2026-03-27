@@ -140,6 +140,112 @@ registerDueDiligenceEntrypoint(addEntrypoint, dueDiligenceAnalyzer);
 // NL query (routes to the right enricher based on keyword matching)
 registerQueryEntrypoint(addEntrypoint, walletProfiler, tokenAnalyzer, txParser, whaleWatcher, dueDiligenceAnalyzer, copyTradeAnalyzer, graphMapper);
 
+// --- Demo endpoint (free, rate-limited, for landing page) ---
+
+import { formatResponse } from '../formatters/index';
+import { formatWalletBriefing } from '../formatters/llm-wallet';
+import { formatTokenBriefing } from '../formatters/llm-token';
+
+const TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
+const TOKEN_2022_PROGRAM_ID = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';
+
+// In-memory rate limiter: IP → { count, resetAt }
+const demoRateLimits = new Map<string, { count: number; resetAt: number }>();
+const DEMO_MAX_REQUESTS = 10;
+const DEMO_WINDOW_MS = 60 * 60 * 1000; // 1 hour
+
+// Cleanup expired entries every 10 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of demoRateLimits) {
+    if (now > entry.resetAt) demoRateLimits.delete(ip);
+  }
+}, 10 * 60 * 1000);
+
+function getDemoRateLimit(ip: string): { allowed: boolean; remaining: number; resetAt: number } {
+  const now = Date.now();
+  let entry = demoRateLimits.get(ip);
+  if (!entry || now > entry.resetAt) {
+    entry = { count: 0, resetAt: now + DEMO_WINDOW_MS };
+    demoRateLimits.set(ip, entry);
+  }
+  if (entry.count >= DEMO_MAX_REQUESTS) {
+    return { allowed: false, remaining: 0, resetAt: entry.resetAt };
+  }
+  entry.count++;
+  return { allowed: true, remaining: DEMO_MAX_REQUESTS - entry.count, resetAt: entry.resetAt };
+}
+
+// CORS for demo routes (landing page on Vercel)
+app.use('/demo/*', cors({
+  origin: '*',
+  allowMethods: ['POST', 'OPTIONS'],
+  allowHeaders: ['Content-Type'],
+}));
+
+app.post('/demo/enrich', async (c) => {
+  const ip = c.req.header('x-forwarded-for')?.split(',')[0]?.trim()
+    || c.req.header('cf-connecting-ip')
+    || 'unknown';
+
+  const rateLimit = getDemoRateLimit(ip);
+  if (!rateLimit.allowed) {
+    return c.json({
+      error: 'Rate limit exceeded',
+      resets_at: new Date(rateLimit.resetAt).toISOString(),
+    }, 429);
+  }
+
+  let body: { address?: string };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400);
+  }
+
+  const address = body.address?.trim();
+  if (!address || !/^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(address)) {
+    return c.json({ error: 'Invalid Solana address' }, 400);
+  }
+
+  try {
+    // Detect wallet vs token via account owner
+    let isToken = false;
+    try {
+      const accountInfo = await solanaRpc.getAccountInfo(address);
+      if (accountInfo) {
+        const owner = accountInfo.owner.toBase58();
+        isToken = owner === TOKEN_PROGRAM_ID || owner === TOKEN_2022_PROGRAM_ID;
+      }
+    } catch {
+      // RPC failed — default to wallet
+    }
+
+    let result: any;
+    if (isToken) {
+      const data = await tokenAnalyzer.enrich(address, false);
+      result = formatResponse(data, 'both', formatTokenBriefing);
+    } else {
+      const data = await walletProfiler.enrich(address, 'light');
+      result = formatResponse(data, 'both', formatWalletBriefing);
+    }
+
+    return c.json({
+      _demo: {
+        type: isToken ? 'token' : 'wallet',
+        queries_remaining: rateLimit.remaining,
+        resets_at: new Date(rateLimit.resetAt).toISOString(),
+      },
+      ...result,
+    });
+  } catch (err: any) {
+    console.error('[demo] Enrichment error:', err.message);
+    return c.json({ error: 'Enrichment failed', message: err.message }, 500);
+  }
+});
+
+console.log('[demo] Free demo endpoint available at POST /demo/enrich');
+
 // --- Agent Card discovery metadata ---
 
 app.get("/agent-card-extended", (c) => {
