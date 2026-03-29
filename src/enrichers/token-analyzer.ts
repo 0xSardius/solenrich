@@ -74,11 +74,20 @@ export class TokenAnalyzer {
       { name: 'largestAccounts', fn: () => this.solanaRpc.getTokenLargestAccounts(mint) },
     ];
 
-    const fetched = await parallelFetch(tasks);
+    const fetched = await parallelFetch(tasks, 15_000);
 
-    const dexData = fetched.dexData as Awaited<ReturnType<DexScreenerClient['getTokenData']>>;
+    let dexData = fetched.dexData as Awaited<ReturnType<DexScreenerClient['getTokenData']>>;
     const mintInfo = fetched.mintInfo as Awaited<ReturnType<SolanaRpcClient['getMintInfo']>>;
     const jupiterToken = fetched.jupiterToken as JupiterToken | null;
+
+    // Retry DexScreener once if it failed — price data is critical
+    if (!dexData) {
+      try {
+        dexData = await this.dexscreener.getTokenData(mint);
+      } catch {
+        // Still failed — proceed with zeros
+      }
+    }
     const largestAccounts = (fetched.largestAccounts as Awaited<ReturnType<SolanaRpcClient['getTokenLargestAccounts']>>) ?? [];
 
     const price = dexData?.price ?? 0;
@@ -228,7 +237,10 @@ export class TokenAnalyzer {
       last_updated: formatTimestamp(),
     };
 
-    await this.cache.set(cacheKey, enrichment, CACHE_TTL.tokenPrice);
+    // Only cache if we got meaningful data — don't cache failures
+    if (price > 0 || enrichment.symbol) {
+      await this.cache.set(cacheKey, enrichment, CACHE_TTL.tokenPrice);
+    }
     return enrichment;
   }
 }
