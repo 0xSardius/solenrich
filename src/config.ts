@@ -46,6 +46,8 @@ export const PRICING = {
   'copy-trade-signals': '0.010',
   'due-diligence': '0.020',
   'query': '0.003',
+  'compare-tokens': '0.006',
+  'compare-wallets': '0.006',
 } as const;
 
 /** Cache TTL in seconds per data type */

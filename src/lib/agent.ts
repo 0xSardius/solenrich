@@ -37,6 +37,7 @@ import { registerGraphEntrypoint } from "../entrypoints/graph";
 import { registerCopyTradeEntrypoint } from "../entrypoints/copy-trade";
 import { registerDueDiligenceEntrypoint } from "../entrypoints/due-diligence";
 import { registerQueryEntrypoint } from "../entrypoints/query";
+import { registerCompareEntrypoints } from "../entrypoints/compare";
 import { CONFIG, PRICING } from "../config";
 
 // --- Agent setup ---
@@ -95,6 +96,8 @@ if (PAYMENTS_ENABLED) {
     "POST /entrypoints/copy-trade-signals/invoke": routeConfig(PRICING["copy-trade-signals"]),
     "POST /entrypoints/due-diligence/invoke": routeConfig(PRICING["due-diligence"]),
     "POST /entrypoints/query/invoke": routeConfig(PRICING["query"]),
+    "POST /entrypoints/compare-tokens/invoke": routeConfig(PRICING["compare-tokens"]),
+    "POST /entrypoints/compare-wallets/invoke": routeConfig(PRICING["compare-wallets"]),
   };
 
   app.use("/entrypoints/*", paymentMiddleware(x402Routes, resourceServer));
@@ -123,6 +126,10 @@ const graphMapper = new GraphMapper(helius, cache);
 const copyTradeAnalyzer = new CopyTradeAnalyzer(helius, dexscreener, cache, priceAggregator);
 const dueDiligenceAnalyzer = new DueDiligenceAnalyzer(tokenAnalyzer, whaleWatcher, cache);
 
+import { TokenComparator, WalletComparator } from '../enrichers/comparator';
+const tokenComparator = new TokenComparator(tokenAnalyzer);
+const walletComparator = new WalletComparator(walletProfiler);
+
 // --- Register entrypoints ---
 
 // Core (Phase 5-6)
@@ -139,6 +146,9 @@ registerDueDiligenceEntrypoint(addEntrypoint, dueDiligenceAnalyzer);
 
 // NL query (routes to the right enricher based on keyword matching)
 registerQueryEntrypoint(addEntrypoint, walletProfiler, tokenAnalyzer, txParser, whaleWatcher, dueDiligenceAnalyzer, copyTradeAnalyzer, graphMapper);
+
+// Comparison (side-by-side analysis)
+registerCompareEntrypoints(addEntrypoint, tokenComparator, walletComparator);
 
 // --- Demo endpoint (free, rate-limited, for landing page) ---
 
