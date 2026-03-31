@@ -2,9 +2,9 @@
 
 Solana onchain data enrichment agent. Accepts USDC micropayments via x402 and returns enriched wallet, token, and transaction data — structured JSON for agents or natural language briefings for LLMs.
 
-**Live:** https://solenrich-production.up.railway.app/
-
-**CA:** 677CpPEoKVo9tyCyBHqtiXZivUPdPXEigd3FspWuBAGS
+**Live API:** https://solenrich-production.up.railway.app/
+**Landing Page:** https://landing-rho-six.vercel.app
+**Docs (agent-readable):** https://solenrich-production.up.railway.app/docs
 
 ## Quick Start
 
@@ -15,132 +15,109 @@ curl https://solenrich-production.up.railway.app/health
 # Agent card (A2A discovery)
 curl https://solenrich-production.up.railway.app/.well-known/agent.json
 
-# List all endpoints
+# List all 13 endpoints
 curl https://solenrich-production.up.railway.app/entrypoints
+
+# Full API documentation (agent-readable JSON)
+curl https://solenrich-production.up.railway.app/docs
+
+# Free demo (no payment required, 10 queries/hr)
+curl -X POST https://solenrich-production.up.railway.app/demo/enrich \
+  -H "Content-Type: application/json" \
+  -d '{"address":"DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"}'
 ```
 
 ## Endpoints
 
-All endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JSON body containing an `input` object.
+All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JSON body containing an `input` object. Without a valid x402 payment header, endpoints return HTTP 402 with payment instructions.
 
-### Core Endpoints
+### Core (5 endpoints)
 
-#### `enrich-wallet-light` — $0.002
-Light wallet profile: SOL balance, token holdings, labels, risk score.
+| Endpoint | Price | Input | Description |
+|----------|-------|-------|-------------|
+| `enrich-wallet-light` | $0.002 | `address`, `format` | SOL balance, token holdings, labels, risk score |
+| `enrich-wallet-full` | $0.005 | `address`, `format` | + DeFi positions, connected wallets, enhanced tx history |
+| `enrich-token-light` | $0.002 | `mint`, `format` | Price (median of 3 sources), market cap, volume, liquidity, risk flags |
+| `enrich-token-full` | $0.004 | `mint`, `format` | + Top 20 holders, HHI concentration, volatility metrics |
+| `parse-transaction` | $0.001 | `signature`, `format` | Type detection, protocol identification, transfer breakdown |
 
-```bash
-curl -X POST https://solenrich-production.up.railway.app/entrypoints/enrich-wallet-light/invoke \
-  -H "Content-Type: application/json" \
-  -d '{"input":{"address":"vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg","format":"json","depth":"light"}}'
-```
+### Premium (5 endpoints)
 
-#### `enrich-wallet-full` — $0.005
-Full wallet profile: holdings, DeFi positions, connected wallets, labels, risk score.
+| Endpoint | Price | Input | Description |
+|----------|-------|-------|-------------|
+| `whale-watch` | $0.008 | `mint`, `format` | Top holders with accumulation/distribution tracking |
+| `batch-enrich` | $0.015 | `addresses[]`, `type`, `depth`, `format` | Parallel enrichment of up to 25 wallets or tokens |
+| `wallet-graph` | $0.010 | `address`, `depth`, `format` | Transaction connection mapping and cluster detection |
+| `copy-trade-signals` | $0.010 | `address`, `format` | PnL, win rate, Sharpe/Sortino ratios, max drawdown |
+| `due-diligence` | $0.020 | `mint`, `format` | Composite risk report with SAFE / CAUTION / RISKY verdict |
 
-```bash
-curl -X POST https://solenrich-production.up.railway.app/entrypoints/enrich-wallet-full/invoke \
-  -H "Content-Type: application/json" \
-  -d '{"input":{"address":"vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg","format":"json","depth":"full"}}'
-```
+### Comparison (2 endpoints)
 
-#### `enrich-token-light` — $0.002
-Token analysis: price, market data, liquidity assessment, risk flags.
+| Endpoint | Price | Input | Description |
+|----------|-------|-------|-------------|
+| `compare-tokens` | $0.006 | `mints[]` (2-3), `format` | Side-by-side: price, liquidity, volatility, HHI, risk. Rankings + summary |
+| `compare-wallets` | $0.006 | `addresses[]` (2-3), `depth`, `format` | Side-by-side: portfolio, activity, risk, labels. Rankings + summary |
 
-```bash
-curl -X POST https://solenrich-production.up.railway.app/entrypoints/enrich-token-light/invoke \
-  -H "Content-Type: application/json" \
-  -d '{"input":{"mint":"DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263","format":"json","depth":"light"}}'
-```
+### Natural Language (1 endpoint)
 
-#### `enrich-token-full` — $0.004
-Full token analysis: price, market data, liquidity, risk flags, top holders.
+| Endpoint | Price | Input | Description |
+|----------|-------|-------|-------------|
+| `query` | $0.003 | `question`, `format` | Plain English questions routed to the right enricher |
 
-```bash
-curl -X POST https://solenrich-production.up.railway.app/entrypoints/enrich-token-full/invoke \
-  -H "Content-Type: application/json" \
-  -d '{"input":{"mint":"DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263","format":"json","depth":"full"}}'
-```
-
-#### `parse-transaction` — $0.001
-Parse a Solana transaction: type detection, protocol identification, transfer details.
+### Example Request
 
 ```bash
-curl -X POST https://solenrich-production.up.railway.app/entrypoints/parse-transaction/invoke \
+curl -X POST https://solenrich-production.up.railway.app/entrypoints/compare-tokens/invoke \
   -H "Content-Type: application/json" \
-  -d '{"input":{"signature":"<tx-signature>","format":"json"}}'
+  -d '{"input":{"mints":["JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN","DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"],"format":"both"}}'
 ```
-
-### Premium Endpoints
-
-#### `whale-watch` — $0.008
-Track large token holders, accumulation/distribution patterns.
-
-```bash
-curl -X POST https://solenrich-production.up.railway.app/entrypoints/whale-watch/invoke \
-  -H "Content-Type: application/json" \
-  -d '{"input":{"mint":"DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263","format":"json"}}'
-```
-
-#### `batch-enrich` — $0.015
-Enrich multiple wallets or tokens in a single request (max concurrency: 5).
-
-```bash
-curl -X POST https://solenrich-production.up.railway.app/entrypoints/batch-enrich/invoke \
-  -H "Content-Type: application/json" \
-  -d '{"input":{"type":"wallet","addresses":["vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg"],"format":"json","depth":"light"}}'
-```
-
-#### `wallet-graph` — $0.010
-Map wallet transaction connections and detect suspicious clusters.
-
-```bash
-curl -X POST https://solenrich-production.up.railway.app/entrypoints/wallet-graph/invoke \
-  -H "Content-Type: application/json" \
-  -d '{"input":{"address":"vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg","format":"json"}}'
-```
-
-#### `copy-trade-signals` — $0.010
-Analyze wallet trading performance: PnL, win rate, consistency, smart money labeling.
-
-```bash
-curl -X POST https://solenrich-production.up.railway.app/entrypoints/copy-trade-signals/invoke \
-  -H "Content-Type: application/json" \
-  -d '{"input":{"address":"vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg","format":"json"}}'
-```
-
-#### `due-diligence` — $0.020
-Comprehensive token research: security analysis, whale tracking, holder distribution, risk verdict (SAFE/CAUTION/RISKY).
-
-```bash
-curl -X POST https://solenrich-production.up.railway.app/entrypoints/due-diligence/invoke \
-  -H "Content-Type: application/json" \
-  -d '{"input":{"mint":"DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263","format":"json"}}'
-```
-
-## Pricing
-
-| Endpoint | Price (USDC) | Description |
-|----------|-------------|-------------|
-| `enrich-wallet-light` | $0.002 | Light wallet profile |
-| `enrich-wallet-full` | $0.005 | Full wallet profile with DeFi positions |
-| `enrich-token-light` | $0.002 | Token price, market data, risk flags |
-| `enrich-token-full` | $0.004 | Full token analysis with holders |
-| `parse-transaction` | $0.001 | Transaction parsing and enrichment |
-| `whale-watch` | $0.008 | Large holder tracking |
-| `batch-enrich` | $0.015 | Batch wallet/token enrichment |
-| `wallet-graph` | $0.010 | Wallet connection mapping |
-| `copy-trade-signals` | $0.010 | Trading performance analysis |
-| `due-diligence` | $0.020 | Comprehensive token research |
-
-Payments are in USDC on Solana via the [x402 protocol](https://x402.org). When payments are enabled, requests without a valid x402 payment header return HTTP 402 with payment instructions.
 
 ## Output Formats
 
 Every endpoint accepts a `format` parameter:
 
 - **`json`** — Structured data for agent-to-agent consumption
-- **`llm`** — Natural language briefing optimized for LLM context windows
+- **`llm`** — Natural language briefing (markdown) for LLM context windows
 - **`both`** — JSON data with an additional `llm_summary` field
+
+## Scoring Methodology
+
+All scoring is **deterministic on-chain logic** — no LLM inference anywhere in the pipeline.
+
+### Wallet Risk Score (0.0 - 1.0)
+
+Seven additive factors from on-chain activity:
+
+| Factor | Weight |
+|--------|--------|
+| High transaction concentration (few counterparties) | +0.15 |
+| Low transaction diversity | +0.10 |
+| New wallet (< 30 days old) | +0.15 |
+| Bot-like patterns (high frequency, repetitive) | +0.20 |
+| Interactions with known risky programs | +0.15 |
+| Airdrop farming signals (many small token accounts) | +0.10 |
+| Low protocol diversity (< 2 protocols) | +0.10 |
+
+**Risk Levels:** LOW (< 0.25) | MODERATE (0.25-0.50) | ELEVATED (0.50-0.65) | HIGH (0.65-0.80) | CRITICAL (> 0.80)
+
+### HHI (Herfindahl-Hirschman Index)
+
+Holder concentration metric from top 20 on-chain holders:
+- **< 1500** — Well distributed
+- **1500-2500** — Moderately concentrated
+- **> 2500** — Highly concentrated
+
+### Price Volatility
+
+Computed from DexScreener multi-timeframe data (zero extra API calls):
+- **LOW** — daily std < 3%
+- **MODERATE** — 3-8%
+- **HIGH** — 8-15%
+- **EXTREME** — > 15%
+
+### Token Pricing
+
+Median of up to 3 sources (Helius DAS, DexScreener, Jupiter). Median resists outliers from any single DEX.
 
 ## Architecture
 
@@ -153,14 +130,18 @@ Client → x402 Paywall → Entrypoint Router → Enrichment Engine → Format R
 | Source | Usage |
 |--------|-------|
 | [Helius](https://helius.dev) | DAS API (assets, token accounts), enhanced transaction parsing, RPC |
-| [DexScreener](https://dexscreener.com) | Token prices, market data, liquidity |
+| [DexScreener](https://dexscreener.com) | Token prices, market data, liquidity, OHLCV |
 | [DeFi Llama](https://defillama.com) | Protocol TVL, yield data |
-| [Jupiter](https://jup.ag) | Token prices (cross-reference), metadata, verified status |
-| Solana RPC | SOL balances, raw account data |
+| [Jupiter](https://jup.ag) | Token prices (cross-reference), metadata, verification status |
+| Solana RPC | SOL balances, mint info, top 20 holders |
 
-### MCP Server
+### Entity Labeling
 
-SolEnrich exposes an MCP endpoint for Claude Desktop, Claude Code, and Cursor integration. **No install required** — just add the remote URL:
+20+ known Solana addresses auto-tagged across all enrichment results: CEX wallets (Binance, Coinbase), protocol addresses (Raydium, Orca, Jupiter), bridges, and foundations.
+
+## MCP Server
+
+SolEnrich exposes an MCP endpoint for Claude Desktop, Claude Code, and Cursor. **No install required:**
 
 ```json
 {
@@ -175,7 +156,19 @@ SolEnrich exposes an MCP endpoint for Claude Desktop, Claude Code, and Cursor in
 
 7 tools: `enrich_wallet`, `enrich_token`, `parse_transaction`, `whale_watch`, `due_diligence`, `wallet_graph`, `copy_trade_signals`.
 
-See [`mcp/README.md`](mcp/README.md) for local setup and full tool descriptions.
+## Free Demo
+
+Try SolEnrich without payment — paste any Solana wallet address or token mint:
+
+```bash
+curl -X POST https://solenrich-production.up.railway.app/demo/enrich \
+  -H "Content-Type: application/json" \
+  -d '{"address":"JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"}'
+```
+
+10 free queries per IP per hour. Auto-detects wallet vs token. Returns `format: "both"` (JSON + LLM summary).
+
+Interactive demo on the landing page: https://landing-rho-six.vercel.app
 
 ## Development
 
@@ -190,8 +183,9 @@ bun run dev
 bunx tsc --noEmit
 
 # Run tests
-bun run test/test-enrichment.ts
-bun run test/test-server.ts
+bun test test/unit.test.ts                # 138 unit tests
+bun run test/test-all-endpoints.ts        # 55 endpoint tests (requires local server)
+bun run test/test-402-production.ts       # Production paywall verification
 ```
 
 ### Environment Variables
@@ -201,21 +195,14 @@ bun run test/test-server.ts
 | `HELIUS_API_KEY` | Yes | Helius API key (helius.dev) |
 | `AGENT_WALLET_ADDRESS` | Yes | Solana wallet address for payments |
 | `PAYMENTS_ENABLED` | No | Set to `"true"` to enable x402 paywall |
-| `PAYMENTS_RECEIVABLE_ADDRESS` | If payments | Wallet to receive USDC payments |
 | `FACILITATOR_URL` | If payments | x402 facilitator URL |
-| `NETWORK` | If payments | `solana:mainnet` |
-| `JUPITER_API_KEY` | No | Jupiter API key (optional, free tier works) |
 | `UPSTASH_REDIS_REST_URL` | No | Upstash Redis for caching (falls back to in-memory) |
 | `UPSTASH_REDIS_REST_TOKEN` | No | Upstash Redis token |
+| `JUPITER_API_KEY` | No | Jupiter API key (optional, free tier works) |
 
 ## Deployment
 
-Deployed on [Railway](https://railway.app) with Docker (Bun runtime).
-
-```bash
-# Deploy to Railway
-railway up --service solenrich
-```
+Deployed on [Railway](https://railway.app) with Docker (Bun runtime). Auto-deploys from `main` branch.
 
 ## License
 
