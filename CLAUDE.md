@@ -263,7 +263,7 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] `src/enrichers/due-diligence.ts` — DueDiligenceAnalyzer: composite (token + whales + holders), centralized `scoreTokenRisk()` with holder concentration, risk levels, detailed risk factors
 - [x] `src/formatters/llm-{whale-watch,graph,copy-trade,due-diligence}.ts` — LLM briefing generators
 - [x] `src/entrypoints/{whale-watch,batch,graph,copy-trade,due-diligence}.ts` — entrypoint handlers
-- [x] `src/lib/agent.ts` — all 10 entrypoints registered (5 core + 5 premium)
+- [x] `src/lib/agent.ts` — all 13 entrypoints registered (5 core + 5 premium + query + 2 comparison)
 - [x] Type check passes, server starts, all endpoints respond and return data
 - **Note:** `query` endpoint (NL inference via Daydreams Router) deferred — lowest priority per PRD
 - **Note:** Batch endpoint uses concurrency limit of 5 to prevent overwhelming data sources
@@ -314,7 +314,7 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] `query` endpoint — accepts freeform NL questions, routes via keyword matching to the right enricher (2026-03-21)
 - [ ] Webhook/SSE streaming — real-time whale alerts, token movement notifications (`src/realtime/` scaffolded but empty)
 - [ ] Portfolio tracker — historical wallet value over time using Helius tx history + price snapshots
-- [ ] Token comparison — side-by-side analysis of 2-3 tokens (liquidity, holder distribution, risk)
+- [x] Token & wallet comparison — side-by-side analysis of 2-3 tokens or wallets with rankings + summary picks (2026-03-30)
 - [x] Entity labeling — known entities (CEX, protocol, bridge) tagged in wallet-graph, whale-watch, connected wallets (2026-03-21)
 
 ### Critical Bug Fixes
@@ -346,11 +346,11 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 
 Six features to deepen SolEnrich's core value prop: getting solid Solana data to agents/LLMs.
 
-**Priority 1 — Multi-Entity Comparison** (1 session, no blockers)
-- `compare-tokens`, `compare-wallets` endpoints
-- Runs 2-3 enrichments in parallel, returns structured diff + recommendation
-- Reuses: token-analyzer, due-diligence, batch-enrich pattern
-- Feasibility: Very High — straightforward wrapper over existing enrichers
+**Priority 1 — Multi-Entity Comparison** — DONE (2026-03-30)
+- [x] `compare-tokens`, `compare-wallets` endpoints shipped
+- [x] Side-by-side rankings per metric, summary picks (safest, most liquid, etc.)
+- [x] LLM briefing with markdown tables
+- [x] $0.006 USDC per comparison, 13 total endpoints now
 
 **Priority 2 — Temporal Context / "What changed?"** (2-3 sessions)
 - `wallet-history`, `token-trend` endpoints
