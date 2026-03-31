@@ -256,6 +256,166 @@ app.post('/demo/enrich', async (c) => {
 
 console.log('[demo] Free demo endpoint available at POST /demo/enrich');
 
+// --- Documentation endpoint (agent-readable) ---
+
+app.get('/docs', (c) => {
+  return c.json({
+    name: 'SolEnrich',
+    version: '1.0.0',
+    description: 'Solana onchain data enrichment agent. All scoring is deterministic — no LLM inference in the pipeline.',
+    base_url: 'https://solenrich-production.up.railway.app',
+    payment: {
+      protocol: 'x402',
+      currency: 'USDC',
+      network: 'solana',
+      facilitator: 'https://facilitator.payai.network',
+    },
+    formats: {
+      json: 'Structured data for agent pipelines',
+      llm: 'Natural language briefing (markdown) for LLM context windows',
+      both: 'JSON data + llm_summary field',
+    },
+    endpoints: {
+      'enrich-wallet-light': {
+        price: '0.002',
+        input: { address: 'string (Solana base58)', format: 'json | llm | both' },
+        description: 'Light wallet profile: SOL balance, token holdings, labels, risk score',
+      },
+      'enrich-wallet-full': {
+        price: '0.005',
+        input: { address: 'string', format: 'json | llm | both' },
+        description: 'Full wallet profile: adds DeFi positions, connected wallets, enhanced tx history',
+      },
+      'enrich-token-light': {
+        price: '0.002',
+        input: { mint: 'string (token mint address)', format: 'json | llm | both' },
+        description: 'Token analysis: price (median of 3 sources), market cap, volume, liquidity, risk flags',
+      },
+      'enrich-token-full': {
+        price: '0.004',
+        input: { mint: 'string', format: 'json | llm | both' },
+        description: 'Full token analysis: adds top 20 holders, HHI concentration, volatility metrics',
+      },
+      'parse-transaction': {
+        price: '0.001',
+        input: { signature: 'string (tx signature)', format: 'json | llm | both' },
+        description: 'Parse a transaction: type detection, protocol identification, transfer breakdown',
+      },
+      'whale-watch': {
+        price: '0.008',
+        input: { mint: 'string', threshold_usd: 'number (default 10000)', lookback_hours: 'number (default 24)', format: 'json | llm | both' },
+        description: 'Top holders with accumulation/distribution tracking and balance context',
+      },
+      'batch-enrich': {
+        price: '0.015',
+        input: { addresses: 'string[] (1-25)', type: 'wallet | token', depth: 'light | full', format: 'json | llm | both' },
+        description: 'Parallel enrichment of multiple wallets or tokens in a single call',
+      },
+      'wallet-graph': {
+        price: '0.010',
+        input: { address: 'string', depth: '1 | 2', format: 'json | llm | both' },
+        description: 'Transaction connection mapping and suspicious cluster detection',
+      },
+      'copy-trade-signals': {
+        price: '0.010',
+        input: { address: 'string', lookback_days: 'number (default 30)', format: 'json | llm | both' },
+        description: 'Trading PnL, win rate, Sharpe/Sortino ratios, max drawdown, profit factor',
+      },
+      'due-diligence': {
+        price: '0.020',
+        input: { mint: 'string', format: 'json | llm | both' },
+        description: 'Composite risk report: token analysis + whale activity + holder concentration. Returns SAFE / CAUTION / RISKY verdict',
+      },
+      'query': {
+        price: '0.003',
+        input: { question: 'string (natural language)', format: 'json | llm | both' },
+        description: 'Plain English questions routed to the right enricher via keyword matching',
+      },
+      'compare-tokens': {
+        price: '0.006',
+        input: { mints: 'string[] (2-3 token mints)', format: 'json | llm | both' },
+        description: 'Side-by-side token comparison: price, liquidity, volatility, HHI, risk. Rankings + summary picks',
+      },
+      'compare-wallets': {
+        price: '0.006',
+        input: { addresses: 'string[] (2-3 wallet addresses)', depth: 'light | full', format: 'json | llm | both' },
+        description: 'Side-by-side wallet comparison: portfolio, activity, risk, labels. Rankings + summary picks',
+      },
+    },
+    methodology: {
+      risk_score: {
+        description: 'Wallet risk score from 0.0 (safe) to 1.0 (critical). Pure on-chain, deterministic.',
+        factors: [
+          'High transaction concentration (few counterparties) — +0.15',
+          'Low transaction diversity — +0.1',
+          'New wallet (< 30 days old) — +0.15',
+          'Bot-like patterns (high frequency, repetitive) — +0.2',
+          'Interactions with known risky programs — +0.15',
+          'Airdrop farming signals (many small token accounts) — +0.1',
+          'Low protocol diversity (< 2 protocols) — +0.1',
+        ],
+        levels: {
+          LOW: '< 0.25',
+          MODERATE: '0.25 - 0.50',
+          ELEVATED: '0.50 - 0.65',
+          HIGH: '0.65 - 0.80',
+          CRITICAL: '> 0.80',
+        },
+      },
+      token_risk_score: {
+        description: 'Token risk score from 0.0 to 1.0 used in due-diligence. Combines risk flags, holder concentration, and whale activity.',
+        factors: [
+          'Risk flags count — each adds 0.1',
+          'Not verified on Jupiter — +0.1',
+          'Mint authority still active — +0.15',
+          'Freeze authority active — +0.1',
+          'Top holder > 50% supply — +0.15',
+          'Top 5 holders > 80% supply — +0.1',
+          'Whale distribution activity detected — +0.05',
+        ],
+        verdicts: {
+          SAFE: 'risk_score < 0.3',
+          CAUTION: 'risk_score 0.3 - 0.6',
+          RISKY: 'risk_score > 0.6',
+        },
+      },
+      hhi: {
+        description: 'Herfindahl-Hirschman Index — sum of squared holder percentages. Measures concentration shape. Based on top 20 holders from Solana RPC.',
+        interpretation: {
+          '< 1500': 'Well distributed',
+          '1500 - 2500': 'Moderately concentrated',
+          '> 2500': 'Highly concentrated',
+        },
+      },
+      volatility: {
+        description: 'Price volatility computed from DexScreener multi-timeframe data (1h, 6h, 24h price changes). No extra API calls.',
+        classifications: {
+          LOW: 'daily std < 3%',
+          MODERATE: 'daily std 3-8%',
+          HIGH: 'daily std 8-15%',
+          EXTREME: 'daily std > 15%',
+        },
+      },
+      pricing: {
+        description: 'Token prices are the median of up to 3 sources: Helius DAS, DexScreener, and Jupiter. Median resists outliers from any single DEX.',
+      },
+    },
+    data_sources: {
+      helius: 'DAS API for wallet assets, enhanced transaction parsing. Primary source.',
+      dexscreener: 'Token prices, market data, liquidity, OHLCV. Free API.',
+      jupiter: 'Token metadata, verification status, cross-reference pricing. Free API.',
+      defi_llama: 'Protocol TVL and yield data. Free API.',
+      solana_rpc: 'SOL balances, mint info, top holders (via Helius RPC endpoint).',
+    },
+    entity_labeling: {
+      description: '20+ known Solana addresses auto-tagged in all enrichment results.',
+      types: ['CEX (Binance, Coinbase, etc.)', 'Protocol (Raydium, Orca, etc.)', 'Bridge', 'Foundation'],
+    },
+  });
+});
+
+console.log('[docs] Documentation endpoint available at GET /docs');
+
 // --- Agent Card discovery metadata ---
 
 app.get("/agent-card-extended", (c) => {

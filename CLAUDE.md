@@ -157,6 +157,12 @@ Used by wallet-profiler for DeFi position detection:
 - marginfi: `MFv2hWf31Z9kbCa1snEPYctwafyhdvnV7FZnsebVacA`
 - Drift: `dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH`
 
+## Documentation
+
+- **`GET /docs`** — Agent-readable documentation endpoint. Returns JSON with all endpoint schemas, input/output descriptions, scoring methodology (risk score factors, HHI interpretation, volatility classifications), data sources, and entity labeling info.
+- **IMPORTANT:** When adding new endpoints, scoring factors, or methodology changes, update the `/docs` endpoint in `src/lib/agent.ts` to keep agent-facing documentation in sync.
+- **README.md** — Human-readable API docs with examples, pricing table, and integration guide.
+
 ## Test Addresses
 
 - **Wallet:** `vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg` (Solana Foundation)
