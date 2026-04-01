@@ -217,8 +217,14 @@ export class StressRunner {
       }
     } catch {}
 
-    for (const ep of ENDPOINTS) {
+    for (let i = 0; i < ENDPOINTS.length; i++) {
+      const ep = ENDPOINTS[i];
       const input = { ...ep.input };
+
+      // Small delay between paid calls to avoid facilitator rate limiting
+      if (i > 0 && this.fetchFn !== globalThis.fetch) {
+        await new Promise(r => setTimeout(r, 2000));
+      }
 
       // Inject real sig for parse-transaction
       if (input.signature === '__FETCH_SIG__') {
