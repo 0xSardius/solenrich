@@ -3,11 +3,12 @@
  * SolScout — SolEnrich consumer agent + stress test runner
  *
  * Usage:
- *   bun run agents/solscout/index.ts --target local      # test against localhost:3000
- *   bun run agents/solscout/index.ts --target production  # test against Railway
- *   bun run agents/solscout/index.ts --target local --mode demo   # demo consumer mode
- *   bun run agents/solscout/index.ts --target local --mode stress # stress test (default)
- *   bun run agents/solscout/index.ts --target local --mode report # stress test + save report
+ *   bun run agents/solscout/index.ts --target local                    # stress test (free, local)
+ *   bun run agents/solscout/index.ts --target production               # stress test (402 verification)
+ *   bun run agents/solscout/index.ts --target production --paid        # stress test WITH real USDC payments
+ *   bun run agents/solscout/index.ts --target local --mode demo        # demo consumer mode
+ *   bun run agents/solscout/index.ts --target local --mode report      # stress test + save report
+ *   bun run agents/solscout/index.ts --target production --paid --mode demo "Is JUP safe?"
  */
 
 import { StressRunner } from './stress';
@@ -22,6 +23,7 @@ const target = args.includes('--target')
 const mode = args.includes('--mode')
   ? args[args.indexOf('--mode') + 1]
   : 'stress';
+const paid = args.includes('--paid');
 
 const BASE_URLS: Record<string, string> = {
   local: 'http://127.0.0.1:3000',
@@ -37,8 +39,18 @@ if (!baseUrl) {
 console.log(`\n╔═══════════════════════════════════════╗`);
 console.log(`║  SolScout — SolEnrich Consumer Agent  ║`);
 console.log(`╚═══════════════════════════════════════╝`);
-console.log(`  Target: ${target} (${baseUrl})`);
-console.log(`  Mode:   ${mode}\n`);
+console.log(`  Target:  ${target} (${baseUrl})`);
+console.log(`  Mode:    ${mode}`);
+console.log(`  Payment: ${paid ? 'ENABLED (x402 USDC)' : 'disabled'}`);
+console.log('');
+
+// --- Set up fetch (paid or free) ---
+let fetchFn: typeof fetch = globalThis.fetch;
+
+if (paid) {
+  const { createPaidFetch } = await import('./paid-fetch');
+  fetchFn = await createPaidFetch();
+}
 
 // --- Health check ---
 try {
@@ -56,7 +68,7 @@ try {
 
 // --- Run mode ---
 if (mode === 'stress' || mode === 'report') {
-  const runner = new StressRunner(baseUrl);
+  const runner = new StressRunner(baseUrl, paid ? fetchFn : undefined);
   const results = await runner.run();
   const reporter = new Reporter(results, target);
   reporter.print();
@@ -66,7 +78,7 @@ if (mode === 'stress' || mode === 'report') {
 } else if (mode === 'demo') {
   const question = args.filter(a => !a.startsWith('--') && a !== target && a !== mode).join(' ')
     || 'Is JUP a safe token to hold?';
-  const demo = new DemoConsumer(baseUrl);
+  const demo = new DemoConsumer(baseUrl, paid ? fetchFn : undefined);
   await demo.ask(question);
 } else {
   console.error(`Unknown mode "${mode}". Use: stress | report | demo`);

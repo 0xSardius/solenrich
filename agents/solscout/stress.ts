@@ -189,9 +189,11 @@ const ENDPOINTS: Array<{
 
 export class StressRunner {
   private baseUrl: string;
+  private fetchFn: typeof fetch;
 
-  constructor(baseUrl: string) {
+  constructor(baseUrl: string, fetchFn?: typeof fetch) {
     this.baseUrl = baseUrl;
+    this.fetchFn = fetchFn ?? globalThis.fetch;
   }
 
   async run(): Promise<StressResults> {
@@ -271,7 +273,7 @@ export class StressRunner {
     const timer = setTimeout(() => controller.abort(), timeout);
 
     try {
-      const res = await fetch(`${this.baseUrl}/entrypoints/${key}/invoke`, {
+      const res = await this.fetchFn(`${this.baseUrl}/entrypoints/${key}/invoke`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input }),

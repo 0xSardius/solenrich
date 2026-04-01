@@ -20,9 +20,11 @@ interface RouteResult {
 
 export class DemoConsumer {
   private baseUrl: string;
+  private fetchFn: typeof fetch;
 
-  constructor(baseUrl: string) {
+  constructor(baseUrl: string, fetchFn?: typeof fetch) {
     this.baseUrl = baseUrl;
+    this.fetchFn = fetchFn ?? globalThis.fetch;
   }
 
   async ask(question: string): Promise<void> {
@@ -43,7 +45,7 @@ export class DemoConsumer {
 
     try {
       const start = Date.now();
-      const res = await fetch(`${this.baseUrl}/entrypoints/${route.endpoint}/invoke`, {
+      const res = await this.fetchFn(`${this.baseUrl}/entrypoints/${route.endpoint}/invoke`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ input: route.input }),
@@ -94,7 +96,7 @@ export class DemoConsumer {
 
     try {
       const start = Date.now();
-      const res = await fetch(`${this.baseUrl}/demo/enrich`, {
+      const res = await this.fetchFn(`${this.baseUrl}/demo/enrich`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ address }),
