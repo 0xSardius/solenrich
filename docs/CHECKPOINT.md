@@ -1,11 +1,21 @@
 # Session Checkpoint
 
 ## Last session date
-2026-03-29
+2026-04-01
 
 ## What was completed
 
-### This session (March 26-29)
+### This session (March 30 - April 1)
+- **compare-tokens + compare-wallets endpoints** — side-by-side comparison of 2-3 tokens or wallets with rankings, summary picks, markdown tables. $0.006 each. 13 total endpoints.
+- **GET /docs endpoint** — agent-readable documentation with full API reference, scoring methodology, HHI interpretation, volatility classifications
+- **README rewrite** — complete API docs with all 13 endpoints, scoring methodology, demo section, MCP setup
+- **SolScout consumer agent** — `agents/solscout/` standalone stress test + demo + paid E2E verification
+- **SolScout wallet** — `H3UyiWm1YTzSKxXTpyssxxEreq6HzWTwNW5BVYewmmfC`, funded with SOL + USDC
+- **Full paid E2E verification** — 13/13 endpoints passing with real USDC via x402 on production. Report saved.
+- **x402 payment flow debugged** — fixed signer format (toClientSvmSigner), facilitator rate limiting (2s delay), receiving wallet USDC token account initialization
+- **CLAUDE.md updated** — comparison endpoints, SolScout docs, /docs endpoint reminder
+
+### Previous session (March 26-29)
 - **Interactive demo endpoint** — `POST /demo/enrich` with auto wallet/token detection, IP-based rate limiting (10/hr), CORS for Vercel
 - **Landing page demo section** — search bar, example buttons (JUP, BONK, Solana Foundation), formatted/JSON toggle, rate limit counter
 - **OG meta tags + image** — Open Graph + Twitter Card for rich link previews, OG image template + PNG

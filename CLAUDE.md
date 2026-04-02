@@ -163,6 +163,31 @@ Used by wallet-profiler for DeFi position detection:
 - **IMPORTANT:** When adding new endpoints, scoring factors, or methodology changes, update the `/docs` endpoint in `src/lib/agent.ts` to keep agent-facing documentation in sync.
 - **README.md** — Human-readable API docs with examples, pricing table, and integration guide.
 
+## SolScout (Consumer Agent)
+
+SolScout is a standalone consumer agent in `agents/solscout/` that calls SolEnrich over HTTP. It does NOT modify anything in `src/`.
+
+```bash
+# Stress test (local, free)
+bun run agents/solscout/index.ts --target local --mode stress
+
+# Stress test (production, verifies 402 paywall)
+bun run agents/solscout/index.ts --target production --mode stress
+
+# Paid E2E test (real USDC, ~$0.10 per run)
+bun run agents/solscout/index.ts --target production --paid --mode stress
+
+# Demo consumer (NL questions)
+bun run agents/solscout/index.ts --target local --mode demo "Is JUP safe?"
+
+# Save JSON report
+bun run agents/solscout/index.ts --target production --paid --mode report
+```
+
+- **SolScout wallet:** `H3UyiWm1YTzSKxXTpyssxxEreq6HzWTwNW5BVYewmmfC` (env: `SOLSCOUT_PRIVATE_KEY`)
+- **Reports:** `agents/solscout/reports/`
+- **First E2E report:** 13/13 passed, avg 4.8s latency (2026-04-01)
+
 ## Test Addresses
 
 - **Wallet:** `vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg` (Solana Foundation)
@@ -342,6 +367,12 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [ ] Usage analytics — track endpoint calls, response times, error rates (Axiom or simple logging)
 - [ ] Birdeye API key — unlocks wallet portfolio endpoint and richer token data
 - [ ] Test suite in CI — wire existing test files into GitHub Actions
+- [x] SolScout consumer agent — stress test + demo + paid E2E verification (2026-04-01)
+- [x] Full E2E paid verification — 13/13 endpoints passing with real USDC via x402 (2026-04-01)
+- [x] Test-endpoints Claude Code subagent — `.claude/agents/test-endpoints.md` (2026-03-29)
+- [x] `test/test-all-endpoints.ts` — 55 endpoint verification tests (2026-03-29)
+- [x] `test/test-402-production.ts` — production paywall verification (2026-03-29)
+- [x] `GET /docs` — agent-readable documentation endpoint with scoring methodology (2026-03-30)
 
 ### Distribution / Growth
 - [ ] Agent-to-agent integrations — partner with trading agents that need enrichment data
