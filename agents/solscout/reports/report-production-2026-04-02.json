@@ -1,0 +1,358 @@
+{
+  "target": "https://solenrich-production.up.railway.app",
+  "timestamp": "2026-04-02T00:08:00.702Z",
+  "total": 13,
+  "passed": 13,
+  "failed": 0,
+  "avg_latency_ms": 4828,
+  "endpoints": [
+    {
+      "endpoint": "enrich-wallet-light",
+      "status": 200,
+      "latency_ms": 2113,
+      "passed": true,
+      "checks": [
+        {
+          "name": "has address",
+          "passed": true
+        },
+        {
+          "name": "has sol_balance",
+          "passed": true
+        },
+        {
+          "name": "has top_holdings array",
+          "passed": true
+        },
+        {
+          "name": "has labels array",
+          "passed": true
+        },
+        {
+          "name": "has risk_score",
+          "passed": true
+        },
+        {
+          "name": "has risk_level",
+          "passed": true
+        },
+        {
+          "name": "has llm_summary",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "endpoint": "enrich-wallet-full",
+      "status": 200,
+      "latency_ms": 4896,
+      "passed": true,
+      "checks": [
+        {
+          "name": "has address",
+          "passed": true
+        },
+        {
+          "name": "has defi_positions",
+          "passed": true
+        },
+        {
+          "name": "has connected_wallets",
+          "passed": true
+        },
+        {
+          "name": "has llm_summary",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "endpoint": "enrich-token-light",
+      "status": 200,
+      "latency_ms": 4859,
+      "passed": true,
+      "checks": [
+        {
+          "name": "has mint",
+          "passed": true
+        },
+        {
+          "name": "has price_usd (non-zero)",
+          "passed": true,
+          "detail": "price=0.000005891"
+        },
+        {
+          "name": "price is real (> 0)",
+          "passed": true,
+          "detail": "price=0.000005891 — DATA QUALITY ISSUE if 0"
+        },
+        {
+          "name": "has symbol",
+          "passed": true,
+          "detail": "symbol=\"Bonk\""
+        },
+        {
+          "name": "has market_cap",
+          "passed": true
+        },
+        {
+          "name": "has risk_flags",
+          "passed": true
+        },
+        {
+          "name": "has llm_summary",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "endpoint": "enrich-token-full",
+      "status": 200,
+      "latency_ms": 5124,
+      "passed": true,
+      "checks": [
+        {
+          "name": "has top_holders",
+          "passed": true
+        },
+        {
+          "name": "holders have pct_supply",
+          "passed": true
+        },
+        {
+          "name": "has concentration",
+          "passed": true
+        },
+        {
+          "name": "has HHI",
+          "passed": true
+        },
+        {
+          "name": "has volatility",
+          "passed": true
+        },
+        {
+          "name": "has llm_summary",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "endpoint": "parse-transaction",
+      "status": 200,
+      "latency_ms": 2256,
+      "passed": true,
+      "checks": [
+        {
+          "name": "has signature",
+          "passed": true
+        },
+        {
+          "name": "has type",
+          "passed": true
+        },
+        {
+          "name": "has timestamp",
+          "passed": true
+        },
+        {
+          "name": "has llm_summary",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "endpoint": "whale-watch",
+      "status": 200,
+      "latency_ms": 4624,
+      "passed": true,
+      "checks": [
+        {
+          "name": "has mint",
+          "passed": true
+        },
+        {
+          "name": "has whales array",
+          "passed": true
+        },
+        {
+          "name": "has net_flow_direction",
+          "passed": true
+        },
+        {
+          "name": "has llm_summary",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "endpoint": "batch-enrich",
+      "status": 200,
+      "latency_ms": 1972,
+      "passed": true,
+      "checks": [
+        {
+          "name": "has results array",
+          "passed": true
+        },
+        {
+          "name": "results count >= 1",
+          "passed": true
+        },
+        {
+          "name": "first result has address",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "endpoint": "wallet-graph",
+      "status": 200,
+      "latency_ms": 2963,
+      "passed": true,
+      "checks": [
+        {
+          "name": "has address",
+          "passed": true
+        },
+        {
+          "name": "has nodes",
+          "passed": true
+        },
+        {
+          "name": "has edges",
+          "passed": true
+        },
+        {
+          "name": "has llm_summary",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "endpoint": "copy-trade-signals",
+      "status": 200,
+      "latency_ms": 3036,
+      "passed": true,
+      "checks": [
+        {
+          "name": "has address",
+          "passed": true
+        },
+        {
+          "name": "has trades_analyzed",
+          "passed": true
+        },
+        {
+          "name": "has win_rate",
+          "passed": true
+        },
+        {
+          "name": "has llm_summary",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "endpoint": "due-diligence",
+      "status": 200,
+      "latency_ms": 4863,
+      "passed": true,
+      "checks": [
+        {
+          "name": "has token data",
+          "passed": true
+        },
+        {
+          "name": "has overall_risk_score",
+          "passed": true
+        },
+        {
+          "name": "has risk_level",
+          "passed": true
+        },
+        {
+          "name": "has recommendation",
+          "passed": true
+        },
+        {
+          "name": "has llm_summary",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "endpoint": "query",
+      "status": 200,
+      "latency_ms": 2229,
+      "passed": true,
+      "checks": [
+        {
+          "name": "returned data",
+          "passed": true
+        },
+        {
+          "name": "has meaningful content",
+          "passed": "## Wallet Profile: vine...PTg\n\nActive since April 2022 Solana wallet. Holds 0.04 SOL and 6 SPL tokens.\nPortfolio value: ~$3.35 across tokens, NFTs, and DeFi positions.\n\nTop holdings: SMOG ($0.13), SI ($0.000616), SOL ($0.00), $ƧOЯⱯ ($0.00), RAP ($0.00). Holds 9 NFTs.\n\n8 transactions in 30 days. Risk score: 0.15/1.0 (low).\nKey risk factors: Low transaction diversity; Interacts with fewer than 2 protocols.\n\nData as of: 2026-04-02T00:04:09.517Z"
+        }
+      ]
+    },
+    {
+      "endpoint": "compare-tokens",
+      "status": 200,
+      "latency_ms": 17370,
+      "passed": true,
+      "checks": [
+        {
+          "name": "has tokens array",
+          "passed": true
+        },
+        {
+          "name": "has rankings",
+          "passed": true
+        },
+        {
+          "name": "has summary",
+          "passed": true
+        },
+        {
+          "name": "has safest pick",
+          "passed": true
+        },
+        {
+          "name": "token prices are real",
+          "passed": true,
+          "detail": "Bonk=$0.000005891, JUP=$0.1553"
+        },
+        {
+          "name": "has llm_summary",
+          "passed": true
+        }
+      ]
+    },
+    {
+      "endpoint": "compare-wallets",
+      "status": 200,
+      "latency_ms": 6458,
+      "passed": true,
+      "checks": [
+        {
+          "name": "has wallets array",
+          "passed": true
+        },
+        {
+          "name": "has rankings",
+          "passed": true
+        },
+        {
+          "name": "has summary",
+          "passed": true
+        },
+        {
+          "name": "has llm_summary",
+          "passed": true
+        }
+      ]
+    }
+  ]
+}
