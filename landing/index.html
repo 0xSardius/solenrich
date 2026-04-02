@@ -1294,6 +1294,7 @@
         <span class="update-item"><span class="check">&#10003;</span> Sharpe ratio &amp; risk-adjusted returns</span>
         <span class="update-item"><span class="check">&#10003;</span> Natural language query endpoint</span>
         <span class="update-item"><span class="check">&#10003;</span> Token &amp; wallet comparison</span>
+        <span class="update-item"><span class="check">&#10003;</span> Temporal trends ("what changed?")</span>
       </div>
     </div>
   </div>
@@ -1351,7 +1352,7 @@
     <div class="container">
       <div class="reveal">
         <div class="section-label">Endpoints</div>
-        <h2 class="section-title">13 enrichment endpoints</h2>
+        <h2 class="section-title">15 enrichment endpoints</h2>
         <p class="section-desc">
           From quick wallet lookups to full due diligence reports.
           Every endpoint returns data in your choice of format.
@@ -1473,6 +1474,24 @@
             <span class="endpoint-price">$0.006</span>
           </div>
           <p class="endpoint-desc">Side-by-side comparison of 2-3 wallets: portfolio value, activity, risk score, labels, holdings. Rankings + summary picks.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">wallet</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">token-trend</span>
+            <span class="endpoint-price">$0.006</span>
+          </div>
+          <p class="endpoint-desc">"What changed?" — price, liquidity, concentration, and risk changes over 7/14/30 days. Direction indicators per metric. Snapshots accumulate automatically.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">token</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">wallet-history</span>
+            <span class="endpoint-price">$0.006</span>
+          </div>
+          <p class="endpoint-desc">"What changed?" — portfolio value, SOL balance, risk score, and position changes over 7/14/30 days. Tracks added and removed holdings.</p>
           <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">wallet</span></div>
         </div>
       </div>

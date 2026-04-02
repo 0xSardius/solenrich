@@ -294,7 +294,7 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] `src/enrichers/due-diligence.ts` — DueDiligenceAnalyzer: composite (token + whales + holders), centralized `scoreTokenRisk()` with holder concentration, risk levels, detailed risk factors
 - [x] `src/formatters/llm-{whale-watch,graph,copy-trade,due-diligence}.ts` — LLM briefing generators
 - [x] `src/entrypoints/{whale-watch,batch,graph,copy-trade,due-diligence}.ts` — entrypoint handlers
-- [x] `src/lib/agent.ts` — all 13 entrypoints registered (5 core + 5 premium + query + 2 comparison)
+- [x] `src/lib/agent.ts` — all 15 entrypoints registered (5 core + 5 premium + query + 2 comparison + 2 temporal)
 - [x] Type check passes, server starts, all endpoints respond and return data
 - **Note:** `query` endpoint (NL inference via Daydreams Router) deferred — lowest priority per PRD
 - **Note:** Batch endpoint uses concurrency limit of 5 to prevent overwhelming data sources
@@ -336,7 +336,7 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] Entity labeling — known wallets (CEX, protocol, bridge) tagged in all enrichment results (2026-03-21)
 - [x] Copy-trade PnL fix — average cost basis instead of FIFO (2026-03-21)
 - [x] Query endpoint — NL questions routed to enrichers via keyword matching (2026-03-21)
-- [ ] Custom domain (`api.solenrich.xyz` or `solenrich.parallaxlabs.xyz`)
+- [x] Custom domain (2026-04-02)
 - [ ] MCP directory submissions (Smithery, mcp.run, Glama) — free distribution to Claude/Cursor users
 - [ ] x402 bazaar listing — trigger by making a paid request through the facilitator
 - [ ] XGATE registration for agent-to-agent discovery
@@ -389,12 +389,14 @@ Six features to deepen SolEnrich's core value prop: getting solid Solana data to
 - [x] LLM briefing with markdown tables
 - [x] $0.006 USDC per comparison, 13 total endpoints now
 
-**Priority 2 — Temporal Context / "What changed?"** (2-3 sessions)
-- `wallet-history`, `token-trend` endpoints
-- Store daily snapshots in Upstash Redis with timestamped keys, return deltas on request
-- Reuses: wallet-profiler, token-analyzer, whale-watch (snapshot their output)
-- Blocker: Needs scheduled snapshot job (Railway cron or external trigger)
-- Feasibility: High — unique differentiator, no one else does this on Solana
+**Priority 2 — Temporal Context / "What changed?"** — DONE (2026-04-02)
+- [x] `token-trend`, `wallet-history` endpoints shipped
+- [x] SnapshotStore: daily snapshots captured fire-and-forget on every enrichment call (no cron needed)
+- [x] Cache: mget (batch retrieval) + setIfAbsent (NX) methods added
+- [x] Direction indicators: improving/declining/stable per metric + overall direction
+- [x] Position change tracking for wallets (added/removed holdings)
+- [x] 30-day TTL on snapshots, data accumulates over time
+- [x] $0.006 USDC per call, 15 total endpoints now
 
 **Priority 3 — New Token Discovery** (2 sessions)
 - `new-launches`, `token-screener` endpoints
