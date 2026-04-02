@@ -48,6 +48,8 @@ export const PRICING = {
   'query': '0.003',
   'compare-tokens': '0.006',
   'compare-wallets': '0.006',
+  'token-trend': '0.006',
+  'wallet-history': '0.006',
 } as const;
 
 /** Cache TTL in seconds per data type */
@@ -63,4 +65,6 @@ export const CACHE_TTL = {
   graph: 1800,
   copyTrade: 600,
   dueDiligence: 600,
+  snapshot: 2_592_000,  // 30 days
+  trend: 300,           // 5 minutes
 } as const;

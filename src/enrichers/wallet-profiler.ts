@@ -2,6 +2,7 @@ import type { HeliusClient, HeliusAssetList, EnhancedTransaction } from '../sour
 import type { SolanaRpcClient } from '../sources/solana-rpc';
 import type { DexScreenerClient } from '../sources/dexscreener';
 import type { PriceAggregator } from '../utils/price-aggregator';
+import type { SnapshotStore } from './snapshot-store';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { parallelFetch, type ParallelTask } from '../utils/parallel';
@@ -65,13 +66,18 @@ export interface WalletEnrichment {
 // --- Class ---
 
 export class WalletProfiler {
+  private snapshotStore?: SnapshotStore;
+
   constructor(
     private helius: HeliusClient,
     private solanaRpc: SolanaRpcClient,
     private dexscreener: DexScreenerClient,
     private cache: Cache,
     private priceAggregator?: PriceAggregator,
-  ) {}
+    snapshotStore?: SnapshotStore,
+  ) {
+    this.snapshotStore = snapshotStore;
+  }
 
   async enrich(address: string, depth: 'light' | 'full'): Promise<WalletEnrichment> {
     // Step 1: cache check
@@ -339,6 +345,12 @@ export class WalletProfiler {
     };
 
     await this.cache.set(cacheKey, enrichment, CACHE_TTL.walletProfile);
+
+    // Fire-and-forget snapshot capture (one per day per address)
+    if (this.snapshotStore) {
+      this.snapshotStore.captureWalletSnapshot(enrichment).catch(() => {});
+    }
+
     return enrichment;
   }
 }

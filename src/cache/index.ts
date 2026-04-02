@@ -74,6 +74,53 @@ export class Cache {
     }
   }
 
+  /** Batch get multiple keys in one round-trip */
+  async mget<T>(keys: string[]): Promise<(T | null)[]> {
+    if (keys.length === 0) return [];
+    const prefixed = keys.map(k => KEY_PREFIX + k);
+    try {
+      if (this.redis) {
+        const results = await this.redis.mget<string[]>(...prefixed);
+        return results.map(raw => {
+          if (raw === null || raw === undefined) return null;
+          try { return typeof raw === 'string' ? JSON.parse(raw) : (raw as T); }
+          catch { return null; }
+        });
+      }
+      // In-memory path
+      const now = Date.now();
+      return prefixed.map(pk => {
+        const entry = this.memory.get(pk);
+        if (!entry || now > entry.expiry) return null;
+        try { return JSON.parse(entry.value); }
+        catch { return null; }
+      });
+    } catch (err) {
+      console.warn(`[cache] mget failed:`, err);
+      return keys.map(() => null);
+    }
+  }
+
+  /** Set key only if it doesn't exist (NX). Returns true if set, false if already existed */
+  async setIfAbsent<T>(key: string, value: T, ttlSeconds: number): Promise<boolean> {
+    const prefixed = KEY_PREFIX + key;
+    try {
+      const serialized = JSON.stringify(value);
+      if (this.redis) {
+        const result = await this.redis.set(prefixed, serialized, { ex: ttlSeconds, nx: true });
+        return result === 'OK';
+      }
+      // In-memory path
+      const existing = this.memory.get(prefixed);
+      if (existing && Date.now() < existing.expiry) return false;
+      this.memory.set(prefixed, { value: serialized, expiry: Date.now() + ttlSeconds * 1000 });
+      return true;
+    } catch (err) {
+      console.warn(`[cache] setIfAbsent(${key}) failed:`, err);
+      return false;
+    }
+  }
+
   async del(key: string): Promise<void> {
     const prefixed = KEY_PREFIX + key;
     try {

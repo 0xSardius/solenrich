@@ -38,6 +38,7 @@ import { registerCopyTradeEntrypoint } from "../entrypoints/copy-trade";
 import { registerDueDiligenceEntrypoint } from "../entrypoints/due-diligence";
 import { registerQueryEntrypoint } from "../entrypoints/query";
 import { registerCompareEntrypoints } from "../entrypoints/compare";
+import { registerTrendEntrypoints } from "../entrypoints/trend";
 import { CONFIG, PRICING } from "../config";
 
 // --- Agent setup ---
@@ -98,6 +99,8 @@ if (PAYMENTS_ENABLED) {
     "POST /entrypoints/query/invoke": routeConfig(PRICING["query"]),
     "POST /entrypoints/compare-tokens/invoke": routeConfig(PRICING["compare-tokens"]),
     "POST /entrypoints/compare-wallets/invoke": routeConfig(PRICING["compare-wallets"]),
+    "POST /entrypoints/token-trend/invoke": routeConfig(PRICING["token-trend"]),
+    "POST /entrypoints/wallet-history/invoke": routeConfig(PRICING["wallet-history"]),
   };
 
   app.use("/entrypoints/*", paymentMiddleware(x402Routes, resourceServer));
@@ -111,15 +114,19 @@ if (PAYMENTS_ENABLED) {
 
 import { PriceAggregator } from "../utils/price-aggregator";
 
+import { SnapshotStore } from '../enrichers/snapshot-store';
+import { TrendAnalyzer } from '../enrichers/trend-analyzer';
+
 const cache = new Cache();
+const snapshotStore = new SnapshotStore(cache);
 const helius = new HeliusClient(cache);
 const dexscreener = new DexScreenerClient(cache);
 const jupiter = new JupiterClient(cache);
 const solanaRpc = new SolanaRpcClient();
 const priceAggregator = new PriceAggregator(dexscreener, jupiter);
 
-const walletProfiler = new WalletProfiler(helius, solanaRpc, dexscreener, cache, priceAggregator);
-const tokenAnalyzer = new TokenAnalyzer(helius, dexscreener, solanaRpc, jupiter, cache);
+const walletProfiler = new WalletProfiler(helius, solanaRpc, dexscreener, cache, priceAggregator, snapshotStore);
+const tokenAnalyzer = new TokenAnalyzer(helius, dexscreener, solanaRpc, jupiter, cache, snapshotStore);
 const txParser = new TxParser(helius, cache);
 const whaleWatcher = new WhaleWatcher(helius, dexscreener, solanaRpc, cache, priceAggregator);
 const graphMapper = new GraphMapper(helius, cache);
@@ -149,6 +156,10 @@ registerQueryEntrypoint(addEntrypoint, walletProfiler, tokenAnalyzer, txParser, 
 
 // Comparison (side-by-side analysis)
 registerCompareEntrypoints(addEntrypoint, tokenComparator, walletComparator);
+
+// Temporal context (trends over time)
+const trendAnalyzer = new TrendAnalyzer(tokenAnalyzer, walletProfiler, snapshotStore, cache);
+registerTrendEntrypoints(addEntrypoint, trendAnalyzer);
 
 // --- Demo endpoint (free, rate-limited, for landing page) ---
 

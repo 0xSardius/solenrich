@@ -6,6 +6,7 @@ import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { parallelFetch, type ParallelTask } from '../utils/parallel';
 import { formatTimestamp } from '../utils/normalize';
+import type { SnapshotStore } from './snapshot-store';
 
 // --- Types ---
 
@@ -53,13 +54,18 @@ export interface TokenEnrichment {
 // --- Class ---
 
 export class TokenAnalyzer {
+  private snapshotStore?: SnapshotStore;
+
   constructor(
     private helius: HeliusClient,
     private dexscreener: DexScreenerClient,
     private solanaRpc: SolanaRpcClient,
     private jupiter: JupiterClient,
     private cache: Cache,
-  ) {}
+    snapshotStore?: SnapshotStore,
+  ) {
+    this.snapshotStore = snapshotStore;
+  }
 
   async enrich(mint: string, includeHolders = false): Promise<TokenEnrichment> {
     const cacheKey = `token:${mint}:${includeHolders ? 'holders' : 'basic'}`;
@@ -241,6 +247,12 @@ export class TokenAnalyzer {
     if (price > 0 || enrichment.symbol) {
       await this.cache.set(cacheKey, enrichment, CACHE_TTL.tokenPrice);
     }
+
+    // Fire-and-forget snapshot capture (one per day per mint)
+    if (this.snapshotStore && price > 0) {
+      this.snapshotStore.captureTokenSnapshot(enrichment).catch(() => {});
+    }
+
     return enrichment;
   }
 }
