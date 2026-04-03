@@ -294,7 +294,7 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] `src/enrichers/due-diligence.ts` — DueDiligenceAnalyzer: composite (token + whales + holders), centralized `scoreTokenRisk()` with holder concentration, risk levels, detailed risk factors
 - [x] `src/formatters/llm-{whale-watch,graph,copy-trade,due-diligence}.ts` — LLM briefing generators
 - [x] `src/entrypoints/{whale-watch,batch,graph,copy-trade,due-diligence}.ts` — entrypoint handlers
-- [x] `src/lib/agent.ts` — all 15 entrypoints registered (5 core + 5 premium + query + 2 comparison + 2 temporal)
+- [x] `src/lib/agent.ts` — all 16 entrypoints registered (5 core + 5 premium + query + 2 comparison + 2 temporal + 1 discovery)
 - [x] Type check passes, server starts, all endpoints respond and return data
 - **Note:** `query` endpoint (NL inference via Daydreams Router) deferred — lowest priority per PRD
 - **Note:** Batch endpoint uses concurrency limit of 5 to prevent overwhelming data sources
@@ -398,12 +398,11 @@ Six features to deepen SolEnrich's core value prop: getting solid Solana data to
 - [x] 30-day TTL on snapshots, data accumulates over time
 - [x] $0.006 USDC per call, 15 total endpoints now
 
-**Priority 3 — New Token Discovery** (2 sessions)
-- `new-launches`, `token-screener` endpoints
-- DexScreener recently created pairs → filter by creation time → run due-diligence pipeline → ranked list
-- Reuses: due-diligence, token-analyzer, whale-watch, risk-scorer
-- Blocker: No direct "new pools" API — DexScreener search or Helius searchAssets with creation filter needed
-- Feasibility: Medium-High — killer feature for trading agents
+**Priority 3 — New Token Discovery** — DONE (2026-04-02)
+- [x] `new-tokens` endpoint shipped
+- [x] DexScreener getLatestProfiles() → filter → enrich in parallel batches of 5 → risk score → rank safest first
+- [x] Filters: min_liquidity_usd, max_risk_score, limit
+- [x] $0.012 USDC per call, 16 total endpoints now
 
 **Priority 4 — Protocol Analytics** (1-2 sessions)
 - `protocol-profile` endpoint
