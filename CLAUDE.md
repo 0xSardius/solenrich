@@ -374,6 +374,33 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] `test/test-402-production.ts` — production paywall verification (2026-03-29)
 - [x] `GET /docs` — agent-readable documentation endpoint with scoring methodology (2026-03-30)
 
+### MPP Integration (Machine Payments Protocol) — PLANNED
+
+Add MPP (`mppx`) alongside existing x402 as a second payment option. Stripe + Tempo co-authored protocol, Solana + fiat support. x402 stays untouched — MPP is additive.
+
+**Approach:** Staged rollout — 3 cheapest endpoints first, then all 16 once verified.
+
+**Stage 1 endpoints:** `parse-transaction` ($0.001), `enrich-wallet-light` ($0.002), `enrich-token-light` ($0.002)
+
+**Payment methods to enable:**
+- Solana SPL tokens (tightens existing crypto flow)
+- Stripe fiat (new capability — agents pay with cards)
+
+**Implementation:**
+- Install `mppx` package
+- Add `mppx/hono` middleware alongside existing x402 middleware on Stage 1 routes
+- 402 responses include both x402 and MPP challenge types
+- Agents can pay via either protocol
+- Test with SolScout `--paid` flag
+
+**Env vars needed (not yet set):**
+- `MPP_SECRET_KEY` — HMAC key for challenge signing (generate or from mpp.dev)
+- `STRIPE_SECRET_KEY` — Stripe API key (user has Stripe account)
+
+**Docs:** https://mpp.dev/llms-full.txt | SDK: `mppx` (npm) | GitHub: wevm/mppx
+
+**Why:** Multiple users requesting MPP support. Stripe backing = enterprise adoption signal. "Supports both x402 and MPP" is a strong hackathon differentiator.
+
 ### Distribution / Growth
 - [ ] Agent-to-agent integrations — partner with trading agents that need enrichment data
 - [ ] SDK/client package — `npm install @solenrich/client` for easy integration
