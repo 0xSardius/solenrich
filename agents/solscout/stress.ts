@@ -185,6 +185,40 @@ const ENDPOINTS: Array<{
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.length > 100 },
     ],
   },
+  {
+    key: 'token-trend',
+    input: { mint: TEST_TOKEN, lookback: '7d', format: 'both' },
+    timeout: 60000,
+    checks: [
+      { name: 'has current data', test: (d) => d.current != null },
+      { name: 'has snapshots array', test: (d) => Array.isArray(d.snapshots) },
+      { name: 'has lookback_days', test: (d) => d.lookback_days === 7 },
+      { name: 'has overall_direction', test: (d) => typeof d.overall_direction === 'string' },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' },
+    ],
+  },
+  {
+    key: 'wallet-history',
+    input: { address: TEST_WALLET, lookback: '7d', format: 'both' },
+    timeout: 45000,
+    checks: [
+      { name: 'has current data', test: (d) => d.current != null },
+      { name: 'has snapshots array', test: (d) => Array.isArray(d.snapshots) },
+      { name: 'has overall_direction', test: (d) => typeof d.overall_direction === 'string' },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' },
+    ],
+  },
+  {
+    key: 'new-tokens',
+    input: { min_liquidity_usd: 1000, max_risk_score: 0.8, limit: 5, format: 'both' },
+    timeout: 120000,
+    checks: [
+      { name: 'has tokens array', test: (d) => Array.isArray(d.tokens) },
+      { name: 'has total_scanned', test: (d) => typeof d.total_scanned === 'number' },
+      { name: 'has filters', test: (d) => d.filters != null },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' },
+    ],
+  },
 ];
 
 export class StressRunner {
