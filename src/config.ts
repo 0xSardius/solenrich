@@ -50,6 +50,7 @@ export const PRICING = {
   'compare-wallets': '0.006',
   'token-trend': '0.006',
   'wallet-history': '0.006',
+  'new-tokens': '0.012',
 } as const;
 
 /** Cache TTL in seconds per data type */

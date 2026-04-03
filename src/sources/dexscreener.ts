@@ -89,6 +89,44 @@ export class DexScreenerClient {
     return data?.price ?? 0;
   }
 
+  /** Get latest token profiles from DexScreener (recently created/boosted) */
+  async getLatestProfiles(): Promise<Array<{ mint: string; chainId: string; description?: string; links?: any[] }>> {
+    const cacheKey = 'dexscreener:latest-profiles';
+    const cached = await this.cache.get<Array<{ mint: string; chainId: string }>>(cacheKey);
+    if (cached) return cached;
+
+    const res = await fetch(`${this.baseUrl}/token-profiles/latest/v1`, {
+      headers: { Accept: 'application/json' },
+    });
+
+    if (!res.ok) return [];
+
+    const raw: any[] = await res.json();
+    // Filter to Solana only
+    const solana = raw
+      .filter((p: any) => p.chainId === 'solana' && p.tokenAddress)
+      .map((p: any) => ({
+        mint: p.tokenAddress,
+        chainId: p.chainId,
+        description: p.description,
+        links: p.links,
+      }));
+
+    await this.cache.set(cacheKey, solana, 300); // 5 min cache
+    return solana;
+  }
+
+  /** Search DexScreener for tokens matching a query */
+  async search(query: string): Promise<DexPair[]> {
+    const res = await fetch(`${this.baseUrl}/latest/dex/search?q=${encodeURIComponent(query)}`, {
+      headers: { Accept: 'application/json' },
+    });
+
+    if (!res.ok) return [];
+    const raw: any = await res.json();
+    return (raw.pairs ?? []).filter((p: any) => p.chainId === 'solana');
+  }
+
   /** Get daily OHLCV candles for the highest-liquidity pair (7 days) */
   async getOhlcv7d(mint: string): Promise<Array<{ open: number; high: number; low: number; close: number }> | null> {
     const cacheKey = `dexscreener:ohlcv7d:${mint}`;

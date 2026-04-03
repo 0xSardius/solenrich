@@ -39,6 +39,7 @@ import { registerDueDiligenceEntrypoint } from "../entrypoints/due-diligence";
 import { registerQueryEntrypoint } from "../entrypoints/query";
 import { registerCompareEntrypoints } from "../entrypoints/compare";
 import { registerTrendEntrypoints } from "../entrypoints/trend";
+import { registerDiscoveryEntrypoint } from "../entrypoints/discovery";
 import { CONFIG, PRICING } from "../config";
 
 // --- Agent setup ---
@@ -101,6 +102,7 @@ if (PAYMENTS_ENABLED) {
     "POST /entrypoints/compare-wallets/invoke": routeConfig(PRICING["compare-wallets"]),
     "POST /entrypoints/token-trend/invoke": routeConfig(PRICING["token-trend"]),
     "POST /entrypoints/wallet-history/invoke": routeConfig(PRICING["wallet-history"]),
+    "POST /entrypoints/new-tokens/invoke": routeConfig(PRICING["new-tokens"]),
   };
 
   app.use("/entrypoints/*", paymentMiddleware(x402Routes, resourceServer));
@@ -160,6 +162,11 @@ registerCompareEntrypoints(addEntrypoint, tokenComparator, walletComparator);
 // Temporal context (trends over time)
 const trendAnalyzer = new TrendAnalyzer(tokenAnalyzer, walletProfiler, snapshotStore, cache);
 registerTrendEntrypoints(addEntrypoint, trendAnalyzer);
+
+// New token discovery
+import { TokenDiscovery } from '../enrichers/token-discovery';
+const tokenDiscovery = new TokenDiscovery(dexscreener, tokenAnalyzer, cache);
+registerDiscoveryEntrypoint(addEntrypoint, tokenDiscovery);
 
 // --- Demo endpoint (free, rate-limited, for landing page) ---
 
