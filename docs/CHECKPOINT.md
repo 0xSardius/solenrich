@@ -14,9 +14,11 @@
 - **SolScout consumer agent** — stress test + demo + paid E2E verification (13/13 then 15/16 passing)
 - **SolScout wallet** — generated, funded, full paid E2E verified with real USDC
 - **MPP integration (Stage 1)** — `mppx` + Stripe on 3 cheapest endpoints. Dual-protocol: fiat agents pay with cards, crypto agents pay with USDC via x402. Correct micropayment pricing verified.
+- **MPP middleware routing** — Stage 1 endpoints excluded from x402 route config, MPP handles them exclusively. Clean separation verified.
+- **MPP pricing fix** — 6 decimal precision for micropayments ($0.001 = 1000 base units)
 - **enrich-token-full fix** — only fetches holders when needed, graceful degradation on RPC overload
 - **Custom domain** confirmed live
-- **Landing page updated** — 16 endpoints with all new cards + update banner
+- **Landing page updated** — 16 endpoints, MPP/Stripe in update banner + value props + how-it-works + meta tags
 - **16 total endpoints** (was 11 at session start)
 
 ### Previous session (March 26-29)
