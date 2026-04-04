@@ -374,32 +374,34 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] `test/test-402-production.ts` — production paywall verification (2026-03-29)
 - [x] `GET /docs` — agent-readable documentation endpoint with scoring methodology (2026-03-30)
 
-### MPP Integration (Machine Payments Protocol) — PLANNED
+### MPP Integration (Machine Payments Protocol) — STAGE 1 LIVE (2026-04-03)
 
-Add MPP (`mppx`) alongside existing x402 as a second payment option. Stripe + Tempo co-authored protocol, Solana + fiat support. x402 stays untouched — MPP is additive.
+Dual-protocol payments: MPP (`mppx`) + Stripe on 3 endpoints, x402 on 13 endpoints.
 
-**Approach:** Staged rollout — 3 cheapest endpoints first, then all 16 once verified.
+**Stage 1 endpoints (MPP/Stripe):** `parse-transaction` ($0.001), `enrich-wallet-light` ($0.002), `enrich-token-light` ($0.002)
+**Remaining 13 endpoints:** x402 with Solana USDC (unchanged)
 
-**Stage 1 endpoints:** `parse-transaction` ($0.001), `enrich-wallet-light` ($0.002), `enrich-token-light` ($0.002)
+**How it works:**
+- Stage 1 returns `WWW-Authenticate: Payment method="stripe"` with correct pricing
+- Other endpoints return `PAYMENT-REQUIRED` (x402) as before
+- x402 route config excludes Stage 1 when MPP is enabled
+- Fiat agents pay with cards, crypto agents pay with USDC
 
-**Payment methods to enable:**
-- Solana SPL tokens (tightens existing crypto flow)
-- Stripe fiat (new capability — agents pay with cards)
+**Packages:** `mppx@0.5.5`, `@solana/mpp@0.2.0`, `stripe@22.0.0`
+**Env vars:** `MPP_SECRET_KEY` (HMAC), `STRIPE_SECRET_KEY` (Stripe API key) — both set in .env + Railway
 
-**Implementation:**
-- Install `mppx` package
-- Add `mppx/hono` middleware alongside existing x402 middleware on Stage 1 routes
-- 402 responses include both x402 and MPP challenge types
-- Agents can pay via either protocol
-- Test with SolScout `--paid` flag
+**Solana MPP blocked:** `@solana/mpp` requires `@solana/kit >= 6.5.0`, we have `5.5.1`. Upgrading risks breaking `@x402/svm`. Commented out until safe to upgrade.
 
-**Env vars needed (not yet set):**
-- `MPP_SECRET_KEY` — HMAC key for challenge signing (generate or from mpp.dev)
-- `STRIPE_SECRET_KEY` — Stripe API key (user has Stripe account)
+**Docs:** `docs/mpp_docs.txt` (full llms-full.txt from mpp.dev) | SDK: `mppx` (npm) | GitHub: wevm/mppx
 
-**Docs:** https://mpp.dev/llms-full.txt | SDK: `mppx` (npm) | GitHub: wevm/mppx
-
-**Why:** Multiple users requesting MPP support. Stripe backing = enterprise adoption signal. "Supports both x402 and MPP" is a strong hackathon differentiator.
+**Next steps for MPP:**
+1. Test Stripe payment E2E with a real card (need MPP client or mppx CLI)
+2. Upgrade `@solana/kit` to 6.5.0 in isolated branch — test if @x402/svm still works
+3. If safe, enable Solana MPP alongside Stripe for dual crypto+fiat on Stage 1
+4. Roll out MPP to all 16 endpoints once Stage 1 is proven
+5. Add MPP payment info to /docs endpoint and landing page
+6. Update SolScout with MPP client mode (`--paid-mpp` flag)
+7. Register on MPPScan (mppscan.com) for discovery
 
 ### Distribution / Growth
 - [ ] Agent-to-agent integrations — partner with trading agents that need enrichment data
