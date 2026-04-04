@@ -108,6 +108,61 @@ if (PAYMENTS_ENABLED) {
   app.use("/entrypoints/*", paymentMiddleware(x402Routes, resourceServer));
 
   console.log(`[x402] Payment middleware enabled — ${PAYMENT_NETWORK}, payTo: ${PAY_TO}`);
+
+  // --- MPP Payment Middleware (Stage 1: 3 cheapest endpoints) ---
+
+  const MPP_ENABLED = !!process.env.MPP_SECRET_KEY;
+
+  if (MPP_ENABLED) {
+    const { Mppx } = await import('mppx/hono');
+    const mppMethods: any[] = [];
+
+    // Solana MPP — requires @solana/kit >= 6.5.0 (currently on 5.5.1)
+    // TODO: Enable once @solana/kit is upgraded without breaking @x402/svm
+    // const { solana: solanaMpp } = await import('@solana/mpp/server');
+    // mppMethods.push(solanaMpp.charge({ recipient: PAY_TO, network: 'mainnet-beta' }));
+
+    // Stripe fiat payments
+    if (process.env.STRIPE_SECRET_KEY) {
+      const { stripe: stripeMpp } = await import('mppx/server');
+      const { default: Stripe } = await import('stripe');
+      const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY);
+      mppMethods.push(stripeMpp.charge({
+        client: stripeClient,
+        currency: 'usd',
+        decimals: 2,
+        networkId: 'internal',
+        paymentMethodTypes: ['card'],
+      }));
+      console.log('[mpp] Stripe payment method enabled');
+    }
+
+    if (mppMethods.length === 0) {
+      console.log('[mpp] No payment methods configured — skipping MPP middleware');
+    }
+
+    const mppx = mppMethods.length > 0 ? Mppx.create({
+      secretKey: process.env.MPP_SECRET_KEY!,
+      methods: mppMethods,
+    }) as any : null;
+
+    // Stage 1: Only the 3 cheapest endpoints get MPP
+    const mppStage1Routes = [
+      'parse-transaction',
+      'enrich-wallet-light',
+      'enrich-token-light',
+    ];
+
+    if (mppx) {
+      for (const key of mppStage1Routes) {
+        app.use(
+          `/entrypoints/${key}/invoke`,
+          mppx.charge({ amount: PRICING[key as keyof typeof PRICING] }),
+        );
+      }
+      console.log(`[mpp] MPP middleware enabled on ${mppStage1Routes.length} Stage 1 endpoints`);
+    }
+  }
 } else {
   console.log("[x402] Payments disabled — set AGENT_WALLET_ADDRESS and PAYMENTS_ENABLED=true to enable");
 }
