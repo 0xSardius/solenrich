@@ -126,7 +126,7 @@ if (PAYMENTS_ENABLED) {
         stripeMpp.charge({
           client: stripeClient,
           currency: 'usd',
-          decimals: 2,
+          decimals: 6,  // Match USDC 6-decimal precision for micropayments ($0.002 = 2000 base units)
           networkId: 'internal',
           paymentMethodTypes: ['card'],
         }),
