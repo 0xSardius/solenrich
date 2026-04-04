@@ -42,13 +42,12 @@
 ## Next steps (prioritized)
 
 ### MPP Stage 2 (immediate priority)
-1. Test Stripe payment E2E with real card (mppx CLI or test client)
-2. Upgrade @solana/kit to 6.5.0 in isolated branch — verify @x402/svm compatibility
-3. Enable Solana MPP alongside Stripe on Stage 1 if upgrade is safe
-4. Roll out MPP to all 16 endpoints once Stage 1 proven
-5. Add MPP info to /docs endpoint and landing page
+1. **AgentCash discovery** — build `GET /openapi.json` with x-payment-info (protocols: x402 + mpp), input schemas per route, x-guidance, 402 responses. Validate with `npx @agentcash/discovery check`. Register on MPPScan once passing.
+2. Test Stripe payment E2E with real card (mppx CLI or test client)
+3. Upgrade @solana/kit to 6.5.0 in isolated branch — verify @x402/svm compatibility
+4. Enable Solana MPP alongside Stripe on Stage 1 if upgrade is safe
+5. Roll out MPP to all 16 endpoints once Stage 1 proven
 6. Add SolScout `--paid-mpp` flag for MPP client testing
-7. Register on MPPScan (mppscan.com)
 
 ### Remaining Expansions
 4. **Protocol Analytics** — `protocol-profile` (1-2 sessions)

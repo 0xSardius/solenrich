@@ -395,13 +395,25 @@ Dual-protocol payments: MPP (`mppx`) + Stripe on 3 endpoints, x402 on 13 endpoin
 **Docs:** `docs/mpp_docs.txt` (full llms-full.txt from mpp.dev) | SDK: `mppx` (npm) | GitHub: wevm/mppx
 
 **Next steps for MPP:**
-1. Test Stripe payment E2E with a real card (need MPP client or mppx CLI)
-2. Upgrade `@solana/kit` to 6.5.0 in isolated branch — test if @x402/svm still works
-3. If safe, enable Solana MPP alongside Stripe for dual crypto+fiat on Stage 1
-4. Roll out MPP to all 16 endpoints once Stage 1 is proven
-5. Add MPP payment info to /docs endpoint and landing page
-6. Update SolScout with MPP client mode (`--paid-mpp` flag)
-7. Register on MPPScan (mppscan.com) for discovery
+1. **AgentCash discovery + MPPScan registration** — expose `/openapi.json` with x-payment-info, x-guidance, input schemas per route. Validate with `npx @agentcash/discovery check`. Register on mppscan.com once passing. See detailed spec below.
+2. Test Stripe payment E2E with a real card (need MPP client or mppx CLI)
+3. Upgrade `@solana/kit` to 6.5.0 in isolated branch — test if @x402/svm still works
+4. If safe, enable Solana MPP alongside Stripe for dual crypto+fiat on Stage 1
+5. Roll out MPP to all 16 endpoints once Stage 1 is proven
+6. Add MPP payment info to /docs endpoint and landing page
+7. Update SolScout with MPP client mode (`--paid-mpp` flag)
+
+**AgentCash / OpenAPI Discovery Spec:**
+- Endpoint: `GET /openapi.json` — OpenAPI 3.1.0 document
+- Required fields per paid route: `x-payment-info` with `protocols` array (x402 + mpp) and `price` object (fixed mode with amount/currency)
+- Required: `requestBody.content["application/json"].schema` with input schema per route
+- Required: `responses.402` on every paid route
+- Required: `info.x-guidance` — high-level agent usage instructions
+- Optional: `x-discovery.ownershipProofs` for verification
+- Free/identity-only endpoints: use zero-dollar auth (amount: "0")
+- Validate: `npx -y @agentcash/discovery@latest check <URL>`
+- Discover: `npx -y @agentcash/discovery@latest discover <URL>`
+- Register: mppscan.com once validation passes
 
 ### Distribution / Growth
 - [ ] Agent-to-agent integrations — partner with trading agents that need enrichment data
