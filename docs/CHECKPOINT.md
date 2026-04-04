@@ -1,76 +1,64 @@
 # Session Checkpoint
 
 ## Last session date
-2026-04-01
+2026-04-03
 
 ## What was completed
 
-### This session (March 30 - April 1)
-- **compare-tokens + compare-wallets endpoints** — side-by-side comparison of 2-3 tokens or wallets with rankings, summary picks, markdown tables. $0.006 each. 13 total endpoints.
+### This session (April 2-3)
+- **compare-tokens + compare-wallets endpoints** — side-by-side comparison of 2-3 tokens or wallets with rankings, summary picks, markdown tables. $0.006 each.
 - **GET /docs endpoint** — agent-readable documentation with full API reference, scoring methodology, HHI interpretation, volatility classifications
-- **README rewrite** — complete API docs with all 13 endpoints, scoring methodology, demo section, MCP setup
+- **README rewrite** — complete API docs with all endpoints, scoring methodology, demo section, MCP setup
 - **SolScout consumer agent** — `agents/solscout/` standalone stress test + demo + paid E2E verification
-- **SolScout wallet** — `H3UyiWm1YTzSKxXTpyssxxEreq6HzWTwNW5BVYewmmfC`, funded with SOL + USDC
-- **Full paid E2E verification** — 13/13 endpoints passing with real USDC via x402 on production. Report saved.
+- **SolScout wallet generated** — `H3UyiWm1YTzSKxXTpyssxxEreq6HzWTwNW5BVYewmmfC`, funded with SOL + USDC
+- **Full paid E2E verification** — 13/13 (now 16/16) endpoints verified with real USDC via x402 on production
 - **x402 payment flow debugged** — fixed signer format (toClientSvmSigner), facilitator rate limiting (2s delay), receiving wallet USDC token account initialization
-- **CLAUDE.md updated** — comparison endpoints, SolScout docs, /docs endpoint reminder
+- **token-trend + wallet-history endpoints** — temporal context with daily snapshots, direction indicators, position change tracking. Snapshots accumulate automatically on every enrichment call.
+- **new-tokens endpoint** — discover recently launched Solana tokens via DexScreener, run risk scoring, filter by liquidity and risk, return safest first. $0.012 per call.
+- **enrich-token-full fix** — getTokenLargestAccounts only called when includeHolders=true, graceful degradation when RPC overloaded
+- **SolScout stress test updated** — all 16 endpoints covered, 15/16 passing (1 intermittent RPC overload)
+- **MPP research + integration plan** — Machine Payments Protocol (Stripe + Tempo) analyzed, staged rollout planned alongside x402
+- **MPP docs saved** — `docs/mpp_docs.txt` (full llms-full.txt from mpp.dev)
+- **Custom domain** — confirmed live
+- **Landing page updated** — 16 endpoints, new token discovery card, temporal trends card, update banner
 
 ### Previous session (March 26-29)
-- **Interactive demo endpoint** — `POST /demo/enrich` with auto wallet/token detection, IP-based rate limiting (10/hr), CORS for Vercel
-- **Landing page demo section** — search bar, example buttons (JUP, BONK, Solana Foundation), formatted/JSON toggle, rate limit counter
-- **OG meta tags + image** — Open Graph + Twitter Card for rich link previews, OG image template + PNG
-- **Test-endpoints subagent** — `.claude/agents/test-endpoints.md` for QA verification of all 11 endpoints
-- **Full endpoint test suite** — `test/test-all-endpoints.ts` (55 tests, all passing) + `test/test-402-production.ts` (production paywall verification)
-- **Token enrichment fix** — DexScreener retry on failure, increased timeout to 15s, don't cache failed enrichments (price=0)
-- **Token detection fix** — corrected SPL Token Program ID for wallet-vs-token auto-detection
-- **Railway reconnected to GitHub** — auto-deploy was disconnected, 2 weeks of updates were not deployed. Now connected and auto-deploying on push.
-- **Considered expansions roadmap** — 6 prioritized features added to CLAUDE.md (comparison, temporal, discovery, protocol, aggregated intel, alerts)
-- **Bags hackathon updates** — crafted 3 update texts (endpoints, data quality, demo)
-
-### Previous sessions (March 22-24)
-- Multi-source price aggregation (median of Helius + DexScreener + Jupiter)
-- HHI holder concentration index
-- Price volatility metrics (daily std, 7d range, severity classification)
-- Risk-adjusted returns (Sharpe, Sortino, max drawdown, profit factor)
-- 138 unit tests across 17 pure functions
-- Landing page updated with all features
-
-### Earlier sessions (March 17-21)
-- Upstash Redis in production
-- Enriched 402 response bodies
-- Hardened endpoints (holder concentration, whale-watch rewrite, risk levels)
-- Entity labeling (20+ known Solana addresses)
-- Copy-trade PnL fix, query endpoint, 5 critical bug fixes
-- MCP HTTP transport, social launch, Bags hackathon submitted
+- Interactive demo endpoint + landing page demo section
+- OG meta tags + image for rich link previews
+- Test-endpoints Claude Code subagent
+- Full endpoint test suite (55 + 402 verification)
+- Token enrichment fix (DexScreener retry, don't cache failures)
+- Railway reconnected to GitHub (2 weeks of updates deployed at once)
 
 ## Current state
 - **Live API:** https://solenrich-production.up.railway.app/
 - **MCP endpoint:** https://solenrich-production.up.railway.app/mcp
 - **Landing page:** https://landing-rho-six.vercel.app
 - **Demo endpoint:** https://solenrich-production.up.railway.app/demo/enrich
-- **Payments:** ENABLED — all 11 endpoints return 402 with correct pricing
-- **Cache:** Upstash Redis (production), don't-cache-failures logic on token enrichment
+- **Docs endpoint:** https://solenrich-production.up.railway.app/docs
+- **Payments:** x402 ENABLED — all 16 endpoints paywalled with correct pricing
+- **Cache:** Upstash Redis with snapshot storage (30-day TTL)
 - **8004 identity:** Registered on mainnet
-- **Endpoints:** 11 paid + 1 free demo
-- **Tests:** 138 unit + 55 endpoint + production 402 verification
+- **Endpoints:** 16 paid + 1 free demo + /docs
+- **Tests:** 138 unit + SolScout stress (16 endpoints) + production 402 verification
+- **SolScout:** Stress test + demo + paid E2E, all modes working
 - **Railway:** Auto-deploying from GitHub main branch
 - **Everything is committed, pushed, and deployed**
 
 ## Next steps (prioritized)
 
-### Considered Expansions (new features)
-1. **Multi-Entity Comparison** — `compare-tokens`, `compare-wallets` (1 session, no blockers, highest ROI)
-2. **New Token Discovery** — `new-launches`, `token-screener` (2 sessions, killer for trading agents)
-3. **Temporal Context** — `wallet-history`, `token-trend` (2-3 sessions, needs snapshot cron)
+### MPP Integration (next session)
+1. Get MPP secret key + add Stripe secret key to .env
+2. Install `mppx` package
+3. Add `mppx/hono` middleware on 3 cheapest endpoints (parse-transaction, enrich-wallet-light, enrich-token-light)
+4. Test with SolScout
+5. Roll out to all 16 endpoints once verified
+6. Docs: `docs/mpp_docs.txt` has full protocol reference
+
+### Remaining Expansions
 4. **Protocol Analytics** — `protocol-profile` (1-2 sessions)
 5. **Aggregated Intelligence** — `trending-signals`, `smart-money-flow` (2-3 sessions)
 6. **Event-Driven Alerts** — `subscribe-alerts` SSE streaming (3-4 sessions)
-
-### SolScout consumer agent
-- Standalone agent that uses SolEnrich as its data source
-- Takes NL questions, calls SolEnrich, interprets results
-- Proves agent-to-agent value prop for hackathon
-- Lives in `agents/solscout/` directory
 
 ### Infrastructure
 - CI pipeline — GitHub Actions for tsc + bun test on push
@@ -79,21 +67,23 @@
 - Rate limiting — @upstash/ratelimit on invoke endpoints
 
 ## Blockers
-- **Birdeye API** — still no key. Would unlock wallet portfolio endpoint.
-- **DexScreener on Railway** — intermittently fails, fixed with retry logic but root cause may be Railway IP reputation.
+- **MPP secret key** — needed before MPP integration can start
+- **Stripe secret key** — user has Stripe account, needs to add API key to .env
+- **Birdeye API** — still no key
+- **enrich-token-full intermittent failure** — Solana RPC `getTokenLargestAccounts` overloaded occasionally. Mitigated with graceful degradation.
 
 ## Key decisions made this session
-- **Railway was disconnected from GitHub for ~2 weeks** — all post-March-17 updates were only in code, not deployed. Fixed by reconnecting repo.
-- **Don't cache failed enrichments** — price=0 results no longer persist in Upstash
-- **DexScreener gets one retry** — price data is too critical to skip on first failure
-- **Demo uses light depth only** — minimizes API cost per free query
-- **Rate limit: 10/hr per IP** — server-enforced + client-side localStorage counter
-- **OG image hosted on GitHub raw** — Vercel wasn't serving static PNGs, GitHub raw works reliably
-- **Subagent for QA** — test locally first to avoid burning production API calls
+- **MPP alongside x402, not replacing** — x402 is proven and working, MPP is 20 hours old. Staged rollout: 3 endpoints first, then all 16.
+- **Helius over Alchemy** — Helius is better for SolEnrich (DAS API, enhanced tx parsing are Helius-only). RPC overload is Solana-side, not provider-side.
+- **Token-full only fetches holders when needed** — light endpoint no longer wastes an RPC call on getTokenLargestAccounts
+- **Snapshot capture on enrichment** — no cron job needed, snapshots accumulate naturally as API is used
+- **New token discovery uses DexScreener latest profiles** — scans up to 30, enriches in batches of 5, filters by liquidity + risk
+- **SolScout wallet is separate from agent/operational wallets** — clean isolation, $0.10 per full stress test run
 
 ## Key values
 - **Agent Asset:** 5rsdgYL8mETFm785mXpEMYftjSE3H4JSqFANhJ4BoTHk
 - **Operational Wallet:** 5ijYechYmQfQFvWKsX9bgCqDnKV1amiriyt5RLmd877y
 - **Agent Wallet:** 66Qvhr1xnwqbCT36KfHfZF1JpoWdmCQ3uFYTN335CGXe
+- **SolScout Wallet:** H3UyiWm1YTzSKxXTpyssxxEreq6HzWTwNW5BVYewmmfC
 - **Railway project ID:** 4f26f635-bbc8-440c-8539-afd3d7bea0bb
 - **Vercel project:** 0xsardius-projects/landing
