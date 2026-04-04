@@ -86,82 +86,62 @@ if (PAYMENTS_ENABLED) {
     mimeType: "application/json",
   });
 
-  const x402Routes: RoutesConfig = {
-    "POST /entrypoints/enrich-wallet-light/invoke": routeConfig(PRICING["enrich-wallet-light"]),
-    "POST /entrypoints/enrich-wallet-full/invoke": routeConfig(PRICING["enrich-wallet-full"]),
-    "POST /entrypoints/enrich-token-light/invoke": routeConfig(PRICING["enrich-token-light"]),
-    "POST /entrypoints/enrich-token-full/invoke": routeConfig(PRICING["enrich-token-full"]),
-    "POST /entrypoints/parse-transaction/invoke": routeConfig(PRICING["parse-transaction"]),
-    "POST /entrypoints/whale-watch/invoke": routeConfig(PRICING["whale-watch"]),
-    "POST /entrypoints/batch-enrich/invoke": routeConfig(PRICING["batch-enrich"]),
-    "POST /entrypoints/wallet-graph/invoke": routeConfig(PRICING["wallet-graph"]),
-    "POST /entrypoints/copy-trade-signals/invoke": routeConfig(PRICING["copy-trade-signals"]),
-    "POST /entrypoints/due-diligence/invoke": routeConfig(PRICING["due-diligence"]),
-    "POST /entrypoints/query/invoke": routeConfig(PRICING["query"]),
-    "POST /entrypoints/compare-tokens/invoke": routeConfig(PRICING["compare-tokens"]),
-    "POST /entrypoints/compare-wallets/invoke": routeConfig(PRICING["compare-wallets"]),
-    "POST /entrypoints/token-trend/invoke": routeConfig(PRICING["token-trend"]),
-    "POST /entrypoints/wallet-history/invoke": routeConfig(PRICING["wallet-history"]),
-    "POST /entrypoints/new-tokens/invoke": routeConfig(PRICING["new-tokens"]),
-  };
+  // Stage 1 MPP endpoints — these will be handled by MPP instead of x402
+  const mppStage1Keys = new Set([
+    'parse-transaction',
+    'enrich-wallet-light',
+    'enrich-token-light',
+  ]);
+
+  const MPP_ENABLED = !!process.env.MPP_SECRET_KEY && !!process.env.STRIPE_SECRET_KEY;
+
+  // Build x402 routes — exclude Stage 1 if MPP is handling them
+  const x402RouteEntries = Object.entries(PRICING)
+    .filter(([key]) => !(MPP_ENABLED && mppStage1Keys.has(key)))
+    .map(([key, price]) => [`POST /entrypoints/${key}/invoke`, routeConfig(price)] as const);
+
+  const x402Routes: RoutesConfig = Object.fromEntries(x402RouteEntries);
 
   app.use("/entrypoints/*", paymentMiddleware(x402Routes, resourceServer));
 
-  console.log(`[x402] Payment middleware enabled — ${PAYMENT_NETWORK}, payTo: ${PAY_TO}`);
+  const x402Count = Object.keys(x402Routes).length;
+  console.log(`[x402] Payment middleware enabled on ${x402Count} endpoints — ${PAYMENT_NETWORK}, payTo: ${PAY_TO}`);
 
-  // --- MPP Payment Middleware (Stage 1: 3 cheapest endpoints) ---
-
-  const MPP_ENABLED = !!process.env.MPP_SECRET_KEY;
+  // --- MPP Payment Middleware (Stage 1 endpoints) ---
 
   if (MPP_ENABLED) {
     const { Mppx } = await import('mppx/hono');
-    const mppMethods: any[] = [];
+    const { stripe: stripeMpp } = await import('mppx/server');
+    const { default: Stripe } = await import('stripe');
+
+    const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
     // Solana MPP — requires @solana/kit >= 6.5.0 (currently on 5.5.1)
     // TODO: Enable once @solana/kit is upgraded without breaking @x402/svm
     // const { solana: solanaMpp } = await import('@solana/mpp/server');
-    // mppMethods.push(solanaMpp.charge({ recipient: PAY_TO, network: 'mainnet-beta' }));
 
-    // Stripe fiat payments
-    if (process.env.STRIPE_SECRET_KEY) {
-      const { stripe: stripeMpp } = await import('mppx/server');
-      const { default: Stripe } = await import('stripe');
-      const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY);
-      mppMethods.push(stripeMpp.charge({
-        client: stripeClient,
-        currency: 'usd',
-        decimals: 2,
-        networkId: 'internal',
-        paymentMethodTypes: ['card'],
-      }));
-      console.log('[mpp] Stripe payment method enabled');
-    }
-
-    if (mppMethods.length === 0) {
-      console.log('[mpp] No payment methods configured — skipping MPP middleware');
-    }
-
-    const mppx = mppMethods.length > 0 ? Mppx.create({
+    const mppx = Mppx.create({
       secretKey: process.env.MPP_SECRET_KEY!,
-      methods: mppMethods,
-    }) as any : null;
+      methods: [
+        stripeMpp.charge({
+          client: stripeClient,
+          currency: 'usd',
+          decimals: 2,
+          networkId: 'internal',
+          paymentMethodTypes: ['card'],
+        }),
+        // solanaMpp.charge({ recipient: PAY_TO, network: 'mainnet-beta' }),
+      ],
+    }) as any;
 
-    // Stage 1: Only the 3 cheapest endpoints get MPP
-    const mppStage1Routes = [
-      'parse-transaction',
-      'enrich-wallet-light',
-      'enrich-token-light',
-    ];
-
-    if (mppx) {
-      for (const key of mppStage1Routes) {
-        app.use(
-          `/entrypoints/${key}/invoke`,
-          mppx.charge({ amount: PRICING[key as keyof typeof PRICING] }),
-        );
-      }
-      console.log(`[mpp] MPP middleware enabled on ${mppStage1Routes.length} Stage 1 endpoints`);
+    for (const key of mppStage1Keys) {
+      app.use(
+        `/entrypoints/${key}/invoke`,
+        mppx.charge({ amount: PRICING[key as keyof typeof PRICING] }),
+      );
     }
+
+    console.log(`[mpp] MPP + Stripe enabled on ${mppStage1Keys.size} Stage 1 endpoints`);
   }
 } else {
   console.log("[x402] Payments disabled — set AGENT_WALLET_ADDRESS and PAYMENTS_ENABLED=true to enable");
