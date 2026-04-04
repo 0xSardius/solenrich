@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SolEnrich — Solana Onchain Data Enrichment for Agents & LLMs</title>
-  <meta name="description" content="Solana onchain data enrichment agent. Wallet profiling, token analysis, risk scoring. USDC micropayments via x402. JSON for agents, natural language for LLMs.">
+  <meta name="description" content="Solana onchain data enrichment agent. Wallet profiling, token analysis, risk scoring. Dual-protocol payments: USDC via x402 or credit cards via MPP/Stripe. JSON for agents, natural language for LLMs.">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://landing-rho-six.vercel.app">
   <meta property="og:title" content="SolEnrich — Onchain Intelligence for Agents & LLMs">
-  <meta property="og:description" content="11 enrichment endpoints on Solana. Wallet profiling, token risk, whale tracking, due diligence. Pay USDC micropayments, get structured data or LLM-ready briefings.">
+  <meta property="og:description" content="16 enrichment endpoints on Solana. Dual payments: USDC via x402 or credit cards via MPP/Stripe. Wallet profiling, token risk, whale tracking, due diligence.">
   <meta property="og:image" content="https://raw.githubusercontent.com/0xSardius/solenrich/main/landing/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -18,7 +18,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SolEnrich — Onchain Intelligence for Agents & LLMs">
-  <meta name="twitter:description" content="11 enrichment endpoints on Solana. Pay USDC micropayments, get wallet profiles, token risk scores, whale tracking, and due diligence reports.">
+  <meta name="twitter:description" content="16 enrichment endpoints on Solana. Dual payments: USDC via x402 or credit cards via MPP/Stripe. Wallet profiling, token risk, whale tracking, due diligence.">
   <meta name="twitter:image" content="https://raw.githubusercontent.com/0xSardius/solenrich/main/landing/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1296,6 +1296,7 @@
         <span class="update-item"><span class="check">&#10003;</span> Token &amp; wallet comparison</span>
         <span class="update-item"><span class="check">&#10003;</span> Temporal trends ("what changed?")</span>
         <span class="update-item"><span class="check">&#10003;</span> New token discovery</span>
+        <span class="update-item"><span class="check">&#10003;</span> MPP + Stripe fiat payments</span>
       </div>
     </div>
   </div>
@@ -1528,11 +1529,12 @@
 
         <div class="step reveal">
           <div class="step-number">2</div>
-          <h3 class="step-title">x402 payment</h3>
-          <p class="step-desc">Pay USDC micropayments on Solana. The x402 protocol handles verification and settlement automatically.</p>
+          <h3 class="step-title">Pay your way</h3>
+          <p class="step-desc">USDC on Solana via x402, or credit cards via MPP/Stripe. Dual-protocol — agents choose how to pay.</p>
           <div class="step-code">
             <span style="color: var(--accent-warm);">402</span> Payment Required<br>
-            <span style="color: var(--text-muted);">price: $0.002 USDC</span>
+            <span style="color: var(--text-muted);">x402: USDC on Solana</span><br>
+            <span style="color: var(--text-muted);">MPP: Stripe cards</span>
           </div>
         </div>
 
@@ -1670,9 +1672,9 @@ Well-distributed supply.</span>
         </div>
 
         <div class="value-card reveal">
-          <div class="value-icon">&gt;_ micropay</div>
-          <h3 class="value-title">USDC micropayments</h3>
-          <p class="value-desc">No API keys. No subscriptions. Pay per request with USDC on Solana via the x402 protocol. Costs start at $0.001.</p>
+          <div class="value-icon">&gt;_ pay</div>
+          <h3 class="value-title">Dual-protocol payments</h3>
+          <p class="value-desc">No API keys. No subscriptions. Pay per request with USDC on Solana (x402) or credit cards (MPP/Stripe). Costs start at $0.001.</p>
         </div>
 
         <div class="value-card reveal">
