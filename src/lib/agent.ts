@@ -116,9 +116,9 @@ if (PAYMENTS_ENABLED) {
 
     const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-    // Solana MPP — requires @solana/kit >= 6.5.0 (currently on 5.5.1)
-    // TODO: Enable once @solana/kit is upgraded without breaking @x402/svm
-    // const { solana: solanaMpp } = await import('@solana/mpp/server');
+    const { solana: solanaMpp } = await import('@solana/mpp/server');
+
+    const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
     const mppx = Mppx.create({
       secretKey: process.env.MPP_SECRET_KEY!,
@@ -130,7 +130,13 @@ if (PAYMENTS_ENABLED) {
           networkId: 'internal',
           paymentMethodTypes: ['card'],
         }),
-        // solanaMpp.charge({ recipient: PAY_TO, network: 'mainnet-beta' }),
+        solanaMpp.charge({
+          recipient: PAY_TO,
+          currency: USDC_MINT,
+          decimals: 6,
+          network: 'mainnet-beta',
+          rpcUrl: CONFIG.helius.rpcUrl,
+        }),
       ],
     }) as any;
 

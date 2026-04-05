@@ -235,14 +235,16 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
     // Amount in base units: USDC has 6 decimals, so $0.002 = 2000
     const amountBaseUnits = Math.round(parseFloat(price) * 1_000_000).toString();
 
-    // When MPP enabled, all endpoints accept Stripe fiat; otherwise x402 USDC
+    // When MPP enabled, endpoints accept both Stripe (fiat) and Solana USDC (crypto)
     const paymentInfo: Record<string, unknown> = mppEnabled
       ? {
           amount: amountBaseUnits,
-          currency: 'usd',
           description: meta.summary,
           intent: 'charge',
-          method: 'stripe',
+          methods: [
+            { method: 'stripe', currency: 'usd' },
+            { method: 'solana', currency: 'USDC', network: 'solana:mainnet-beta' },
+          ],
         }
       : {
           amount: amountBaseUnits,
@@ -338,7 +340,7 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
       'x-guidance': [
         'All paid endpoints are at POST /entrypoints/{key}/invoke with JSON body.',
         'Set "format" to "json" for structured data, "llm" for natural language briefings, or "both" for JSON + llm_summary.',
-        'Prices are in USDC. Stage 1 endpoints accept Stripe cards via MPP. Others accept Solana USDC via x402.',
+        'All endpoints accept both Stripe cards (fiat) and Solana USDC (crypto) via MPP.',
         'Use "enrich-wallet-light" or "enrich-token-light" for quick lookups. Use "due-diligence" for comprehensive risk reports.',
         'The "query" endpoint accepts plain English questions and routes to the right enricher automatically.',
         'Try the free /demo/enrich endpoint first to test (10 requests/hour, no payment needed).',
