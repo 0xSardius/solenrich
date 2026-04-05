@@ -86,18 +86,14 @@ if (PAYMENTS_ENABLED) {
     mimeType: "application/json",
   });
 
-  // Stage 1 MPP endpoints — these will be handled by MPP instead of x402
-  const mppStage1Keys = new Set([
-    'parse-transaction',
-    'enrich-wallet-light',
-    'enrich-token-light',
-  ]);
-
+  // MPP endpoints — when MPP is enabled, these use Stripe (fiat); rest stay on x402 (USDC)
+  // When MPP covers all endpoints, x402 routes will be empty but middleware stays registered (no-op)
   const MPP_ENABLED = !!process.env.MPP_SECRET_KEY && !!process.env.STRIPE_SECRET_KEY;
+  const mppKeys = MPP_ENABLED ? new Set(Object.keys(PRICING)) : new Set<string>();
 
-  // Build x402 routes — exclude Stage 1 if MPP is handling them
+  // Build x402 routes — exclude any keys handled by MPP
   const x402RouteEntries = Object.entries(PRICING)
-    .filter(([key]) => !(MPP_ENABLED && mppStage1Keys.has(key)))
+    .filter(([key]) => !mppKeys.has(key))
     .map(([key, price]) => [`POST /entrypoints/${key}/invoke`, routeConfig(price)] as const);
 
   const x402Routes: RoutesConfig = Object.fromEntries(x402RouteEntries);
@@ -105,9 +101,13 @@ if (PAYMENTS_ENABLED) {
   app.use("/entrypoints/*", paymentMiddleware(x402Routes, resourceServer));
 
   const x402Count = Object.keys(x402Routes).length;
-  console.log(`[x402] Payment middleware enabled on ${x402Count} endpoints — ${PAYMENT_NETWORK}, payTo: ${PAY_TO}`);
+  if (x402Count > 0) {
+    console.log(`[x402] Payment middleware enabled on ${x402Count} endpoints — ${PAYMENT_NETWORK}, payTo: ${PAY_TO}`);
+  } else {
+    console.log(`[x402] All endpoints handled by MPP — x402 middleware registered but idle`);
+  }
 
-  // --- MPP Payment Middleware (Stage 1 endpoints) ---
+  // --- MPP Payment Middleware (Stripe fiat on all endpoints) ---
 
   if (MPP_ENABLED) {
     const { Mppx } = await import('mppx/hono');
@@ -134,14 +134,14 @@ if (PAYMENTS_ENABLED) {
       ],
     }) as any;
 
-    for (const key of mppStage1Keys) {
+    for (const key of mppKeys) {
       app.use(
         `/entrypoints/${key}/invoke`,
         mppx.charge({ amount: PRICING[key as keyof typeof PRICING] }),
       );
     }
 
-    console.log(`[mpp] MPP + Stripe enabled on ${mppStage1Keys.size} Stage 1 endpoints`);
+    console.log(`[mpp] MPP + Stripe enabled on ${mppKeys.size} endpoints`);
   }
 } else {
   console.log("[x402] Payments disabled — set AGENT_WALLET_ADDRESS and PAYMENTS_ENABLED=true to enable");

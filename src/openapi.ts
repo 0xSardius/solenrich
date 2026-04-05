@@ -4,12 +4,7 @@
 
 import { PRICING } from './config';
 
-/** MPP Stage 1 endpoints handled by Stripe */
-const MPP_STAGE1_KEYS = new Set([
-  'parse-transaction',
-  'enrich-wallet-light',
-  'enrich-token-light',
-]);
+// When MPP is enabled, all endpoints accept Stripe. Otherwise all use x402.
 
 /** Endpoint metadata: description, summary, input schema */
 const ENDPOINT_META: Record<string, {
@@ -237,12 +232,11 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
     const meta = ENDPOINT_META[key];
     if (!meta) continue;
 
-    const isMppStage1 = mppEnabled && MPP_STAGE1_KEYS.has(key);
-
     // Amount in base units: USDC has 6 decimals, so $0.002 = 2000
     const amountBaseUnits = Math.round(parseFloat(price) * 1_000_000).toString();
 
-    const paymentInfo: Record<string, unknown> = isMppStage1
+    // When MPP enabled, all endpoints accept Stripe fiat; otherwise x402 USDC
+    const paymentInfo: Record<string, unknown> = mppEnabled
       ? {
           amount: amountBaseUnits,
           currency: 'usd',
