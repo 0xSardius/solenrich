@@ -469,6 +469,22 @@ app.get('/docs', (c) => {
 
 console.log('[docs] Documentation endpoint available at GET /docs');
 
+// --- OpenAPI discovery document (MPP / AgentCash) ---
+
+import { generateOpenApiDoc } from '../openapi';
+
+const MPP_ENABLED_FOR_DISCOVERY = !!process.env.MPP_SECRET_KEY && !!process.env.STRIPE_SECRET_KEY;
+const openApiDoc = generateOpenApiDoc(MPP_ENABLED_FOR_DISCOVERY);
+const openApiJson = JSON.stringify(openApiDoc);
+
+app.get('/openapi.json', (c) => {
+  c.header('Cache-Control', 'public, max-age=300');
+  c.header('Content-Type', 'application/json');
+  return c.body(openApiJson);
+});
+
+console.log('[discovery] OpenAPI document available at GET /openapi.json');
+
 // --- Agent Card discovery metadata ---
 
 app.get("/agent-card-extended", (c) => {
