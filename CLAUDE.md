@@ -374,46 +374,38 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] `test/test-402-production.ts` — production paywall verification (2026-03-29)
 - [x] `GET /docs` — agent-readable documentation endpoint with scoring methodology (2026-03-30)
 
-### MPP Integration (Machine Payments Protocol) — STAGE 1 LIVE (2026-04-03)
+### MPP Integration (Machine Payments Protocol) — FULL ROLLOUT (2026-04-05)
 
-Dual-protocol payments: MPP (`mppx`) + Stripe on 3 endpoints, x402 on 13 endpoints.
-
-**Stage 1 endpoints (MPP/Stripe):** `parse-transaction` ($0.001), `enrich-wallet-light` ($0.002), `enrich-token-light` ($0.002)
-**Remaining 13 endpoints:** x402 with Solana USDC (unchanged)
+Dual-protocol payments on all 16 endpoints: MPP (Stripe cards + Solana USDC) alongside x402.
 
 **How it works:**
-- Stage 1 returns `WWW-Authenticate: Payment method="stripe"` with correct pricing
-- Other endpoints return `PAYMENT-REQUIRED` (x402) as before
-- x402 route config excludes Stage 1 when MPP is enabled
-- Fiat agents pay with cards, crypto agents pay with USDC
+- When `MPP_SECRET_KEY` + `STRIPE_SECRET_KEY` are set, MPP handles all 16 endpoints
+- MPP advertises both Stripe (fiat) and Solana USDC (crypto) via `Mppx.compose`-style multi-method
+- x402 middleware stays registered but filters to zero routes (safe no-op)
+- When MPP keys are missing (local dev), all endpoints fall back to x402
+- Fiat agents pay with cards, crypto agents pay with Solana USDC — same endpoints, client chooses
 
-**Packages:** `mppx@0.5.5`, `@solana/mpp@0.2.0`, `stripe@22.0.0`
+**Packages:** `mppx@0.5.5`, `@solana/mpp@0.2.0`, `stripe@22.0.0`, `@solana/kit@6.7.0`
 **Env vars:** `MPP_SECRET_KEY` (HMAC), `STRIPE_SECRET_KEY` (Stripe API key) — both set in .env + Railway
 
-**Solana MPP blocked:** `@solana/mpp` requires `@solana/kit >= 6.5.0`, we have `5.5.1`. Upgrading risks breaking `@x402/svm`. Commented out until safe to upgrade.
+**Discovery:** `GET /openapi.json` — OpenAPI 3.1.0 with `x-payment-info` per route, input schemas, `x-service-info`. Validated by `npx mppx discover validate`. AgentCash discovers all 19 routes.
 
 **Docs:** `docs/mpp_docs.txt` (full llms-full.txt from mpp.dev) | SDK: `mppx` (npm) | GitHub: wevm/mppx
 
-**Next steps for MPP:**
-1. **AgentCash discovery + MPPScan registration** — expose `/openapi.json` with x-payment-info, x-guidance, input schemas per route. Validate with `npx @agentcash/discovery check`. Register on mppscan.com once passing. See detailed spec below.
-2. Test Stripe payment E2E with a real card (need MPP client or mppx CLI)
-3. Upgrade `@solana/kit` to 6.5.0 in isolated branch — test if @x402/svm still works
-4. If safe, enable Solana MPP alongside Stripe for dual crypto+fiat on Stage 1
-5. Roll out MPP to all 16 endpoints once Stage 1 is proven
-6. Add MPP payment info to /docs endpoint and landing page
-7. Update SolScout with MPP client mode (`--paid-mpp` flag)
+**Completed:**
+- [x] MPP Stage 1 — Stripe on 3 endpoints (2026-04-03)
+- [x] OpenAPI discovery endpoint — `/openapi.json` validated by mppx CLI (2026-04-05)
+- [x] Expanded MPP to all 16 endpoints (2026-04-05)
+- [x] `@solana/kit` upgraded 5.5.1 → 6.7.0 — tested in worktree, zero breakage (2026-04-05)
+- [x] Solana MPP enabled — `solanaMpp.charge()` with USDC mint, mainnet, Helius RPC (2026-04-05)
 
-**AgentCash / OpenAPI Discovery Spec:**
-- Endpoint: `GET /openapi.json` — OpenAPI 3.1.0 document
-- Required fields per paid route: `x-payment-info` with `protocols` array (x402 + mpp) and `price` object (fixed mode with amount/currency)
-- Required: `requestBody.content["application/json"].schema` with input schema per route
-- Required: `responses.402` on every paid route
-- Required: `info.x-guidance` — high-level agent usage instructions
-- Optional: `x-discovery.ownershipProofs` for verification
-- Free/identity-only endpoints: use zero-dollar auth (amount: "0")
-- Validate: `npx -y @agentcash/discovery@latest check <URL>`
-- Discover: `npx -y @agentcash/discovery@latest discover <URL>`
-- Register: mppscan.com once validation passes
+**Next steps for MPP:**
+1. Test Stripe payment E2E with a real card (~$0.001 via `npx mppx pay`)
+2. Register on MPPScan (mppscan.com) — discovery is live
+3. Fix minor AgentCash warnings (legacy x-payment-info format, free route auth modes)
+4. Add MPP payment info to /docs endpoint and landing page
+5. Update SolScout with MPP client mode (`--paid-mpp` flag)
+6. Submit to MCP directories (Smithery, mcp.run, Glama)
 
 ### Distribution / Growth
 - [ ] Agent-to-agent integrations — partner with trading agents that need enrichment data
