@@ -86,12 +86,13 @@ if (PAYMENTS_ENABLED) {
     mimeType: "application/json",
   });
 
-  // MPP endpoints — when MPP is enabled, these use Stripe (fiat); rest stay on x402 (USDC)
-  // When MPP covers all endpoints, x402 routes will be empty but middleware stays registered (no-op)
+  // MPP (Stripe fiat) and x402 (Solana USDC) split: each middleware returns 402 if
+  // no credential is present, so they can't both be on the same route. MPP handles
+  // its set, x402 handles the rest. Agents pick the endpoint that matches their payment rail.
   const MPP_ENABLED = !!process.env.MPP_SECRET_KEY && !!process.env.STRIPE_SECRET_KEY;
   const mppKeys = MPP_ENABLED ? new Set(Object.keys(PRICING)) : new Set<string>();
 
-  // Build x402 routes — exclude any keys handled by MPP
+  // x402 handles routes NOT claimed by MPP
   const x402RouteEntries = Object.entries(PRICING)
     .filter(([key]) => !mppKeys.has(key))
     .map(([key, price]) => [`POST /entrypoints/${key}/invoke`, routeConfig(price)] as const);
@@ -116,9 +117,11 @@ if (PAYMENTS_ENABLED) {
 
     const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-    const { solana: solanaMpp } = await import('@solana/mpp/server');
-
-    const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+    // Solana MPP — runtime crash due to @solana/errors version conflict between
+    // @solana/mpp (needs kit 6.x internals) and @x402/svm (bundles kit 5.x errors).
+    // tsc passes but Bun fails at module load: SOLANA_ERROR__TRANSACTION__INVALID_CONFIG_VALUE_KIND
+    // not found. Crypto payments handled by x402 until this is resolved.
+    // const { solana: solanaMpp } = await import('@solana/mpp/server');
 
     const mppx = Mppx.create({
       secretKey: process.env.MPP_SECRET_KEY!,
@@ -130,21 +133,23 @@ if (PAYMENTS_ENABLED) {
           networkId: 'internal',
           paymentMethodTypes: ['card'],
         }),
-        solanaMpp.charge({
-          recipient: PAY_TO,
-          currency: USDC_MINT,
-          decimals: 6,
-          network: 'mainnet-beta',
-          rpcUrl: CONFIG.helius.rpcUrl,
-        }),
+        // solanaMpp.charge({ recipient: PAY_TO, currency: USDC_MINT, decimals: 6, network: 'mainnet-beta', rpcUrl: CONFIG.helius.rpcUrl }),
       ],
-    }) as any;
+    });
 
-    for (const key of mppKeys) {
-      app.use(
-        `/entrypoints/${key}/invoke`,
-        mppx.charge({ amount: PRICING[key as keyof typeof PRICING] }),
-      );
+    // Use explicit key path 'stripe/charge' — the shorthand 'charge' may not resolve
+    // across all Bun versions (broke on Railway Bun 1.3.11, worked on local 1.2.21)
+    const chargeHandler = (mppx as any)['stripe/charge'] ?? (mppx as any).charge;
+    if (!chargeHandler) {
+      console.error('[mpp] FATAL: No charge handler found on mppx object. Keys:', Object.keys(mppx as any));
+    } else {
+      for (const key of mppKeys) {
+        app.use(
+          `/entrypoints/${key}/invoke`,
+          chargeHandler({ amount: PRICING[key as keyof typeof PRICING] }),
+        );
+      }
+      console.log(`[mpp] MPP + Stripe enabled on ${mppKeys.size} endpoints`);
     }
 
     console.log(`[mpp] MPP + Stripe enabled on ${mppKeys.size} endpoints`);
