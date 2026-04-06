@@ -72,15 +72,14 @@ export class TokenAnalyzer {
     const cached = await this.cache.get<TokenEnrichment>(cacheKey);
     if (cached) return cached;
 
-    // Parallel fetch: DexScreener + Jupiter + on-chain mint info (+ largest accounts if full)
+    // Parallel fetch: DexScreener + Jupiter + on-chain mint info + largest accounts
+    // Always fetch largest accounts so holder_count is non-zero even on light endpoint
     const tasks: ParallelTask<any>[] = [
       { name: 'dexData', fn: () => this.dexscreener.getTokenData(mint) },
       { name: 'mintInfo', fn: () => this.solanaRpc.getMintInfo(mint) },
       { name: 'jupiterToken', fn: () => this.jupiter.getTokenInfo(mint) },
+      { name: 'largestAccounts', fn: () => this.solanaRpc.getTokenLargestAccounts(mint) },
     ];
-    if (includeHolders) {
-      tasks.push({ name: 'largestAccounts', fn: () => this.solanaRpc.getTokenLargestAccounts(mint) });
-    }
 
     const fetched = await parallelFetch(tasks, 15_000);
 
@@ -229,7 +228,7 @@ export class TokenAnalyzer {
       name: dexData?.name ?? jupiterToken?.name ?? '',
       decimals,
       supply,
-      holder_count: largestAccounts.length, // Top-20 returned by RPC; full count requires Birdeye
+      holder_count: largestAccounts.length, // Top 20 from RPC (always fetched); full count would require Birdeye
       price_usd: price,
       market_cap: dexData?.marketCap ?? (price * supply),
       volume_24h: dexData?.volume24h ?? 0,

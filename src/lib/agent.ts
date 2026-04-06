@@ -318,7 +318,59 @@ app.post('/demo/enrich', async (c) => {
   }
 });
 
-console.log('[demo] Free demo endpoint available at POST /demo/enrich');
+import { formatTokenComparisonBriefing } from '../formatters/llm-compare';
+
+app.post('/demo/compare', async (c) => {
+  const ip = c.req.header('x-forwarded-for')?.split(',')[0]?.trim()
+    || c.req.header('cf-connecting-ip')
+    || 'unknown';
+
+  const rateLimit = getDemoRateLimit(ip);
+  if (!rateLimit.allowed) {
+    return c.json({
+      error: 'Rate limit exceeded',
+      resets_at: new Date(rateLimit.resetAt).toISOString(),
+    }, 429);
+  }
+
+  let body: { mints?: string[] };
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: 'Invalid JSON body' }, 400);
+  }
+
+  const mints = body.mints;
+  if (!Array.isArray(mints) || mints.length < 2 || mints.length > 3) {
+    return c.json({ error: 'Provide 2-3 token mint addresses in the "mints" array' }, 400);
+  }
+
+  const addressRegex = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/;
+  for (const mint of mints) {
+    if (!addressRegex.test(mint)) {
+      return c.json({ error: `Invalid Solana address: ${mint}` }, 400);
+    }
+  }
+
+  try {
+    const data = await tokenComparator.compare(mints);
+    const result = formatResponse(data, 'both', formatTokenComparisonBriefing);
+
+    return c.json({
+      _demo: {
+        type: 'compare',
+        queries_remaining: rateLimit.remaining,
+        resets_at: new Date(rateLimit.resetAt).toISOString(),
+      },
+      ...result,
+    });
+  } catch (err: any) {
+    console.error('[demo] Compare error:', err.message);
+    return c.json({ error: 'Comparison failed', message: err.message }, 500);
+  }
+});
+
+console.log('[demo] Free demo endpoints available at POST /demo/enrich and /demo/compare');
 
 // --- Documentation endpoint (agent-readable) ---
 

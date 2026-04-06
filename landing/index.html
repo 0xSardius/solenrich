@@ -1311,16 +1311,37 @@
       </div>
 
       <div class="reveal">
-        <div class="demo-search">
-          <input type="text" id="demo-input" placeholder="Paste a Solana address or token mint..." autocomplete="off" spellcheck="false">
-          <button id="demo-submit">Enrich</button>
+        <div class="demo-mode-toggle" style="display:flex; justify-content:center; gap:8px; margin-bottom:16px;">
+          <button class="demo-mode-btn active" id="mode-enrich" style="padding:6px 16px; border-radius:6px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.08); color:#fff; cursor:pointer; font-size:14px;">Enrich</button>
+          <button class="demo-mode-btn" id="mode-compare" style="padding:6px 16px; border-radius:6px; border:1px solid rgba(255,255,255,0.15); background:transparent; color:rgba(255,255,255,0.5); cursor:pointer; font-size:14px;">Compare Tokens</button>
         </div>
 
-        <div class="demo-examples">
-          <span class="demo-examples-label">Try:</span>
-          <button class="demo-example-btn" data-address="JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN">JUP Token</button>
-          <button class="demo-example-btn" data-address="DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263">BONK Token</button>
-          <button class="demo-example-btn" data-address="vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg">Solana Foundation</button>
+        <div id="demo-enrich-mode">
+          <div class="demo-search">
+            <input type="text" id="demo-input" placeholder="Paste a Solana address or token mint..." autocomplete="off" spellcheck="false">
+            <button id="demo-submit">Enrich</button>
+          </div>
+
+          <div class="demo-examples">
+            <span class="demo-examples-label">Try:</span>
+            <button class="demo-example-btn" data-address="JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN">JUP Token</button>
+            <button class="demo-example-btn" data-address="DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263">BONK Token</button>
+            <button class="demo-example-btn" data-address="vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg">Solana Foundation</button>
+          </div>
+        </div>
+
+        <div id="demo-compare-mode" style="display:none;">
+          <div class="demo-search" style="flex-direction:column; gap:8px;">
+            <input type="text" id="compare-input-1" placeholder="Token mint #1 (e.g. JUP)" autocomplete="off" spellcheck="false" style="width:100%;">
+            <input type="text" id="compare-input-2" placeholder="Token mint #2 (e.g. BONK)" autocomplete="off" spellcheck="false" style="width:100%;">
+            <button id="compare-submit" style="align-self:flex-end;">Compare</button>
+          </div>
+
+          <div class="demo-examples">
+            <span class="demo-examples-label">Try:</span>
+            <button class="demo-compare-btn" data-mint1="JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN" data-mint2="DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263">JUP vs BONK</button>
+            <button class="demo-compare-btn" data-mint1="EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" data-mint2="Es9vMFrzaCERmKfrQkEvAvuHm1AHRuGe5VFMi3YRbNCi">USDC vs USDT</button>
+          </div>
         </div>
 
         <div class="demo-counter" id="demo-counter">
@@ -1966,6 +1987,107 @@ Well-distributed supply.</span>
       }
     }
 
+    // --- Compare function ---
+    async function compareTokens(mint1, mint2) {
+      if (!isValid(mint1) || !isValid(mint2)) { showError('Both fields need valid Solana token mint addresses.'); return; }
+
+      state = loadState();
+      if (state.remaining <= 0) {
+        showError('Rate limit reached. Resets ' + new Date(state.resetAt).toLocaleTimeString());
+        return;
+      }
+
+      showLoading();
+      els.loadingText.textContent = 'Comparing tokens...';
+
+      var warmup = setTimeout(function() {
+        els.loadingText.textContent = 'Fetching data for both tokens...';
+      }, 5000);
+
+      try {
+        var res = await fetch(API + '/demo/compare', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mints: [mint1, mint2] }),
+        });
+
+        clearTimeout(warmup);
+
+        if (res.status === 429) {
+          state.remaining = 0;
+          try { var b = await res.json(); state.resetAt = new Date(b.resets_at).getTime(); } catch {}
+          saveState(state); updateCounter();
+          showError('Rate limit reached. Try again later.');
+          return;
+        }
+
+        if (!res.ok) {
+          var err = {};
+          try { err = await res.json(); } catch {}
+          showError(err.error || 'Comparison failed. Try again.');
+          return;
+        }
+
+        var data = await res.json();
+
+        if (data._demo) {
+          state.remaining = data._demo.queries_remaining;
+          if (data._demo.resets_at) state.resetAt = new Date(data._demo.resets_at).getTime();
+        } else {
+          state.remaining = Math.max(0, state.remaining - 1);
+        }
+        saveState(state);
+        updateCounter();
+
+        els.resultType.textContent = 'COMPARE';
+        els.resultType.className = 'demo-result-type token';
+
+        els.formatted.innerHTML = renderFormatted(data.llm_summary);
+        els.json.innerHTML = renderJson(data);
+
+        document.querySelectorAll('.demo-tab').forEach(function(t) { t.classList.remove('active'); });
+        document.querySelector('.demo-tab[data-view="formatted"]').classList.add('active');
+        els.formatted.style.display = 'block';
+        els.json.style.display = 'none';
+
+        hide();
+        els.result.style.display = 'block';
+        els.loadingText.textContent = 'Enriching onchain data...';
+
+      } catch (e) {
+        clearTimeout(warmup);
+        showError('Network error. The API may be warming up ��� try again in a few seconds.');
+      }
+    }
+
+    // --- Mode toggle ---
+    var enrichMode = document.getElementById('demo-enrich-mode');
+    var compareMode = document.getElementById('demo-compare-mode');
+    var modeEnrichBtn = document.getElementById('mode-enrich');
+    var modeCompareBtn = document.getElementById('mode-compare');
+
+    modeEnrichBtn.addEventListener('click', function() {
+      enrichMode.style.display = 'block';
+      compareMode.style.display = 'none';
+      modeEnrichBtn.style.background = 'rgba(255,255,255,0.08)';
+      modeEnrichBtn.style.color = '#fff';
+      modeEnrichBtn.classList.add('active');
+      modeCompareBtn.style.background = 'transparent';
+      modeCompareBtn.style.color = 'rgba(255,255,255,0.5)';
+      modeCompareBtn.classList.remove('active');
+    });
+
+    modeCompareBtn.addEventListener('click', function() {
+      enrichMode.style.display = 'none';
+      compareMode.style.display = 'block';
+      modeCompareBtn.style.background = 'rgba(255,255,255,0.08)';
+      modeCompareBtn.style.color = '#fff';
+      modeCompareBtn.classList.add('active');
+      modeEnrichBtn.style.background = 'transparent';
+      modeEnrichBtn.style.color = 'rgba(255,255,255,0.5)';
+      modeEnrichBtn.classList.remove('active');
+    });
+
     // --- Event wiring ---
     els.submit.addEventListener('click', function() { enrich(els.input.value.trim()); });
     els.input.addEventListener('keydown', function(e) { if (e.key === 'Enter') enrich(els.input.value.trim()); });
@@ -1973,6 +2095,25 @@ Well-distributed supply.</span>
       btn.addEventListener('click', function() {
         els.input.value = btn.dataset.address;
         enrich(btn.dataset.address);
+      });
+    });
+
+    // Compare wiring
+    var compareInput1 = document.getElementById('compare-input-1');
+    var compareInput2 = document.getElementById('compare-input-2');
+    var compareSubmit = document.getElementById('compare-submit');
+
+    compareSubmit.addEventListener('click', function() {
+      compareTokens(compareInput1.value.trim(), compareInput2.value.trim());
+    });
+    compareInput2.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') compareTokens(compareInput1.value.trim(), compareInput2.value.trim());
+    });
+    document.querySelectorAll('.demo-compare-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        compareInput1.value = btn.dataset.mint1;
+        compareInput2.value = btn.dataset.mint2;
+        compareTokens(btn.dataset.mint1, btn.dataset.mint2);
       });
     });
   })();
