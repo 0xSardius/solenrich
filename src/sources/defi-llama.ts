@@ -53,17 +53,42 @@ export class DefiLlamaClient {
     const cached = await this.cache.get<ProtocolDetail>(cacheKey);
     if (cached) return cached;
 
-    const res = await fetch(`${this.baseUrl}/protocol/${slug}`);
-    if (!res.ok) throw new Error(`DeFi Llama HTTP ${res.status}: ${await res.text()}`);
+    // Use lightweight /tvl endpoint + protocol list for metadata
+    // The full /protocol/{slug} endpoint returns megabytes of historical data and times out
+    const [tvlRes, protocols] = await Promise.all([
+      fetch(`${this.baseUrl}/tvl/${slug}`).then((r) => r.ok ? r.text() : '0').catch(() => '0'),
+      this.getSolanaProtocols().catch(() => [] as Protocol[]),
+    ]);
 
-    const raw: any = await res.json();
+    const totalTvl = parseFloat(tvlRes) || 0;
+    const meta = protocols.find((p) => p.slug.toLowerCase() === slug.toLowerCase());
+
+    // /tvl/ returns total TVL across all chains. Use protocol list's per-chain TVL if available.
     const result: ProtocolDetail = {
-      tvl: raw.currentChainTvls?.Solana ?? raw.tvl ?? 0,
-      chains: raw.currentChainTvls ?? {},
-      name: raw.name ?? slug,
-      slug: raw.slug ?? slug,
-      category: raw.category ?? 'Unknown',
+      tvl: meta?.tvl ?? totalTvl,
+      chains: { total: totalTvl },
+      name: meta?.name ?? slug,
+      slug: meta?.slug ?? slug,
+      category: meta?.category ?? 'Unknown',
     };
+
+    // Try to get chain breakdown from full endpoint with a short timeout
+    try {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), 8000);
+      const fullRes = await fetch(`${this.baseUrl}/protocol/${slug}`, { signal: controller.signal });
+      clearTimeout(timer);
+      if (fullRes.ok) {
+        const raw: any = await fullRes.json();
+        if (raw.currentChainTvls) result.chains = raw.currentChainTvls;
+        if (raw.category) result.category = raw.category;
+        if (raw.name) result.name = raw.name;
+        // Prefer Solana-specific TVL if available
+        if (raw.currentChainTvls?.Solana) result.tvl = raw.currentChainTvls.Solana;
+      }
+    } catch {
+      // Full endpoint timed out — proceed with lightweight data
+    }
 
     await this.cache.set(cacheKey, result, CACHE_TTL.defiProtocol);
     return result;

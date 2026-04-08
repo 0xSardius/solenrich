@@ -167,10 +167,13 @@ export class HeliusClient {
   async getSignaturesForAddress(
     address: string,
     limit = 100,
+    before?: string,
   ): Promise<Array<{ signature: string; slot: number; blockTime: number | null }>> {
+    const opts: Record<string, unknown> = { limit };
+    if (before) opts.before = before;
     const result = await this.dasRpc<
       Array<{ signature: string; slot: number; blockTime: number | null }>
-    >('getSignaturesForAddress', [address, { limit }], true);
+    >('getSignaturesForAddress', [address, opts], true);
     return result;
   }
 

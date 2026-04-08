@@ -51,6 +51,7 @@ export const PRICING = {
   'token-trend': '0.006',
   'wallet-history': '0.006',
   'new-tokens': '0.012',
+  'protocol-profile': '0.008',
 } as const;
 
 /** Cache TTL in seconds per data type */
@@ -68,4 +69,5 @@ export const CACHE_TTL = {
   dueDiligence: 600,
   snapshot: 2_592_000,  // 30 days
   trend: 300,           // 5 minutes
+  protocolProfile: 1800, // 30 minutes — activity data is RPC-heavy
 } as const;

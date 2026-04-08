@@ -217,6 +217,19 @@ const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'protocol-profile': {
+    summary: 'DeFi protocol analytics',
+    description: 'Protocol TVL, yield pools, on-chain activity metrics, health signals. Supports Raydium, Orca, marginfi, Drift, Jupiter, Kamino, Marinade, Jito, and more.',
+    schema: {
+      type: 'object',
+      required: ['protocol'],
+      properties: {
+        protocol: { type: 'string', description: 'Protocol slug (e.g. "raydium", "orca") or Solana program ID', minLength: 1, maxLength: 64 },
+        include_yields: { type: 'boolean', default: true, description: 'Include yield pool data' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
 };
 
 const BASE_URL = 'https://solenrich-production.up.railway.app';

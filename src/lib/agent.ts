@@ -17,6 +17,7 @@ import { HeliusClient } from "../sources/helius";
 import { DexScreenerClient } from "../sources/dexscreener";
 import { JupiterClient } from "../sources/jupiter";
 import { SolanaRpcClient } from "../sources/solana-rpc";
+import { DefiLlamaClient } from "../sources/defi-llama";
 
 // Enrichers
 import { WalletProfiler } from "../enrichers/wallet-profiler";
@@ -26,6 +27,7 @@ import { WhaleWatcher } from "../enrichers/whale-watch";
 import { GraphMapper } from "../enrichers/graph-mapper";
 import { CopyTradeAnalyzer } from "../enrichers/copy-trade-analyzer";
 import { DueDiligenceAnalyzer } from "../enrichers/due-diligence";
+import { ProtocolAnalyzer } from "../enrichers/protocol-analyzer";
 
 // Entrypoint registration
 import { registerWalletEntrypoints } from "../entrypoints/wallet";
@@ -40,6 +42,7 @@ import { registerQueryEntrypoint } from "../entrypoints/query";
 import { registerCompareEntrypoints } from "../entrypoints/compare";
 import { registerTrendEntrypoints } from "../entrypoints/trend";
 import { registerDiscoveryEntrypoint } from "../entrypoints/discovery";
+import { registerProtocolEntrypoint } from "../entrypoints/protocol";
 import { CONFIG, PRICING } from "../config";
 
 // --- Agent setup ---
@@ -180,6 +183,8 @@ const whaleWatcher = new WhaleWatcher(helius, dexscreener, solanaRpc, cache, pri
 const graphMapper = new GraphMapper(helius, cache);
 const copyTradeAnalyzer = new CopyTradeAnalyzer(helius, dexscreener, cache, priceAggregator);
 const dueDiligenceAnalyzer = new DueDiligenceAnalyzer(tokenAnalyzer, whaleWatcher, cache);
+const defiLlama = new DefiLlamaClient(cache);
+const protocolAnalyzer = new ProtocolAnalyzer(defiLlama, helius, cache);
 
 import { TokenComparator, WalletComparator } from '../enrichers/comparator';
 const tokenComparator = new TokenComparator(tokenAnalyzer);
@@ -213,6 +218,9 @@ registerTrendEntrypoints(addEntrypoint, trendAnalyzer);
 import { TokenDiscovery } from '../enrichers/token-discovery';
 const tokenDiscovery = new TokenDiscovery(dexscreener, tokenAnalyzer, cache);
 registerDiscoveryEntrypoint(addEntrypoint, tokenDiscovery);
+
+// Protocol analytics
+registerProtocolEntrypoint(addEntrypoint, protocolAnalyzer);
 
 // --- Demo endpoint (free, rate-limited, for landing page) ---
 
@@ -456,6 +464,11 @@ app.get('/docs', (c) => {
         price: '0.006',
         input: { addresses: 'string[] (2-3 wallet addresses)', depth: 'light | full', format: 'json | llm | both' },
         description: 'Side-by-side wallet comparison: portfolio, activity, risk, labels. Rankings + summary picks',
+      },
+      'protocol-profile': {
+        price: '0.008',
+        input: { protocol: 'string (slug or program ID)', include_yields: 'boolean (default true)', format: 'json | llm | both' },
+        description: 'DeFi protocol analytics: TVL, yield pools, on-chain activity, health signals. Supports Raydium, Orca, marginfi, Drift, Jupiter, Kamino, Marinade, Jito.',
       },
     },
     methodology: {
