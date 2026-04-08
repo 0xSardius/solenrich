@@ -365,7 +365,7 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 ### Infrastructure
 - [ ] Rate limiting — protect upstream APIs, per-IP or per-wallet throttling
 - [ ] Usage analytics — track endpoint calls, response times, error rates (Axiom or simple logging)
-- [ ] Birdeye API key — unlocks wallet portfolio endpoint and richer token data
+- [ ] Birdeye API integration — see detailed plan below
 - [ ] Test suite in CI — wire existing test files into GitHub Actions
 - [x] SolScout consumer agent — stress test + demo + paid E2E verification (2026-04-01)
 - [x] Full E2E paid verification — 13/13 endpoints passing with real USDC via x402 (2026-04-01)
@@ -406,6 +406,30 @@ Dual-protocol payments on all 16 endpoints: MPP (Stripe cards + Solana USDC) alo
 4. Add MPP payment info to /docs endpoint and landing page
 5. Update SolScout with MPP client mode (`--paid-mpp` flag)
 6. Submit to MCP directories (Smithery, mcp.run, Glama)
+
+### Birdeye API Integration (planned)
+
+**Pricing:** https://bds.birdeye.so/pricing | **Docs:** https://docs.birdeye.so
+**Client already written:** `src/sources/birdeye.ts` — needs API key in `BIRDEYE_API_KEY` env var.
+
+**Phase 1 — Free tier ($0/mo, 1 rps):**
+- Token holder counts via `/defi/v3/token/holder` — fixes holder_count=0 on mega-cap tokens (JUP, USDC, etc.)
+- OHLCV price data — improves volatility calculations beyond DexScreener's multi-timeframe estimates
+- 1 rps is fine with our caching (60s-300s TTL per token)
+- **Endpoints improved:** enrich-token-light, enrich-token-full, due-diligence, compare-tokens, token-trend, new-tokens
+
+**Phase 2 — Lite tier ($39/mo, 15 rps):**
+- Token security metadata (`/defi/token_security`) — honeypot detection, trading restrictions. Feeds into risk flags.
+- Wallet portfolio (`/v1/wallet/token_list`, beta) — accurate USD values per holding instead of Helius+price estimation
+- **Endpoints improved:** enrich-wallet-light, enrich-wallet-full, compare-wallets, wallet-history, copy-trade-signals, whale-watch
+
+**Integration work:** Minimal — Birdeye client exists, enrichers already accept Birdeye data. Main tasks:
+1. Add `getTokenHolderCount()` to birdeye.ts, call in token-analyzer parallel fetch
+2. Add `getTokenSecurity()` to birdeye.ts, feed flags into risk-scorer
+3. Re-enable `getWalletPortfolio()` in wallet-profiler (currently bypassed)
+4. Set `BIRDEYE_API_KEY` in .env + Railway
+
+**Not changed by Birdeye:** Transaction parsing, wallet graph, risk scoring logic (pure functions), LLM formatting
 
 ### Distribution / Growth
 - [ ] Agent-to-agent integrations — partner with trading agents that need enrichment data
