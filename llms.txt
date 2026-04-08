@@ -1,0 +1,221 @@
+# SolEnrich
+
+> Solana onchain data enrichment API. Wallet profiling, token analysis, risk scoring, whale tracking, DeFi protocol analytics. Pay-per-call with USDC or credit card. Returns JSON for agents or natural language for LLMs.
+
+## Base URL
+
+```
+https://solenrich-production.up.railway.app
+```
+
+## Free Endpoints (no payment required)
+
+- `GET /health` — Server status
+- `GET /docs` — Full API documentation with scoring methodology (JSON)
+- `GET /openapi.json` — OpenAPI 3.1.0 spec with payment info
+- `GET /entrypoints` — List all available endpoints
+- `GET /.well-known/agent.json` — Agent card (8004-solana identity)
+- `POST /demo/enrich` — Free wallet enrichment (10 requests/hour, rate limited)
+
+## Authentication & Payment
+
+All paid endpoints require payment via one of two protocols:
+
+**x402 (Solana USDC):**
+Endpoints return HTTP 402 with payment instructions. Your agent completes a USDC micropayment on Solana, then retries the request with the payment proof header. Facilitator: `https://facilitator.daydreams.systems`
+
+**MPP/Stripe (credit card):**
+Standard HTTP payment protocol. Endpoints advertise `x-payment-info` headers. Pay with any credit card via Stripe. See `/openapi.json` for payment details per route.
+
+Prices are in USDC (e.g., $0.002 = two-tenths of a cent per call).
+
+## Output Formats
+
+Every paid endpoint accepts a `format` parameter:
+
+| Value | Returns | Use case |
+|-------|---------|----------|
+| `"json"` | Structured data object | Agent processing, data pipelines |
+| `"llm"` | `{ briefing, content_type }` — markdown natural language | LLM context windows, chat interfaces |
+| `"both"` | Full JSON + `llm_summary` field | Agents that also display to humans |
+
+Default is `"json"`.
+
+## Invoking Endpoints
+
+```
+POST /entrypoints/{endpoint-key}/invoke
+Content-Type: application/json
+
+{ "input": { ...endpoint-specific fields... } }
+```
+
+Response envelope:
+```json
+{
+  "run_id": "uuid",
+  "status": "succeeded",
+  "output": { ...endpoint-specific data... }
+}
+```
+
+## Endpoints
+
+### Core Enrichment
+
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `enrich-wallet-light` | $0.002 | Wallet profile: SOL balance, token holdings, NFTs, labels, risk score |
+| `enrich-wallet-full` | $0.005 | Full profile: adds DeFi positions, connected wallets, deeper tx history |
+| `enrich-token-light` | $0.002 | Token analysis: price, market cap, liquidity, volatility, risk flags |
+| `enrich-token-full` | $0.004 | Full analysis: adds top 20 holders, concentration metrics (HHI), holder list |
+| `parse-transaction` | $0.001 | Transaction parsing: type detection, protocol ID, transfer details, accounts |
+
+### Premium Analytics
+
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `whale-watch` | $0.008 | Top token holders, accumulation/distribution patterns, whale activity |
+| `wallet-graph` | $0.010 | Wallet connection mapping, cluster detection (1-2 hop depth) |
+| `copy-trade-signals` | $0.010 | Trading performance: PnL, win rate, Sharpe/Sortino ratios, copyability score |
+| `due-diligence` | $0.020 | Comprehensive token research: security + whales + holders + risk verdict |
+| `batch-enrich` | $0.015 | Enrich multiple wallets or tokens in parallel (up to 10) |
+
+### Comparison & Temporal
+
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `compare-tokens` | $0.006 | Side-by-side comparison of 2-3 tokens with per-metric rankings |
+| `compare-wallets` | $0.006 | Side-by-side comparison of 2-3 wallets with per-metric rankings |
+| `token-trend` | $0.006 | Token changes over 7/14/30 days: price, liquidity, concentration direction |
+| `wallet-history` | $0.006 | Wallet changes over 7/14/30 days: portfolio value, positions added/removed |
+
+### Discovery & Intelligence
+
+| Endpoint | Price | Description |
+|----------|-------|-------------|
+| `new-tokens` | $0.012 | Recently launched tokens with risk scoring, filtered and ranked safest-first |
+| `protocol-profile` | $0.008 | DeFi protocol analytics: TVL, yield pools, on-chain activity, health signals |
+| `query` | $0.003 | Natural language question about any Solana wallet, token, or transaction |
+
+## Input Schemas
+
+### Wallet endpoints
+```json
+{ "address": "<solana-address>", "format": "json" }
+```
+- `address` (required): Solana wallet address (32-44 chars, base58)
+- `format` (optional): `"json"` | `"llm"` | `"both"`
+- `depth` (optional, full only): `"light"` | `"full"`
+
+### Token endpoints
+```json
+{ "mint": "<token-mint-address>", "format": "json" }
+```
+- `mint` (required): SPL token mint address
+- `format` (optional): `"json"` | `"llm"` | `"both"`
+
+### Transaction endpoint
+```json
+{ "signature": "<tx-signature>", "format": "json" }
+```
+
+### Comparison endpoints
+```json
+{ "addresses": ["<mint1>", "<mint2>"], "format": "json" }
+```
+- `addresses` (required): Array of 2-3 Solana addresses or mint addresses
+
+### Query endpoint
+```json
+{ "question": "Is DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263 safe to buy?" }
+```
+- `question` (required): Natural language question. Must include a Solana address or mint.
+
+### Whale-watch / due-diligence
+```json
+{ "mint": "<token-mint>", "format": "json" }
+```
+
+### Protocol-profile
+```json
+{ "protocol": "raydium", "format": "json" }
+```
+- `protocol` (required): Protocol name or slug (e.g., "raydium", "drift", "orca", "marinade", "jupiter", "kamino", "marginfi", "jito")
+
+### Batch endpoint
+```json
+{
+  "items": [
+    { "type": "wallet", "address": "<addr>" },
+    { "type": "token", "mint": "<mint>" }
+  ],
+  "format": "json"
+}
+```
+
+## Risk Scoring
+
+### Wallet Risk (0.0 - 1.0)
+Seven additive factors: transaction volume, diversity, protocol interactions, wallet age, concentration, counterparty risk, large transfers. Levels: LOW (0-0.2), MODERATE (0.2-0.4), ELEVATED (0.4-0.6), HIGH (0.6-0.8), CRITICAL (0.8-1.0).
+
+### Token Risk
+Flags: `unverified`, `low_liquidity`, `high_concentration`, `whale_dominated`, `frozen`, `mintable`, `low_holder_count`, `high_volatility`, `new_token`. Due-diligence adds a composite score with SAFE/CAUTION/RISKY/DANGEROUS recommendations.
+
+### Holder Concentration (HHI)
+Herfindahl-Hirschman Index on top 20 holders. <500 = dispersed, 500-1500 = moderate, 1500-2500 = concentrated, >2500 = highly concentrated.
+
+### Volatility Classification
+Based on 7-day price range: LOW (<5%), MODERATE (5-15%), HIGH (15-30%), EXTREME (>30%).
+
+## Data Sources
+
+| Source | What it provides |
+|--------|-----------------|
+| Helius | DAS API (assets, token accounts), enhanced transaction parsing, RPC |
+| DexScreener | Token prices, market data, pair liquidity |
+| Jupiter | Token prices (cross-reference), metadata, verified status |
+| DeFi Llama | Protocol TVL, yield pools, chain breakdowns |
+| Solana RPC | SOL balances, token largest accounts, parsed transactions |
+
+## MCP Server
+
+SolEnrich is available as an MCP (Model Context Protocol) server for direct integration with Claude Desktop, Claude Code, Cursor, and other MCP clients.
+
+**Remote (no install):**
+```json
+{
+  "mcpServers": {
+    "solenrich": {
+      "url": "https://solenrich-production.up.railway.app/mcp"
+    }
+  }
+}
+```
+
+**Local (stdio):**
+```json
+{
+  "mcpServers": {
+    "solenrich": {
+      "command": "bun",
+      "args": ["run", "mcp/server.ts"],
+      "cwd": "/path/to/solenrich"
+    }
+  }
+}
+```
+
+7 tools available: `enrich_wallet`, `enrich_token`, `parse_transaction`, `whale_watch`, `due_diligence`, `wallet_graph`, `copy_trade_signals`.
+
+## Links
+
+- API Docs: `GET /docs` (machine-readable JSON)
+- OpenAPI: `GET /openapi.json`
+- Agent Card: `GET /.well-known/agent.json`
+- Landing Page: https://landing-rho-six.vercel.app
+- GitHub: https://github.com/0xSardius/solenrich
+
+## Optional: llms-full.txt
+
+For complete JSON response examples, see [llms-full.txt](./llms-full.txt).

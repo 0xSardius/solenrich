@@ -1,0 +1,682 @@
+# SolEnrich — Full API Reference with Response Examples
+
+> This is the extended version of llms.txt with complete JSON response samples. For the concise reference, see [llms.txt](./llms.txt).
+
+## Base URL
+
+```
+https://solenrich-production.up.railway.app
+```
+
+## Invoking Endpoints
+
+```
+POST /entrypoints/{endpoint-key}/invoke
+Content-Type: application/json
+
+{ "input": { ...fields... } }
+```
+
+All responses are wrapped in:
+```json
+{
+  "run_id": "uuid",
+  "status": "succeeded",
+  "output": { ... }
+}
+```
+
+---
+
+## enrich-wallet-light — $0.002
+
+Light wallet profile with SOL balance, token holdings, NFTs, labels, and risk score.
+
+**Request:**
+```json
+POST /entrypoints/enrich-wallet-light/invoke
+Content-Type: application/json
+
+{
+  "input": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "format": "json"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "run_id": "7608453c-8496-427a-827b-d7889132e36c",
+  "status": "succeeded",
+  "output": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "sol_balance": 0.039769364,
+    "portfolio_value_usd": 3.45,
+    "token_count": 6,
+    "top_holdings": [
+      {
+        "mint": "FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8",
+        "symbol": "SMOG",
+        "balance": 29.621167,
+        "usd_value": 0.13
+      },
+      {
+        "mint": "Fxgdfsy1Z5Mvh53o69s2Ev6TGxtAJ1RQ5RJ5moCpKmQZ",
+        "symbol": "SI",
+        "balance": 50,
+        "usd_value": 0.000628
+      }
+    ],
+    "nft_count": 9,
+    "defi_positions": [],
+    "tx_count_30d": 7,
+    "first_tx_date": "2022-04-15T22:30:11.000Z",
+    "labels": [],
+    "risk_score": 0.15,
+    "risk_level": "LOW",
+    "risk_factors": [
+      "Low transaction diversity",
+      "Interacts with fewer than 2 protocols"
+    ],
+    "connected_wallets": [],
+    "last_updated": "2026-04-08T14:31:13.373Z"
+  }
+}
+```
+
+**LLM format** (`"format": "llm"`):
+```json
+{
+  "run_id": "45d211b9-390e-4c01-86c0-0c1a618a08e8",
+  "status": "succeeded",
+  "output": {
+    "briefing": "## Wallet Profile: vine...PTg\n\nActive since April 2022 Solana wallet. Holds 0.04 SOL and 6 SPL tokens.\nPortfolio value: ~$3.45 across tokens, NFTs, and DeFi positions.\n\nTop holdings: SMOG ($0.13), SI ($0.000628), SOL ($0.00).\nHolds 9 NFTs.\n\n7 transactions in 30 days. Risk score: 0.15/1.0 (low).\nKey risk factors: Low transaction diversity; Interacts with fewer than 2 protocols.\n\nData as of: 2026-04-08T14:31:13.373Z",
+    "content_type": "text/markdown"
+  }
+}
+```
+
+---
+
+## enrich-wallet-full — $0.005
+
+Full wallet profile: adds DeFi positions, connected wallets, and deeper transaction history.
+
+**Request:**
+```json
+{
+  "input": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "format": "json",
+    "depth": "full"
+  }
+}
+```
+
+**Response:** Same schema as wallet-light, plus:
+- `defi_positions[]` — active DeFi positions with protocol, type, estimated USD value
+- `connected_wallets[]` — addresses this wallet has transacted with, with interaction counts
+- Deeper `tx_count_30d` and richer `labels` (e.g., `"defi_user"`, `"whale"`, `"active_trader"`)
+
+---
+
+## enrich-token-light — $0.002
+
+Token analysis: price, market cap, liquidity, volatility, risk flags.
+
+**Request:**
+```json
+{
+  "input": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "format": "json"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "run_id": "d993fc4e-d9f3-49f4-8cfc-f152d66488cc",
+  "status": "succeeded",
+  "output": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "symbol": "Bonk",
+    "name": "Bonk",
+    "decimals": 5,
+    "supply": 87994742466688.48,
+    "holder_count": 20,
+    "price_usd": 0.000005947,
+    "market_cap": 528470662,
+    "volume_24h": 1418865.18,
+    "price_change_24h": 6.05,
+    "volatility": {
+      "daily_std_7d": 4.47,
+      "high_7d": 0.00000608,
+      "low_7d": 0.00000561,
+      "range_pct_7d": 8.39,
+      "classification": "MODERATE"
+    },
+    "liquidity": 378929.11,
+    "risk_flags": ["unverified"],
+    "verified": false,
+    "mint_authority": null,
+    "freeze_authority": null,
+    "last_updated": "2026-04-08T14:31:39.550Z"
+  }
+}
+```
+
+---
+
+## enrich-token-full — $0.004
+
+Full token analysis: adds top 20 holders with supply percentages and concentration metrics.
+
+**Request:**
+```json
+{
+  "input": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "format": "json"
+  }
+}
+```
+
+**Response:** Same as token-light, plus:
+```json
+{
+  "top_holders": [
+    {
+      "address": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+      "balance": 6723663307555.245,
+      "pct_supply": 7.64
+    },
+    {
+      "address": "8Tp9fFkZ2KcRBLYDTUNXo98Ez6ojGb6MZEPXfGDdeBzG",
+      "balance": 4712045617254.889,
+      "pct_supply": 5.35
+    }
+  ],
+  "concentration": {
+    "top1_pct": 7.64,
+    "top5_pct": 25.68,
+    "top10_pct": 40.69,
+    "herfindahl_index": 212
+  }
+}
+```
+
+**Concentration interpretation:**
+- `herfindahl_index` < 500: dispersed (healthy)
+- 500-1500: moderate concentration
+- 1500-2500: concentrated
+- > 2500: highly concentrated (risky)
+
+---
+
+## parse-transaction — $0.001
+
+Parse a Solana transaction with type detection, protocol identification, and transfer details.
+
+**Request:**
+```json
+{
+  "input": {
+    "signature": "<86-90 char base58 transaction signature>",
+    "format": "json"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "output": {
+    "signature": "...",
+    "type": "SWAP",
+    "source": "JUPITER",
+    "timestamp": 1712345678,
+    "fee": 5000,
+    "status": "success",
+    "transfers": [
+      {
+        "from": "...",
+        "to": "...",
+        "amount": 1.5,
+        "mint": "So11111111111111111111111111111111111111112",
+        "symbol": "SOL"
+      }
+    ],
+    "accounts": ["..."],
+    "protocol": "Jupiter"
+  }
+}
+```
+
+---
+
+## due-diligence — $0.020
+
+Comprehensive token research: token data + whale analysis + holder concentration + composite risk verdict.
+
+**Request:**
+```json
+{
+  "input": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "format": "json"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "run_id": "88c53c5e-1721-4f64-9938-6eb8a9a87753",
+  "status": "succeeded",
+  "output": {
+    "token": {
+      "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "symbol": "Bonk",
+      "name": "Bonk",
+      "price_usd": 0.000005947,
+      "market_cap": 528470662,
+      "volume_24h": 1418865.18,
+      "price_change_24h": 6.05,
+      "volatility": {
+        "daily_std_7d": 4.47,
+        "range_pct_7d": 8.39,
+        "classification": "MODERATE"
+      },
+      "liquidity": 378929.11,
+      "risk_flags": ["unverified"],
+      "verified": false,
+      "mint_authority": null,
+      "freeze_authority": null
+    },
+    "whales": {
+      "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "threshold_usd": 10000,
+      "lookback_hours": 72,
+      "whales": [],
+      "total_whale_volume_usd": 0,
+      "net_flow_direction": "neutral",
+      "whale_count": 0
+    },
+    "overall_risk_score": 0.23,
+    "risk_level": "MODERATE",
+    "risk_factors": [
+      "1 risk flag(s) identified",
+      "Not verified on Jupiter"
+    ],
+    "recommendation": "SAFE",
+    "last_updated": "2026-04-08T14:31:47.970Z"
+  }
+}
+```
+
+**Recommendation values:** `SAFE`, `CAUTION`, `RISKY`, `DANGEROUS`
+
+---
+
+## protocol-profile — $0.008
+
+DeFi protocol analytics: TVL, yield pools, on-chain activity, health signals.
+
+**Request:**
+```json
+{
+  "input": {
+    "protocol": "raydium",
+    "format": "json"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "run_id": "a728d0fa-63db-43f1-a58b-1087c76733ba",
+  "status": "succeeded",
+  "output": {
+    "protocol": {
+      "name": "Raydium",
+      "slug": "raydium",
+      "program_id": "675kPX9MHTjS2zt1qfr1NYHuzeLXfQM9H24wFSUt1Mp8",
+      "category": "Unknown"
+    },
+    "tvl": {
+      "total_usd": 1003930750,
+      "solana_usd": 1003930750,
+      "solana_dominance_pct": 100
+    },
+    "yields": {
+      "pool_count": 1704,
+      "top_pools": [
+        {
+          "symbol": "TON-USDC",
+          "apy": 0.01,
+          "apy_base": 0.01,
+          "apy_reward": 0,
+          "tvl_usd": 70758314
+        },
+        {
+          "symbol": "WSOL-USD1",
+          "apy": 30.83,
+          "apy_base": 30.83,
+          "apy_reward": 0,
+          "tvl_usd": 16596257
+        }
+      ],
+      "avg_apy": 55.15,
+      "median_apy": 8.76,
+      "total_yield_tvl_usd": 790077658
+    },
+    "activity": {
+      "recent_tx_count": 200,
+      "unique_signers": 109,
+      "tx_types": {
+        "TRANSFER": 38,
+        "SWAP": 130,
+        "UNKNOWN": 28,
+        "CLOSE_ACCOUNT": 3,
+        "TOKEN_MINT": 1
+      }
+    },
+    "health_signals": {
+      "tvl_tier": "mega",
+      "yield_attractiveness": "moderate",
+      "activity_level": "low"
+    },
+    "last_updated": "2026-04-08T14:32:20.618Z"
+  }
+}
+```
+
+**Supported protocols:** raydium, orca, marginfi, drift, jupiter, kamino, marinade, jito. Any DeFi Llama-listed protocol also works as a fallback.
+
+---
+
+## query — $0.003
+
+Natural language question about any Solana wallet, token, or transaction. Must include a Solana address.
+
+**Request:**
+```json
+{
+  "input": {
+    "question": "Is DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263 safe?"
+  }
+}
+```
+
+**Response:** Routes to the appropriate enricher (due-diligence for "safe?", wallet-profiler for "who is?", etc.) and returns the full enrichment result. Same output schema as the matched endpoint.
+
+**Supported intents:** wallet profile, token analysis, due diligence, whale watch, copy trade signals, transaction parsing, wallet graph.
+
+---
+
+## whale-watch — $0.008
+
+**Request:**
+```json
+{
+  "input": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "format": "json"
+  }
+}
+```
+
+**Response:**
+```json
+{
+  "output": {
+    "mint": "...",
+    "threshold_usd": 10000,
+    "lookback_hours": 72,
+    "whales": [
+      {
+        "address": "...",
+        "entity_label": "Binance Hot Wallet",
+        "balance": 1000000000,
+        "pct_supply": 5.2,
+        "volume_usd": 150000,
+        "net_flow": "accumulating",
+        "tx_count": 12
+      }
+    ],
+    "total_whale_volume_usd": 150000,
+    "net_flow_direction": "accumulating",
+    "whale_count": 5
+  }
+}
+```
+
+---
+
+## compare-tokens — $0.006
+
+**Request:**
+```json
+{
+  "input": {
+    "addresses": [
+      "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"
+    ],
+    "format": "json"
+  }
+}
+```
+
+**Response:** Array of enriched tokens plus `rankings` object with per-metric winners and `summary_picks` (safest, most liquid, lowest volatility, etc.).
+
+---
+
+## compare-wallets — $0.006
+
+**Request:**
+```json
+{
+  "input": {
+    "addresses": [
+      "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+      "66Qvhr1xnwqbCT36KfHfZF1JpoWdmCQ3uFYTN335CGXe"
+    ],
+    "format": "json"
+  }
+}
+```
+
+**Response:** Array of enriched wallets plus `rankings` and `summary_picks` (highest value, most active, lowest risk, etc.).
+
+---
+
+## token-trend — $0.006
+
+**Request:**
+```json
+{
+  "input": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "period": "7d",
+    "format": "json"
+  }
+}
+```
+
+**Response:** Current snapshot + historical comparison with `direction` indicators (improving/declining/stable) per metric and overall.
+
+---
+
+## wallet-history — $0.006
+
+**Request:**
+```json
+{
+  "input": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "period": "7d",
+    "format": "json"
+  }
+}
+```
+
+**Response:** Current snapshot + position changes (holdings added/removed) + direction indicators.
+
+---
+
+## new-tokens — $0.012
+
+**Request:**
+```json
+{
+  "input": {
+    "min_liquidity_usd": 1000,
+    "max_risk_score": 0.5,
+    "limit": 10,
+    "format": "json"
+  }
+}
+```
+
+**Response:** Array of recently launched tokens, enriched with risk scores, sorted safest-first.
+
+---
+
+## batch-enrich — $0.015
+
+**Request:**
+```json
+{
+  "input": {
+    "items": [
+      { "type": "wallet", "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg" },
+      { "type": "token", "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263" }
+    ],
+    "format": "json"
+  }
+}
+```
+
+**Response:** Array of results, each matching the schema of the corresponding endpoint (wallet-light or token-light). Max 10 items, concurrency limited to 5.
+
+---
+
+## wallet-graph — $0.010
+
+**Request:**
+```json
+{
+  "input": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "depth": 1,
+    "format": "json"
+  }
+}
+```
+
+**Response:** Graph of wallet connections with edge weights (interaction counts), node metadata (labels, entity tags), and cluster detection.
+
+---
+
+## copy-trade-signals — $0.010
+
+**Request:**
+```json
+{
+  "input": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "format": "json"
+  }
+}
+```
+
+**Response:** Trading performance metrics: total PnL, win rate, avg trade size, Sharpe ratio, Sortino ratio, max drawdown, profit factor, consistency score, and `copyability` rating (high/medium/low).
+
+---
+
+## Free Demo Endpoint
+
+No payment required. Rate limited to 10 requests/hour.
+
+**Request:**
+```json
+POST /demo/enrich
+Content-Type: application/json
+
+{ "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg" }
+```
+
+**Response:** Same as `enrich-wallet-light` output plus `llm_summary` field and `_demo` metadata:
+```json
+{
+  "_demo": {
+    "type": "wallet",
+    "queries_remaining": 8,
+    "resets_at": "2026-04-08T15:32:25.901Z"
+  },
+  "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+  "sol_balance": 0.039769364,
+  "portfolio_value_usd": 3.45,
+  "token_count": 6,
+  "top_holdings": [...],
+  "risk_score": 0.15,
+  "risk_level": "LOW",
+  "llm_summary": "## Wallet Profile: vine...PTg\n\nActive since April 2022..."
+}
+```
+
+---
+
+## MCP Server
+
+7 tools available via Model Context Protocol:
+
+| MCP Tool | Maps to endpoint |
+|----------|-----------------|
+| `enrich_wallet` | enrich-wallet-light / full |
+| `enrich_token` | enrich-token-light / full |
+| `parse_transaction` | parse-transaction |
+| `whale_watch` | whale-watch |
+| `due_diligence` | due-diligence |
+| `wallet_graph` | wallet-graph |
+| `copy_trade_signals` | copy-trade-signals |
+
+**Remote URL:** `https://solenrich-production.up.railway.app/mcp`
+
+---
+
+## Error Responses
+
+**402 Payment Required:**
+```json
+{
+  "error": "Payment required",
+  "price": "0.002",
+  "currency": "USDC",
+  "endpoint": "enrich-wallet-light",
+  "payment_methods": ["x402 (Solana USDC)", "Stripe (credit card)"]
+}
+```
+
+**400 Invalid Input:**
+```json
+{
+  "error": {
+    "code": "invalid_input",
+    "issues": [
+      {
+        "expected": "string",
+        "code": "invalid_type",
+        "path": ["mint"],
+        "message": "Invalid input: expected string, received undefined"
+      }
+    ]
+  }
+}
+```
