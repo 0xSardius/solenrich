@@ -461,12 +461,15 @@ Six features to deepen SolEnrich's core value prop: getting solid Solana data to
 - [x] Filters: min_liquidity_usd, max_risk_score, limit
 - [x] $0.012 USDC per call, 16 total endpoints now
 
-**Priority 4 — Protocol Analytics** (1-2 sessions)
-- `protocol-profile` endpoint
-- DeFi Llama TVL + yields, Helius signature scanning on program IDs for user/tx counts
-- Reuses: DeFi Llama client, Helius, risk-scorer
-- Blocker: Rate-heavy on popular programs — needs aggressive caching (30min+ TTL)
-- Feasibility: High
+**Priority 4 — Protocol Analytics** — DONE (2026-04-08)
+- [x] `protocol-profile` endpoint shipped — TVL, yields, on-chain activity, health signals
+- [x] 8 protocols in static registry (Raydium, Orca, marginfi, Drift, Jupiter, Kamino, Marinade, Jito)
+- [x] Dynamic DeFi Llama fallback for unlisted protocols
+- [x] Helius signature scanning (2 pages, 200 sigs) for activity metrics
+- [x] Health signals: TVL tier, yield attractiveness, activity level
+- [x] DeFi Llama client activated (was built but unwired)
+- [x] Lightweight /tvl/ endpoint + 8s abort fallback for large /protocol/ responses
+- [x] $0.008 per call, 30min cache. 17 total endpoints now.
 
 **Priority 5 — Aggregated Intelligence / Smart Money** (2-3 sessions)
 - `trending-signals`, `smart-money-flow` endpoints

@@ -1,69 +1,63 @@
 # Session Checkpoint
 
 ## Last session date
-2026-04-05
+2026-04-08
 
 ## What was completed
 
-### This session (April 5)
-- **OpenAPI discovery endpoint** — `GET /openapi.json` with OpenAPI 3.1.0, `x-payment-info` per route, input schemas, `x-service-info`. Validated by `npx mppx discover validate`. AgentCash discovers all 19 routes with correct pricing.
-- **MPP expanded to all 16 endpoints** — was 3 (Stage 1), now all endpoints accept Stripe cards via MPP. x402 middleware stays registered but idle when MPP is active.
-- **@solana/kit upgraded 5.5.1 → 6.7.0** — tested in isolated git worktree first. @x402/svm peer dep is `>=5.1.0`, zero type errors, 138/138 unit tests pass. Safe upgrade confirmed.
-- **Solana MPP enabled** — `solanaMpp.charge()` with USDC mint, mainnet-beta, Helius RPC. All 16 endpoints now accept both Stripe (fiat) and Solana USDC (crypto).
-- **CLAUDE.md updated** — MPP section rewritten for full rollout status
+### This session (April 5-8)
+- **OpenAPI discovery endpoint** — `GET /openapi.json`, validated by mppx CLI + AgentCash
+- **MPP expanded to all 16 endpoints** — Stripe fiat on all, x402 as fallback when MPP off
+- **@solana/kit upgrade attempted** — 5.5.1 → 6.7.0. tsc passed but Bun runtime crashed (@solana/errors version conflict). Reverted to 5.5.1. Solana MPP blocked until resolved.
+- **Railway crash fix** — mppx.charge shorthand undefined on Bun 1.3.11, fixed with explicit 'stripe/charge' key path
+- **holder_count fix** — always fetch getTokenLargestAccounts even on light endpoint (was returning 0)
+- **Compare demo** — `/demo/compare` backend route + landing page Enrich/Compare toggle with preset examples
+- **Birdeye API plan** — documented two-phase integration (free tier → Lite) in CLAUDE.md
+- **Protocol Analytics endpoint** — `protocol-profile` (#17): TVL, yields, on-chain activity, health signals. 8 protocols in registry + dynamic DeFi Llama fallback. Tested live with Drift ($241M TVL, 6.22% APY, 46 tx/hr).
+- **DeFi Llama client activated** — was built but never wired up. Now instantiated and used.
+- **Helius pagination** — `getSignaturesForAddress` now supports `before` param for multi-page scanning
+- **Strategy + memory saved** — user segments, product integrations, expansion priorities
 
-### Previous session (April 2-3)
-- compare-tokens + compare-wallets, token-trend + wallet-history, new-tokens endpoints
-- SolScout consumer agent, paid E2E verification, MPP Stage 1 (3 endpoints)
-- Landing page updated, custom domain live
+### Previous sessions
+- April 2-3: Comparison, temporal, discovery endpoints. MPP Stage 1. SolScout E2E.
+- March 26-29: Demo, OG tags, test suite, Railway reconnect.
 
 ## Current state
 - **Live API:** https://solenrich-production.up.railway.app/
 - **MCP:** https://solenrich-production.up.railway.app/mcp
 - **Landing:** https://landing-rho-six.vercel.app
-- **Demo:** https://solenrich-production.up.railway.app/demo/enrich
-- **Docs:** https://solenrich-production.up.railway.app/docs
 - **Discovery:** https://solenrich-production.up.railway.app/openapi.json
-- **Payments:** All 16 endpoints accept both Stripe cards (fiat) + Solana USDC (crypto) via MPP. x402 as fallback when MPP keys not set.
-- **Cache:** Upstash Redis with 30-day snapshot storage
-- **Endpoints:** 16 paid + 1 free demo + /docs + /openapi.json
-- **Tests:** 138 unit + SolScout stress (16 endpoints) + production E2E
+- **Payments:** MPP/Stripe (fiat) on all 17 endpoints when keys set, x402 (Solana USDC) as fallback
+- **Endpoints:** 17 paid + 1 free demo (enrich + compare) + /docs + /openapi.json
+- **Tests:** 138 unit, all passing
 - **Railway:** Auto-deploying from GitHub main branch
 - **Everything committed, pushed, and deployed**
 
 ## Next steps (prioritized)
 
-### MPP Finalization
-1. Test Stripe payment E2E with real card (~$0.001 via `npx mppx pay`)
-2. Register on MPPScan (mppscan.com) — discovery endpoint is live
-3. Fix minor AgentCash warnings (legacy x-payment-info format, free route auth modes)
-4. Add MPP payment info to /docs endpoint and landing page
-5. Update SolScout with MPP client mode (`--paid-mpp` flag)
+### Immediate
+1. Verify protocol-profile works on production after Railway deploy
+2. Test Stripe E2E with real card (~$0.001 via `npx mppx pay`)
+3. Register on MPPScan (mppscan.com)
 
-### Distribution
-- MCP directory submissions (Smithery, mcp.run, Glama)
-- x402 bazaar listing
-- Agent-to-agent integrations
+### Birdeye API Integration (key is set on Railway)
+1. Wire Birdeye holder count into token-analyzer (free tier)
+2. Wire Jupiter API key (already in code, verify working)
+3. Phase 2: token security + wallet portfolio ($39/mo Lite tier)
 
-### Remaining Expansions
-4. **Protocol Analytics** — `protocol-profile` (1-2 sessions)
-5. **Aggregated Intelligence** — `trending-signals`, `smart-money-flow` (2-3 sessions)
-6. **Event-Driven Alerts** — `subscribe-alerts` SSE streaming (3-4 sessions)
+### Feature Expansions
+4. **Smart Money / Aggregated Intelligence** — `trending-signals`, `smart-money-flow` (2-3 sessions)
+5. **Event-Driven Alerts** — `subscribe-alerts` SSE streaming (3-4 sessions)
 
 ### Infrastructure
-- CI pipeline — GitHub Actions for tsc + bun test on push
-- Rate limiting — @upstash/ratelimit on invoke endpoints
-- Usage analytics — Upstash counters per endpoint per day
+- CI pipeline — GitHub Actions for tsc + bun test
+- Rate limiting — @upstash/ratelimit
+- MCP directory submissions (Smithery, mcp.run, Glama)
 
 ## Blockers
-- **Stripe E2E untested** — MPP middleware returns correct challenges but no real card payment processed yet
-- **Birdeye API** — still no key (nice-to-have, not blocking)
-
-## Key decisions made this session
-- **MPP alongside x402, not replacing** — crypto agents keep USDC option, fiat agents get cards
-- **Architecture unchanged** — same filter-based deconfliction, just expanded key set from 3 to all 16
-- **@solana/kit upgrade safe** — @x402/svm peer dep covers 6.x, worktree test confirmed zero breakage
-- **Future: Mppx.compose()** — once we want both protocols on same route simultaneously, compose advertises multiple WWW-Authenticate headers
+- **@solana/kit must stay at 5.5.1** — 6.x causes @solana/errors runtime crash in Bun. tsc passes but runtime breaks. Solana MPP blocked.
+- **Stripe E2E untested** — MPP middleware works but no real card payment processed yet
+- **DeFi Llama /protocol/ endpoint** — returns massive payload for popular protocols, can timeout. Mitigated with lightweight /tvl/ fallback + 8s abort.
 
 ## Key values
 - **Agent Asset:** 5rsdgYL8mETFm785mXpEMYftjSE3H4JSqFANhJ4BoTHk
