@@ -471,14 +471,25 @@ Six features to deepen SolEnrich's core value prop: getting solid Solana data to
 - [x] Lightweight /tvl/ endpoint + 8s abort fallback for large /protocol/ responses
 - [x] $0.008 per call, 30min cache. 17 total endpoints now.
 
-**Priority 5 — Aggregated Intelligence / Smart Money** (2-3 sessions)
+**Priority 5 — Automated Activity Signals / Agentic Behavior Detection** (1-2 sessions)
+- Add behavioral flags to wallet labeler: `regular_intervals`, `high_frequency`, `24_7_active`, `repetitive_actions`
+- Detection logic: analyze tx timestamps from enhanced transactions for regularity (std deviation of intervals), frequency (tx/hr), sleep gaps (>6hr breaks), and action repetition (same type+amount patterns)
+- Surface flags in: wallet-profiler labels, copy-trade-signals, wallet-graph nodes, protocol-profile unique_signers
+- New protocol-level metric: `automated_activity_pct` — % of unique signers exhibiting automated behavior flags
+- No new endpoints needed — enriches existing endpoints with richer behavioral data
+- Reuses: existing Helius enhanced tx parsing, labeler (pure function addition), wallet-profiler
+- **Use case:** "Agentic ponzis" thesis — agents/bots driving perpetual DeFi protocol activity. Traders/researchers want to know what % of a protocol's volume is agent-driven, and whether specific wallets are bots or humans.
+- **Design decision:** Frame as behavioral signals, not bot/human classification. ~60-70% accuracy on binary classification isn't reliable enough to label definitively. Let consumers interpret the flags.
+- Feasibility: High — 3-4 new labeler rules + protocol-analyzer metric. No new data sources needed.
+
+**Priority 6 — Aggregated Intelligence / Smart Money** (2-3 sessions)
 - `trending-signals`, `smart-money-flow` endpoints
 - Scan top holders across multiple tokens, aggregate whale-watch data, rank by activity
 - Reuses: whale-watch, due-diligence, DeFi Llama, PriceAggregator
 - Blocker: No "scan all tokens" API — needs curated watchlist or DexScreener trending as input
 - Feasibility: Medium — builds on temporal + discovery features
 
-**Priority 6 — Event-Driven Data / Alerts** (3-4 sessions)
+**Priority 7 — Event-Driven Data / Alerts** (3-4 sessions)
 - `subscribe-alerts` (SSE) or `check-alerts` (poll-based) endpoints
 - Build realtime infra in `src/realtime/` (currently empty) — polling loop + threshold detection + SSE streaming
 - Reuses: whale-watch, token-analyzer

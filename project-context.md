@@ -73,6 +73,16 @@ Every endpoint is pay-per-call via USDC micropayments (x402) or credit card (MPP
 - Blocker: No "scan all tokens" API — needs curated watchlist or DexScreener trending as input
 - **Serves**: Prediction market agent, Bags trading agent
 
+**Automated Activity Signals / Agentic Behavior Detection** (1-2 sessions)
+- Add behavioral flags to wallet labeler: `regular_intervals`, `high_frequency`, `24_7_active`, `repetitive_actions`
+- Analyze tx timestamps for regularity, frequency, sleep gaps, and action repetition
+- Surface in existing endpoints: wallet-profiler, copy-trade, wallet-graph, protocol-profile
+- New protocol-level metric: `automated_activity_pct` — what % of signers show automated behavior
+- No new endpoints — enriches existing data with behavioral intelligence
+- **Thesis**: "Agentic ponzis" — agents sustaining DeFi activity where humans couldn't. Researchers and traders want to know if a protocol's volume is bot-driven or organic.
+- **Design**: Behavioral signals, not binary bot/human classification (~60-70% accuracy isn't enough to label definitively). Let consumers interpret.
+- **Serves**: All trading agents, prediction market agent, Telegram research bot
+
 **Event-Driven Alerts** (3-4 sessions)
 - `subscribe-alerts` (SSE) or `check-alerts` (poll-based)
 - Whale movements, price spikes, risk score changes, new token launches
