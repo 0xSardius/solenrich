@@ -471,6 +471,8 @@ Six features to deepen SolEnrich's core value prop: getting solid Solana data to
 - [x] Lightweight /tvl/ endpoint + 8s abort fallback for large /protocol/ responses
 - [x] $0.008 per call, 30min cache. 17 total endpoints now.
 
+#### Phase 2A — Deepen Intelligence (next 2-3 sessions)
+
 **Priority 5 — Automated Activity Signals / Agentic Behavior Detection** (1-2 sessions)
 - Add behavioral flags to wallet labeler: `regular_intervals`, `high_frequency`, `24_7_active`, `repetitive_actions`
 - Detection logic: analyze tx timestamps from enhanced transactions for regularity (std deviation of intervals), frequency (tx/hr), sleep gaps (>6hr breaks), and action repetition (same type+amount patterns)
@@ -482,21 +484,96 @@ Six features to deepen SolEnrich's core value prop: getting solid Solana data to
 - **Design decision:** Frame as behavioral signals, not bot/human classification. ~60-70% accuracy on binary classification isn't reliable enough to label definitively. Let consumers interpret the flags.
 - Feasibility: High — 3-4 new labeler rules + protocol-analyzer metric. No new data sources needed.
 
-**Priority 6 — Aggregated Intelligence / Smart Money** (2-3 sessions)
-- `trending-signals`, `smart-money-flow` endpoints
-- Scan top holders across multiple tokens, aggregate whale-watch data, rank by activity
-- Reuses: whale-watch, due-diligence, DeFi Llama, PriceAggregator
+**Priority 6 — Slippage Estimates / Liquidity Depth** (1 session)
+- Add `slippage_estimate` field to token-light, token-full, due-diligence, compare-tokens responses
+- Use Jupiter Quote API (`GET /quote`) — already routes across all Solana DEX pools, returns expected output for given input
+- Query at 4 position sizes ($100, $1K, $10K, $100K), report price impact at each
+- Add `getQuote(inputMint, outputMint, amount)` method to existing Jupiter client in `src/sources/jupiter.ts`
+- **Value:** Trading agents need "what's my slippage at this size?" before entering positions. No other enrichment API provides this.
+- **Future expansion (Phase 2B+):** Full order book depth via Birdeye Lite ($39/mo) for pool-by-pool breakdown
+- Feasibility: High — one new Jupiter client method + add to token-analyzer parallel fetch
+
+**Priority 7 — Birdeye Integration (free tier)** (1 session)
+- Token holder counts via `/defi/v3/token/holder` — fixes holder_count showing 20 instead of real count on mega-cap tokens
+- OHLCV price data — proper candlestick data for more accurate volatility calculations
+- Client already written in `src/sources/birdeye.ts`, API key set on Railway
+- Add `getTokenHolderCount()` and `getOHLCV()` methods, wire into token-analyzer parallel fetch
+- **Endpoints improved:** enrich-token-light, enrich-token-full, due-diligence, compare-tokens, token-trend, new-tokens
+- Feasibility: High — ~30-40 lines, enricher already designed to accept Birdeye data
+
+**Priority 8 — Proprietary Signal Capture** (1 session)
+- Request analytics as a data asset: per-endpoint call counts, unique tokens/wallets queried, query frequency per token
+- Redis INCR counters per endpoint per day — near-zero overhead (~20 lines middleware)
+- Surface via internal `GET /metrics` endpoint (not public initially)
+- Enables "consensus signal" detection: N distinct agents querying same token in short window = leading indicator
+- **Why now:** Cheap to build, compounds immediately. Every day without it is lost data.
+- Feasibility: High
+
+#### Phase 2B — Expand Orchestration (3-5 sessions)
+
+Orchestration = composed endpoints that chain multiple enrichers together. Worth more than the sum of parts because agents get synthesized intelligence instead of raw data they'd have to reconcile themselves. Justifies higher pricing ($0.05-$0.10 per call).
+
+**Priority 9 — Aggregated Intelligence / Smart Money** (2-3 sessions)
+- `trending-signals` — orchestrates new-tokens + due-diligence + whale-watch across multiple tokens. "What's worth paying attention to right now?" Scans DexScreener trending as input, enriches top candidates, ranks by composite signal.
+- `smart-money-flow` — orchestrates whale-watch + copy-trade-signals + wallet-graph across high-performing wallets. "Where is smart money moving?" Identifies smart wallets (copy-trade win rates), tracks their flows (whale-watch), maps connections (graph).
+- Reuses: whale-watch, due-diligence, copy-trade, wallet-graph, DeFi Llama, PriceAggregator
 - Blocker: No "scan all tokens" API — needs curated watchlist or DexScreener trending as input
 - Feasibility: Medium — builds on temporal + discovery features
 
-**Priority 7 — Event-Driven Data / Alerts** (3-4 sessions)
-- `subscribe-alerts` (SSE) or `check-alerts` (poll-based) endpoints
-- Build realtime infra in `src/realtime/` (currently empty) — polling loop + threshold detection + SSE streaming
-- Reuses: whale-watch, token-analyzer
-- Blocker: Realtime infrastructure from scratch. Start with poll-based, upgrade to SSE later.
-- Feasibility: Medium — highest effort, stickiest feature, save for after core expansions
+**Priority 10 — Smarter Query Endpoint** (1 session)
+- Upgrade `query` to chain multiple enrichers per question
+- "Should I buy BONK?" → due-diligence + token-trend + whale-watch, unified answer
+- "Where should I put $10K?" → protocol-profile + trending-signals + slippage estimates
+- Agent calls one endpoint, SolEnrich orchestrates 3-5 internally. Highest orchestration value.
+- Reuses: all existing enrichers via keyword routing
+- Feasibility: High — extend existing query router with multi-step chains
+
+**Priority 11 — Portfolio Tracker** (1 session)
+- `portfolio-history` endpoint — returns full time series of wallet portfolio value from temporal snapshots
+- Input: `{ address, period: "7d" | "14d" | "30d" }`. Output: array of `{ date, portfolio_value_usd, sol_balance, token_count, risk_score }` per snapshot day
+- 80% built via existing SnapshotStore + wallet-history infrastructure. This just returns the raw series instead of a two-point comparison.
+- Start with raw snapshots (gaps = wallet wasn't queried that day). Density improves as usage grows.
+- Pricing: $0.006 (same as wallet-history)
+- Feasibility: High — composition of existing temporal infra
+
+#### Phase 2C — Sticky Infrastructure (5-7 sessions)
+
+**Priority 12 — Event-Driven Alerts** (3-4 sessions)
+Build order: poll-based → SSE → webhooks. Same underlying detection engine, different delivery.
+- **Step 1: `check-alerts` (poll-based)** — Agent calls periodically, gets alerts since last check. No persistent connections, no infra overhead. Alerts: whale movements, price spikes >X%, risk score changes, new token launches matching criteria. Store alerts in Redis with TTL. ~$0.003/call.
+- **Step 2: `subscribe-alerts` (SSE)** — Persistent server-sent events stream. Agent opens connection, receives alerts in real-time. Needs streaming infra in `src/realtime/`. ~$0.01/hour.
+- **Step 3: `webhook-register`** — Agent registers a callback URL + alert criteria. SolEnrich POSTs to it when triggered. Needs: webhook registry in Redis, polling loop, HTTP callback client. ~$0.005 to register.
+- Reuses: whale-watch, token-analyzer, protocol-profile for detection logic
+- **Revenue model shift:** One-shot calls → subscriptions. Stickiest feature.
+
+**Priority 13 — Intelligence Feed / Proactive Scanning** (3-4 sessions)
+- SolEnrich scans `new-tokens` on a schedule, runs due-diligence on anything above liquidity threshold
+- Publishes daily "SolEnrich Intelligence Brief" — scored tokens, flagged protocols, behavioral anomalies
+- Feed endpoint: `GET /feed/latest` (JSON) or SSE stream for real-time subscribers
+- Own agents (Pythia, Tidal, Cardex) are first consumers — proves the model, dogfoods the data
+- Turns SolEnrich from a passive tool agents call into a signal source agents listen to
+- Reuses: new-tokens, due-diligence, protocol-profile, automated activity signals, temporal snapshots, signal capture (consensus detection)
+- **Why this matters:** Hardest thing to clone. Requires temporal data + scoring + orchestration that only exists inside SolEnrich.
+- Feasibility: Medium — scheduling infra + feed format + first-consumer integration
+
+**Priority 14 — SDK/Client Package** (1-2 sessions)
+- `npm install @solenrich/client` — typed TypeScript client
+- Auto-payment (x402 or MPP), typed responses matching Zod schemas, streaming support for alerts
+- Lowers integration friction to near-zero for new agent builders
+- Feasibility: High — generate from existing Zod schemas + OpenAPI spec
+
+#### Phase 2D — Distribution (ongoing, parallel to everything)
+
+- [ ] MCP directories (Smithery, mcp.run, Glama) — free distribution to Claude/Cursor users
+- [ ] x402 bazaar + MPPScan registration — agent-to-agent discovery
+- [ ] Agent framework partnerships — get recommended in Daydreams/Eliza docs
+- [ ] Own agents as proof points — Pythia, Tidal, Cardex, Bags agent publicly using SolEnrich
+- [ ] Social launch — Twitter thread, Farcaster, Solana ecosystem channels
 
 ### Moonshots
-- [ ] Multi-chain expansion — Base/Ethereum enrichment using same architecture
+- [ ] Multi-chain expansion — Base/Ethereum enrichment using same architecture (10x TAM)
 - [ ] Reputation-gated pricing — cheaper rates for agents with high 8004 reputation scores
 - [ ] On-chain analytics dashboard — frontend showing live usage, top queried wallets/tokens
+- [ ] Outcome correlation loop — track whether agents that query risk scores make better decisions (partial signals: re-query patterns, whale-watch spikes after DD calls). Feedback loop that improves scoring over time.
+- [ ] Full liquidity depth — Birdeye Lite ($39/mo) for pool-by-pool order book depth, bid/ask spread analysis
+- [ ] Birdeye Lite tier ($39/mo) — token security metadata (honeypot detection) + wallet portfolio (accurate USD per holding)

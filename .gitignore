@@ -4,3 +4,7 @@ dist/
 bun.lockb
 .wrangler/
 .data/
+
+# Private strategy docs (not for public GitHub)
+project-context.md
+docs/helius-application.md
