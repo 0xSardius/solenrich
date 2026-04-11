@@ -570,6 +570,29 @@ Build order: poll-based → SSE → webhooks. Same underlying detection engine, 
 - [ ] Own agents as proof points — Pythia, Tidal, Cardex, Bags agent publicly using SolEnrich
 - [ ] Social launch — Twitter thread, Farcaster, Solana ecosystem channels
 
+### Potential Integrations (pending API access / partnerships)
+
+**tokens.xyz — RWA Token Data** (conditional on API access)
+- **What:** tokens.xyz aggregates tokenized real-world assets on Solana — 219 stocks, 24 ETFs, 15 treasuries, 14 currencies, 4 metals as SPL tokens
+- **Integration value:**
+  - Wallet profiler labels RWA holdings properly ("Tokenized Apple Inc. stock") instead of unknown token
+  - Risk scorer weights RWA holdings as lower-risk — wallet with 60% treasuries ≠ 60% memecoins
+  - New discovery angle: "what tokenized stocks just launched on Solana?" for DeFi/portfolio agents
+  - Portfolio categorization: crypto vs RWA vs stablecoin breakdown per wallet
+- **First-implementer opportunity:** New platform, no enrichment service integrates their data yet
+- **Status:** No public API docs. Tweeted from @solenrichHQ requesting API access (2026-04-10). Waiting for response.
+- **Blocker:** Need API documentation and access before scoping work
+
+**@solana-commerce / Solana Developer Platform (SDP)** (watchlist)
+- **What:** Official Solana payments toolkit — `@solana-commerce/headless` (payment flow primitives), `@solana-commerce/sdk` (React hooks), `@solana-commerce/solana-pay` (QR/payment links). SDP is the enterprise API (Mastercard, Worldpay, Modern Treasury partners).
+- **Opportunity:** SolEnrich as payment risk intelligence — "is this receiving wallet legitimate?", "what's the counterparty risk?" Same endpoints, positioned for payment processors and fintechs building on SDP. No new code needed, just distribution.
+- **Status:** Watching. No integration needed yet — evaluate if SDP opens payment flow query APIs.
+
+**Kora — Gasless Transactions** (watchlist)
+- **What:** Enables USDC transfers without the sender holding SOL for fees. Sponsor covers ~$0.001 gas.
+- **Opportunity:** Lowers friction for new agent consumers who don't have SOL. Cost is negligible against endpoint pricing.
+- **Status:** Watching. Evaluate when agent onboarding friction becomes a measurable problem.
+
 ### Moonshots
 - [ ] Multi-chain expansion — Base/Ethereum enrichment using same architecture (10x TAM)
 - [ ] Reputation-gated pricing — cheaper rates for agents with high 8004 reputation scores
