@@ -1,63 +1,79 @@
 # Session Checkpoint
 
 ## Last session date
-2026-04-08
+2026-04-10
 
 ## What was completed
 
-### This session (April 5-8)
-- **OpenAPI discovery endpoint** — `GET /openapi.json`, validated by mppx CLI + AgentCash
-- **MPP expanded to all 16 endpoints** — Stripe fiat on all, x402 as fallback when MPP off
-- **@solana/kit upgrade attempted** — 5.5.1 → 6.7.0. tsc passed but Bun runtime crashed (@solana/errors version conflict). Reverted to 5.5.1. Solana MPP blocked until resolved.
-- **Railway crash fix** — mppx.charge shorthand undefined on Bun 1.3.11, fixed with explicit 'stripe/charge' key path
-- **holder_count fix** — always fetch getTokenLargestAccounts even on light endpoint (was returning 0)
-- **Compare demo** — `/demo/compare` backend route + landing page Enrich/Compare toggle with preset examples
-- **Birdeye API plan** — documented two-phase integration (free tier → Lite) in CLAUDE.md
-- **Protocol Analytics endpoint** — `protocol-profile` (#17): TVL, yields, on-chain activity, health signals. 8 protocols in registry + dynamic DeFi Llama fallback. Tested live with Drift ($241M TVL, 6.22% APY, 46 tx/hr).
-- **DeFi Llama client activated** — was built but never wired up. Now instantiated and used.
-- **Helius pagination** — `getSignaturesForAddress` now supports `before` param for multi-page scanning
-- **Strategy + memory saved** — user segments, product integrations, expansion priorities
+### This session (April 9-10)
+- **llms.txt + llms-full.txt** — Agent-facing API reference with full JSON response samples. Published to GitHub.
+- **project-context.md** — Strategy doc with user segments, roadmap, data moat, first-implementer thesis. Kept private (gitignored).
+- **Helius partnership application** — Full application draft at `docs/helius-application.md` (gitignored). Submitted 2026-04-09.
+- **Usage metrics dashboard** — Pulled live metrics from Upstash Redis: 65 tokens, 11 wallets, 3,881 commands, 8 active days.
+- **Complete Phase 2 roadmap** — Phases 2A-2D with 15 priorities, endpoint projection to 27.
+- **Proprietary signal capture (Priority 8, SHIPPED)** — Redis INCR counters on every paid endpoint call. `GET /metrics` endpoint returns per-endpoint calls, top queried tokens/wallets, 7-day history. Cache gains `incr()`, `keys()`, `getRaw()` methods.
+- **Automated activity signals (Priority 5, SHIPPED)** — 4 behavioral flags in labeler: `regular_intervals`, `high_frequency`, `24_7_active`, `repetitive_actions`. Protocol-analyzer gains `automated_activity_pct`. Drift: 25% automated, Raydium: 0%.
+- **Landing page updated** — 16 → 17 endpoints, protocol-profile card added, banner refreshed with latest features, meta tags updated.
+- **Drift perps intelligence scoped** — Confirmed Drift Data API: 86 perp markets, free, no auth. Funding rates, trades, liquidations, OI all returning rich data. Added as Priority 10 in Phase 2B.
+- **Integration watchlist** — tokens.xyz (RWA, tweeted from @solenrichHQ), @solana-commerce/SDP, Kora gasless.
+- **Strategy workshopped** — First-implementer advantage thesis, proprietary data moat (3 layers), orchestration pricing strategy, Parallax Labs agent portfolio (Pythia, Tidal, Cardex, Bags agent).
+- **Privatized strategy docs** — project-context.md and helius-application.md removed from git tracking, added to .gitignore.
 
 ### Previous sessions
+- April 5-8: Protocol analytics, OpenAPI discovery, MPP full rollout, holder_count fix, compare demo.
 - April 2-3: Comparison, temporal, discovery endpoints. MPP Stage 1. SolScout E2E.
 - March 26-29: Demo, OG tags, test suite, Railway reconnect.
 
 ## Current state
 - **Live API:** https://solenrich-production.up.railway.app/
-- **MCP:** https://solenrich-production.up.railway.app/mcp
+- **MCP:** https://solenrich-production.up.railway.app/mcp (7 tools, working)
 - **Landing:** https://landing-rho-six.vercel.app
 - **Discovery:** https://solenrich-production.up.railway.app/openapi.json
+- **Metrics:** https://solenrich-production.up.railway.app/metrics (once deployed)
 - **Payments:** MPP/Stripe (fiat) on all 17 endpoints when keys set, x402 (Solana USDC) as fallback
-- **Endpoints:** 17 paid + 1 free demo (enrich + compare) + /docs + /openapi.json
-- **Tests:** 138 unit, all passing
+- **Endpoints:** 17 paid + free demo + /docs + /openapi.json + /metrics
+- **New features:** Behavioral activity flags on all wallet endpoints, automated_activity_pct on protocol-profile
 - **Railway:** Auto-deploying from GitHub main branch
 - **Everything committed, pushed, and deployed**
 
 ## Next steps (prioritized)
 
-### Immediate
-1. Verify protocol-profile works on production after Railway deploy
-2. Test Stripe E2E with real card (~$0.001 via `npx mppx pay`)
-3. Register on MPPScan (mppscan.com)
+### Phase 2A — Deepen Intelligence (remaining)
+1. **Priority 6 — Slippage estimates** — Jupiter Quote API, `slippage_estimate` field on token endpoints (1 session)
+2. **Priority 7 — Birdeye integration** — holder counts + OHLCV, client already written, key on Railway (1 session)
 
-### Birdeye API Integration (key is set on Railway)
-1. Wire Birdeye holder count into token-analyzer (free tier)
-2. Wire Jupiter API key (already in code, verify working)
-3. Phase 2: token security + wallet portfolio ($39/mo Lite tier)
+### Phase 2B — Expand Orchestration
+3. **Priority 9 — Smart money** — `trending-signals`, `smart-money-flow` endpoints (2-3 sessions)
+4. **Priority 10 — Perps intelligence** — Drift integration, 3 new endpoints: `perps-market-structure`, `perps-trader-profile`, `perps-signals` (2-3 sessions)
+5. **Priority 11 — Smarter query** — Multi-step orchestration (1 session)
+6. **Priority 12 — Portfolio tracker** — `portfolio-history` from temporal snapshots (1 session)
 
-### Feature Expansions
-4. **Smart Money / Aggregated Intelligence** — `trending-signals`, `smart-money-flow` (2-3 sessions)
-5. **Event-Driven Alerts** — `subscribe-alerts` SSE streaming (3-4 sessions)
+### Phase 2C — Sticky Infrastructure
+7. Event-driven alerts (3-4 sessions)
+8. Intelligence feed / proactive scanning (3-4 sessions)
+9. SDK/client package (1-2 sessions)
 
-### Infrastructure
-- CI pipeline — GitHub Actions for tsc + bun test
-- Rate limiting — @upstash/ratelimit
-- MCP directory submissions (Smithery, mcp.run, Glama)
+### Distribution
+- MCP directories (Smithery, mcp.run, Glama)
+- x402 bazaar + MPPScan registration
+- Social launch (tweet drafted for activity detection feature)
+
+### Pending Responses
+- **Helius partnership** — Application submitted 2026-04-09, awaiting response
+- **tokens.xyz** — Tweeted from @solenrichHQ requesting API access, awaiting response
+- **Bags Hackathon** — Submitted, judging pending
 
 ## Blockers
-- **@solana/kit must stay at 5.5.1** — 6.x causes @solana/errors runtime crash in Bun. tsc passes but runtime breaks. Solana MPP blocked.
+- **@solana/kit must stay at 5.5.1** — 6.x causes @solana/errors runtime crash in Bun. Solana MPP blocked.
 - **Stripe E2E untested** — MPP middleware works but no real card payment processed yet
-- **DeFi Llama /protocol/ endpoint** — returns massive payload for popular protocols, can timeout. Mitigated with lightweight /tvl/ fallback + 8s abort.
+- **Railway CLI needs re-auth** — `railway login` required to access logs/metrics from CLI
+
+## Key decisions made
+- **Behavioral signals, not bot classification** — ~60-70% accuracy isn't enough for binary labels. Frame as signals, let consumers interpret.
+- **Strategy docs privatized** — project-context.md and helius-application.md gitignored. Public roadmap in CLAUDE.md, private playbook stays local.
+- **First-implementer as strategic principle** — Not a phase, but a lens for prioritization. MPP drove 16x token MC response.
+- **Perps intelligence prioritized** — Drift API confirmed rich and free. Added as Phase 2B priority before smart query and portfolio tracker.
+- **Signal capture ships first** — Every day without request counters is lost proprietary data.
 
 ## Key values
 - **Agent Asset:** 5rsdgYL8mETFm785mXpEMYftjSE3H4JSqFANhJ4BoTHk
