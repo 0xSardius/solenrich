@@ -520,15 +520,27 @@ Orchestration = composed endpoints that chain multiple enrichers together. Worth
 - Blocker: No "scan all tokens" API — needs curated watchlist or DexScreener trending as input
 - Feasibility: Medium — builds on temporal + discovery features
 
-**Priority 10 — Smarter Query Endpoint** (1 session)
+**Priority 10 — Perps Intelligence / Drift Integration** (2-3 sessions)
+- New data source: `src/sources/drift.ts` — client for Drift Data API (`data.api.drift.trade`, free, no auth)
+- 86 perp markets + 63 spot markets available. Funding rates, trades, liquidations, OI, spreads, candles, trader profiles.
+- **`perps-market-structure` endpoint** (~$0.012) — funding rate + trend, open interest + direction, recent liquidation volume, bid/ask spread, volume, basis (perp mark vs spot oracle price). Per-market or top-N overview.
+- **`perps-trader-profile` endpoint** (~$0.010) — Drift-specific trading history for a wallet: perps PnL, positions, win rate. Uses `/authority/{id}/snapshots/trading`. Complements copy-trade-signals with leverage-specific data.
+- **`perps-signals` endpoint** (~$0.015, orchestrated) — combines funding rates + OI + liquidation cascade risk + basis across multiple markets. "Where are the perps opportunities right now?" Highest orchestration value.
+- LLM formatter: "SOL-PERP funding rate is -0.001% (shorts paying longs). OI rising 12% in 24h with price up 2% = bullish conviction. 3 liquidations >$50K in last hour, all shorts."
+- **Why high priority:** Perps agents are among the highest-frequency data consumers. Drift is the largest Solana perps DEX. API is free. Nobody else offers this as an enrichment API.
+- Reuses: existing price aggregator (for basis calculation), protocol-profile (Drift already in registry)
+- Feasibility: High — standard pattern (client → enricher → formatter → entrypoint), rich API data confirmed
+
+**Priority 11 — Smarter Query Endpoint** (1 session)
 - Upgrade `query` to chain multiple enrichers per question
 - "Should I buy BONK?" → due-diligence + token-trend + whale-watch, unified answer
 - "Where should I put $10K?" → protocol-profile + trending-signals + slippage estimates
+- "What's the SOL-PERP funding rate?" → perps-market-structure
 - Agent calls one endpoint, SolEnrich orchestrates 3-5 internally. Highest orchestration value.
 - Reuses: all existing enrichers via keyword routing
 - Feasibility: High — extend existing query router with multi-step chains
 
-**Priority 11 — Portfolio Tracker** (1 session)
+**Priority 12 — Portfolio Tracker** (1 session)
 - `portfolio-history` endpoint — returns full time series of wallet portfolio value from temporal snapshots
 - Input: `{ address, period: "7d" | "14d" | "30d" }`. Output: array of `{ date, portfolio_value_usd, sol_balance, token_count, risk_score }` per snapshot day
 - 80% built via existing SnapshotStore + wallet-history infrastructure. This just returns the raw series instead of a two-point comparison.
@@ -538,7 +550,7 @@ Orchestration = composed endpoints that chain multiple enrichers together. Worth
 
 #### Phase 2C — Sticky Infrastructure (5-7 sessions)
 
-**Priority 12 — Event-Driven Alerts** (3-4 sessions)
+**Priority 13 — Event-Driven Alerts** (3-4 sessions)
 Build order: poll-based → SSE → webhooks. Same underlying detection engine, different delivery.
 - **Step 1: `check-alerts` (poll-based)** — Agent calls periodically, gets alerts since last check. No persistent connections, no infra overhead. Alerts: whale movements, price spikes >X%, risk score changes, new token launches matching criteria. Store alerts in Redis with TTL. ~$0.003/call.
 - **Step 2: `subscribe-alerts` (SSE)** — Persistent server-sent events stream. Agent opens connection, receives alerts in real-time. Needs streaming infra in `src/realtime/`. ~$0.01/hour.
@@ -546,7 +558,7 @@ Build order: poll-based → SSE → webhooks. Same underlying detection engine, 
 - Reuses: whale-watch, token-analyzer, protocol-profile for detection logic
 - **Revenue model shift:** One-shot calls → subscriptions. Stickiest feature.
 
-**Priority 13 — Intelligence Feed / Proactive Scanning** (3-4 sessions)
+**Priority 14 — Intelligence Feed / Proactive Scanning** (3-4 sessions)
 - SolEnrich scans `new-tokens` on a schedule, runs due-diligence on anything above liquidity threshold
 - Publishes daily "SolEnrich Intelligence Brief" — scored tokens, flagged protocols, behavioral anomalies
 - Feed endpoint: `GET /feed/latest` (JSON) or SSE stream for real-time subscribers
@@ -556,7 +568,7 @@ Build order: poll-based → SSE → webhooks. Same underlying detection engine, 
 - **Why this matters:** Hardest thing to clone. Requires temporal data + scoring + orchestration that only exists inside SolEnrich.
 - Feasibility: Medium — scheduling infra + feed format + first-consumer integration
 
-**Priority 14 — SDK/Client Package** (1-2 sessions)
+**Priority 15 — SDK/Client Package** (1-2 sessions)
 - `npm install @solenrich/client` — typed TypeScript client
 - Auto-payment (x402 or MPP), typed responses matching Zod schemas, streaming support for alerts
 - Lowers integration friction to near-zero for new agent builders
