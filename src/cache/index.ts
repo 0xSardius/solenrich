@@ -121,6 +121,74 @@ export class Cache {
     }
   }
 
+  /** Increment a counter key by 1. Creates key with value 1 if it doesn't exist. */
+  async incr(key: string, ttlSeconds?: number): Promise<number> {
+    const prefixed = KEY_PREFIX + key;
+    try {
+      if (this.redis) {
+        const val = await this.redis.incr(prefixed);
+        if (ttlSeconds && val === 1) {
+          await this.redis.expire(prefixed, ttlSeconds);
+        }
+        return val;
+      }
+      // In-memory path
+      const entry = this.memory.get(prefixed);
+      const current = entry && Date.now() < entry.expiry ? parseInt(entry.value, 10) || 0 : 0;
+      const next = current + 1;
+      const expiry = ttlSeconds ? Date.now() + ttlSeconds * 1000 : Date.now() + 86400 * 1000;
+      this.memory.set(prefixed, { value: String(next), expiry });
+      return next;
+    } catch (err) {
+      console.warn(`[cache] incr(${key}) failed:`, err);
+      return 0;
+    }
+  }
+
+  /** Scan keys matching a pattern (Redis SCAN, in-memory filter) */
+  async keys(pattern: string): Promise<string[]> {
+    const prefixed = KEY_PREFIX + pattern;
+    try {
+      if (this.redis) {
+        const results: string[] = [];
+        let cursor = 0;
+        do {
+          const [nextCursor, keys] = await this.redis.scan(cursor, { match: prefixed, count: 100 });
+          cursor = typeof nextCursor === 'string' ? parseInt(nextCursor, 10) : nextCursor;
+          results.push(...keys);
+        } while (cursor !== 0);
+        return results.map(k => k.replace(KEY_PREFIX, ''));
+      }
+      // In-memory path
+      const regex = new RegExp('^' + prefixed.replace(/\*/g, '.*') + '$');
+      const now = Date.now();
+      return [...this.memory.keys()]
+        .filter(k => regex.test(k) && now < (this.memory.get(k)?.expiry ?? 0))
+        .map(k => k.replace(KEY_PREFIX, ''));
+    } catch (err) {
+      console.warn(`[cache] keys(${pattern}) failed:`, err);
+      return [];
+    }
+  }
+
+  /** Get raw string/number value without JSON parsing */
+  async getRaw(key: string): Promise<string | null> {
+    const prefixed = KEY_PREFIX + key;
+    try {
+      if (this.redis) {
+        const raw = await this.redis.get<string>(prefixed);
+        if (raw === null || raw === undefined) return null;
+        return String(raw);
+      }
+      const entry = this.memory.get(prefixed);
+      if (!entry || Date.now() > entry.expiry) return null;
+      return entry.value;
+    } catch (err) {
+      console.warn(`[cache] getRaw(${key}) failed:`, err);
+      return null;
+    }
+  }
+
   async del(key: string): Promise<void> {
     const prefixed = KEY_PREFIX + key;
     try {

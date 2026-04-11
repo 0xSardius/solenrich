@@ -161,6 +161,57 @@ if (PAYMENTS_ENABLED) {
   console.log("[x402] Payments disabled — set AGENT_WALLET_ADDRESS and PAYMENTS_ENABLED=true to enable");
 }
 
+// --- Metrics middleware (fire-and-forget Redis counters) ---
+
+const metricsCache = new Cache();
+const METRICS_TTL = 90 * 86400; // 90 days
+
+app.use('/entrypoints/*/invoke', async (c, next) => {
+  await next();
+  // Only count successful responses
+  if (c.res.status !== 200) return;
+  try {
+    const path = c.req.path; // e.g. /entrypoints/enrich-wallet-light/invoke
+    const endpoint = path.split('/')[2]; // extract key
+    const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+    // Fire-and-forget — don't await, don't block response
+    metricsCache.incr(`metrics:calls:${endpoint}:${date}`, METRICS_TTL).catch(() => {});
+    metricsCache.incr(`metrics:calls:total:${date}`, METRICS_TTL).catch(() => {});
+
+    // Try to extract the queried address/mint from the request body
+    try {
+      const body = await c.req.raw.clone().json();
+      const input = body?.input ?? body;
+      const address = input?.address || input?.mint || input?.protocol;
+      if (address && typeof address === 'string') {
+        const type = input?.mint ? 'token' : input?.protocol ? 'protocol' : 'wallet';
+        metricsCache.incr(`metrics:${type}s:${address}:${date}`, METRICS_TTL).catch(() => {});
+      }
+      // Track batch items
+      if (input?.items && Array.isArray(input.items)) {
+        for (const item of input.items) {
+          const addr = item?.address || item?.mint;
+          if (addr) {
+            const t = item?.mint ? 'token' : 'wallet';
+            metricsCache.incr(`metrics:${t}s:${addr}:${date}`, METRICS_TTL).catch(() => {});
+          }
+        }
+      }
+      // Track comparison addresses
+      if (input?.addresses && Array.isArray(input.addresses)) {
+        for (const addr of input.addresses) {
+          if (typeof addr === 'string') {
+            metricsCache.incr(`metrics:entities:${addr}:${date}`, METRICS_TTL).catch(() => {});
+          }
+        }
+      }
+    } catch { /* body parse failed — still count the endpoint call */ }
+  } catch { /* metrics must never break the response */ }
+});
+
+console.log('[metrics] Request counter middleware enabled');
+
 // --- Dependency injection ---
 
 import { PriceAggregator } from "../utils/price-aggregator";
@@ -544,6 +595,71 @@ app.get('/docs', (c) => {
 });
 
 console.log('[docs] Documentation endpoint available at GET /docs');
+
+// --- Metrics endpoint (internal usage analytics) ---
+
+app.get('/metrics', async (c) => {
+  const today = new Date().toISOString().slice(0, 10);
+
+  // Get call counts per endpoint for today
+  const endpointKeys = Object.keys(PRICING);
+  const callCounts: Record<string, number> = {};
+  let todayTotal = 0;
+
+  await Promise.all(
+    endpointKeys.map(async (key) => {
+      const raw = await metricsCache.getRaw(`metrics:calls:${key}:${today}`);
+      const count = raw ? parseInt(raw, 10) : 0;
+      if (count > 0) callCounts[key] = count;
+      todayTotal += count;
+    })
+  );
+
+  // Get last 7 days totals
+  const dailyTotals: Record<string, number> = {};
+  for (let i = 0; i < 7; i++) {
+    const d = new Date();
+    d.setDate(d.getDate() - i);
+    const dateStr = d.toISOString().slice(0, 10);
+    const raw = await metricsCache.getRaw(`metrics:calls:total:${dateStr}`);
+    dailyTotals[dateStr] = raw ? parseInt(raw, 10) : 0;
+  }
+
+  // Get top queried tokens and wallets today
+  const tokenKeys = await metricsCache.keys(`metrics:tokens:*:${today}`);
+  const walletKeys = await metricsCache.keys(`metrics:wallets:*:${today}`);
+
+  const topTokens: Array<{ address: string; queries: number }> = [];
+  for (const key of tokenKeys) {
+    const raw = await metricsCache.getRaw(key);
+    const address = key.split(':')[2];
+    topTokens.push({ address, queries: raw ? parseInt(raw, 10) : 0 });
+  }
+  topTokens.sort((a, b) => b.queries - a.queries);
+
+  const topWallets: Array<{ address: string; queries: number }> = [];
+  for (const key of walletKeys) {
+    const raw = await metricsCache.getRaw(key);
+    const address = key.split(':')[2];
+    topWallets.push({ address, queries: raw ? parseInt(raw, 10) : 0 });
+  }
+  topWallets.sort((a, b) => b.queries - a.queries);
+
+  return c.json({
+    date: today,
+    today: {
+      total_calls: todayTotal,
+      by_endpoint: callCounts,
+    },
+    last_7_days: dailyTotals,
+    top_tokens_today: topTokens.slice(0, 10),
+    top_wallets_today: topWallets.slice(0, 10),
+    unique_tokens_today: tokenKeys.length,
+    unique_wallets_today: walletKeys.length,
+  });
+});
+
+console.log('[metrics] Usage metrics available at GET /metrics');
 
 // --- OpenAPI discovery document (MPP / AgentCash) ---
 
