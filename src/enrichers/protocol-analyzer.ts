@@ -4,6 +4,7 @@ import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { parallelFetch, type ParallelTask } from '../utils/parallel';
 import { formatTimestamp } from '../utils/normalize';
+import { detectRegularIntervals, detectHighFrequency } from './labeler';
 
 // --- Protocol registry ---
 
@@ -64,6 +65,7 @@ export interface ProtocolProfileEnrichment {
     tx_types: Record<string, number>;
     avg_tx_per_hour: number;
     sample_window_minutes: number;
+    automated_activity_pct: number; // % of signers showing automated behavior (regular_intervals or high_frequency)
   } | null;
   health_signals: {
     tvl_tier: 'mega' | 'large' | 'mid' | 'small' | 'micro';
@@ -229,15 +231,21 @@ export class ProtocolAnalyzer {
       }
     }
 
-    // Unique signers
-    const signers = new Set<string>();
+    // Unique signers + per-signer timestamps for behavioral analysis
+    const signerTimestamps = new Map<string, number[]>();
     const txTypes: Record<string, number> = {};
 
     for (const tx of allTxs) {
-      if (tx.feePayer) signers.add(tx.feePayer);
+      if (tx.feePayer) {
+        const ts = signerTimestamps.get(tx.feePayer) ?? [];
+        if (tx.timestamp > 0) ts.push(tx.timestamp);
+        signerTimestamps.set(tx.feePayer, ts);
+      }
       const type = tx.type || 'UNKNOWN';
       txTypes[type] = (txTypes[type] || 0) + 1;
     }
+
+    const signers = new Set(signerTimestamps.keys());
 
     // Time window
     const blockTimes = sigs
@@ -255,12 +263,26 @@ export class ProtocolAnalyzer {
       }
     }
 
+    // Behavioral analysis: what % of signers show automated patterns?
+    let automatedSignerCount = 0;
+    for (const [, timestamps] of signerTimestamps) {
+      if (timestamps.length < 5) continue; // need enough data to detect patterns
+      if (detectRegularIntervals(timestamps) || detectHighFrequency(timestamps)) {
+        automatedSignerCount++;
+      }
+    }
+    const signersWithEnoughData = [...signerTimestamps.values()].filter((ts) => ts.length >= 5).length;
+    const automatedActivityPct = signersWithEnoughData > 0
+      ? Math.round((automatedSignerCount / signersWithEnoughData) * 1000) / 10
+      : 0;
+
     return {
       recent_tx_count: allTxs.length,
       unique_signers: signers.size,
       tx_types: txTypes,
       avg_tx_per_hour: avgTxPerHour,
       sample_window_minutes: sampleWindowMinutes,
+      automated_activity_pct: automatedActivityPct,
     };
   }
 

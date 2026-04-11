@@ -13,6 +13,9 @@ export interface WalletData {
   daily_tx_counts: number[];
   protocols_interacted: string[];
   stablecoin_pct: number;
+  // Behavioral signal data (optional — older callers may not provide these)
+  tx_timestamps?: number[];    // blockTime values (unix seconds) for recent txs
+  tx_type_counts?: Record<string, number>; // e.g. { SWAP: 80, TRANSFER: 15, UNKNOWN: 5 }
 }
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
@@ -84,5 +87,89 @@ export function labelWallet(data: WalletData): string[] {
     labels.push('lp_provider');
   }
 
+  // --- Behavioral / automated activity signals ---
+  // These analyze transaction timing patterns to surface automated behavior.
+  // Framed as signals, not binary bot/human classification.
+
+  if (data.tx_timestamps && data.tx_timestamps.length >= 10) {
+    const ts = data.tx_timestamps;
+
+    if (detectRegularIntervals(ts)) labels.push('regular_intervals');
+    if (detectHighFrequency(ts)) labels.push('high_frequency');
+    if (detect247Active(ts)) labels.push('24_7_active');
+  }
+
+  if (data.tx_type_counts && data.tx_count_30d >= 20) {
+    if (detectRepetitiveActions(data.tx_type_counts, data.tx_count_30d)) {
+      labels.push('repetitive_actions');
+    }
+  }
+
   return labels.sort();
+}
+
+// --- Behavioral detection helpers (pure functions, exported for protocol-analyzer) ---
+
+/**
+ * Regular intervals: low coefficient of variation in time gaps between txs.
+ * Humans trade irregularly; bots trade on schedule.
+ * CV < 0.3 with at least 10 txs = strong regularity signal.
+ */
+export function detectRegularIntervals(timestamps: number[]): boolean {
+  if (timestamps.length < 10) return false;
+  const sorted = [...timestamps].sort((a, b) => a - b);
+  const gaps: number[] = [];
+  for (let i = 1; i < sorted.length; i++) {
+    const gap = sorted[i] - sorted[i - 1];
+    if (gap > 0) gaps.push(gap);
+  }
+  if (gaps.length < 9) return false;
+
+  const mean = gaps.reduce((s, g) => s + g, 0) / gaps.length;
+  if (mean < 10) return false; // too close together to be meaningful
+  const variance = gaps.reduce((s, g) => s + (g - mean) ** 2, 0) / gaps.length;
+  const std = Math.sqrt(variance);
+  const cv = std / mean; // coefficient of variation
+
+  return cv < 0.3;
+}
+
+/**
+ * High frequency: sustained rate of 20+ txs per hour over the analysis window.
+ */
+export function detectHighFrequency(timestamps: number[]): boolean {
+  if (timestamps.length < 20) return false;
+  const sorted = [...timestamps].sort((a, b) => a - b);
+  const windowSeconds = sorted[sorted.length - 1] - sorted[0];
+  if (windowSeconds < 3600) return false; // need at least 1 hour window
+  const txPerHour = (timestamps.length / windowSeconds) * 3600;
+  return txPerHour >= 20;
+}
+
+/**
+ * 24/7 active: no gaps longer than 6 hours across a multi-day window.
+ * Humans sleep; bots don't.
+ */
+export function detect247Active(timestamps: number[]): boolean {
+  if (timestamps.length < 20) return false;
+  const sorted = [...timestamps].sort((a, b) => a - b);
+  const windowSeconds = sorted[sorted.length - 1] - sorted[0];
+  // Need at least 48 hours of data to detect sleep patterns
+  if (windowSeconds < 48 * 3600) return false;
+
+  const sixHours = 6 * 3600;
+  for (let i = 1; i < sorted.length; i++) {
+    if (sorted[i] - sorted[i - 1] > sixHours) return false; // found a sleep gap
+  }
+  return true;
+}
+
+/**
+ * Repetitive actions: >70% of txs are the same type.
+ * Humans diversify; bots repeat the same action.
+ */
+function detectRepetitiveActions(typeCounts: Record<string, number>, totalTxs: number): boolean {
+  if (totalTxs < 20) return false;
+  const maxTypeCount = Math.max(...Object.values(typeCounts));
+  return maxTypeCount / totalTxs > 0.7;
 }

@@ -270,6 +270,17 @@ export class WalletProfiler {
       ? Math.floor((Date.now() - new Date(firstTxDate).getTime()) / (24 * 60 * 60 * 1000))
       : 0;
 
+    // Behavioral signal data: tx timestamps + type counts
+    const txTimestamps = signatures
+      .map((s) => s.blockTime)
+      .filter((t): t is number => t !== null && t > 0);
+
+    const txTypeCounts: Record<string, number> = {};
+    for (const tx of enhancedTxs) {
+      const type = tx.type || 'UNKNOWN';
+      txTypeCounts[type] = (txTypeCounts[type] || 0) + 1;
+    }
+
     const walletData: WalletData = {
       balance_sol: solBalance,
       portfolio_value_usd: portfolioValueUsd,
@@ -287,6 +298,8 @@ export class WalletProfiler {
       daily_tx_counts: dailyCounts,
       protocols_interacted: protocolsInteracted,
       stablecoin_pct: stablecoinPct,
+      tx_timestamps: txTimestamps,
+      tx_type_counts: Object.keys(txTypeCounts).length > 0 ? txTypeCounts : undefined,
     };
 
     const labels = labelWallet(walletData);
