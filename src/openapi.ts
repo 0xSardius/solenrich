@@ -304,13 +304,13 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
     };
   }
 
-  // Free endpoints — authMode: 'none' tells MPPScan no payment is required
+  // Free endpoints — no x-payment-info means MPPScan treats them as free
   paths['/health'] = {
     get: {
       operationId: 'health',
       summary: 'Health check',
       description: 'Returns service status. Free, no payment required.',
-      'x-payment-info': { authMode: 'none' },
+      security: [],
       responses: { '200': { description: 'Service is healthy' } },
     },
   };
@@ -320,7 +320,7 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
       operationId: 'docs',
       summary: 'API documentation',
       description: 'Agent-readable documentation with all endpoints, scoring methodology, and data sources. Free.',
-      'x-payment-info': { authMode: 'none' },
+      security: [],
       responses: { '200': { description: 'JSON documentation object' } },
     },
   };
@@ -330,7 +330,7 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
       operationId: 'demo-enrich',
       summary: 'Free demo enrichment',
       description: 'Rate-limited free enrichment (10 requests/hour). Auto-detects wallet vs token. No payment required.',
-      'x-payment-info': { authMode: 'none' },
+      security: [],
       requestBody: {
         required: true,
         content: {

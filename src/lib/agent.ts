@@ -149,7 +149,7 @@ if (PAYMENTS_ENABLED) {
       for (const key of mppKeys) {
         app.use(
           `/entrypoints/${key}/invoke`,
-          chargeHandler({ amount: PRICING[key as keyof typeof PRICING] }),
+          chargeHandler({ amount: PRICING[key as keyof typeof PRICING], recipient: PAY_TO }),
         );
       }
       console.log(`[mpp] MPP + Stripe enabled on ${mppKeys.size} endpoints`);
