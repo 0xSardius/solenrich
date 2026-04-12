@@ -25,11 +25,11 @@
 - March 26-29: Demo, OG tags, test suite, Railway reconnect.
 
 ## Current state
-- **Live API:** https://solenrich-production.up.railway.app/
-- **MCP:** https://solenrich-production.up.railway.app/mcp (7 tools, working)
+- **Live API:** https://api.solenrich.com/
+- **MCP:** https://api.solenrich.com/mcp (7 tools, working)
 - **Landing:** https://landing-rho-six.vercel.app
-- **Discovery:** https://solenrich-production.up.railway.app/openapi.json
-- **Metrics:** https://solenrich-production.up.railway.app/metrics (once deployed)
+- **Discovery:** https://api.solenrich.com/openapi.json
+- **Metrics:** https://api.solenrich.com/metrics (once deployed)
 - **Payments:** MPP/Stripe (fiat) on all 17 endpoints when keys set, x402 (Solana USDC) as fallback
 - **Endpoints:** 17 paid + free demo + /docs + /openapi.json + /metrics
 - **New features:** Behavioral activity flags on all wallet endpoints, automated_activity_pct on protocol-profile

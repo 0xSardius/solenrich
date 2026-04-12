@@ -27,7 +27,7 @@ const paid = args.includes('--paid');
 
 const BASE_URLS: Record<string, string> = {
   local: 'http://127.0.0.1:3000',
-  production: 'https://solenrich-production.up.railway.app',
+  production: 'https://api.solenrich.com',
 };
 
 const baseUrl = BASE_URLS[target];

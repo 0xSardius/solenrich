@@ -438,7 +438,7 @@ app.get('/docs', (c) => {
     name: 'SolEnrich',
     version: '1.0.0',
     description: 'Solana onchain data enrichment agent. All scoring is deterministic — no LLM inference in the pipeline.',
-    base_url: 'https://solenrich-production.up.railway.app',
+    base_url: 'https://api.solenrich.com',
     payment: {
       protocol: 'x402',
       currency: 'USDC',

@@ -17,7 +17,7 @@ Add to `claude_desktop_config.json`:
   "mcpServers": {
     "solenrich": {
       "type": "streamable-http",
-      "url": "https://solenrich-production.up.railway.app/mcp"
+      "url": "https://api.solenrich.com/mcp"
     }
   }
 }
@@ -32,7 +32,7 @@ Add to `.claude/settings.json`:
   "mcpServers": {
     "solenrich": {
       "type": "streamable-http",
-      "url": "https://solenrich-production.up.railway.app/mcp"
+      "url": "https://api.solenrich.com/mcp"
     }
   }
 }
@@ -89,7 +89,7 @@ To point at a local SolEnrich instance:
 
 ## MCP Endpoint
 
-**Remote:** `https://solenrich-production.up.railway.app/mcp`
+**Remote:** `https://api.solenrich.com/mcp`
 **Transport:** Streamable HTTP (MCP spec 2025-03-26)
 **Protocol:** Stateless — each request creates a fresh server instance
 
@@ -97,4 +97,4 @@ To point at a local SolEnrich instance:
 
 | Variable | Default | Description |
 |---|---|---|
-| `SOLENRICH_URL` | `https://solenrich-production.up.railway.app` | SolEnrich agent URL (for stdio transport) |
+| `SOLENRICH_URL` | `https://api.solenrich.com` | SolEnrich agent URL (for stdio transport) |

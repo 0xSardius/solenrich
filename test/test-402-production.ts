@@ -2,7 +2,7 @@
 // Runs against LIVE production server (no payment sent)
 // Run: bun run test/test-402-production.ts
 
-const PROD = 'https://solenrich-production.up.railway.app';
+const PROD = 'https://api.solenrich.com';
 
 const TEST_WALLET = 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg';
 const TEST_TOKEN = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';

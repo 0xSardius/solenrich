@@ -12,7 +12,7 @@ You are a QA agent for SolEnrich, a Solana onchain data enrichment API. Your job
 ## Configuration
 
 - **Local API:** http://127.0.0.1:3000
-- **Production API:** https://solenrich-production.up.railway.app
+- **Production API:** https://api.solenrich.com
 - **Test wallet:** vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg
 - **Test token (BONK):** DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263
 - **Test token (JUP):** JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN

@@ -6,7 +6,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 
-const AGENT_URL = process.env.SOLENRICH_URL ?? 'https://solenrich-production.up.railway.app';
+const AGENT_URL = process.env.SOLENRICH_URL ?? 'https://api.solenrich.com';
 
 async function invoke(entrypointKey: string, input: Record<string, unknown>): Promise<string> {
   const url = `${AGENT_URL}/entrypoints/${entrypointKey}/invoke`;

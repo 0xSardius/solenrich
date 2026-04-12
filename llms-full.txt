@@ -5,7 +5,7 @@
 ## Base URL
 
 ```
-https://solenrich-production.up.railway.app
+https://api.solenrich.com
 ```
 
 ## Invoking Endpoints
@@ -647,7 +647,7 @@ Content-Type: application/json
 | `wallet_graph` | wallet-graph |
 | `copy_trade_signals` | copy-trade-signals |
 
-**Remote URL:** `https://solenrich-production.up.railway.app/mcp`
+**Remote URL:** `https://api.solenrich.com/mcp`
 
 ---
 

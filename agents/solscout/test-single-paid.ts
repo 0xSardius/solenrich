@@ -47,7 +47,7 @@ console.log('\n=== Testing enrich-wallet-light with payment ===\n');
 
 try {
   const res = await paidFetch(
-    'https://solenrich-production.up.railway.app/entrypoints/enrich-wallet-light/invoke',
+    'https://api.solenrich.com/entrypoints/enrich-wallet-light/invoke',
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

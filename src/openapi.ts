@@ -232,7 +232,7 @@ const ENDPOINT_META: Record<string, {
   },
 };
 
-const BASE_URL = 'https://solenrich-production.up.railway.app';
+const BASE_URL = 'https://api.solenrich.com';
 
 /**
  * Generate the full OpenAPI 3.1.0 discovery document.
@@ -363,7 +363,7 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
     'x-service-info': {
       categories: ['ai', 'blockchain', 'solana', 'data-enrichment', 'risk-scoring'],
       docs: {
-        homepage: 'https://landing-rho-six.vercel.app',
+        homepage: 'https://solenrich.com',
         apiReference: `${BASE_URL}/docs`,
         llms: `${BASE_URL}/docs`,
       },

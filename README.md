@@ -2,27 +2,27 @@
 
 Solana onchain data enrichment agent. Accepts USDC micropayments via x402 and returns enriched wallet, token, and transaction data — structured JSON for agents or natural language briefings for LLMs.
 
-**Live API:** https://solenrich-production.up.railway.app/
-**Landing Page:** https://landing-rho-six.vercel.app
-**Docs (agent-readable):** https://solenrich-production.up.railway.app/docs
+**Live API:** https://api.solenrich.com/
+**Landing Page:** https://solenrich.com
+**Docs (agent-readable):** https://api.solenrich.com/docs
 
 ## Quick Start
 
 ```bash
 # Health check
-curl https://solenrich-production.up.railway.app/health
+curl https://api.solenrich.com/health
 
 # Agent card (A2A discovery)
-curl https://solenrich-production.up.railway.app/.well-known/agent.json
+curl https://api.solenrich.com/.well-known/agent.json
 
 # List all 13 endpoints
-curl https://solenrich-production.up.railway.app/entrypoints
+curl https://api.solenrich.com/entrypoints
 
 # Full API documentation (agent-readable JSON)
-curl https://solenrich-production.up.railway.app/docs
+curl https://api.solenrich.com/docs
 
 # Free demo (no payment required, 10 queries/hr)
-curl -X POST https://solenrich-production.up.railway.app/demo/enrich \
+curl -X POST https://api.solenrich.com/demo/enrich \
   -H "Content-Type: application/json" \
   -d '{"address":"DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"}'
 ```
@@ -67,7 +67,7 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 ### Example Request
 
 ```bash
-curl -X POST https://solenrich-production.up.railway.app/entrypoints/compare-tokens/invoke \
+curl -X POST https://api.solenrich.com/entrypoints/compare-tokens/invoke \
   -H "Content-Type: application/json" \
   -d '{"input":{"mints":["JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN","DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"],"format":"both"}}'
 ```
@@ -148,7 +148,7 @@ SolEnrich exposes an MCP endpoint for Claude Desktop, Claude Code, and Cursor. *
   "mcpServers": {
     "solenrich": {
       "type": "streamable-http",
-      "url": "https://solenrich-production.up.railway.app/mcp"
+      "url": "https://api.solenrich.com/mcp"
     }
   }
 }
@@ -161,14 +161,14 @@ SolEnrich exposes an MCP endpoint for Claude Desktop, Claude Code, and Cursor. *
 Try SolEnrich without payment — paste any Solana wallet address or token mint:
 
 ```bash
-curl -X POST https://solenrich-production.up.railway.app/demo/enrich \
+curl -X POST https://api.solenrich.com/demo/enrich \
   -H "Content-Type: application/json" \
   -d '{"address":"JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"}'
 ```
 
 10 free queries per IP per hour. Auto-detects wallet vs token. Returns `format: "both"` (JSON + LLM summary).
 
-Interactive demo on the landing page: https://landing-rho-six.vercel.app
+Interactive demo on the landing page: https://solenrich.com
 
 ## Development
 

@@ -87,7 +87,7 @@ console.log(`Collection pointer: ${collectionResult.pointer}`);
 // ============================================================
 console.log('\n=== Step 2: Register Agent ===');
 
-const DEPLOY_URL = process.env.AGENT_URL ?? 'https://solenrich-production.up.railway.app';
+const DEPLOY_URL = process.env.AGENT_URL ?? 'https://api.solenrich.com';
 
 const registrationFile = buildRegistrationFileJson({
   name: 'SolEnrich',
