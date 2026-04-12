@@ -304,53 +304,8 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
     };
   }
 
-  // Free endpoints — no x-payment-info means MPPScan treats them as free
-  paths['/health'] = {
-    get: {
-      operationId: 'health',
-      summary: 'Health check',
-      description: 'Returns service status. Free, no payment required.',
-      security: [],
-      responses: { '200': { description: 'Service is healthy' } },
-    },
-  };
-
-  paths['/docs'] = {
-    get: {
-      operationId: 'docs',
-      summary: 'API documentation',
-      description: 'Agent-readable documentation with all endpoints, scoring methodology, and data sources. Free.',
-      security: [],
-      responses: { '200': { description: 'JSON documentation object' } },
-    },
-  };
-
-  paths['/demo/enrich'] = {
-    post: {
-      operationId: 'demo-enrich',
-      summary: 'Free demo enrichment',
-      description: 'Rate-limited free enrichment (10 requests/hour). Auto-detects wallet vs token. No payment required.',
-      security: [],
-      requestBody: {
-        required: true,
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              required: ['address'],
-              properties: {
-                address: { type: 'string', description: 'Solana address (wallet or token mint)' },
-              },
-            },
-          },
-        },
-      },
-      responses: {
-        '200': { description: 'Enrichment result with demo metadata' },
-        '429': { description: 'Rate limit exceeded' },
-      },
-    },
-  };
+  // Free endpoints omitted from OpenAPI discovery — MPPScan is a payment registry,
+  // free routes (/health, /docs, /demo/enrich) are discoverable via GET /docs instead.
 
   return {
     openapi: '3.1.0',
