@@ -248,37 +248,30 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
     const meta = ENDPOINT_META[key];
     if (!meta) continue;
 
-    // Amount in base units: USDC has 6 decimals, so $0.002 = 2000
-    const amountBaseUnits = Math.round(parseFloat(price) * 1_000_000).toString();
+    // Price in decimal USD (e.g. "0.002000" for $0.002)
+    const priceDecimal = parseFloat(price).toFixed(6);
 
-    // When MPP enabled, endpoints accept both Stripe (fiat) and Solana USDC (crypto)
-    const paymentInfo: Record<string, unknown> = mppEnabled
-      ? {
-          amount: amountBaseUnits,
-          description: meta.summary,
-          intent: 'charge',
-          recipient: RECIPIENT,
-          methods: [
-            { method: 'stripe', currency: 'usd', recipient: RECIPIENT },
-            { method: 'solana', currency: 'USDC', network: 'solana:mainnet-beta', recipient: RECIPIENT },
-          ],
-        }
-      : {
-          amount: amountBaseUnits,
-          currency: 'USDC',
-          description: meta.summary,
-          intent: 'charge',
-          method: 'x402',
-          network: 'solana',
-          recipient: RECIPIENT,
-        };
+    // MPPScan x-payment-info format: price object + protocols array
+    const protocols: Record<string, unknown>[] = [
+      { x402: { network: 'solana', recipient: RECIPIENT } },
+    ];
+    if (mppEnabled) {
+      protocols.push({ mpp: { method: 'stripe', intent: 'charge', currency: 'usd', recipient: RECIPIENT } });
+    }
 
     paths[`/entrypoints/${key}/invoke`] = {
       post: {
         operationId: key,
         summary: meta.summary,
         description: meta.description,
-        'x-payment-info': paymentInfo,
+        'x-payment-info': {
+          price: {
+            mode: 'fixed',
+            currency: 'USD',
+            amount: priceDecimal,
+          },
+          protocols,
+        },
         requestBody: {
           required: true,
           content: {
