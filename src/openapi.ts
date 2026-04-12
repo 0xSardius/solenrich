@@ -2,7 +2,10 @@
 // Serves at GET /openapi.json — machine-readable payment terms + input schemas
 // Reference: https://mpp.dev/advanced/discovery
 
-import { PRICING } from './config';
+import { PRICING, CONFIG } from './config';
+
+// Agent wallet that receives payments
+const RECIPIENT = CONFIG.solana.walletAddress;
 
 // When MPP is enabled, all endpoints accept Stripe. Otherwise all use x402.
 
@@ -254,9 +257,10 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
           amount: amountBaseUnits,
           description: meta.summary,
           intent: 'charge',
+          recipient: RECIPIENT,
           methods: [
-            { method: 'stripe', currency: 'usd' },
-            { method: 'solana', currency: 'USDC', network: 'solana:mainnet-beta' },
+            { method: 'stripe', currency: 'usd', recipient: RECIPIENT },
+            { method: 'solana', currency: 'USDC', network: 'solana:mainnet-beta', recipient: RECIPIENT },
           ],
         }
       : {
@@ -266,6 +270,7 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
           intent: 'charge',
           method: 'x402',
           network: 'solana',
+          recipient: RECIPIENT,
         };
 
     paths[`/entrypoints/${key}/invoke`] = {
@@ -299,12 +304,13 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
     };
   }
 
-  // Free endpoints
+  // Free endpoints — authMode: 'none' tells MPPScan no payment is required
   paths['/health'] = {
     get: {
       operationId: 'health',
       summary: 'Health check',
       description: 'Returns service status. Free, no payment required.',
+      'x-payment-info': { authMode: 'none' },
       responses: { '200': { description: 'Service is healthy' } },
     },
   };
@@ -314,6 +320,7 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
       operationId: 'docs',
       summary: 'API documentation',
       description: 'Agent-readable documentation with all endpoints, scoring methodology, and data sources. Free.',
+      'x-payment-info': { authMode: 'none' },
       responses: { '200': { description: 'JSON documentation object' } },
     },
   };
@@ -323,6 +330,7 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
       operationId: 'demo-enrich',
       summary: 'Free demo enrichment',
       description: 'Rate-limited free enrichment (10 requests/hour). Auto-detects wallet vs token. No payment required.',
+      'x-payment-info': { authMode: 'none' },
       requestBody: {
         required: true,
         content: {
