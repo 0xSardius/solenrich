@@ -1,11 +1,21 @@
 # Session Checkpoint
 
 ## Last session date
-2026-04-10
+2026-04-12
 
 ## What was completed
 
-### This session (April 9-10)
+### This session (April 12)
+- **Custom domain** — `api.solenrich.com` for API, `solenrich.com` for landing page. CNAME via GoDaddy → Railway.
+- **URL migration** — 14 files updated from Railway URL to custom domain (source, docs, landing, tests, MCP README).
+- **MPPScan registration** — Rewrote `x-payment-info` to MPPScan format (price/protocols), added recipient, removed free routes from spec.
+- **x402scan registration** — Listed at https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641
+- **Dual-protocol payments** — x402 and MPP now coexist on all endpoints. x402 is default (returns 402 challenge when no credential). MPP/Stripe activates only on `Authorization: Payment` header.
+- **`/.well-known/x402`** — Fallback discovery endpoint listing all 17 paid routes.
+- **Favicon** — SolEnrich logo served at `/favicon.ico` and `/favicon.png`.
+- **OpenAPI spec cleanup** — Free routes removed, MPPScan-format `x-payment-info` with price object + protocols array.
+
+### Previous session (April 9-10)
 - **llms.txt + llms-full.txt** — Agent-facing API reference with full JSON response samples. Published to GitHub.
 - **project-context.md** — Strategy doc with user segments, roadmap, data moat, first-implementer thesis. Kept private (gitignored).
 - **Helius partnership application** — Full application draft at `docs/helius-application.md` (gitignored). Submitted 2026-04-09.
