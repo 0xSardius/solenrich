@@ -198,5 +198,165 @@ export function createSolEnrichMcpServer(): McpServer {
     },
   );
 
+  server.registerTool(
+    'batch_enrich',
+    {
+      title: 'Batch Enrich',
+      description: 'Enrich multiple wallets or tokens in a single call (1-25). Returns parallel results.',
+      inputSchema: {
+        addresses: z.array(z.string()).describe('Array of Solana addresses (1-25)'),
+        type: z.enum(['wallet', 'token']).describe('Address type: wallet or token'),
+        depth: z.enum(['light', 'full']).default('light').describe('Enrichment depth'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('batch-enrich', {
+        addresses: args.addresses,
+        type: args.type,
+        depth: args.depth ?? 'light',
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
+    'compare_tokens',
+    {
+      title: 'Compare Tokens',
+      description: 'Side-by-side comparison of 2-3 tokens: price, liquidity, volatility, holder concentration, risk. Rankings and summary picks.',
+      inputSchema: {
+        mints: z.array(z.string()).describe('2-3 token mint addresses to compare'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('compare-tokens', {
+        mints: args.mints,
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
+    'compare_wallets',
+    {
+      title: 'Compare Wallets',
+      description: 'Side-by-side comparison of 2-3 wallets: portfolio, activity, risk, labels. Rankings and summary picks.',
+      inputSchema: {
+        addresses: z.array(z.string()).describe('2-3 wallet addresses to compare'),
+        depth: z.enum(['light', 'full']).default('light').describe('Enrichment depth'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('compare-wallets', {
+        addresses: args.addresses,
+        depth: args.depth ?? 'light',
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
+    'token_trend',
+    {
+      title: 'Token Trend',
+      description: 'Token metrics over time: daily snapshots with direction indicators (improving/declining/stable) per metric.',
+      inputSchema: {
+        mint: z.string().describe('Token mint address (base58)'),
+        lookback: z.enum(['7d', '14d', '30d']).default('7d').describe('Lookback period'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('token-trend', {
+        mint: args.mint,
+        lookback: args.lookback ?? '7d',
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
+    'wallet_history',
+    {
+      title: 'Wallet History',
+      description: 'Wallet portfolio over time: snapshots with position changes (added/removed holdings) and direction indicators.',
+      inputSchema: {
+        address: z.string().describe('Solana wallet address (base58)'),
+        lookback: z.enum(['7d', '14d', '30d']).default('7d').describe('Lookback period'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('wallet-history', {
+        address: args.address,
+        lookback: args.lookback ?? '7d',
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
+    'new_tokens',
+    {
+      title: 'New Tokens',
+      description: 'Discover recently launched Solana tokens. Filters by liquidity and risk score, ranked safest first.',
+      inputSchema: {
+        min_liquidity_usd: z.number().default(1000).describe('Minimum liquidity in USD'),
+        max_risk_score: z.number().default(0.8).describe('Maximum risk score (0-1)'),
+        limit: z.number().default(10).describe('Number of tokens to return (1-20)'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('new-tokens', {
+        min_liquidity_usd: args.min_liquidity_usd ?? 1000,
+        max_risk_score: args.max_risk_score ?? 0.8,
+        limit: args.limit ?? 10,
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
+    'protocol_profile',
+    {
+      title: 'Protocol Profile',
+      description: 'DeFi protocol analytics: TVL, yield pools, on-chain activity, health signals. Supports Raydium, Orca, marginfi, Drift, Jupiter, Kamino, Marinade, Jito, and more.',
+      inputSchema: {
+        protocol: z.string().describe('Protocol slug (e.g. "raydium", "orca") or Solana program ID'),
+        include_yields: z.boolean().default(true).describe('Include yield pool data'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('protocol-profile', {
+        protocol: args.protocol,
+        include_yields: args.include_yields ?? true,
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
+    'query',
+    {
+      title: 'Query',
+      description: 'Ask a plain English question about any Solana wallet, token, or protocol. Routes to the right enricher automatically. Example: "Is JUP safe?" or "What does this wallet do?"',
+      inputSchema: {
+        question: z.string().describe('Natural language question about a Solana wallet or token'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('query', {
+        question: args.question,
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
   return server;
 }

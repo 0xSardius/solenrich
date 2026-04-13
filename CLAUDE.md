@@ -134,6 +134,7 @@ Data source clients (HeliusClient, BirdeyeClient, etc.) are instantiated once in
 - **`parallelFetch()` uses `Promise.allSettled`** with 10-second per-task timeout. One slow upstream API must not block the entire enrichment.
 - **Labeler and risk scorer are pure functions** — they receive data objects and return labels/scores. No API calls, no side effects. This logic is proprietary.
 - **The `/query` endpoint is the ONLY one that uses LLM inference** (via Daydreams Router). All other LLM-format responses use deterministic string templates.
+- **When adding new endpoints, also add a matching MCP tool** in `src/mcp-tools.ts`. Every endpoint should be accessible via MCP (Smithery, Claude Desktop, Cursor). Follow the existing pattern: `server.registerTool()` with Zod input schema, calling `invoke()` with `format: 'llm'`.
 
 ## Data Sources
 
