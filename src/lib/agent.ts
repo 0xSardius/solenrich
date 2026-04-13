@@ -661,6 +661,34 @@ app.get('/metrics', async (c) => {
 
 console.log('[metrics] Usage metrics available at GET /metrics');
 
+// --- Favicon ---
+
+import { readFileSync } from 'fs';
+import { join } from 'path';
+
+let faviconData: ArrayBuffer | null = null;
+try {
+  const buf = readFileSync(join(import.meta.dir, '../public/favicon.png'));
+  faviconData = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength);
+} catch { /* favicon not found — skip */ }
+
+if (faviconData) {
+  const data = faviconData;
+  app.get('/favicon.ico', (c) => {
+    c.header('Content-Type', 'image/png');
+    c.header('Cache-Control', 'public, max-age=86400');
+    return c.body(data);
+  });
+
+  app.get('/favicon.png', (c) => {
+    c.header('Content-Type', 'image/png');
+    c.header('Cache-Control', 'public, max-age=86400');
+    return c.body(data);
+  });
+
+  console.log('[favicon] Serving at /favicon.ico and /favicon.png');
+}
+
 // --- OpenAPI discovery document (MPP / AgentCash) ---
 
 import { generateOpenApiDoc } from '../openapi';
