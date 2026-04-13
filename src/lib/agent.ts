@@ -89,29 +89,29 @@ if (PAYMENTS_ENABLED) {
     mimeType: "application/json",
   });
 
-  // MPP (Stripe fiat) and x402 (Solana USDC) split: each middleware returns 402 if
-  // no credential is present, so they can't both be on the same route. MPP handles
-  // its set, x402 handles the rest. Agents pick the endpoint that matches their payment rail.
+  // Dual-protocol payments: x402 (Solana USDC) + MPP (Stripe fiat) on ALL routes.
+  // x402 activates when X-Payment header is present, MPP handles everything else.
+  // Agents choose their payment rail — crypto agents use x402, fiat agents use Stripe.
   const MPP_ENABLED = !!process.env.MPP_SECRET_KEY && !!process.env.STRIPE_SECRET_KEY;
-  const mppKeys = MPP_ENABLED ? new Set(Object.keys(PRICING)) : new Set<string>();
 
-  // x402 handles routes NOT claimed by MPP
+  // x402 routes cover ALL endpoints
   const x402RouteEntries = Object.entries(PRICING)
-    .filter(([key]) => !mppKeys.has(key))
     .map(([key, price]) => [`POST /entrypoints/${key}/invoke`, routeConfig(price)] as const);
-
   const x402Routes: RoutesConfig = Object.fromEntries(x402RouteEntries);
+  const x402MW = paymentMiddleware(x402Routes, resourceServer);
 
-  app.use("/entrypoints/*", paymentMiddleware(x402Routes, resourceServer));
+  // Conditional x402 middleware: only runs when X-Payment header is present.
+  // If no X-Payment header, falls through to MPP middleware (or handler if MPP disabled).
+  app.use("/entrypoints/*", async (c, next) => {
+    if (c.req.header('x-payment')) {
+      return x402MW(c, next);
+    }
+    await next();
+  });
 
-  const x402Count = Object.keys(x402Routes).length;
-  if (x402Count > 0) {
-    console.log(`[x402] Payment middleware enabled on ${x402Count} endpoints — ${PAYMENT_NETWORK}, payTo: ${PAY_TO}`);
-  } else {
-    console.log(`[x402] All endpoints handled by MPP — x402 middleware registered but idle`);
-  }
+  console.log(`[x402] Payment middleware enabled on ${Object.keys(x402Routes).length} endpoints — ${PAYMENT_NETWORK}, payTo: ${PAY_TO}`);
 
-  // --- MPP Payment Middleware (Stripe fiat on all endpoints) ---
+  // --- MPP Payment Middleware (Stripe fiat fallback on all endpoints) ---
 
   if (MPP_ENABLED) {
     const { Mppx } = await import('mppx/hono');
@@ -120,42 +120,31 @@ if (PAYMENTS_ENABLED) {
 
     const stripeClient = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
-    // Solana MPP — runtime crash due to @solana/errors version conflict between
-    // @solana/mpp (needs kit 6.x internals) and @x402/svm (bundles kit 5.x errors).
-    // tsc passes but Bun fails at module load: SOLANA_ERROR__TRANSACTION__INVALID_CONFIG_VALUE_KIND
-    // not found. Crypto payments handled by x402 until this is resolved.
-    // const { solana: solanaMpp } = await import('@solana/mpp/server');
-
     const mppx = Mppx.create({
       secretKey: process.env.MPP_SECRET_KEY!,
       methods: [
         stripeMpp.charge({
           client: stripeClient,
           currency: 'usd',
-          decimals: 6,  // Match USDC 6-decimal precision for micropayments ($0.002 = 2000 base units)
+          decimals: 6,
           networkId: 'internal',
           paymentMethodTypes: ['card'],
         }),
-        // solanaMpp.charge({ recipient: PAY_TO, currency: USDC_MINT, decimals: 6, network: 'mainnet-beta', rpcUrl: CONFIG.helius.rpcUrl }),
       ],
     });
 
-    // Use explicit key path 'stripe/charge' — the shorthand 'charge' may not resolve
-    // across all Bun versions (broke on Railway Bun 1.3.11, worked on local 1.2.21)
     const chargeHandler = (mppx as any)['stripe/charge'] ?? (mppx as any).charge;
     if (!chargeHandler) {
       console.error('[mpp] FATAL: No charge handler found on mppx object. Keys:', Object.keys(mppx as any));
     } else {
-      for (const key of mppKeys) {
+      for (const key of Object.keys(PRICING)) {
         app.use(
           `/entrypoints/${key}/invoke`,
           chargeHandler({ amount: PRICING[key as keyof typeof PRICING], recipient: PAY_TO }),
         );
       }
-      console.log(`[mpp] MPP + Stripe enabled on ${mppKeys.size} endpoints`);
+      console.log(`[mpp] MPP + Stripe enabled on ${Object.keys(PRICING).length} endpoints (fallback after x402)`);
     }
-
-    console.log(`[mpp] MPP + Stripe enabled on ${mppKeys.size} endpoints`);
   }
 } else {
   console.log("[x402] Payments disabled — set AGENT_WALLET_ADDRESS and PAYMENTS_ENABLED=true to enable");
