@@ -307,7 +307,7 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] `mcp/README.md` — setup instructions for remote (URL) and local (stdio) modes
 - [x] CORS configured for MCP protocol headers
 - [x] All tools call SolEnrich agent via HTTP, return LLM-formatted briefings
-- **Remote URL:** `https://solenrich-production.up.railway.app/mcp`
+- **Remote URL:** `https://api.solenrich.com/mcp`
 - **Local:** `bun run mcp/server.ts`
 
 ### Phase 11-12: Deployment & Launch — DONE
