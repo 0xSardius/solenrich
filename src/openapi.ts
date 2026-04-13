@@ -42,7 +42,7 @@ const ENDPOINT_META: Record<string, {
   },
   'enrich-token-light': {
     summary: 'Light token analysis',
-    description: 'Price (median of 3 sources), market cap, volume, liquidity, risk flags, verification status.',
+    description: 'Price (median of 3 sources), market cap, volume, liquidity, slippage estimates at 4 position sizes, risk flags, verification status.',
     schema: {
       type: 'object',
       required: ['mint'],
@@ -54,7 +54,7 @@ const ENDPOINT_META: Record<string, {
   },
   'enrich-token-full': {
     summary: 'Full token analysis',
-    description: 'Adds top 20 holders, HHI concentration index, volatility metrics to light token analysis.',
+    description: 'Adds top 20 holders, HHI concentration index, volatility metrics, slippage estimates to light token analysis.',
     schema: {
       type: 'object',
       required: ['mint'],

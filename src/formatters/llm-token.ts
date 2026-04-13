@@ -34,6 +34,20 @@ export function formatTokenBriefing(data: TokenEnrichment): string {
   const assessment = liquidityAssessment(data.liquidity, data.market_cap);
   lines.push(`Liquidity: ${formatUsd(data.liquidity)}. ${assessment} relative to market cap.`);
 
+  // Slippage estimates
+  if (data.slippage_estimates && data.slippage_estimates.length > 0) {
+    const slippageLines = data.slippage_estimates.map((s) => {
+      const label = s.size_usd >= 1000 ? `$${(s.size_usd / 1000).toFixed(0)}K` : `$${s.size_usd}`;
+      const impact = Math.abs(s.price_impact_pct);
+      return `${label}: ${impact < 0.01 ? '<0.01' : impact.toFixed(2)}%`;
+    });
+    lines.push(`Slippage (USDC → token): ${slippageLines.join(' | ')}.`);
+    const worst = data.slippage_estimates[data.slippage_estimates.length - 1];
+    if (worst && Math.abs(worst.price_impact_pct) > 10) {
+      lines.push('⚠ Significant slippage at larger sizes — thin liquidity.');
+    }
+  }
+
   // Volatility
   if (data.volatility) {
     const v = data.volatility;

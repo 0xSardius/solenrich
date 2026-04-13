@@ -36,6 +36,12 @@ export const TokenEnrichmentSchema = z.object({
     top10_pct: z.number(),
     herfindahl_index: z.number(),
   }).optional(),
+  slippage_estimates: z.array(z.object({
+    size_usd: z.number(),
+    price_impact_pct: z.number(),
+    output_amount: z.number(),
+    input_amount: z.number(),
+  })).optional(),
   liquidity: z.number(),
   risk_flags: z.array(z.string()),
   verified: z.boolean(),

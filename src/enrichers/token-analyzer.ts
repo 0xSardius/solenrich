@@ -1,7 +1,7 @@
 import type { HeliusClient } from '../sources/helius';
 import type { DexScreenerClient } from '../sources/dexscreener';
 import type { SolanaRpcClient } from '../sources/solana-rpc';
-import type { JupiterClient, JupiterToken } from '../sources/jupiter';
+import type { JupiterClient, JupiterToken, SlippageEstimate } from '../sources/jupiter';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { parallelFetch, type ParallelTask } from '../utils/parallel';
@@ -43,6 +43,7 @@ export interface TokenEnrichment {
     pct_supply: number;
   }>;
   concentration?: HolderConcentration;
+  slippage_estimates?: SlippageEstimate[];
   liquidity: number;
   risk_flags: string[];
   verified: boolean;
@@ -79,6 +80,7 @@ export class TokenAnalyzer {
       { name: 'mintInfo', fn: () => this.solanaRpc.getMintInfo(mint) },
       { name: 'jupiterToken', fn: () => this.jupiter.getTokenInfo(mint) },
       { name: 'largestAccounts', fn: () => this.solanaRpc.getTokenLargestAccounts(mint) },
+      { name: 'slippage', fn: () => this.jupiter.getSlippageEstimates(mint) },
     ];
 
     const fetched = await parallelFetch(tasks, 15_000);
@@ -96,6 +98,7 @@ export class TokenAnalyzer {
       }
     }
     const largestAccounts = (fetched.largestAccounts as Awaited<ReturnType<SolanaRpcClient['getTokenLargestAccounts']>>) ?? [];
+    const slippageEstimates = (fetched.slippage as SlippageEstimate[] | null) ?? [];
 
     const price = dexData?.price ?? 0;
     const decimals = mintInfo?.decimals ?? jupiterToken?.decimals ?? 0;
@@ -220,6 +223,11 @@ export class TokenAnalyzer {
     if (concentration && concentration.top5_pct > 80) {
       riskFlags.push('whale_dominated');
     }
+    // High slippage at $1K = illiquid for most trading agents
+    const slippage1k = slippageEstimates.find((s) => s.size_usd === 1000);
+    if (slippage1k && Math.abs(slippage1k.price_impact_pct) > 5) {
+      riskFlags.push('high_slippage');
+    }
 
     // --- Assemble ---
     const enrichment: TokenEnrichment = {
@@ -236,6 +244,7 @@ export class TokenAnalyzer {
       volatility,
       top_holders: topHolders,
       concentration,
+      slippage_estimates: slippageEstimates.length > 0 ? slippageEstimates : undefined,
       liquidity: dexData?.liquidity ?? 0,
       risk_flags: riskFlags,
       verified: jupiterToken?.verified === true,

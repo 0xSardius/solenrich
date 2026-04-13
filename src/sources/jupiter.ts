@@ -21,6 +21,16 @@ export interface JupiterPrice {
   price: number;
 }
 
+export interface SlippageEstimate {
+  size_usd: number;
+  price_impact_pct: number;
+  output_amount: number;
+  input_amount: number;
+}
+
+// USDC mint on Solana mainnet
+const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+
 // --- Client ---
 
 export class JupiterClient {
@@ -95,6 +105,54 @@ export class JupiterClient {
 
     await this.cache.set(cacheKey, token, CACHE_TTL.tokenMetadata);
     return token;
+  }
+
+  /**
+   * Get slippage estimates at multiple position sizes by querying Jupiter Quote API.
+   * Swaps USDC → token to measure price impact at $100, $1K, $10K, $100K.
+   */
+  async getSlippageEstimates(mint: string): Promise<SlippageEstimate[]> {
+    const cacheKey = `jupiter:slippage:${mint}`;
+    const cached = await this.cache.get<SlippageEstimate[]>(cacheKey);
+    if (cached) return cached;
+
+    // Position sizes in USDC (6 decimals)
+    const sizes = [
+      { usd: 100, amount: 100_000_000 },
+      { usd: 1_000, amount: 1_000_000_000 },
+      { usd: 10_000, amount: 10_000_000_000 },
+      { usd: 100_000, amount: 100_000_000_000 },
+    ];
+
+    const results: SlippageEstimate[] = [];
+
+    // Query each size — sequential to avoid rate limits
+    for (const size of sizes) {
+      try {
+        const url = `${this.baseUrl}/swap/v1/quote?inputMint=${USDC_MINT}&outputMint=${mint}&amount=${size.amount}&slippageBps=50`;
+        const res = await this.fetchWithKey(url);
+        if (!res.ok) continue;
+
+        const quote: any = await res.json();
+        const priceImpact = parseFloat(quote.priceImpactPct ?? '0');
+        const outAmount = Number(quote.outAmount ?? 0);
+
+        results.push({
+          size_usd: size.usd,
+          price_impact_pct: Math.round(priceImpact * 10000) / 10000,
+          output_amount: outAmount,
+          input_amount: size.amount,
+        });
+      } catch {
+        // Skip this size on error — partial results are fine
+      }
+    }
+
+    if (results.length > 0) {
+      await this.cache.set(cacheKey, results, CACHE_TTL.jupiterPrice);
+    }
+
+    return results;
   }
 
   private fetchWithKey(url: string): Promise<Response> {
