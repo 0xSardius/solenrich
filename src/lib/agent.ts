@@ -100,13 +100,20 @@ if (PAYMENTS_ENABLED) {
   const x402Routes: RoutesConfig = Object.fromEntries(x402RouteEntries);
   const x402MW = paymentMiddleware(x402Routes, resourceServer);
 
-  // Conditional x402 middleware: only runs when X-Payment header is present.
-  // If no X-Payment header, falls through to MPP middleware (or handler if MPP disabled).
+  // Conditional x402 middleware: x402 is the default payment protocol.
+  // Only skip x402 when an explicit MPP credential (Authorization: Payment) is present.
+  // No credential → x402 returns 402 with x402 challenge (preferred protocol).
+  // X-Payment header → x402 verifies the payment.
+  // Authorization: Payment → skip x402, let MPP handle below.
   app.use("/entrypoints/*", async (c, next) => {
-    if (c.req.header('x-payment')) {
-      return x402MW(c, next);
+    const hasMppCredential = c.req.header('authorization')?.startsWith('Payment ');
+    if (hasMppCredential) {
+      // MPP credential present — skip x402, let MPP middleware handle
+      await next();
+      return;
     }
-    await next();
+    // x402 handles: validates X-Payment if present, returns 402 challenge if not
+    return x402MW(c, next);
   });
 
   console.log(`[x402] Payment middleware enabled on ${Object.keys(x402Routes).length} endpoints — ${PAYMENT_NETWORK}, payTo: ${PAY_TO}`);
@@ -693,6 +700,15 @@ app.get('/openapi.json', (c) => {
 });
 
 console.log('[discovery] OpenAPI document available at GET /openapi.json');
+
+// --- x402 well-known discovery (fallback for x402scan) ---
+
+app.get('/.well-known/x402', (c) => {
+  const resources = Object.keys(PRICING).map((key) => `POST /entrypoints/${key}/invoke`);
+  return c.json({ version: 1, resources });
+});
+
+console.log('[discovery] x402 well-known available at GET /.well-known/x402');
 
 // --- Agent Card discovery metadata ---
 
