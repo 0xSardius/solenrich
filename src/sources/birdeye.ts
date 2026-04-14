@@ -143,6 +143,21 @@ export class BirdeyeClient {
     return data.data?.items ?? [];
   }
 
+  async getDailyCandles(mint: string, days = 7): Promise<OHLCV[]> {
+    const cacheKey = `birdeye:candles:1D:${mint}:${days}`;
+    const cached = await this.cache.get<OHLCV[]>(cacheKey);
+    if (cached) return cached;
+
+    const now = Math.floor(Date.now() / 1000);
+    const from = now - days * 86400;
+    const data = await this.get<{ data: { items: OHLCV[] } }>(
+      `/defi/ohlcv?address=${mint}&type=1D&time_from=${from}&time_to=${now}`,
+    );
+    const candles = data.data?.items ?? [];
+    await this.cache.set(cacheKey, candles, CACHE_TTL.tokenMetadata);
+    return candles;
+  }
+
   // --- Internal ---
 
   private async get<T>(path: string): Promise<T> {

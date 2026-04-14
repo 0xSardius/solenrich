@@ -2,6 +2,7 @@ import type { HeliusClient } from '../sources/helius';
 import type { DexScreenerClient } from '../sources/dexscreener';
 import type { SolanaRpcClient } from '../sources/solana-rpc';
 import type { JupiterClient, JupiterToken, SlippageEstimate } from '../sources/jupiter';
+import type { BirdeyeClient, OHLCV, TokenOverview } from '../sources/birdeye';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { parallelFetch, type ParallelTask } from '../utils/parallel';
@@ -64,6 +65,7 @@ export class TokenAnalyzer {
     private jupiter: JupiterClient,
     private cache: Cache,
     snapshotStore?: SnapshotStore,
+    private birdeye?: BirdeyeClient,
   ) {
     this.snapshotStore = snapshotStore;
   }
@@ -83,6 +85,13 @@ export class TokenAnalyzer {
       { name: 'slippage', fn: () => this.jupiter.getSlippageEstimates(mint) },
     ];
 
+    if (this.birdeye) {
+      tasks.push(
+        { name: 'birdeyeOverview', fn: () => this.birdeye!.getTokenOverview(mint) },
+        { name: 'birdeyeCandles', fn: () => this.birdeye!.getDailyCandles(mint, 7) },
+      );
+    }
+
     const fetched = await parallelFetch(tasks, 15_000);
 
     let dexData = fetched.dexData as Awaited<ReturnType<DexScreenerClient['getTokenData']>>;
@@ -99,15 +108,49 @@ export class TokenAnalyzer {
     }
     const largestAccounts = (fetched.largestAccounts as Awaited<ReturnType<SolanaRpcClient['getTokenLargestAccounts']>>) ?? [];
     const slippageEstimates = (fetched.slippage as SlippageEstimate[] | null) ?? [];
+    const birdeyeOverview = (fetched.birdeyeOverview as TokenOverview | null) ?? null;
+    const birdeyeCandles = (fetched.birdeyeCandles as OHLCV[] | null) ?? null;
 
-    const price = dexData?.price ?? 0;
-    const decimals = mintInfo?.decimals ?? jupiterToken?.decimals ?? 0;
+    const price = dexData?.price ?? birdeyeOverview?.price ?? 0;
+    const decimals = mintInfo?.decimals ?? jupiterToken?.decimals ?? birdeyeOverview?.decimals ?? 0;
     const rawSupply = mintInfo?.supply ?? 0;
     const supply = decimals > 0 ? rawSupply / 10 ** decimals : rawSupply;
 
-    // --- Price volatility (from multi-timeframe DexScreener data) ---
+    // --- Price volatility ---
+    // Prefer Birdeye daily candles (real OHLCV); fall back to DexScreener multi-timeframe estimate.
     let volatility: PriceVolatility | undefined;
-    if (dexData && price > 0) {
+
+    if (birdeyeCandles && birdeyeCandles.length >= 3) {
+      const closes = birdeyeCandles.map((c) => c.close).filter((p) => p > 0 && isFinite(p));
+      if (closes.length >= 3) {
+        const returns: number[] = [];
+        for (let i = 1; i < closes.length; i++) {
+          returns.push(((closes[i] - closes[i - 1]) / closes[i - 1]) * 100);
+        }
+        const mean = returns.reduce((s, r) => s + r, 0) / returns.length;
+        const variance = returns.reduce((s, r) => s + (r - mean) ** 2, 0) / returns.length;
+        const std = Math.sqrt(variance);
+
+        const highs = birdeyeCandles.map((c) => c.high).filter((p) => p > 0 && isFinite(p));
+        const lows = birdeyeCandles.map((c) => c.low).filter((p) => p > 0 && isFinite(p));
+        const high7d = highs.length > 0 ? Math.max(...highs) : Math.max(...closes);
+        const low7d = lows.length > 0 ? Math.min(...lows) : Math.min(...closes);
+        const rangePct = low7d > 0 ? ((high7d - low7d) / low7d) * 100 : 0;
+
+        const classification: PriceVolatility['classification'] =
+          std > 15 ? 'EXTREME' : std > 8 ? 'HIGH' : std > 3 ? 'MODERATE' : 'LOW';
+
+        volatility = {
+          daily_std_7d: Math.round(std * 100) / 100,
+          high_7d: Math.round(high7d * 1e8) / 1e8,
+          low_7d: Math.round(low7d * 1e8) / 1e8,
+          range_pct_7d: Math.round(rangePct * 100) / 100,
+          classification,
+        };
+      }
+    }
+
+    if (!volatility && dexData && price > 0) {
       const h1 = dexData.priceChange1h;
       const h6 = dexData.priceChange6h;
       const h24 = dexData.priceChange24h;
@@ -232,20 +275,20 @@ export class TokenAnalyzer {
     // --- Assemble ---
     const enrichment: TokenEnrichment = {
       mint,
-      symbol: dexData?.symbol ?? jupiterToken?.symbol ?? '',
-      name: dexData?.name ?? jupiterToken?.name ?? '',
+      symbol: dexData?.symbol ?? jupiterToken?.symbol ?? birdeyeOverview?.symbol ?? '',
+      name: dexData?.name ?? jupiterToken?.name ?? birdeyeOverview?.name ?? '',
       decimals,
       supply,
-      holder_count: largestAccounts.length, // Top 20 from RPC (always fetched); full count would require Birdeye
+      holder_count: birdeyeOverview?.holder ?? largestAccounts.length,
       price_usd: price,
-      market_cap: dexData?.marketCap ?? (price * supply),
-      volume_24h: dexData?.volume24h ?? 0,
-      price_change_24h: dexData?.priceChange24h ?? 0,
+      market_cap: dexData?.marketCap ?? birdeyeOverview?.marketCap ?? (price * supply),
+      volume_24h: dexData?.volume24h ?? birdeyeOverview?.volume24h ?? 0,
+      price_change_24h: dexData?.priceChange24h ?? birdeyeOverview?.priceChange24h ?? 0,
       volatility,
       top_holders: topHolders,
       concentration,
       slippage_estimates: slippageEstimates.length > 0 ? slippageEstimates : undefined,
-      liquidity: dexData?.liquidity ?? 0,
+      liquidity: dexData?.liquidity ?? birdeyeOverview?.liquidity ?? 0,
       risk_flags: riskFlags,
       verified: jupiterToken?.verified === true,
       mint_authority: mintInfo?.mintAuthority ?? null,

@@ -18,6 +18,7 @@ import { DexScreenerClient } from "../sources/dexscreener";
 import { JupiterClient } from "../sources/jupiter";
 import { SolanaRpcClient } from "../sources/solana-rpc";
 import { DefiLlamaClient } from "../sources/defi-llama";
+import { BirdeyeClient } from "../sources/birdeye";
 
 // Enrichers
 import { WalletProfiler } from "../enrichers/wallet-profiler";
@@ -221,10 +222,11 @@ const helius = new HeliusClient(cache);
 const dexscreener = new DexScreenerClient(cache);
 const jupiter = new JupiterClient(cache);
 const solanaRpc = new SolanaRpcClient();
+const birdeye = CONFIG.birdeye.apiKey ? new BirdeyeClient(cache) : undefined;
 const priceAggregator = new PriceAggregator(dexscreener, jupiter);
 
 const walletProfiler = new WalletProfiler(helius, solanaRpc, dexscreener, cache, priceAggregator, snapshotStore);
-const tokenAnalyzer = new TokenAnalyzer(helius, dexscreener, solanaRpc, jupiter, cache, snapshotStore);
+const tokenAnalyzer = new TokenAnalyzer(helius, dexscreener, solanaRpc, jupiter, cache, snapshotStore, birdeye);
 const txParser = new TxParser(helius, cache);
 const whaleWatcher = new WhaleWatcher(helius, dexscreener, solanaRpc, cache, priceAggregator);
 const graphMapper = new GraphMapper(helius, cache);

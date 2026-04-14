@@ -1,25 +1,22 @@
 # Session Checkpoint
 
 ## Last session date
-2026-04-13
+2026-04-14
 
 ## What was completed
 
-### This session (April 12-13)
-- **Custom domain** — `api.solenrich.com` for API, `solenrich.com` for landing page. CNAME via GoDaddy → Railway.
-- **URL migration** — 14 files updated from Railway URL to custom domain (source, docs, landing, tests, MCP README).
-- **x402scan listed** — Live at https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641
-- **Smithery listed** — 15 MCP tools published, publicly discoverable. Description written.
-- **Dual-protocol payments** — x402 and MPP now coexist on all endpoints. x402 is default (returns 402 challenge when no credential). MPP/Stripe activates only on `Authorization: Payment` header.
-- **`/.well-known/x402`** — Fallback discovery endpoint listing all 17 paid routes.
-- **Favicon** — SolEnrich logo served at `/favicon.ico` and `/favicon.png`.
-- **OpenAPI spec rewrite** — MPPScan-format `x-payment-info` with price/protocols structure. Free routes removed.
-- **15 MCP tools** (was 7) — Every endpoint now accessible via MCP. Added batch, compare, trends, discovery, protocol, query tools.
-- **Slippage estimates shipped (Priority 6)** — Jupiter Quote API (`swap/v1/quote`) at 4 position sizes ($100, $1K, $10K, $100K). New `high_slippage` risk flag (>5% at $1K). Shows on all token endpoints + LLM briefing.
-- **CLAUDE.md updated** — MCP tool checklist for new endpoints. MCP URL fixed.
-- **SolScout verified** — 16/16 endpoints passing on production after dual-protocol change.
+### This session (April 14)
+- **Priority 7 — Birdeye integration shipped** — Phase 2A complete.
+  - `getDailyCandles(mint, days)` added to BirdeyeClient (`/defi/ohlcv?type=1D` with time_from/time_to).
+  - BirdeyeClient instantiated in `agent.ts` (only when `BIRDEYE_API_KEY` set), passed into TokenAnalyzer.
+  - `holder_count` now uses `birdeyeOverview.holder` — verified BONK 999K, JUP 837K, USDC 6.5M (was capped at 20 from RPC).
+  - Volatility prefers Birdeye daily candles (real OHLCV) — falls back to DexScreener multi-timeframe estimate.
+  - Price/symbol/name/marketCap/volume/liquidity also fall back to Birdeye if DexScreener fails.
+  - Improves: enrich-token-light, enrich-token-full, due-diligence, compare-tokens, token-trend, new-tokens (automatic).
+- `test/test-birdeye.ts` — smoke test for BONK/JUP/USDC.
 
 ### Previous sessions
+- April 12-13: Custom domain (api.solenrich.com), x402scan listing, Smithery listing, dual-protocol payments, slippage estimates (Priority 6), 15 MCP tools.
 - April 9-10: llms.txt, signal capture (Priority 8), activity detection (Priority 5), Drift scoped, strategy workshopped.
 - April 5-8: Protocol analytics, OpenAPI discovery, MPP full rollout, holder_count fix, compare demo.
 - April 2-3: Comparison, temporal, discovery endpoints. MPP Stage 1. SolScout E2E.
@@ -34,14 +31,14 @@
 - **Smithery:** Listed, 15 tools, public
 - **Payments:** Dual-protocol — x402 (Solana USDC, default) + MPP/Stripe (fiat, on Authorization: Payment header)
 - **Endpoints:** 17 paid + free demo + /docs + /openapi.json + /metrics + /.well-known/x402
-- **New this session:** Slippage estimates on all token endpoints, 15 MCP tools, dual-protocol coexistence
+- **New this session:** Birdeye integration — real holder counts + OHLCV-derived volatility on all token endpoints
 - **Railway:** Auto-deploying from GitHub main branch
 - **Everything committed, pushed, and deployed**
 
 ## Next steps (prioritized)
 
-### Phase 2A — Deepen Intelligence (1 remaining)
-1. **Priority 7 — Birdeye integration** — holder counts + OHLCV, client already written, key on Railway (~1 session)
+### Phase 2A — Deepen Intelligence — COMPLETE
+- All 4 priorities shipped (5: activity, 6: slippage, 7: Birdeye, 8: signal capture)
 
 ### Distribution (parallel, low effort)
 2. **Orbis API listing** — Submit to orbisapi.com (founder connection, fellow hackathon participant)

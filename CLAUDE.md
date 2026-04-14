@@ -494,13 +494,14 @@ Six features to deepen SolEnrich's core value prop: getting solid Solana data to
 - **Future expansion (Phase 2B+):** Full order book depth via Birdeye Lite ($39/mo) for pool-by-pool breakdown
 - Feasibility: High — one new Jupiter client method + add to token-analyzer parallel fetch
 
-**Priority 7 — Birdeye Integration (free tier)** (1 session)
-- Token holder counts via `/defi/v3/token/holder` — fixes holder_count showing 20 instead of real count on mega-cap tokens
-- OHLCV price data — proper candlestick data for more accurate volatility calculations
-- Client already written in `src/sources/birdeye.ts`, API key set on Railway
-- Add `getTokenHolderCount()` and `getOHLCV()` methods, wire into token-analyzer parallel fetch
-- **Endpoints improved:** enrich-token-light, enrich-token-full, due-diligence, compare-tokens, token-trend, new-tokens
-- Feasibility: High — ~30-40 lines, enricher already designed to accept Birdeye data
+**Priority 7 — Birdeye Integration (free tier)** — DONE (2026-04-14)
+- [x] `getDailyCandles(mint, days)` added to BirdeyeClient — `/defi/ohlcv?type=1D` with time_from/time_to
+- [x] BirdeyeClient instantiated in agent.ts (only when `BIRDEYE_API_KEY` set), passed to TokenAnalyzer
+- [x] TokenAnalyzer parallel fetch now includes `birdeyeOverview` + `birdeyeCandles`
+- [x] `holder_count` uses Birdeye `overview.holder` (real count) — fallback to RPC top-20 length when missing. Verified: BONK 999K, JUP 837K, USDC 6.5M.
+- [x] Volatility prefers Birdeye daily candles (real OHLCV) — fallback to DexScreener multi-timeframe estimate
+- [x] Price/symbol/name/marketCap/volume/liquidity also fall back to Birdeye if DexScreener fails
+- **Endpoints improved (automatic via TokenAnalyzer):** enrich-token-light, enrich-token-full, due-diligence, compare-tokens, token-trend, new-tokens
 
 **Priority 8 — Proprietary Signal Capture** (1 session)
 - Request analytics as a data asset: per-endpoint call counts, unique tokens/wallets queried, query frequency per token
