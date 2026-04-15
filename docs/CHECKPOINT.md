@@ -14,6 +14,7 @@
   - Price/symbol/name/marketCap/volume/liquidity also fall back to Birdeye if DexScreener fails.
   - Improves: enrich-token-light, enrich-token-full, due-diligence, compare-tokens, token-trend, new-tokens (automatic).
 - `test/test-birdeye.ts` — smoke test for BONK/JUP/USDC.
+- **Priority 10 pivot** — Drift Protocol hacked 2026-04-01 for $285M (DPRK, durable-nonce exploit). `data.api.drift.trade` returns 404, TVL collapsed $550M → <$250M, no relaunch date. Perps agents rotated to Jupiter Perps. Rewrote Priority 10 in CLAUDE.md to build on Jupiter Perps first instead of Drift. Tighter scope, same thesis. Drift stays out until post-mortem + security assurances + relaunch.
 
 ### Previous sessions
 - April 12-13: Custom domain (api.solenrich.com), x402scan listing, Smithery listing, dual-protocol payments, slippage estimates (Priority 6), 15 MCP tools.
@@ -71,6 +72,8 @@
 - **MPPScan warnings** — Input schema warnings remain (mppx library limitation). Not blocking registration but not clean.
 
 ## Key decisions made
+- **Perps pivot: Jupiter Perps, not Drift** (2026-04-14) — Drift hack changed the perps landscape. Jupiter Perps is now the dominant Solana perps DEX. Tighter scope (one provider, extends existing JupiterClient) and the buyer segment has already moved. Drift stays out until relaunch + post-mortem. Keep Drift program ID in known-protocols registry for historical wallet labeling.
+- **Birdeye with graceful fallback** (2026-04-14) — BirdeyeClient instantiated only when `BIRDEYE_API_KEY` is set. Its results supplement but never block: holder_count and volatility fall back to the prior RPC/DexScreener path if Birdeye fails. Keeps the light-tier integration risk-free.
 - **x402 as default protocol** — When no payment credential is present, x402 returns its 402 challenge. MPP only activates on explicit `Authorization: Payment` header. x402 is preferred, Stripe is fallback.
 - **All endpoints on both protocols** — No splitting routes between x402 and MPP. Every endpoint accepts both.
 - **Custom domain before registry listings** — Registered api.solenrich.com before submitting to x402scan/Smithery so the URL is portable.
