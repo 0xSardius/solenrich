@@ -46,8 +46,8 @@
 4. **Social launch** — Tweet thread on x402scan listing, slippage estimates, dual-protocol payments
 
 ### Phase 2B — Expand Orchestration
-5. **Priority 9 — Smart Money** — `trending-signals`, `smart-money-flow` endpoints (2-3 sessions)
-6. **Priority 10 — Perps Intelligence** — Drift Data API, 3 new endpoints (2-3 sessions)
+5. **Priority 10 — Perps Intelligence (PIVOT to Jupiter Perps)** — START TOMORROW. Drift hacked 2026-04-01 for $285M (DPRK, durable-nonce exploit), `data.api.drift.trade` offline, TVL collapsed. Pivot to Jupiter Perps (now dominant Solana perps DEX). Extend existing JupiterClient. Ship `perps-market-structure` + `perps-trader-profile` first (1-2 sessions). Defer orchestrated `perps-signals`. See CLAUDE.md Priority 10 for full scope. (1-2 sessions)
+6. **Priority 9 — Smart Money** — `trending-signals`, `smart-money-flow` endpoints (2-3 sessions)
 7. **Priority 11 — Smarter Query** — Multi-step orchestration (1 session)
 8. **Priority 12 — Portfolio Tracker** — From temporal snapshots (1 session)
 

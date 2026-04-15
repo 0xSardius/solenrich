@@ -522,16 +522,19 @@ Orchestration = composed endpoints that chain multiple enrichers together. Worth
 - Blocker: No "scan all tokens" API — needs curated watchlist or DexScreener trending as input
 - Feasibility: Medium — builds on temporal + discovery features
 
-**Priority 10 — Perps Intelligence / Drift Integration** (2-3 sessions)
-- New data source: `src/sources/drift.ts` — client for Drift Data API (`data.api.drift.trade`, free, no auth)
-- 86 perp markets + 63 spot markets available. Funding rates, trades, liquidations, OI, spreads, candles, trader profiles.
-- **`perps-market-structure` endpoint** (~$0.012) — funding rate + trend, open interest + direction, recent liquidation volume, bid/ask spread, volume, basis (perp mark vs spot oracle price). Per-market or top-N overview.
-- **`perps-trader-profile` endpoint** (~$0.010) — Drift-specific trading history for a wallet: perps PnL, positions, win rate. Uses `/authority/{id}/snapshots/trading`. Complements copy-trade-signals with leverage-specific data.
-- **`perps-signals` endpoint** (~$0.015, orchestrated) — combines funding rates + OI + liquidation cascade risk + basis across multiple markets. "Where are the perps opportunities right now?" Highest orchestration value.
-- LLM formatter: "SOL-PERP funding rate is -0.001% (shorts paying longs). OI rising 12% in 24h with price up 2% = bullish conviction. 3 liquidations >$50K in last hour, all shorts."
-- **Why high priority:** Perps agents are among the highest-frequency data consumers. Drift is the largest Solana perps DEX. API is free. Nobody else offers this as an enrichment API.
-- Reuses: existing price aggregator (for basis calculation), protocol-profile (Drift already in registry)
-- Feasibility: High — standard pattern (client → enricher → formatter → entrypoint), rich API data confirmed
+**Priority 10 — Perps Intelligence / Jupiter Perps Integration** (1-2 sessions) — PIVOT from Drift 2026-04-14
+- **Context:** Drift hacked 2026-04-01 for $285M via DPRK durable-nonce exploit. TVL collapsed $550M → <$250M. `data.api.drift.trade` returns 404. Operations paused, no relaunch date. Perps traders/agents rotated to Jupiter Perps, Adrena, Zeta, Mango, bridged Hyperliquid.
+- **New venue:** Jupiter Perps is now the dominant Solana perps DEX. Free API (extend existing `src/sources/jupiter.ts`). Smaller market scope than Drift (SOL, ETH, BTC initially) but the buyer segment has moved here.
+- **Thesis:** Perps agents remain highest-frequency data consumers. Post-hack, perps *risk* intelligence is more valuable than before — agents need to know which venues are safe, what funding looks like, where liquidations cluster.
+- **Scope (start small):**
+  - Extend JupiterClient with perps methods (positions API, markets API)
+  - `perps-market-structure` endpoint (~$0.012) — funding rate, OI, recent liquidations, basis vs spot oracle
+  - `perps-trader-profile` endpoint (~$0.010) — wallet's Jupiter Perps history, PnL, win rate, position sizing
+  - Defer `perps-signals` orchestration until market structure + trader profile are validated
+- **Phase 2 expansion (next quarter):** Fold in Adrena, Zeta, Mango for cross-venue perps aggregation — arguably more valuable than Drift-only would have been.
+- **Drift:** Do NOT integrate until protocol relaunches with post-mortem + security assurances. Keep program ID in known-protocols registry for labeling wallets that historically interacted.
+- Reuses: existing JupiterClient, PriceAggregator (for basis), protocol-profile
+- Feasibility: High — tighter scope than original Drift plan, one provider, extends existing client
 
 **Priority 11 — Smarter Query Endpoint** (1 session)
 - Upgrade `query` to chain multiple enrichers per question
