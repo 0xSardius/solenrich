@@ -1,27 +1,21 @@
 # Session Checkpoint
 
 ## Last session date
-2026-04-14
+2026-04-15
 
 ## What was completed
 
-### This session (April 14)
-- **Priority 7 — Birdeye integration shipped** — Phase 2A complete.
-  - `getDailyCandles(mint, days)` added to BirdeyeClient (`/defi/ohlcv?type=1D` with time_from/time_to).
-  - BirdeyeClient instantiated in `agent.ts` (only when `BIRDEYE_API_KEY` set), passed into TokenAnalyzer.
-  - `holder_count` now uses `birdeyeOverview.holder` — verified BONK 999K, JUP 837K, USDC 6.5M (was capped at 20 from RPC).
-  - Volatility prefers Birdeye daily candles (real OHLCV) — falls back to DexScreener multi-timeframe estimate.
-  - Price/symbol/name/marketCap/volume/liquidity also fall back to Birdeye if DexScreener fails.
-  - Improves: enrich-token-light, enrich-token-full, due-diligence, compare-tokens, token-trend, new-tokens (automatic).
-- `test/test-birdeye.ts` — smoke test for BONK/JUP/USDC.
-- **Priority 10 pivot** — Drift Protocol hacked 2026-04-01 for $285M (DPRK, durable-nonce exploit). `data.api.drift.trade` returns 404, TVL collapsed $550M → <$250M, no relaunch date. Perps agents rotated to Jupiter Perps. Rewrote Priority 10 in CLAUDE.md to build on Jupiter Perps first instead of Drift. Tighter scope, same thesis. Drift stays out until post-mortem + security assurances + relaunch.
+### This session (April 15)
+- **Jupiter Perps research — complete.** No REST API; all on-chain Anchor accounts. Full technical notes logged in CLAUDE.md Priority 10: program ID (`PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu`), 5 custody PDAs, borrow fee math (no funding rate — hourly compounding instead), position query via `getProgramAccounts` with memcmp owner filter, OI from `custody.assets.guaranteedUsd`/`globalShortSizes`. IDL from julianfssen/jupiter-perps-anchor-idl-parsing repo. Needs `@coral-xyz/anchor` install.
+- **Listing profile created** — `docs/listing-profile.md` with description, 17 endpoints, pricing table, payment info, MCP config, discovery URLs. Reusable for Orbis, mcp.run, Glama, any marketplace.
+- **Orbis API scouted** — orbisapi.com is JS-rendered SPA, no public provider self-serve. Has MCP tools for consumers (`browse_apis`, `subscribe_to_api`). Listing is founder-relationship-driven. User has founder connection.
 
 ### Previous sessions
-- April 12-13: Custom domain (api.solenrich.com), x402scan listing, Smithery listing, dual-protocol payments, slippage estimates (Priority 6), 15 MCP tools.
-- April 9-10: llms.txt, signal capture (Priority 8), activity detection (Priority 5), Drift scoped, strategy workshopped.
-- April 5-8: Protocol analytics, OpenAPI discovery, MPP full rollout, holder_count fix, compare demo.
+- April 14: Birdeye integration (Priority 7, Phase 2A complete), Drift-to-Jupiter Perps pivot.
+- April 12-13: Custom domain, x402scan, Smithery, dual-protocol payments, slippage (Priority 6), 15 MCP tools.
+- April 9-10: llms.txt, signal capture (Priority 8), activity detection (Priority 5), strategy.
+- April 5-8: Protocol analytics, OpenAPI, MPP rollout, holder_count fix, compare demo.
 - April 2-3: Comparison, temporal, discovery endpoints. MPP Stage 1. SolScout E2E.
-- March 26-29: Demo, OG tags, test suite, Railway reconnect.
 
 ## Current state
 - **Live API:** https://api.solenrich.com
@@ -30,36 +24,36 @@
 - **Discovery:** https://api.solenrich.com/openapi.json + /.well-known/x402
 - **x402scan:** https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641
 - **Smithery:** Listed, 15 tools, public
-- **Payments:** Dual-protocol — x402 (Solana USDC, default) + MPP/Stripe (fiat, on Authorization: Payment header)
+- **Payments:** Dual-protocol — x402 (Solana USDC, default) + MPP/Stripe (fiat)
 - **Endpoints:** 17 paid + free demo + /docs + /openapi.json + /metrics + /.well-known/x402
-- **New this session:** Birdeye integration — real holder counts + OHLCV-derived volatility on all token endpoints
 - **Railway:** Auto-deploying from GitHub main branch
 - **Everything committed, pushed, and deployed**
 
-## Next steps (prioritized)
+## Next session plan (ACTION ITEMS)
 
-### Phase 2A — Deepen Intelligence — COMPLETE
-- All 4 priorities shipped (5: activity, 6: slippage, 7: Birdeye, 8: signal capture)
+### 1. Jupiter Perps build — START HERE
+Research is done, notes are in CLAUDE.md Priority 10. Build order:
+1. `bun add @coral-xyz/anchor` — install Anchor SDK
+2. Copy IDL from julianfssen/jupiter-perps-anchor-idl-parsing (`src/idl/jupiter-perpetuals-idl.ts`)
+3. New `src/sources/jupiter-perps.ts` — JupiterPerpsClient with:
+   - `getMarketStructure()` — fetch 3 custody accounts (SOL/BTC/ETH), compute borrow APR, utilization, OI long/short, oracle mark price
+   - `getPositionsForWallet(address)` — getProgramAccounts with owner memcmp, decode positions, compute PnL
+4. New `src/enrichers/perps-analyzer.ts` — PerpsAnalyzer enricher
+5. New `src/formatters/llm-perps.ts` — LLM briefing
+6. New `src/entrypoints/perps.ts` — `perps-market-structure` ($0.012) + `perps-trader-profile` ($0.010)
+7. Register in agent.ts, add MCP tools, add to OpenAPI spec, add to /docs
+8. Test, commit, push, deploy
 
-### Distribution (parallel, low effort)
-2. **Orbis API listing** — Submit to orbisapi.com (founder connection, fellow hackathon participant)
-3. **MCP directories** — mcp.run, Glama (Smithery done)
-4. **Social launch** — Tweet thread on x402scan listing, slippage estimates, dual-protocol payments
+### 2. Orbis API listing — FINISH
+- Share `docs/listing-profile.md` with Orbis founder (user has relationship)
+- Draft outreach message if user wants one
+- Submit listing
 
-### Phase 2B — Expand Orchestration
-5. **Priority 10 — Perps Intelligence (PIVOT to Jupiter Perps)** — START TOMORROW. Drift hacked 2026-04-01 for $285M (DPRK, durable-nonce exploit), `data.api.drift.trade` offline, TVL collapsed. Pivot to Jupiter Perps (now dominant Solana perps DEX). Extend existing JupiterClient. Ship `perps-market-structure` + `perps-trader-profile` first (1-2 sessions). Defer orchestrated `perps-signals`. See CLAUDE.md Priority 10 for full scope. (1-2 sessions)
-6. **Priority 9 — Smart Money** — `trending-signals`, `smart-money-flow` endpoints (2-3 sessions)
-7. **Priority 11 — Smarter Query** — Multi-step orchestration (1 session)
-8. **Priority 12 — Portfolio Tracker** — From temporal snapshots (1 session)
-
-### Phase 2C — Sticky Infrastructure
-9. Event-driven alerts (3-4 sessions)
-10. Intelligence feed / proactive scanning (3-4 sessions)
-11. SDK/client package (1-2 sessions)
-
-### Phase 2D — Distribution (ongoing)
-- Agent framework partnerships (Daydreams/Eliza docs)
-- Own agents as proof points (Pythia, Tidal, Cardex)
+### Remaining roadmap
+- **Priority 9 — Smart Money** — `trending-signals`, `smart-money-flow` (2-3 sessions)
+- **Priority 11 — Smarter Query** — Multi-step orchestration (1 session)
+- **Priority 12 — Portfolio Tracker** — From temporal snapshots (1 session)
+- **Distribution:** mcp.run, Glama, x402 bazaar (community POST + evaluate CDP facilitator switch)
 
 ### Pending Responses
 - **Helius partnership** — Application submitted 2026-04-09, awaiting response
@@ -67,18 +61,16 @@
 - **Bags Hackathon** — Submitted, judging pending
 
 ## Blockers
-- **@solana/kit must stay at 5.5.1** — 6.x causes @solana/errors runtime crash in Bun. Solana MPP blocked.
-- **Stripe E2E untested** — MPP middleware works but no real card payment processed yet
-- **MPPScan warnings** — Input schema warnings remain (mppx library limitation). Not blocking registration but not clean.
+- **@solana/kit must stay at 5.5.1** — 6.x causes @solana/errors runtime crash in Bun
+- **@coral-xyz/anchor compatibility** — needs verification with Bun runtime before building perps client
+- **Stripe E2E untested** — MPP middleware works but no real card payment yet
 
 ## Key decisions made
-- **Perps pivot: Jupiter Perps, not Drift** (2026-04-14) — Drift hack changed the perps landscape. Jupiter Perps is now the dominant Solana perps DEX. Tighter scope (one provider, extends existing JupiterClient) and the buyer segment has already moved. Drift stays out until relaunch + post-mortem. Keep Drift program ID in known-protocols registry for historical wallet labeling.
-- **Birdeye with graceful fallback** (2026-04-14) — BirdeyeClient instantiated only when `BIRDEYE_API_KEY` is set. Its results supplement but never block: holder_count and volatility fall back to the prior RPC/DexScreener path if Birdeye fails. Keeps the light-tier integration risk-free.
-- **x402 as default protocol** — When no payment credential is present, x402 returns its 402 challenge. MPP only activates on explicit `Authorization: Payment` header. x402 is preferred, Stripe is fallback.
-- **All endpoints on both protocols** — No splitting routes between x402 and MPP. Every endpoint accepts both.
-- **Custom domain before registry listings** — Registered api.solenrich.com before submitting to x402scan/Smithery so the URL is portable.
-- **MCP tool parity** — Every endpoint gets a matching MCP tool. Added to CLAUDE.md as a checklist item for new endpoints.
-- **Slippage at 4 sizes** — $100, $1K, $10K, $100K gives agents full picture from retail to institutional.
+- **Jupiter Perps via Anchor IDL, not REST** (2026-04-15) — No REST API exists for Jupiter Perps. All data lives in on-chain accounts (Pool, Custody, Position). Access via `@coral-xyz/anchor` Program + IDL. Uses borrow fees instead of funding rates.
+- **Perps pivot: Jupiter Perps, not Drift** (2026-04-14) — Drift hacked for $285M, API offline, TVL collapsed. Jupiter Perps is now dominant Solana perps DEX.
+- **Birdeye with graceful fallback** (2026-04-14) — supplements but never blocks enrichment
+- **x402 as default protocol** — MPP only on explicit `Authorization: Payment` header
+- **MCP tool parity** — every endpoint gets a matching MCP tool
 
 ## Key values
 - **Agent Asset:** 5rsdgYL8mETFm785mXpEMYftjSE3H4JSqFANhJ4BoTHk
@@ -88,3 +80,5 @@
 - **Railway project ID:** 4f26f635-bbc8-440c-8539-afd3d7bea0bb
 - **Vercel project:** 0xsardius-projects/landing
 - **x402scan ID:** d9814c54-6fa6-4fa7-8b01-43a0ffbc7641
+- **Jupiter Perps Program:** PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu
+- **JLP Pool PDA:** 5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq
