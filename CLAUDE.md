@@ -536,6 +536,20 @@ Orchestration = composed endpoints that chain multiple enrichers together. Worth
 - Reuses: existing JupiterClient, PriceAggregator (for basis), protocol-profile
 - Feasibility: High — tighter scope than original Drift plan, one provider, extends existing client
 
+**Jupiter Perps technical notes (research 2026-04-15):**
+- **No REST API.** All data lives in on-chain Anchor accounts. Access via `@coral-xyz/anchor` Program + IDL, or raw Borsh decode.
+- **Program ID:** `PERPHjGBqRHArX4DySjwM6UJHiR3sWAatqfdBS2qQJu`
+- **JLP Pool PDA:** `5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq`
+- **Custody PDAs (static constants, not derived):** SOL `7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz`, BTC `5Pv3gM9JrFFH883SWAhvJC9RPYmo8UNxuFtv5bMMALkm`, ETH `AQCGyheWPLeo6Qp9WpYS9m3Qj479t7R636N9ey1rEjEn`, USDC `G18jKKXQwBbrHeiK3C9MRXhkHsLHf7XgCSisykV46EZa`, USDT `4vkNeXiYEUizLdrpdPS1eC2mccyM4NUPRtERrk6ZETkk`. Only SOL/BTC/ETH are tradable.
+- **Oracle (Doves):** `DoVEsk76QybCEHQGzkvYPWLQu9gzNoZZZt3TPiL597e`
+- **IDL source of truth:** https://github.com/julianfssen/jupiter-perps-anchor-idl-parsing — copy `src/idl/jupiter-perpetuals-idl.ts` + constants.
+- **No funding rate — uses borrow fees instead.** Hourly compounding. Two mechanisms: Linear (`hourlyFundingDbps`) or Jump (utilization curve with `minRateBps`/`targetRateBps`/`maxRateBps`/`targetUtilizationRate`). `getBorrowApr()` derives annualized rate from custody state.
+- **Open interest directly readable:** `custody.assets.guaranteedUsd` = total longs, `custody.assets.globalShortSizes` = total shorts.
+- **Positions by wallet:** `connection.getProgramAccounts(PERPS_PROGRAM, { filters: [{ memcmp: { offset: 8, bytes: walletAddress }}, { memcmp: program.coder.accounts.memcmp("position") }] })`. Filter results by `sizeUsd > 0` — closed positions are not reaped.
+- **Liquidations are events, not an account.** Requires parsing transaction logs via event authority `37hJBDnntwqhGbK7L6M1bLyvccj4u55CCUiLPdYkiqBN`. Defer to later phase.
+- **Scale constants:** `RATE_POWER = 1_000_000_000`, `BPS_POWER = 10_000`, `DBPS_POWER = 100_000`, `USDC_DECIMALS = 6`, `JLP_DECIMALS = 6`.
+- **Install:** `bun add @coral-xyz/anchor` (not yet installed). Can share existing Helius RPC URL.
+
 **Priority 11 — Smarter Query Endpoint** (1 session)
 - Upgrade `query` to chain multiple enrichers per question
 - "Should I buy BONK?" → due-diligence + token-trend + whale-watch, unified answer
