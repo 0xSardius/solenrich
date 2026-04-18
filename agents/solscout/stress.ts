@@ -219,6 +219,47 @@ const ENDPOINTS: Array<{
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' },
     ],
   },
+  {
+    key: 'protocol-profile',
+    input: { protocol: 'jupiter', format: 'both' },
+    timeout: 60000,
+    checks: [
+      { name: 'has protocol.name', test: (d) => typeof d.protocol?.name === 'string' && d.protocol.name.length > 0 },
+      { name: 'has tvl block', test: (d) => d.tvl != null && typeof d.tvl.total_usd === 'number' },
+      { name: 'has activity block', test: (d) => d.activity != null },
+      { name: 'has health_signals', test: (d) => d.health_signals != null },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.length > 50 },
+    ],
+  },
+  {
+    key: 'perps-market-structure',
+    input: { format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'has pool', test: (d) => typeof d.pool === 'string' },
+      { name: 'has markets array (3)', test: (d) => Array.isArray(d.markets) && d.markets.length === 3, detail: (d) => `markets=${d.markets?.length}` },
+      { name: 'SOL market has OI', test: (d) => d.markets?.[0]?.open_interest?.total_usd > 0, detail: (d) => `SOL_OI=$${d.markets?.[0]?.open_interest?.total_usd?.toFixed(0)}` },
+      { name: 'SOL borrow APR > 0', test: (d) => d.markets?.[0]?.borrow_rate?.annualized_pct > 0, detail: (d) => `SOL_APR=${d.markets?.[0]?.borrow_rate?.annualized_pct?.toFixed(2)}%` },
+      { name: 'SOL mark price real', test: (d) => d.markets?.[0]?.mark_price_usd > 1, detail: (d) => `SOL=$${d.markets?.[0]?.mark_price_usd?.toFixed(2)}` },
+      { name: 'has totals', test: (d) => d.totals?.total_oi_usd > 0 },
+      { name: 'has overall_health', test: (d) => typeof d.overall_health === 'string' },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.length > 100 },
+    ],
+  },
+  {
+    key: 'perps-trader-profile',
+    input: { address: TEST_WALLET, format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'has address', test: (d) => d.address === TEST_WALLET },
+      { name: 'has has_positions flag', test: (d) => typeof d.has_positions === 'boolean' },
+      { name: 'has positions array', test: (d) => Array.isArray(d.positions) },
+      { name: 'has profile classification', test: (d) => typeof d.profile === 'string' },
+      { name: 'has directional_bias', test: (d) => ['long', 'short', 'neutral'].includes(d.directional_bias) },
+      { name: 'has totals', test: (d) => d.totals != null },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' },
+    ],
+  },
 ];
 
 export class StressRunner {

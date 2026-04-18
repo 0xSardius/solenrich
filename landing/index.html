@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SolEnrich — Solana Onchain Data Enrichment for Agents & LLMs</title>
-  <meta name="description" content="Solana onchain data enrichment agent. 17 endpoints: wallet profiling, token analysis, risk scoring, automated activity detection, protocol analytics. Dual payments: USDC via x402 or credit cards via MPP/Stripe. JSON for agents, natural language for LLMs.">
+  <meta name="description" content="Solana onchain data enrichment agent. 19 endpoints: Jupiter Perps market structure, wallet profiling, token analysis, risk scoring, automated activity detection, protocol analytics. Dual payments: USDC via x402 or credit cards via MPP/Stripe. JSON for agents, natural language for LLMs.">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://solenrich.com">
   <meta property="og:title" content="SolEnrich — Onchain Intelligence for Agents & LLMs">
-  <meta property="og:description" content="17 enrichment endpoints on Solana. Automated activity detection, protocol analytics, wallet profiling, token risk, whale tracking, due diligence. Dual payments: USDC via x402 or credit cards via MPP/Stripe.">
+  <meta property="og:description" content="19 enrichment endpoints on Solana. Jupiter Perps market structure, automated activity detection, protocol analytics, wallet profiling, token risk, whale tracking, due diligence. Dual payments: USDC via x402 or credit cards via MPP/Stripe.">
   <meta property="og:image" content="https://raw.githubusercontent.com/0xSardius/solenrich/main/landing/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -18,7 +18,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SolEnrich — Onchain Intelligence for Agents & LLMs">
-  <meta name="twitter:description" content="17 enrichment endpoints on Solana. Automated activity detection, protocol analytics, wallet profiling, token risk, whale tracking, due diligence. Dual payments: USDC via x402 or credit cards via MPP/Stripe.">
+  <meta name="twitter:description" content="19 enrichment endpoints on Solana. Jupiter Perps market structure, automated activity detection, protocol analytics, wallet profiling, token risk, whale tracking, due diligence. Dual payments: USDC via x402 or credit cards via MPP/Stripe.">
   <meta name="twitter:image" content="https://raw.githubusercontent.com/0xSardius/solenrich/main/landing/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1239,7 +1239,7 @@
           <span class="gradient-text">for agents & LLMs</span>
         </h1>
         <p class="hero-sub">
-          17 endpoints enriching any Solana wallet, token, or protocol with a single API call.
+          19 endpoints enriching any Solana wallet, token, or protocol with a single API call.
           Structured JSON for agents. Natural language briefings for LLMs.
           Pay with USDC (x402) or credit card (Stripe).
         </p>
@@ -1533,7 +1533,25 @@
             <span class="endpoint-price">$0.008</span>
           </div>
           <p class="endpoint-desc">DeFi protocol analytics: TVL, yield pools, on-chain activity, health signals. Automated activity detection — what % of volume is bot-driven?</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">protocol</span></div>
+          <div class="tag-row"><span class="tag">protocol</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">perps-market-structure</span>
+            <span class="endpoint-price">$0.012</span>
+          </div>
+          <p class="endpoint-desc">Jupiter Perps market structure — per-market OI, utilization, borrow APR, skew, OI caps, and health flags for SOL/BTC/ETH. Reads on-chain Anchor accounts directly.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">perps-trader-profile</span>
+            <span class="endpoint-price">$0.010</span>
+          </div>
+          <p class="endpoint-desc">Jupiter Perps positions for a wallet with size, leverage, entry, unrealized PnL, and trader classification (scalper / swing / position). Risk flags for high leverage and approaching liquidation.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span></div>
         </div>
       </div>
     </div>
