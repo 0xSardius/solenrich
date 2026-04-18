@@ -52,6 +52,8 @@ export const PRICING = {
   'wallet-history': '0.006',
   'new-tokens': '0.012',
   'protocol-profile': '0.008',
+  'perps-market-structure': '0.012',
+  'perps-trader-profile': '0.010',
 } as const;
 
 /** Cache TTL in seconds per data type */
@@ -70,4 +72,6 @@ export const CACHE_TTL = {
   snapshot: 2_592_000,  // 30 days
   trend: 300,           // 5 minutes
   protocolProfile: 1800, // 30 minutes — activity data is RPC-heavy
+  perpsMarket: 30,       // 30 seconds — on-chain state changes every block
+  perpsTrader: 60,       // 1 minute — positions update on tx
 } as const;

@@ -358,5 +358,36 @@ export function createSolEnrichMcpServer(): McpServer {
     },
   );
 
+  server.registerTool(
+    'perps_market_structure',
+    {
+      title: 'Jupiter Perps Market Structure',
+      description: 'Per-market OI, utilization, borrow APR, skew, OI caps, and health flags across Jupiter Perps SOL/BTC/ETH. Reads on-chain Anchor accounts directly.',
+      inputSchema: {},
+    },
+    async () => {
+      const briefing = await invoke('perps-market-structure', { format: 'llm' });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
+    'perps_trader_profile',
+    {
+      title: 'Jupiter Perps Trader Profile',
+      description: 'Open Jupiter Perps positions for a wallet with size, leverage, entry, unrealized PnL, trader classification (scalper/swing/position), and risk flags.',
+      inputSchema: {
+        address: z.string().describe('Solana wallet address'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('perps-trader-profile', {
+        address: args.address,
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
   return server;
 }

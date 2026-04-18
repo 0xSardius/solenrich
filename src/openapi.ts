@@ -233,6 +233,28 @@ const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'perps-market-structure': {
+    summary: 'Jupiter Perps market structure',
+    description: 'Per-market open interest, utilization, borrow APR, skew, OI caps, and health flags across Jupiter Perps SOL/BTC/ETH markets. Reads on-chain Anchor accounts directly.',
+    schema: {
+      type: 'object',
+      properties: {
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
+  'perps-trader-profile': {
+    summary: 'Jupiter Perps trader profile',
+    description: 'Open Jupiter Perps positions for a wallet with size, leverage, entry price, unrealized PnL, position age, trader classification (scalper/swing/position), and risk flags.',
+    schema: {
+      type: 'object',
+      required: ['address'],
+      properties: {
+        address: { type: 'string', description: 'Solana wallet address', minLength: 32, maxLength: 44 },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
 };
 
 const BASE_URL = 'https://api.solenrich.com';

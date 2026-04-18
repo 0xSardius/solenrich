@@ -522,7 +522,20 @@ Orchestration = composed endpoints that chain multiple enrichers together. Worth
 - Blocker: No "scan all tokens" API — needs curated watchlist or DexScreener trending as input
 - Feasibility: Medium — builds on temporal + discovery features
 
-**Priority 10 — Perps Intelligence / Jupiter Perps Integration** (1-2 sessions) — PIVOT from Drift 2026-04-14
+**Priority 10 — Perps Intelligence / Jupiter Perps Integration** — DONE (2026-04-18)
+- [x] `@coral-xyz/anchor@0.29.0` installed (0.32+ uses new IDL format, reference IDLs are v0.29)
+- [x] Jupiter Perps + Doves IDLs copied to `src/idl/`
+- [x] `src/sources/jupiter-perps.ts` — JupiterPerpsClient reading on-chain Anchor accounts: `getMarketStructure()` (3 custodies, borrow APR via jump-rate curve, OI from `guaranteedUsd`/`globalShortSizes`, Doves oracle mark prices) + `getPositionsForWallet()` (getProgramAccounts memcmp owner filter, PnL from mark - entry)
+- [x] `src/enrichers/perps-analyzer.ts` — market risk flags (extreme_skew, high_utilization, near_oi_cap, elevated_borrow_rate), headroom, HEALTHY/TILTED/STRESSED health; trader classification (scalper/swing/position), directional bias, position-level flags (high_leverage, approaching_liquidation, stale)
+- [x] `src/formatters/llm-perps.ts` — market structure + trader profile briefings
+- [x] `src/entrypoints/perps.ts` — `perps-market-structure` ($0.012) + `perps-trader-profile` ($0.010)
+- [x] Registered in agent.ts, MCP tools (`perps_market_structure`, `perps_trader_profile`), OpenAPI spec, /docs
+- [x] Live tested: SOL $86 / BTC $75.8K / ETH $2.35K, total OI ~$80M, borrow APRs 10-12%, 19 total endpoints now
+- **Scaling gotchas discovered during build:** `targetUtilizationRate` scaled by RATE_POWER (1e9) NOT BPS_POWER. Jump-rate bps values are ANNUALIZED APR (1000=10% APR, 3500=35%, 15000=150%), NOT hourly. Do not multiply by 24×365.
+- **Phase 2 expansion (next quarter):** Fold in Adrena, Zeta, Mango for cross-venue perps aggregation
+- **Drift:** Do NOT integrate until relaunches with post-mortem + security assurances
+
+**Priority 10 (original plan, archived) — Perps Intelligence / Jupiter Perps Integration** — PIVOT from Drift 2026-04-14
 - **Context:** Drift hacked 2026-04-01 for $285M via DPRK durable-nonce exploit. TVL collapsed $550M → <$250M. `data.api.drift.trade` returns 404. Operations paused, no relaunch date. Perps traders/agents rotated to Jupiter Perps, Adrena, Zeta, Mango, bridged Hyperliquid.
 - **New venue:** Jupiter Perps is now the dominant Solana perps DEX. Free API (extend existing `src/sources/jupiter.ts`). Smaller market scope than Drift (SOL, ETH, BTC initially) but the buyer segment has moved here.
 - **Thesis:** Perps agents remain highest-frequency data consumers. Post-hack, perps *risk* intelligence is more valuable than before — agents need to know which venues are safe, what funding looks like, where liquidations cluster.

@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "8004-solana": "^0.7.9",
+    "@coral-xyz/anchor": "0.29.0",
     "@lucid-agents/core": "latest",
     "@lucid-agents/hono": "latest",
     "@lucid-agents/http": "latest",

@@ -29,6 +29,8 @@ import { GraphMapper } from "../enrichers/graph-mapper";
 import { CopyTradeAnalyzer } from "../enrichers/copy-trade-analyzer";
 import { DueDiligenceAnalyzer } from "../enrichers/due-diligence";
 import { ProtocolAnalyzer } from "../enrichers/protocol-analyzer";
+import { PerpsAnalyzer } from "../enrichers/perps-analyzer";
+import { JupiterPerpsClient } from "../sources/jupiter-perps";
 
 // Entrypoint registration
 import { registerWalletEntrypoints } from "../entrypoints/wallet";
@@ -44,6 +46,7 @@ import { registerCompareEntrypoints } from "../entrypoints/compare";
 import { registerTrendEntrypoints } from "../entrypoints/trend";
 import { registerDiscoveryEntrypoint } from "../entrypoints/discovery";
 import { registerProtocolEntrypoint } from "../entrypoints/protocol";
+import { registerPerpsEntrypoints } from "../entrypoints/perps";
 import { CONFIG, PRICING } from "../config";
 
 // --- Agent setup ---
@@ -234,6 +237,8 @@ const copyTradeAnalyzer = new CopyTradeAnalyzer(helius, dexscreener, cache, pric
 const dueDiligenceAnalyzer = new DueDiligenceAnalyzer(tokenAnalyzer, whaleWatcher, cache);
 const defiLlama = new DefiLlamaClient(cache);
 const protocolAnalyzer = new ProtocolAnalyzer(defiLlama, helius, cache);
+const jupiterPerps = new JupiterPerpsClient(cache);
+const perpsAnalyzer = new PerpsAnalyzer(jupiterPerps);
 
 import { TokenComparator, WalletComparator } from '../enrichers/comparator';
 const tokenComparator = new TokenComparator(tokenAnalyzer);
@@ -270,6 +275,9 @@ registerDiscoveryEntrypoint(addEntrypoint, tokenDiscovery);
 
 // Protocol analytics
 registerProtocolEntrypoint(addEntrypoint, protocolAnalyzer);
+
+// Jupiter Perps — market structure + trader profile
+registerPerpsEntrypoints(addEntrypoint, perpsAnalyzer);
 
 // --- Demo endpoint (free, rate-limited, for landing page) ---
 
@@ -518,6 +526,16 @@ app.get('/docs', (c) => {
         price: '0.008',
         input: { protocol: 'string (slug or program ID)', include_yields: 'boolean (default true)', format: 'json | llm | both' },
         description: 'DeFi protocol analytics: TVL, yield pools, on-chain activity, health signals. Supports Raydium, Orca, marginfi, Drift, Jupiter, Kamino, Marinade, Jito.',
+      },
+      'perps-market-structure': {
+        price: '0.012',
+        input: { format: 'json | llm | both' },
+        description: 'Jupiter Perps market structure — per-market OI, utilization, borrow APR, skew, OI caps, and health flags for SOL/BTC/ETH. Reads on-chain Anchor accounts directly (no REST API).',
+      },
+      'perps-trader-profile': {
+        price: '0.010',
+        input: { address: 'string', format: 'json | llm | both' },
+        description: 'Jupiter Perps trader profile — open positions for a wallet with size, leverage, entry, unrealized PnL, profile classification (scalper/swing/position), and risk flags.',
       },
     },
     methodology: {
