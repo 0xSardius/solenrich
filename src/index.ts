@@ -50,7 +50,16 @@ export default {
       originalBody = await res.clone().json();
     } catch {}
 
-    const enrichedBody = { ...originalBody, ...build402Body(url) };
+    // Log middleware's 402 body so CDP facilitator rejection reasons surface in Railway logs.
+    // Safe: already a 402, no secrets in x402 verification error messages.
+    if (Object.keys(originalBody).length > 0) {
+      console.log(`[402] ${url.pathname} middleware body:`, JSON.stringify(originalBody).slice(0, 500));
+    }
+
+    // Our custom fields first, middleware details override — so verify failures
+    // (like "transaction_simulation_failed") propagate to clients instead of being
+    // masked by the generic "Payment Required" message.
+    const enrichedBody = { ...build402Body(url), ...originalBody };
 
     // Preserve x402 protocol headers
     const headers = new Headers(res.headers);
