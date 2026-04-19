@@ -74,8 +74,10 @@ const PAY_TO = process.env.AGENT_WALLET_ADDRESS ?? CONFIG.solana.walletAddress;
 const PAYMENTS_ENABLED = process.env.PAYMENTS_ENABLED?.toLowerCase() === "true" && PAY_TO !== "";
 
 if (PAYMENTS_ENABLED) {
-  const facilitatorUrl = process.env.FACILITATOR_URL ?? "https://facilitator.payai.network";
-  const facilitatorClient = new HTTPFacilitatorClient({ url: facilitatorUrl });
+  // CDP x402 facilitator — speaks current @x402/core 2.6 schema, supports Solana mainnet,
+  // and auto-registers us on the x402 bazaar. Reads CDP_API_KEY_ID + CDP_API_KEY_SECRET from env.
+  const { facilitator } = await import("@coinbase/x402");
+  const facilitatorClient = new HTTPFacilitatorClient(facilitator);
 
   const resourceServer = new x402ResourceServer(facilitatorClient)
     .register(PAYMENT_NETWORK, new ExactSvmScheme());

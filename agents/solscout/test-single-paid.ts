@@ -25,16 +25,19 @@ registerExactSvmScheme(client, { signer });
 
 // Wrap fetch with logging
 const loggingFetch: typeof fetch = async (input, init) => {
-  const url = typeof input === 'string' ? input : input instanceof URL ? input.toString() : (input as Request).url;
-  console.log(`\n>>> ${init?.method ?? 'GET'} ${url}`);
+  const req = input instanceof Request ? input : new Request(input, init);
+  console.log(`\n>>> ${req.method} ${req.url}`);
+  for (const [key, value] of req.headers.entries()) {
+    if (key.toLowerCase().includes('x402') || key.toLowerCase().includes('payment')) {
+      console.log(`    REQ ${key} (${value.length} chars):\n${value}\n`);
+    }
+  }
 
-  const res = await globalThis.fetch(input, init);
+  const res = await globalThis.fetch(req);
   console.log(`<<< ${res.status} ${res.statusText}`);
-
-  // Log x402 headers
   for (const [key, value] of res.headers.entries()) {
     if (key.toLowerCase().includes('x402') || key.toLowerCase().includes('payment')) {
-      console.log(`    ${key}: ${value.slice(0, 100)}...`);
+      console.log(`    RES ${key} (${value.length} chars):\n${value}\n`);
     }
   }
 

@@ -45,12 +45,35 @@
 - Update test-endpoints agent + `test/test-all-endpoints.ts` to cover perps routes
 - Find a real Jupiter Perps trader wallet (via on-chain search or Jupiter leaderboard) and test `perps-trader-profile` with real positions
 
-### 2. Orbis API listing
+### 2. Coinbase facilitator swap (payai.network → CDP) — FIXES PAID FLOW
+- **This is now the recommended fix for the broken paid E2E.** See action #4 for the root-cause debug.
+- **CDP facilitator URL:** `https://api.cdp.coinbase.com/platform/v2/x402`
+- **Supports:** Solana mainnet `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` (confirmed 2026-04-18 via docs.cdp.coinbase.com/x402/network-support)
+- **Auth:** Requires CDP API keys. Free tier 1000 tx/mo, then $0.001/tx.
+- **Bonus:** Automatic x402 bazaar listing = free distribution channel.
+- **Why this fixes the paid flow:** CDP speaks the current @x402/core 2.6 request schema. payai.network's v2 schema has drifted — it expects `accepted` nested inside `paymentPayload`, while @x402/core sends `paymentRequirements` as a top-level field. That mismatch is why every paid request gets 400-rejected by payai and falls back to 402.
+- **Swap steps:**
+  1. Create CDP project at portal.cdp.coinbase.com, generate API keys
+  2. Set `FACILITATOR_URL=https://api.cdp.coinbase.com/platform/v2/x402` on Railway
+  3. Wire CDP auth headers into `HTTPFacilitatorClient` construction in `src/lib/agent.ts` (currently passes only `{url}` — need to add auth header callback)
+  4. Test a single paid request with SolScout
+  5. Verify x402scan listing still shows us, confirm bazaar listing appears
+- **Risk:** Low. `FACILITATOR_URL` is already an env var. If CDP auth headers aren't wired correctly, middleware falls back to returning plain 402 (same failure mode we have now, doesn't break anything further).
+
+### 3. Orbis API listing
 - 500-char summary drafted in last chat — ready to send to founder
 - Share `docs/listing-profile.md`
 - Submit listing
 
-### 3. Remaining roadmap
+### 4. Paid E2E broken — DIAGNOSED 2026-04-18
+- **Root cause:** payai.network's v2 facilitator schema has drifted from @x402/core 2.6. payai expects `accepted` nested inside `paymentPayload`; @x402/core sends `paymentRequirements` as a top-level field. Every verify request gets 400 "invalid_payload: accepted expected object, received undefined" and our server falls back to 402.
+- **Proof:** Replaying a captured payment with `accepted` nested in `paymentPayload` returned `{isValid: false, invalidReason: "transaction_simulation_failed", invalidMessage: "BlockhashNotFound"}` — a real validation pass that only failed on stale blockhash. Fresh request would settle.
+- **Client side is clean:** SolScout signs correctly. Transaction structure verified: account[0]=feePayer (empty sig, correct), account[1]=SolScout (valid ed25519 signature). @x402/fetch pinned to 2.6.0.
+- **Stress test `19/19 passed` was a false positive** — harness (stress.ts:366) treats 402 as pass. 482ms avg latency was the tell (never-enriched).
+- **Fix path:** Action #2 above (swap to CDP facilitator). Single env var + auth wire-up. Low risk.
+- **Do NOT** downgrade @x402 stack to 2.4, upgrade @solana/kit to 6.x, or reorder server middleware — all can break production, and none of them are the actual fix.
+
+### 5. Remaining roadmap
 - **Priority 9 — Smart Money** — `trending-signals`, `smart-money-flow` (2-3 sessions)
 - **Priority 11 — Smarter Query** — Multi-step orchestration. Add perps routing ("SOL-PERP funding rate?") (1 session)
 - **Priority 12 — Portfolio Tracker** — From temporal snapshots (1 session)
