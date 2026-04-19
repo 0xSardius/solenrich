@@ -73,14 +73,27 @@ const PAYMENT_NETWORK = (
 const PAY_TO = process.env.AGENT_WALLET_ADDRESS ?? CONFIG.solana.walletAddress;
 const PAYMENTS_ENABLED = process.env.PAYMENTS_ENABLED?.toLowerCase() === "true" && PAY_TO !== "";
 
+// Build x402 resource server eagerly so we can catch auth/network failures before
+// the process enters its restart loop. If init fails we log and fall back to
+// MPP/Stripe + free endpoints only — no crash, no Railway health-check flapping.
+let resourceServer: x402ResourceServer | null = null;
 if (PAYMENTS_ENABLED) {
   // CDP x402 facilitator — speaks current @x402/core 2.6 schema, supports Solana mainnet,
   // and auto-registers us on the x402 bazaar. Reads CDP_API_KEY_ID + CDP_API_KEY_SECRET from env.
   const { facilitator } = await import("@coinbase/x402");
   const facilitatorClient = new HTTPFacilitatorClient(facilitator);
+  try {
+    const rs = new x402ResourceServer(facilitatorClient)
+      .register(PAYMENT_NETWORK, new ExactSvmScheme());
+    await rs.initialize();
+    resourceServer = rs;
+    console.log('[x402] Facilitator reachable, auth verified');
+  } catch (err) {
+    console.error('[x402] Facilitator init failed — x402 payments DISABLED for this process. Fix CDP_API_KEY_ID/CDP_API_KEY_SECRET or FACILITATOR_URL and redeploy. Error:', err);
+  }
+}
 
-  const resourceServer = new x402ResourceServer(facilitatorClient)
-    .register(PAYMENT_NETWORK, new ExactSvmScheme());
+if (PAYMENTS_ENABLED && resourceServer) {
 
   // Build per-route pricing config
   // Lucid registers invoke routes as POST /entrypoints/{key}/invoke
@@ -159,8 +172,10 @@ if (PAYMENTS_ENABLED) {
       console.log(`[mpp] MPP + Stripe enabled on ${Object.keys(PRICING).length} endpoints (fallback after x402)`);
     }
   }
-} else {
+} else if (!PAYMENTS_ENABLED) {
   console.log("[x402] Payments disabled — set AGENT_WALLET_ADDRESS and PAYMENTS_ENABLED=true to enable");
+} else {
+  console.warn("[x402] Payments enabled but facilitator init failed — paid endpoints will return 402 with no verification path. MPP/Stripe routes (if configured) still work.");
 }
 
 // --- Metrics middleware (fire-and-forget Redis counters) ---
