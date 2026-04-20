@@ -171,12 +171,24 @@ if (PAYMENTS_ENABLED && resourceServer) {
       console.error('[mpp] FATAL: No charge handler found on mppx object. Keys:', Object.keys(mppx as any));
     } else {
       for (const key of Object.keys(PRICING)) {
-        app.use(
-          `/entrypoints/${key}/invoke`,
-          chargeHandler({ amount: PRICING[key as keyof typeof PRICING], recipient: PAY_TO }),
-        );
+        const mppHandler = chargeHandler({
+          amount: PRICING[key as keyof typeof PRICING],
+          recipient: PAY_TO,
+        });
+        // Gate MPP: only run when an MPP credential is actually present.
+        // Without this, MPP's paywall overwrites x402's response on every request,
+        // including successful x402 payments — we'd see an MPP 402 instead of the
+        // enriched 200. This also preserves x402's 402 challenge on the first
+        // request (no-payment-yet case), so the client gets the right feePayer.
+        app.use(`/entrypoints/${key}/invoke`, async (c, next) => {
+          const hasMppCredential = c.req
+            .header('authorization')
+            ?.startsWith('Payment ');
+          if (!hasMppCredential) return next();
+          return mppHandler(c, next);
+        });
       }
-      console.log(`[mpp] MPP + Stripe enabled on ${Object.keys(PRICING).length} endpoints (fallback after x402)`);
+      console.log(`[mpp] MPP + Stripe enabled on ${Object.keys(PRICING).length} endpoints (gated — only runs with Authorization: Payment header)`);
     }
   }
 } else if (!PAYMENTS_ENABLED) {
