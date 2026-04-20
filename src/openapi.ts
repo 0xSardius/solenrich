@@ -10,7 +10,7 @@ const RECIPIENT = CONFIG.solana.walletAddress;
 // When MPP is enabled, all endpoints accept Stripe. Otherwise all use x402.
 
 /** Endpoint metadata: description, summary, input schema */
-const ENDPOINT_META: Record<string, {
+export const ENDPOINT_META: Record<string, {
   summary: string;
   description: string;
   schema: Record<string, unknown>;

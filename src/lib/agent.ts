@@ -736,7 +736,7 @@ if (faviconData) {
 
 // --- OpenAPI discovery document (MPP / AgentCash) ---
 
-import { generateOpenApiDoc } from '../openapi';
+import { generateOpenApiDoc, ENDPOINT_META } from '../openapi';
 
 const MPP_ENABLED_FOR_DISCOVERY = !!process.env.MPP_SECRET_KEY && !!process.env.STRIPE_SECRET_KEY;
 const openApiDoc = generateOpenApiDoc(MPP_ENABLED_FOR_DISCOVERY);
@@ -753,11 +753,82 @@ console.log('[discovery] OpenAPI document available at GET /openapi.json');
 // --- x402 well-known discovery (fallback for x402scan) ---
 
 app.get('/.well-known/x402', (c) => {
+  // Enriched v1 well-known — includes per-endpoint metadata so crawlers
+  // (x402scan, agentic.market, bazaar) can auto-ingest rich service info
+  // without scraping OpenAPI. Backwards-compatible: legacy `resources` array
+  // is preserved.
   const resources = Object.keys(PRICING).map((key) => `POST /entrypoints/${key}/invoke`);
-  return c.json({ version: 1, resources });
+  const endpoints = Object.entries(PRICING).map(([key, price]) => {
+    const meta = ENDPOINT_META[key];
+    return {
+      url: `https://api.solenrich.com/entrypoints/${key}/invoke`,
+      method: 'POST',
+      description: meta?.description ?? '',
+      summary: meta?.summary ?? key,
+      pricing: {
+        amount: price,
+        currency: 'USDC',
+        network: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+      },
+    };
+  });
+  return c.json({
+    version: 1,
+    service: {
+      name: 'SolEnrich',
+      description: 'Solana onchain data enrichment for AI agents and LLMs. Wallet profiling, token analysis, risk scoring, Jupiter Perps intelligence, and more.',
+      provider: 'Parallax Labs',
+      providerUrl: 'https://solenrich.com',
+      categories: ['onchain-data', 'solana', 'defi', 'risk-intelligence', 'perps'],
+      networks: ['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'],
+      openApiUrl: 'https://api.solenrich.com/openapi.json',
+    },
+    resources,
+    endpoints,
+  });
 });
 
 console.log('[discovery] x402 well-known available at GET /.well-known/x402');
+
+// --- llms.txt: human + crawler-readable service summary ---
+// Follows the llms.txt convention (llmstxt.org). agentic.market itself
+// publishes one; their crawler likely checks candidate services for it.
+const LLMS_TXT = `# SolEnrich
+
+> Solana onchain data enrichment API for AI agents and LLMs. Pay-per-request via x402 (USDC on Solana) or Stripe (fiat). 19 endpoints covering wallet profiling, token analysis, whale tracking, copy-trade signals, due diligence, protocol analytics, and Jupiter Perps intelligence.
+
+- Base URL: https://api.solenrich.com
+- Payment: x402 (Solana USDC, default) or MPP/Stripe (fiat cards)
+- Discovery: GET /.well-known/x402 and GET /openapi.json
+- Docs: GET /docs
+- Provider: Parallax Labs
+
+## Endpoints
+
+${Object.entries(PRICING).map(([key, price]) => {
+  const meta = ENDPOINT_META[key];
+  return `- [${key}](https://api.solenrich.com/entrypoints/${key}/invoke) — ${meta?.description ?? meta?.summary ?? key} ($${price} USDC)`;
+}).join('\n')}
+
+## Networks
+
+- Solana Mainnet (CAIP-2: solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp)
+- USDC: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+
+## Integration
+
+Agents can call any endpoint with a Solana USDC x402 payment header. First call returns 402 with payment requirements; second call includes signed payment and receives JSON enrichment data. LLM-optimized natural language briefings available by setting format: "llm" in the request body.
+
+MCP server available at https://api.solenrich.com/mcp for direct Claude/Cursor integration.
+`;
+
+app.get('/llms.txt', (c) => {
+  c.header('Content-Type', 'text/markdown; charset=utf-8');
+  c.header('Cache-Control', 'public, max-age=300');
+  return c.body(LLMS_TXT);
+});
+
+console.log('[discovery] llms.txt available at GET /llms.txt');
 
 // --- Agent Card discovery metadata ---
 
