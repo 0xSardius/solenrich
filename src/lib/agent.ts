@@ -131,13 +131,6 @@ if (PAYMENTS_ENABLED && resourceServer) {
       await next();
       return;
     }
-    // Diagnostic: log whether x402 payment headers reached us.
-    // Remove once paid flow is verified working.
-    const paySig = c.req.header('payment-signature');
-    const xPay = c.req.header('x-payment');
-    if (paySig || xPay) {
-      console.log(`[x402-dbg] ${c.req.path} — payment-signature=${paySig ? paySig.length + 'ch' : 'none'} x-payment=${xPay ? xPay.length + 'ch' : 'none'}`);
-    }
     // x402 handles: validates X-Payment if present, returns 402 challenge if not
     return x402MW(c, next);
   });

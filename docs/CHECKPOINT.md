@@ -1,11 +1,21 @@
 # Session Checkpoint
 
 ## Last session date
-2026-04-18
+2026-04-19
 
 ## What was completed
 
-### This session (April 18)
+### This session (April 19) — PAID FLOW FIXED
+- **Paid E2E WORKING for the first time in weeks.** 19/19 endpoints returning 200 with real USDC settlements via CDP facilitator. Full SolScout stress run: `TOTAL: 19/19 passed | 0 failed | avg 6034ms`. ~$0.146 USDC revenue landed in agent wallet.
+- **Facilitator swap: payai.network → Coinbase CDP** (`https://api.cdp.coinbase.com/platform/v2/x402`). Uses `@coinbase/x402@2.1.0` package; reads `CDP_API_KEY_ID` + `CDP_API_KEY_SECRET` from env.
+- **Root cause of broken paid flow (found today):** MPP middleware was registered unconditionally on every invoke route. It ran AFTER our x402 wrapper in the Hono chain and overwrote x402's response with its own 402 challenge (paymentauth.org RFC 7807 format). Clients saw a 402 even for successful x402 payments.
+- **Fix:** gated MPP's `chargeHandler` behind `Authorization: Payment` header check. MPP only runs when an MPP credential is genuinely present. Preserves dual-protocol behavior (x402 default, MPP opt-in via explicit header).
+- **Stability win:** added graceful fallback around x402ResourceServer.initialize(). If CDP auth fails (bad key, down facilitator), the server logs clearly and keeps MPP + free endpoints running instead of crash-looping Railway.
+- **CDP API key scopes required:** Trade + Transfer + Receive + View (empirically — docs are silent). View-only returns 401.
+- **CDP facilitator rotates fee payer per request** — no cache issue since challenge and verify use the same snapshot.
+- **Automatic bazaar listing:** should appear on x402 bazaar within ~24h now that CDP sees real settlements from us.
+
+### Previous session (April 18)
 - **Jupiter Perps shipped — DONE.** Priority 10 complete. Two new paid endpoints live: `perps-market-structure` ($0.012) + `perps-trader-profile` ($0.010). 19 total endpoints now.
   - `@coral-xyz/anchor@0.29.0` installed (downgraded from 0.32; 0.32 expects new IDL format, reference IDLs are 0.29-era)
   - Jupiter Perps + Doves oracle IDLs in `src/idl/`
@@ -39,41 +49,22 @@
 
 ## Next session plan (ACTION ITEMS)
 
-### 1. Verify perps endpoints on production
-- After push, confirm Railway redeploys cleanly (@coral-xyz/anchor 0.29 is a new dep)
-- Hit `https://api.solenrich.com/entrypoints/perps-market-structure/invoke` — expect 402
-- Update test-endpoints agent + `test/test-all-endpoints.ts` to cover perps routes
-- Find a real Jupiter Perps trader wallet (via on-chain search or Jupiter leaderboard) and test `perps-trader-profile` with real positions
+### 1. Verify x402 bazaar listing appeared
+- CDP auto-registers paid servers on bazaar within ~24h after first settlement
+- Check https://bazaar.x402.org or wherever CDP lists sellers — we should appear
+- If not there after 48h, check CDP dashboard / reach out to them
 
-### 2. Coinbase facilitator swap (payai.network → CDP) — FIXES PAID FLOW
-- **This is now the recommended fix for the broken paid E2E.** See action #4 for the root-cause debug.
-- **CDP facilitator URL:** `https://api.cdp.coinbase.com/platform/v2/x402`
-- **Supports:** Solana mainnet `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` (confirmed 2026-04-18 via docs.cdp.coinbase.com/x402/network-support)
-- **Auth:** Requires CDP API keys. Free tier 1000 tx/mo, then $0.001/tx.
-- **Bonus:** Automatic x402 bazaar listing = free distribution channel.
-- **Why this fixes the paid flow:** CDP speaks the current @x402/core 2.6 request schema. payai.network's v2 schema has drifted — it expects `accepted` nested inside `paymentPayload`, while @x402/core sends `paymentRequirements` as a top-level field. That mismatch is why every paid request gets 400-rejected by payai and falls back to 402.
-- **Swap steps:**
-  1. Create CDP project at portal.cdp.coinbase.com, generate API keys
-  2. Set `FACILITATOR_URL=https://api.cdp.coinbase.com/platform/v2/x402` on Railway
-  3. Wire CDP auth headers into `HTTPFacilitatorClient` construction in `src/lib/agent.ts` (currently passes only `{url}` — need to add auth header callback)
-  4. Test a single paid request with SolScout
-  5. Verify x402scan listing still shows us, confirm bazaar listing appears
-- **Risk:** Low. `FACILITATOR_URL` is already an env var. If CDP auth headers aren't wired correctly, middleware falls back to returning plain 402 (same failure mode we have now, doesn't break anything further).
-
-### 3. Orbis API listing
-- 500-char summary drafted in last chat — ready to send to founder
+### 2. Orbis API listing
+- 500-char summary drafted — ready to send to founder
 - Share `docs/listing-profile.md`
 - Submit listing
 
-### 4. Paid E2E broken — DIAGNOSED 2026-04-18
-- **Root cause:** payai.network's v2 facilitator schema has drifted from @x402/core 2.6. payai expects `accepted` nested inside `paymentPayload`; @x402/core sends `paymentRequirements` as a top-level field. Every verify request gets 400 "invalid_payload: accepted expected object, received undefined" and our server falls back to 402.
-- **Proof:** Replaying a captured payment with `accepted` nested in `paymentPayload` returned `{isValid: false, invalidReason: "transaction_simulation_failed", invalidMessage: "BlockhashNotFound"}` — a real validation pass that only failed on stale blockhash. Fresh request would settle.
-- **Client side is clean:** SolScout signs correctly. Transaction structure verified: account[0]=feePayer (empty sig, correct), account[1]=SolScout (valid ed25519 signature). @x402/fetch pinned to 2.6.0.
-- **Stress test `19/19 passed` was a false positive** — harness (stress.ts:366) treats 402 as pass. 482ms avg latency was the tell (never-enriched).
-- **Fix path:** Action #2 above (swap to CDP facilitator). Single env var + auth wire-up. Low risk.
-- **Do NOT** downgrade @x402 stack to 2.4, upgrade @solana/kit to 6.x, or reorder server middleware — all can break production, and none of them are the actual fix.
+### 3. Real Jupiter Perps trader verify (deferred from April 18)
+- `perps-trader-profile` tested against Solana Foundation wallet (no positions) — shape checks pass but we never verified with actual open positions
+- Find a trader via Jupiter Perps leaderboard or on-chain `getProgramAccounts` search
+- Run paid call, confirm PnL/leverage/flags render correctly with real data
 
-### 5. Remaining roadmap
+### 4. Remaining roadmap
 - **Priority 9 — Smart Money** — `trending-signals`, `smart-money-flow` (2-3 sessions)
 - **Priority 11 — Smarter Query** — Multi-step orchestration. Add perps routing ("SOL-PERP funding rate?") (1 session)
 - **Priority 12 — Portfolio Tracker** — From temporal snapshots (1 session)
@@ -92,9 +83,12 @@
 ## Blockers
 - **@solana/kit must stay at 5.5.1** — 6.x causes @solana/errors runtime crash in Bun
 - **@coral-xyz/anchor pinned to 0.29.0** — 0.32+ requires new IDL format (address/metadata fields); reference IDLs are v0.29 era. Verified working under Bun 1.2.21.
-- **Stripe E2E untested** — MPP middleware works but no real card payment yet
+- **Stripe E2E still untested** — MPP middleware is now correctly gated behind `Authorization: Payment` header. Without a test Stripe card we haven't confirmed end-to-end, but structural routing verified (no-auth requests get x402 challenge, not MPP).
 
 ## Key decisions made
+- **MPP must be gated behind `Authorization: Payment` header** (2026-04-19) — Hono continues middleware chain after x402 returns a response. MPP registered as unconditional `app.use()` would overwrite x402's result. Always wrap MPP's chargeHandler in a check that calls `next()` when there's no MPP credential.
+- **CDP API keys require Trade + Transfer + Receive + View scopes** (2026-04-19) — View-only returns 401 from the facilitator. Docs don't document which scope gates x402 specifically; enabling all four is the safe path.
+- **Facilitator: Coinbase CDP, not payai** (2026-04-19) — payai.network's v2 schema drifted from @x402/core 2.6 (expects `accepted` nested in `paymentPayload` vs the SDK's top-level `paymentRequirements`). CDP speaks the current schema and supports Solana mainnet. Bonus: bazaar auto-listing.
 - **Anchor pinned to 0.29.0** (2026-04-18) — reference Jupiter Perps IDL format predates Anchor 0.30's new IDL schema. Staying on 0.29 until we're ready to regenerate IDLs (not urgent).
 - **Annualized APR interpretation of jump-rate bps** (2026-04-18) — empirically verified: raw `targetRateBps=3500` at 7% utilization produces 12% APR, matching observed Jupiter Perps rates. Rates are annualized, not hourly.
 - **Jupiter Perps via Anchor IDL, not REST** (2026-04-15) — No REST API exists for Jupiter Perps. All data lives in on-chain accounts (Pool, Custody, Position). Access via `@coral-xyz/anchor` Program + IDL. Uses borrow fees instead of funding rates.
