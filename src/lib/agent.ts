@@ -95,18 +95,39 @@ if (PAYMENTS_ENABLED) {
 
 if (PAYMENTS_ENABLED && resourceServer) {
 
-  // Build per-route pricing config
-  // Lucid registers invoke routes as POST /entrypoints/{key}/invoke
-  const routeConfig = (price: string) => ({
-    accepts: [{
-      scheme: "exact" as const,
-      price,
-      network: PAYMENT_NETWORK,
-      payTo: PAY_TO,
-    }],
-    description: "SolEnrich enrichment endpoint",
-    mimeType: "application/json",
-  });
+  // Build per-route pricing config with Bazaar discovery metadata.
+  // Declaring `extensions.bazaar` on each route tells @x402/hono to load the
+  // bazaar extension, and the facilitator catalogs us on every settlement.
+  // Without this, CDP sees our payments but never indexes us into agentic.market
+  // or the x402 bazaar.
+  const { declareDiscoveryExtension } = await import('@x402/extensions');
+  const routeConfig = (key: string, price: string) => {
+    const meta = ENDPOINT_META[key];
+    const inputSchema = meta?.schema ?? { type: 'object', properties: {} };
+    return {
+      accepts: [{
+        scheme: "exact" as const,
+        price,
+        network: PAYMENT_NETWORK,
+        payTo: PAY_TO,
+      }],
+      description: meta?.description ?? "SolEnrich enrichment endpoint",
+      mimeType: "application/json",
+      extensions: {
+        bazaar: declareDiscoveryExtension({
+          bodyType: 'json',
+          inputSchema: inputSchema as Record<string, unknown>,
+          output: {
+            example: {
+              run_id: 'uuid',
+              status: 'succeeded',
+              output: { briefing: 'string (llm format) or object (json format)' },
+            },
+          },
+        }),
+      },
+    };
+  };
 
   // Dual-protocol payments: x402 (Solana USDC) + MPP (Stripe fiat) on ALL routes.
   // x402 activates when X-Payment header is present, MPP handles everything else.
@@ -115,7 +136,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
 
   // x402 routes cover ALL endpoints
   const x402RouteEntries = Object.entries(PRICING)
-    .map(([key, price]) => [`POST /entrypoints/${key}/invoke`, routeConfig(price)] as const);
+    .map(([key, price]) => [`POST /entrypoints/${key}/invoke`, routeConfig(key, price)] as const);
   const x402Routes: RoutesConfig = Object.fromEntries(x402RouteEntries);
   const x402MW = paymentMiddleware(x402Routes, resourceServer);
 
