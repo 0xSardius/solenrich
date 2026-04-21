@@ -1,11 +1,21 @@
 # Session Checkpoint
 
 ## Last session date
-2026-04-19
+2026-04-20
 
 ## What was completed
 
-### This session (April 19) — PAID FLOW FIXED
+### This session (April 20) — DISTRIBUTION + MARKETPLACE LISTINGS
+
+- **Orbis API listing LIVE.** Two tiers: Free Demo (10 req/hr per IP via `/demo/enrich`) and Pay-per-call ($0.001–$0.020 USDC). All 19 endpoints cataloged with descriptions and schemas. Payouts on Base USDC, 90% revenue share to us, 10% Orbis. Base payout wallet: `0x866112E2C9E9F61422Df8b83DC8EcEe9883cF8a5`. Referral code: `683TDRYV` (25% lifetime).
+- **Bazaar discovery metadata shipped** (`9f7a0aa`). Declared `extensions.bazaar` on every route using `@x402/extensions/declareDiscoveryExtension`. This was the missing piece for agentic.market auto-cataloging — CDP needs the bazaar extension to be declared on routes, otherwise settlements aren't indexed. Verified paid flow still works after change (19/19 passed).
+- **Discovery surface hardened** (`03a863d`). Added `/llms.txt` handler (was 404 — now returns markdown catalog with all 19 endpoints + pricing). Enriched `/.well-known/x402` from barebones resource list to full schema match for agentic.market ingestion (service metadata + per-endpoint pricing/description).
+- **Landing page hackathon surface sharpened** (`cad8635`). Update banner now leads with "Jupiter Perps — market structure & trader profiles" and "Live USDC settlements via Coinbase CDP" — the two freshest differentiators.
+- **Square logo shipped** (`957af57`). `logo_black_bg.png` copied to `landing/logo.png`, served at `https://www.solenrich.com/logo.png`. Used on Orbis listing.
+- **Full paid E2E re-verified at end of session.** 19/19 passed, avg 6673ms. ~$0.146 USDC in revenue this run, ~$0.30 across today's multiple test runs. All CDP settlements confirmed on-chain.
+- **Diagnostic logs cleaned up** (`d47ae0d`). Removed `[x402-dbg]` and `[402] middleware body` logs that helped find the MPP-overwrite bug.
+
+### Previous session (April 19) — PAID FLOW FIXED
 - **Paid E2E WORKING for the first time in weeks.** 19/19 endpoints returning 200 with real USDC settlements via CDP facilitator. Full SolScout stress run: `TOTAL: 19/19 passed | 0 failed | avg 6034ms`. ~$0.146 USDC revenue landed in agent wallet.
 - **Facilitator swap: payai.network → Coinbase CDP** (`https://api.cdp.coinbase.com/platform/v2/x402`). Uses `@coinbase/x402@2.1.0` package; reads `CDP_API_KEY_ID` + `CDP_API_KEY_SECRET` from env.
 - **Root cause of broken paid flow (found today):** MPP middleware was registered unconditionally on every invoke route. It ran AFTER our x402 wrapper in the Hono chain and overwrote x402's response with its own 402 challenge (paymentauth.org RFC 7807 format). Clients saw a 402 even for successful x402 payments.
@@ -49,22 +59,31 @@
 
 ## Next session plan (ACTION ITEMS)
 
-### 1. Verify x402 bazaar listing appeared
-- CDP auto-registers paid servers on bazaar within ~24h after first settlement
-- Check https://bazaar.x402.org or wherever CDP lists sellers — we should appear
-- If not there after 48h, check CDP dashboard / reach out to them
+### 1. Check agentic.market listing — did we appear?
+- First settlement with bazaar metadata was last night (2026-04-20 evening). CDP's indexer should have cataloged us within hours.
+- Query `https://api.agentic.market/v1/services` — look for "SolEnrich" / Parallax Labs / our domain
+- If still not listed after ~24h: DM the Orbis / CDP x402 team. Our discovery surface is primed (`/llms.txt`, enriched `/.well-known/x402`, bazaar metadata on routes), so any blocker is on their side.
 
-### 2. Orbis API listing
-- 500-char summary drafted — ready to send to founder
-- Share `docs/listing-profile.md`
-- Submit listing
+### 2. Check x402 bazaar listing appeared
+- Same ~24h window as agentic.market. Check bazaar.x402.org or CDP's bazaar listing page.
 
-### 3. Real Jupiter Perps trader verify (deferred from April 18)
+### 3. Orbis follow-ups
+- Confirm Orbis listing is live (check orbisapi.com directory)
+- Watch Orbis dashboard for first x402 settlement routed through them
+- Consider publishing our referral code (`683TDRYV`) in `/docs` and `/llms.txt` — earns 25% lifetime on any x402 call that includes `x-referral-code: 683TDRYV` header
+- If Orbis sends GET to our POST-only endpoints (we saw 404 on their preview), flag it to their founder
+
+### 4. Real Jupiter Perps trader verify (deferred from April 18)
 - `perps-trader-profile` tested against Solana Foundation wallet (no positions) — shape checks pass but we never verified with actual open positions
 - Find a trader via Jupiter Perps leaderboard or on-chain `getProgramAccounts` search
 - Run paid call, confirm PnL/leverage/flags render correctly with real data
 
-### 4. Remaining roadmap
+### 5. Social / hackathon surface
+- Landing page banner now leads with Jupiter Perps + live CDP settlements (`cad8635`). Hackathon judges probably check.
+- Consider a Twitter thread: "shipped Jupiter Perps intelligence + first Solana-native x402 on Coinbase CDP + listed on Orbis" — three concrete proof points in one session
+- Bags hackathon submission could use an update reflecting today's distribution wins
+
+### 6. Remaining roadmap
 - **Priority 9 — Smart Money** — `trending-signals`, `smart-money-flow` (2-3 sessions)
 - **Priority 11 — Smarter Query** — Multi-step orchestration. Add perps routing ("SOL-PERP funding rate?") (1 session)
 - **Priority 12 — Portfolio Tracker** — From temporal snapshots (1 session)
