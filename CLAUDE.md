@@ -368,6 +368,10 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 2. **Smart Money Orchestration (Priority 9)** — `trending-signals`, `smart-money-flow`. Multi-endpoint chains. Raw-data providers can't compete because their architecture silos inputs. Justifies $0.05-$0.10 per call pricing.
 3. **Data Network Effect (extension of Priority 8)** — Endpoints only we can offer because only we have agent query history. "Is this token being watched?" "What's trending among agents (not DEX volume)?" Unique to us, compounds with usage, incumbent can't replicate without building an agent business first.
 
+### Build sequencing decision (2026-04-21)
+
+**Smart Money Orchestration (#2) ships before Intelligence Feed V1 (#1).** Reason: `trending-signals` becomes the Feed's primary input. Building orchestration first gives Feed V1 higher-quality input with no rework. Feed V1 becomes a thin scheduled wrapper around `trending-signals` instead of a bespoke scanner. Net: same 4-5 total sessions, better composition, no throwaway code.
+
 ### What to deprioritize
 
 - **Raw data breadth.** Don't add endpoints just to have them. Can't out-breadth Helius/Nansen. Out-synthesize them.

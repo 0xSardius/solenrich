@@ -67,19 +67,53 @@ Session on 2026-04-21 established the counter-positioning thesis: SolEnrich wins
 2. **Smart Money Orchestration** (Priority 9) — composed endpoints, justifies higher pricing
 3. **Data Network Effect** (Priority 8 extension) — only we have agent query history
 
-### 1. Intelligence Feed V1 — NEXT BUILD (1-2 sessions, ~$0 marginal cost)
-Ship the minimum viable feed to validate demand before committing to full V2.
+### 1. Smart Money Orchestration (Priority 9) — NEXT BUILD (2-3 sessions)
+
+Build before Intelligence Feed because these become Feed V1's input sources. Also they're the highest-pricing endpoints we'll have ($0.05-$0.10 per call) and hit the "composed intelligence" positioning incumbents can't match.
+
+**Two new endpoints:**
+
+#### `trending-signals` (~$0.05)
+- Orchestrates `new-tokens` + `due-diligence` + `whale-watch` across multiple tokens
+- "What's worth paying attention to right now?"
+- Input: DexScreener trending list (already available via existing client)
+- Enriches top N candidates in parallel, ranks by composite signal (liquidity, holder concentration, whale activity, risk)
+- Output: ranked list with per-token verdict + reasoning
+
+#### `smart-money-flow` (~$0.10)
+- Orchestrates `whale-watch` + `copy-trade-signals` + `wallet-graph` across high-performing wallets
+- "Where is smart money moving?"
+- Step 1: identify smart wallets (copy-trade win rates > threshold)
+- Step 2: track their recent flows (whale-watch)
+- Step 3: map connections (graph) to find clusters
+- Output: top smart wallets + tokens they're accumulating + cluster relationships
 
 **Scope:**
-- Daily cron scans `new-tokens` top 20 on schedule
-- Runs `due-diligence` on tokens above $10K liquidity threshold
-- Stores result in Redis with 24h TTL
+- 2 new entrypoints in `src/entrypoints/orchestration.ts`
+- 2 new enrichers in `src/enrichers/` (thin — mostly compose existing enrichers)
+- 2 new LLM formatters
+- Zod schemas
+- MCP tool parity
+- OpenAPI + /docs + /llms.txt updates
+- Bazaar discovery metadata on both routes (agentic.market auto-listing)
+
+**Reuses:** whale-watcher, due-diligence-analyzer, copy-trade-analyzer, graph-mapper, token-discovery, PriceAggregator — everything already built.
+
+**Blocker to watch:** `smart-money-flow` needs a seed list of candidate wallets (can't scan all Solana wallets cost-effectively). Start with wallets from recent `copy-trade-signals` queries (uses our signal capture data — compounding moat in action).
+
+**Latency expectation:** 15-30s per call (3-5 parallel sub-enrichments, 10s each upstream-bound). Agents routing through Orbis should be fine with that — they're not blocking users.
+
+### 2. Intelligence Feed V1 (Priority 14) — AFTER orchestration ships (1-2 sessions, ~$0 marginal cost)
+Now uses `trending-signals` as its input source instead of raw new-tokens scan — higher-quality brief with same cost.
+
+**Scope:**
+- Daily cron runs `trending-signals` once, caches output in Redis (24h TTL)
 - Serves via `GET /feed/latest` (JSON)
 - List as separate paid endpoint on Orbis: "daily intelligence brief — $0.005"
 
-**Cost math:** ~$0 marginal. 300-500 upstream calls/day fits Helius Pro + Birdeye free tier. Railway/Redis unchanged.
+**Cost math:** ~$0 marginal. ~50 upstream calls/day via one trending-signals run. Fits Helius Pro + Birdeye free tier.
 
-**Validation trigger for V2:** 10+ agents polling V1 daily within 2 weeks. If yes, ship SSE + webhooks ($30-40/mo marginal). If no, 4 hours lost, move on.
+**Validation trigger for V2:** 10+ agents polling V1 daily within 2 weeks → ship SSE + webhooks ($30-40/mo marginal).
 
 **First consumers:** Our own agents (Pythia, Tidal, Cardex) — dogfoods the feed.
 
