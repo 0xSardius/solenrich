@@ -328,6 +328,52 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - **Partners/Judges:** Solana, Helius, Meteora, Privy, DFlow, Birdeye
 - **Submit at:** https://bags.fm/apply | Questions: apps@bags.fm
 
+## Strategic Positioning (2026-04-21)
+
+**Thesis:** SolEnrich wins by being **agent-native first**, not dashboard-with-API. Counter-positioning play against Helius/Nansen/Birdeye/Dune — they can't copy us without sabotaging their existing subscription/dashboard businesses.
+
+### Incumbents and their structural weaknesses (our attack surface)
+
+| Incumbent | Strength | Structural weakness we exploit |
+|---|---|---|
+| Helius | Raw data infrastructure | Customers want data, not intelligence. Can't become synthesis layer without cannibalizing API customers. |
+| Nansen | Wallet labeling, smart-money | $150/mo subscription. Agents can't sign up. Human-dashboard-first. |
+| Birdeye | Market data + UI | Dashboard-first. API is retrofit. Token output, not briefings. |
+| Dune | Flexible SQL | Query-writer required. Not agent-callable. |
+| DexScreener | Token discovery | Ad-supported, free. Limits investment in agent infrastructure. |
+| Step / Solscan / SolanaFM | Human explorers | Humans scroll; agents don't. No opportunity. |
+
+### Our natural advantages (already real)
+
+1. **Agent-native distribution channels incumbents aren't on** — Orbis, x402 bazaar, agentic.market, MCP directories. Proof: 2 paid Orbis calls within 18h of listing with zero marketing.
+2. **Pay-per-call economics** — $0.002/call is in every agent's budget. $150/mo Nansen isn't.
+3. **Composed intelligence over raw data** — `due-diligence` bundles 5 sources into one SAFE/CAUTION/RISKY verdict. Incumbents sell ingredients; we sell decisions.
+4. **Jupiter Perps post-Drift** — only API serving this for agents. We filled the gap 2026-04-18.
+5. **LLM-optimized briefings** — deterministic templates, no inference cost, tuned for context windows. Incumbents don't recognize this as a format.
+
+### Guerilla warfare heuristics
+
+- **Move faster than incumbents can copy.** Weekly ships, not quarterly roadmaps.
+- **Pick terrain they can't fight on.** Agent marketplaces, MCP directories, x402 — yes. Enterprise RFPs, conference sponsorships — cede them.
+- **Commoditize the supplier.** Use Helius/Birdeye/DexScreener as data sources; stay on top of the stack. Let them be shovels; we're the AI miner.
+- **Build compounding moats, not defensible features.** Features get copied. These get stronger with usage:
+  - Signal capture (consensus: "N agents queried this token in last hour")
+  - Temporal snapshots (density grows with traffic)
+  - Agent reputation / outcome correlation
+- **Distribute where they don't.** Every new distribution channel is ground incumbents cede by default.
+
+### Top 3 moves ranked by defensibility × leverage
+
+1. **Intelligence Feed V1 (Priority 14)** — Shift from passive tool to signal source. Recurring-revenue model. Hardest to clone because requires temporal data + scoring + orchestration that only exists inside SolEnrich. Start with daily JSON feed ($0 marginal cost), escalate to SSE/webhooks if V1 validates demand.
+2. **Smart Money Orchestration (Priority 9)** — `trending-signals`, `smart-money-flow`. Multi-endpoint chains. Raw-data providers can't compete because their architecture silos inputs. Justifies $0.05-$0.10 per call pricing.
+3. **Data Network Effect (extension of Priority 8)** — Endpoints only we can offer because only we have agent query history. "Is this token being watched?" "What's trending among agents (not DEX volume)?" Unique to us, compounds with usage, incumbent can't replicate without building an agent business first.
+
+### What to deprioritize
+
+- **Raw data breadth.** Don't add endpoints just to have them. Can't out-breadth Helius/Nansen. Out-synthesize them.
+- **Dashboards.** No UI. Even a pretty one. Dilutes agent-native positioning.
+- **Enterprise sales motion.** Doesn't fit product. Let them come to us.
+
 ## Post-Launch Upgrade Roadmap
 
 ### Quick Wins
@@ -590,15 +636,28 @@ Build order: poll-based → SSE → webhooks. Same underlying detection engine, 
 - Reuses: whale-watch, token-analyzer, protocol-profile for detection logic
 - **Revenue model shift:** One-shot calls → subscriptions. Stickiest feature.
 
-**Priority 14 — Intelligence Feed / Proactive Scanning** (3-4 sessions)
-- SolEnrich scans `new-tokens` on a schedule, runs due-diligence on anything above liquidity threshold
-- Publishes daily "SolEnrich Intelligence Brief" — scored tokens, flagged protocols, behavioral anomalies
-- Feed endpoint: `GET /feed/latest` (JSON) or SSE stream for real-time subscribers
-- Own agents (Pythia, Tidal, Cardex) are first consumers — proves the model, dogfoods the data
-- Turns SolEnrich from a passive tool agents call into a signal source agents listen to
+**Priority 14 — Intelligence Feed / Proactive Scanning** (staged V1 → V2)
+- Turns SolEnrich from passive tool (agents call us) to signal source (agents listen to us). **Recurring-revenue model**, stickiest feature in the roadmap.
+- **Why this matters:** Hardest thing to clone. Requires temporal data + scoring + orchestration that only exists inside SolEnrich. Incumbents can't easily replicate because their data models are dashboard-first, not streaming-first.
+- Own agents (Pythia, Tidal, Cardex) are first consumers — proves the model, dogfoods the data.
+
+**V1 — Daily Brief (1-2 sessions, ~$0 marginal/mo)**
+- Daily cron scans `new-tokens` top 20, runs `due-diligence` on anything above $10K liquidity
+- Stores result in Redis with 24h TTL, served via `GET /feed/latest` (JSON)
+- Upstream cost: 300-500 calls/day — fits Helius Pro plan + Birdeye free tier with aggressive caching
+- Infra cost: ~0 marginal. Railway background cron adds ~1% CPU. Redis writes well under free tier 10K/day.
+- Revenue potential: $0.005/poll or $5-20/mo per subscriber. 3 subscribers = breakeven. 20 = material revenue.
+- **Ship this first. Validate demand before committing to V2.**
+
+**V2 — Live Intelligence Feed (3-5 sessions, ~$30-40/mo marginal)**
+- Hourly scans (×24 V1 traffic), SSE streaming endpoint, webhook delivery for whale alerts + risk-score changes
+- Upstream cost: $0-40/mo (Helius Pro likely covers; Birdeye Lite at $39/mo if we want per-scan Birdeye calls without rate-limits)
+- Infra: Railway compute bump $10-20/mo (persistent SSE connections), Upstash upgrade $0-10/mo, bandwidth ~$5/mo
+- Revenue potential: $10-50/mo per SSE subscriber, $5 per webhook registration. Much stickier than one-shot calls.
+- **Trigger for V2 build:** 10+ agents polling V1 daily within 2 weeks of launch = PMF signal.
+
 - Reuses: new-tokens, due-diligence, protocol-profile, automated activity signals, temporal snapshots, signal capture (consensus detection)
-- **Why this matters:** Hardest thing to clone. Requires temporal data + scoring + orchestration that only exists inside SolEnrich.
-- Feasibility: Medium — scheduling infra + feed format + first-consumer integration
+- Feasibility: V1 High (1-2 sessions). V2 Medium (3-5 sessions + infra coordination).
 
 **Priority 15 — SDK/Client Package** (1-2 sessions)
 - `npm install @solenrich/client` — typed TypeScript client

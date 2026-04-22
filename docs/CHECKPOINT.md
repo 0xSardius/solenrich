@@ -61,31 +61,53 @@
 
 ## Next session plan (ACTION ITEMS)
 
-### 1. Check agentic.market listing — did we appear?
+### 0. Strategic context (reference, not action)
+Session on 2026-04-21 established the counter-positioning thesis: SolEnrich wins as **agent-native first**, not dashboard-with-API. See `CLAUDE.md > Strategic Positioning` for full framework. Top 3 ranked moves by defensibility × leverage:
+1. **Intelligence Feed V1** (Priority 14) — recurring-revenue model, hardest to clone
+2. **Smart Money Orchestration** (Priority 9) — composed endpoints, justifies higher pricing
+3. **Data Network Effect** (Priority 8 extension) — only we have agent query history
+
+### 1. Intelligence Feed V1 — NEXT BUILD (1-2 sessions, ~$0 marginal cost)
+Ship the minimum viable feed to validate demand before committing to full V2.
+
+**Scope:**
+- Daily cron scans `new-tokens` top 20 on schedule
+- Runs `due-diligence` on tokens above $10K liquidity threshold
+- Stores result in Redis with 24h TTL
+- Serves via `GET /feed/latest` (JSON)
+- List as separate paid endpoint on Orbis: "daily intelligence brief — $0.005"
+
+**Cost math:** ~$0 marginal. 300-500 upstream calls/day fits Helius Pro + Birdeye free tier. Railway/Redis unchanged.
+
+**Validation trigger for V2:** 10+ agents polling V1 daily within 2 weeks. If yes, ship SSE + webhooks ($30-40/mo marginal). If no, 4 hours lost, move on.
+
+**First consumers:** Our own agents (Pythia, Tidal, Cardex) — dogfoods the feed.
+
+### 2. Check agentic.market listing — did we appear?
 - First settlement with bazaar metadata was last night (2026-04-20 evening). CDP's indexer should have cataloged us within hours.
 - Query `https://api.agentic.market/v1/services` — look for "SolEnrich" / Parallax Labs / our domain
 - If still not listed after ~24h: DM the Orbis / CDP x402 team. Our discovery surface is primed (`/llms.txt`, enriched `/.well-known/x402`, bazaar metadata on routes), so any blocker is on their side.
 
-### 2. Check x402 bazaar listing appeared
+### 3. Check x402 bazaar listing appeared
 - Same ~24h window as agentic.market. Check bazaar.x402.org or CDP's bazaar listing page.
 
-### 3. Orbis follow-ups
+### 4. Orbis follow-ups
 - Confirm Orbis listing is live (check orbisapi.com directory)
 - Watch Orbis dashboard for first x402 settlement routed through them
 - Consider publishing our referral code (`683TDRYV`) in `/docs` and `/llms.txt` — earns 25% lifetime on any x402 call that includes `x-referral-code: 683TDRYV` header
 - If Orbis sends GET to our POST-only endpoints (we saw 404 on their preview), flag it to their founder
 
-### 4. Real Jupiter Perps trader verify (deferred from April 18)
+### 5. Real Jupiter Perps trader verify (deferred from April 18)
 - `perps-trader-profile` tested against Solana Foundation wallet (no positions) — shape checks pass but we never verified with actual open positions
 - Find a trader via Jupiter Perps leaderboard or on-chain `getProgramAccounts` search
 - Run paid call, confirm PnL/leverage/flags render correctly with real data
 
-### 5. Social / hackathon surface
+### 6. Social / hackathon surface
 - Landing page banner now leads with Jupiter Perps + live CDP settlements (`cad8635`). Hackathon judges probably check.
 - Consider a Twitter thread: "shipped Jupiter Perps intelligence + first Solana-native x402 on Coinbase CDP + listed on Orbis" — three concrete proof points in one session
 - Bags hackathon submission could use an update reflecting today's distribution wins
 
-### 6. Side-quest — Bags hackathon demo video
+### 7. Side-quest — Bags hackathon demo video
 
 **Status:** Requested by Bags team. Currently ranked #37 on hackathon leaderboard. Prize-eligible. Deadline: TBD (confirm when user has date).
 
@@ -137,13 +159,13 @@
 - Logo intro/outro cards (logo_black_bg.png already shipped)
 - Demo music (optional) — royalty-free
 
-### 7. Remaining roadmap
+### 8. Remaining roadmap
 - **Priority 9 — Smart Money** — `trending-signals`, `smart-money-flow` (2-3 sessions)
 - **Priority 11 — Smarter Query** — Multi-step orchestration. Add perps routing ("SOL-PERP funding rate?") (1 session)
 - **Priority 12 — Portfolio Tracker** — From temporal snapshots (1 session)
 - **Distribution:** mcp.run, Glama, x402 bazaar (community POST + evaluate CDP facilitator switch)
 
-### 4. Perps follow-ups (optional depth)
+### 9. Perps follow-ups (optional depth)
 - Liquidation events — parse tx logs from event authority `37hJBDnntwqhGbK7L6M1bLyvccj4u55CCUiLPdYkiqBN`
 - Cross-venue expansion — Adrena, Zeta, Mango next quarter
 - Perps-aware orchestration — fold market structure into `due-diligence` when token has perp exposure
