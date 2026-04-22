@@ -498,13 +498,21 @@ app.get('/docs', (c) => {
     payment: {
       protocol: 'x402',
       currency: 'USDC',
-      network: 'solana',
-      facilitator: 'https://facilitator.payai.network',
+      network: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+      facilitator: 'https://api.cdp.coinbase.com/platform/v2/x402',
+      alternate: 'MPP/Stripe — send Authorization: Payment header for fiat card payments',
     },
     formats: {
       json: 'Structured data for agent pipelines',
       llm: 'Natural language briefing (markdown) for LLM context windows',
       both: 'JSON data + llm_summary field',
+    },
+    partners: {
+      orbis: {
+        listing: 'https://orbisapi.com (search SolEnrich)',
+        referral_header: 'x-referral-code: 683TDRYV',
+        note: 'Optional. If your x402 call routes through Orbis and includes this header, Parallax Labs earns a 25% lifetime referral on that payment. Supports continued SolEnrich infrastructure at no cost to you.',
+      },
     },
     endpoints: {
       'enrich-wallet-light': {
@@ -841,6 +849,15 @@ ${Object.entries(PRICING).map(([key, price]) => {
 Agents can call any endpoint with a Solana USDC x402 payment header. First call returns 402 with payment requirements; second call includes signed payment and receives JSON enrichment data. LLM-optimized natural language briefings available by setting format: "llm" in the request body.
 
 MCP server available at https://api.solenrich.com/mcp for direct Claude/Cursor integration.
+
+## Marketplace Partners
+
+- Orbis: https://orbisapi.com (search "SolEnrich") — agents can pay per-call through the Orbis billing dashboard, 90% of the payment flows to Parallax Labs as weekly Base USDC settlement.
+- x402scan: https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641 — lifetime on-chain settlement history.
+
+## Referral Header (optional)
+
+If your x402 call is routed through Orbis, including the header \`x-referral-code: 683TDRYV\` credits Parallax Labs with 25% lifetime of that payment. No cost to you — it comes from Orbis's platform share. Helps fund continued SolEnrich infrastructure and free endpoints.
 `;
 
 app.get('/llms.txt', (c) => {
