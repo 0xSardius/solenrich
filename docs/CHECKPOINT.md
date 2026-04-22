@@ -47,6 +47,8 @@
 - April 2-3: Comparison, temporal, discovery endpoints. MPP Stage 1. SolScout E2E.
 
 ## Current state
+- **Early traction (2026-04-21):** 2 Orbis-routed x402 calls already landed within ~18h of listing going live. Agents discovering us through new channels.
+- **Hackathon rank:** #37 on Bags leaderboard, prize-eligible
 - **Live API:** https://api.solenrich.com
 - **Landing:** https://solenrich.com
 - **MCP:** https://api.solenrich.com/mcp (17 tools after this session's deploy)
@@ -83,7 +85,59 @@
 - Consider a Twitter thread: "shipped Jupiter Perps intelligence + first Solana-native x402 on Coinbase CDP + listed on Orbis" — three concrete proof points in one session
 - Bags hackathon submission could use an update reflecting today's distribution wins
 
-### 6. Remaining roadmap
+### 6. Side-quest — Bags hackathon demo video
+
+**Status:** Requested by Bags team. Currently ranked #37 on hackathon leaderboard. Prize-eligible. Deadline: TBD (confirm when user has date).
+
+**Constraint:** SolEnrich has no UI — it's a B2B API. Need a visceral "holy shit" moment in the first 15 seconds to keep scroll-weary judges.
+
+**Judging criteria to hit:**
+- Product traction (MRR, DAU, GitHub stars) — ✅ we have: 2 Orbis calls already, real x402 settlements
+- Onchain performance (volume, active traders, revenue) — ✅ we have: CDP settlements visible on x402scan
+- Uniqueness — ✅ we have: Jupiter Perps intelligence (no other Solana enrichment API offers this)
+
+**Three demo shapes to choose from:**
+
+#### Option A — Agent-making-a-real-decision (highest impact)
+- 60s narrative: Claude Desktop with SolEnrich MCP. User asks "Should I long BONK?" Claude calls `enrich-token-full`, `due-diligence`, `perps-market-structure` live. Real USDC settles. Returns synthesized answer.
+- Strengths: Hits agent-native workflow, shows Jupiter Perps, showcases MCP + x402 together
+- Production: 30min record + 30min edit. Need Claude Desktop + MCP configured + SolScout wallet funded
+- Risk: Claude's answer might not be impressive if endpoints return boring data — would want to cherry-pick a token with interesting risk signals
+
+#### Option B — Proof-of-traction terminal montage
+- Terminal split-screen: SolScout paid stress test + Orbis dashboard + x402scan
+- Watch all 19 endpoints settle in real time
+- End on Jupiter Perps market structure output
+- Strengths: Literally shows the judging criteria happening (traction + onchain performance)
+- Production: Very low — one clean recording of a stress run + dashboards
+- Risk: Less narrative, more technical — might not resonate with non-dev judges
+
+#### Option C — Raw-vs-enriched side-by-side
+- Split screen: Solana Explorer (hex wall) vs SolEnrich parse-transaction briefing ("Swapped 100 USDC for 50 JUP on Jupiter at $2.00")
+- Strengths: Most visceral "holy shit" moment, no agent/x402 context needed
+- Production: Lowest — one side-by-side screen capture
+- Risk: Doesn't showcase agents/payments/Jupiter Perps — underplays our moats
+
+#### Recommended composite (90s total)
+- **0-30s:** Option A (agent making a decision, includes Jupiter Perps)
+- **30-60s:** Option B (payment trail, x402scan + Orbis dashboard, real USDC moving)
+- **60-75s:** Stats overlay — "19 endpoints, 2 marketplace listings, real revenue in 2 days"
+- **75-90s:** Logo + CTA (api.solenrich.com + Orbis link)
+
+**Needs from user:**
+- Pick shape (A, B, C, or composite)
+- Confirm submission deadline
+- Decide: record in one take vs edit multiple clips
+- Pick the token to demo against (needs interesting risk signals for Option A to land)
+
+**Asset checklist if we go ahead:**
+- Claude Desktop with `@solenrich` MCP configured
+- SolScout wallet topped up (currently ~$3.88 USDC — enough for ~150 paid calls)
+- Clean terminal theme + one test token ready
+- Logo intro/outro cards (logo_black_bg.png already shipped)
+- Demo music (optional) — royalty-free
+
+### 7. Remaining roadmap
 - **Priority 9 — Smart Money** — `trending-signals`, `smart-money-flow` (2-3 sessions)
 - **Priority 11 — Smarter Query** — Multi-step orchestration. Add perps routing ("SOL-PERP funding rate?") (1 session)
 - **Priority 12 — Portfolio Tracker** — From temporal snapshots (1 session)
