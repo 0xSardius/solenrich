@@ -54,6 +54,8 @@ export const PRICING = {
   'protocol-profile': '0.008',
   'perps-market-structure': '0.012',
   'perps-trader-profile': '0.010',
+  'trending-signals': '0.050',
+  'smart-money-flow': '0.100',
 } as const;
 
 /** Cache TTL in seconds per data type */
@@ -74,4 +76,6 @@ export const CACHE_TTL = {
   protocolProfile: 1800, // 30 minutes — activity data is RPC-heavy
   perpsMarket: 30,       // 30 seconds — on-chain state changes every block
   perpsTrader: 60,       // 1 minute — positions update on tx
+  trendingSignals: 300,  // 5 minutes — trending shifts fast
+  smartMoney: 600,       // 10 minutes — smart money shifts over days
 } as const;

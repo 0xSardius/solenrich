@@ -255,6 +255,35 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'trending-signals': {
+    summary: 'Orchestrated trending-token intelligence',
+    description: 'Composes token-discovery + whale-watch + risk scoring across DexScreener trending. Returns a composite-signal ranked list (liquidity, risk, concentration, whale flow) with per-token reasoning and overall sentiment (accumulation/distribution/mixed). "What\'s worth paying attention to right now?"',
+    schema: {
+      type: 'object',
+      properties: {
+        min_liquidity_usd: { type: 'number', default: 10000, description: 'Minimum liquidity in USD for candidates' },
+        max_risk_score: { type: 'number', minimum: 0, maximum: 1, default: 0.7, description: 'Maximum token risk score (0-1)' },
+        limit: { type: 'number', minimum: 1, maximum: 20, default: 10, description: 'Number of tokens to return' },
+        include_whale_watch: { type: 'boolean', default: true, description: 'Layer whale-watch flow signal per token (slower but higher signal)' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
+  'smart-money-flow': {
+    summary: 'Orchestrated smart-money intelligence',
+    description: 'Scores seed wallets via copy-trade metrics (win rate, Sharpe, consistency), filters to qualifying winners, then surfaces tokens they\'re accumulating and wallet clusters. Pass your own `wallets` array or use the curated default seed list.',
+    schema: {
+      type: 'object',
+      properties: {
+        wallets: { type: 'array', items: { type: 'string', minLength: 32, maxLength: 44 }, maxItems: 30, description: 'Optional Solana wallet addresses to score (uses curated default if omitted)' },
+        lookback_days: { type: 'number', minimum: 1, maximum: 90, default: 14, description: 'Copy-trade lookback window in days' },
+        min_win_rate: { type: 'number', minimum: 0, maximum: 1, default: 0.55, description: 'Minimum win rate to qualify as smart money (0-1)' },
+        top_n_tokens: { type: 'number', minimum: 1, maximum: 20, default: 10, description: 'Max tokens to surface as accumulated' },
+        include_graph: { type: 'boolean', default: true, description: 'Include cluster analysis via wallet-graph (adds latency)' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
 };
 
 const BASE_URL = 'https://api.solenrich.com';

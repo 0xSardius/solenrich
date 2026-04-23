@@ -389,5 +389,55 @@ export function createSolEnrichMcpServer(): McpServer {
     },
   );
 
+  server.registerTool(
+    'trending_signals',
+    {
+      title: 'Trending Signals',
+      description: 'Ranked list of Solana tokens worth paying attention to right now. Composes DexScreener trending + risk scoring + whale-flow into a composite signal with reasoning.',
+      inputSchema: {
+        min_liquidity_usd: z.number().default(10_000).describe('Minimum liquidity in USD'),
+        max_risk_score: z.number().min(0).max(1).default(0.7).describe('Maximum risk score (0-1)'),
+        limit: z.number().int().min(1).max(20).default(10).describe('Number of tokens to return'),
+        include_whale_watch: z.boolean().default(true).describe('Include whale flow signal'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('trending-signals', {
+        min_liquidity_usd: args.min_liquidity_usd ?? 10_000,
+        max_risk_score: args.max_risk_score ?? 0.7,
+        limit: args.limit ?? 10,
+        include_whale_watch: args.include_whale_watch ?? true,
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
+    'smart_money_flow',
+    {
+      title: 'Smart Money Flow',
+      description: 'Where high-performing Solana wallets are moving. Scores seed wallets by copy-trade metrics, surfaces tokens they\'re accumulating, and maps wallet clusters.',
+      inputSchema: {
+        wallets: z.array(z.string()).max(30).optional().describe('Optional wallet addresses to score (curated default used if omitted)'),
+        lookback_days: z.number().int().min(1).max(90).default(14).describe('Copy-trade lookback window'),
+        min_win_rate: z.number().min(0).max(1).default(0.55).describe('Minimum win rate to qualify'),
+        top_n_tokens: z.number().int().min(1).max(20).default(10).describe('Max accumulated tokens to surface'),
+        include_graph: z.boolean().default(true).describe('Include wallet cluster analysis'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('smart-money-flow', {
+        wallets: args.wallets,
+        lookback_days: args.lookback_days ?? 14,
+        min_win_rate: args.min_win_rate ?? 0.55,
+        top_n_tokens: args.top_n_tokens ?? 10,
+        include_graph: args.include_graph ?? true,
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
   return server;
 }

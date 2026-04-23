@@ -31,6 +31,8 @@ import { DueDiligenceAnalyzer } from "../enrichers/due-diligence";
 import { ProtocolAnalyzer } from "../enrichers/protocol-analyzer";
 import { PerpsAnalyzer } from "../enrichers/perps-analyzer";
 import { JupiterPerpsClient } from "../sources/jupiter-perps";
+import { TrendingSignalsAnalyzer } from "../enrichers/trending-signals";
+import { SmartMoneyAnalyzer } from "../enrichers/smart-money-flow";
 
 // Entrypoint registration
 import { registerWalletEntrypoints } from "../entrypoints/wallet";
@@ -47,6 +49,7 @@ import { registerTrendEntrypoints } from "../entrypoints/trend";
 import { registerDiscoveryEntrypoint } from "../entrypoints/discovery";
 import { registerProtocolEntrypoint } from "../entrypoints/protocol";
 import { registerPerpsEntrypoints } from "../entrypoints/perps";
+import { registerOrchestrationEntrypoints } from "../entrypoints/orchestration";
 import { CONFIG, PRICING } from "../config";
 
 // --- Agent setup ---
@@ -329,6 +332,14 @@ registerProtocolEntrypoint(addEntrypoint, protocolAnalyzer);
 // Jupiter Perps — market structure + trader profile
 registerPerpsEntrypoints(addEntrypoint, perpsAnalyzer);
 
+// Smart Money Orchestration — trending-signals + smart-money-flow
+// Composes token-discovery, whale-watch, copy-trade, graph-mapper into synthesized
+// intelligence. Higher-margin endpoints ($0.05-$0.10) reflecting the work of
+// chaining 3-5 sub-enrichers per call.
+const trendingSignalsAnalyzer = new TrendingSignalsAnalyzer(tokenDiscovery, whaleWatcher, cache);
+const smartMoneyAnalyzer = new SmartMoneyAnalyzer(copyTradeAnalyzer, whaleWatcher, graphMapper, cache);
+registerOrchestrationEntrypoints(addEntrypoint, trendingSignalsAnalyzer, smartMoneyAnalyzer);
+
 // --- Demo endpoint (free, rate-limited, for landing page) ---
 
 import { formatResponse } from '../formatters/index';
@@ -594,6 +605,16 @@ app.get('/docs', (c) => {
         price: '0.010',
         input: { address: 'string', format: 'json | llm | both' },
         description: 'Jupiter Perps trader profile — open positions for a wallet with size, leverage, entry, unrealized PnL, profile classification (scalper/swing/position), and risk flags.',
+      },
+      'trending-signals': {
+        price: '0.050',
+        input: { min_liquidity_usd: 'number (default 10000)', max_risk_score: 'number 0-1 (default 0.7)', limit: 'number (default 10)', include_whale_watch: 'boolean (default true)', format: 'json | llm | both' },
+        description: 'Orchestrated ranking of trending Solana tokens. Composes token-discovery + whale-watch + risk scoring. Returns composite-signal ranked list with reasoning. Overall sentiment: accumulation/distribution/mixed.',
+      },
+      'smart-money-flow': {
+        price: '0.100',
+        input: { wallets: 'string[] (optional — uses curated default if omitted)', lookback_days: 'number (default 14)', min_win_rate: 'number 0-1 (default 0.55)', top_n_tokens: 'number (default 10)', include_graph: 'boolean (default true)', format: 'json | llm | both' },
+        description: 'Orchestrated smart-money intelligence. Scores seed wallets via copy-trade metrics, filters to qualifying winners, surfaces tokens they are accumulating + wallet clusters. Pass your own wallet list or use our default.',
       },
     },
     methodology: {
