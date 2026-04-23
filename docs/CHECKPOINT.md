@@ -1,11 +1,42 @@
 # Session Checkpoint
 
 ## Last session date
-2026-04-22
+2026-04-23
 
 ## What was completed
 
-### This session (April 22) — STRATEGIC ALIGNMENT + PRIORITY 5 CLOSEOUT
+### This session (April 23) — PRIORITY 9 SHIPPED (Smart Money Orchestration)
+
+- **Two new composed-intelligence endpoints live** (`7665916`):
+  - `trending-signals` ($0.050) — ranks trending tokens by composite signal (liquidity 20%, risk 40%, concentration 15%, whale flow 25%). Returns ranked list with per-token reasoning + overall sentiment (accumulation/distribution/mixed).
+  - `smart-money-flow` ($0.100) — 3-phase pipeline: score seed wallets via copy-trade → filter to qualifying winners → surface accumulated tokens + wallet clusters. Accepts user-provided `wallets` array; falls back to curated default.
+- **21 total endpoints** (was 19). Highest-margin calls in the catalog — 30-60x a basic enrich.
+- **Paid E2E verified.** Both endpoints settled real USDC at 200. trending-signals 11.8s, smart-money-flow 10.1s. Full data shape checks passed.
+- **Counter-positioning:** these are orchestration plays — 3-5 sub-enrichers composed per call. Raw-data incumbents (Helius/Nansen/Birdeye) structurally can't match this without sabotaging their existing subscription model.
+- **Surface parity:** MCP tools, OpenAPI spec, `/docs`, `/llms.txt`, bazaar discovery metadata all updated.
+- **Cache TTLs:** trending-signals 5min (trending shifts fast), smart-money-flow 10min (smart money shifts over days).
+
+### ⚠ PINNED — smart-money-flow seed list quality (Priority 9.5)
+
+**The issue:** Paid test returned 0 qualifying wallets on the default seed list. Root cause: the 20-wallet curated list shipped with Priority 9 is placeholder-quality — includes Solana Foundation (which doesn't trade) and 19 plausibly-formatted but unverified addresses. Filter requires ≥5 closed trades + ≥55% win rate; most seeds don't satisfy.
+
+**What's working:** endpoint, payment flow, orchestration chain, graceful empty-state handling with clear LLM briefing explaining the fallback.
+
+**What's broken:** the default seed data is bad, so out-of-the-box output is "no signal" for most callers.
+
+**User's current stance:** pinned for consideration, not fixed yet.
+
+**Three paths to decide between:**
+1. **Programmatic derivation (recommended):** derive smart money from `whale-watch` top holders of trending tokens, score via copy-trade, cache winners as rotating seed list. Refreshes weekly. Compounding moat — we generate our own smart-money index from our own query pipeline. ~1-2 sessions to ship.
+2. **Proper manual curation:** pull from Birdeye "top traders" leaderboard, public Twitter smart-money lists (Ansem etc.), Jupiter Perps top PnL wallets. Honest provenance per address. Manual maintenance.
+3. **Stopgap cosmetic fix:** lower default `min_win_rate` to 0.35 so the endpoint looks populated. Makes the demo look good; doesn't give agents real signal. Last resort.
+
+**Quick wins that apply regardless of path chosen:**
+- Remove `vines1...` (Solana Foundation) from seed list — guaranteed-zero-trade wallet has no business in the seed
+- Update `/docs` description to explicitly note the curated-list limitation and encourage agents to pass their own `wallets` array
+- Endpoint continues to serve callers who BYO wallet list
+
+### Previous session (April 22) — STRATEGIC ALIGNMENT + PRIORITY 5 CLOSEOUT
 
 - **Counter-positioning strategy captured in CLAUDE.md.** Documented incumbents table (Helius/Nansen/Birdeye/Dune/DexScreener), our 5 natural advantages, guerilla warfare heuristics, top-3 moves ranked by defensibility × leverage, and explicit "what to deprioritize" list.
 - **Intelligence Feed V1 vs V2 cost breakdown** — V1 ships in 1-2 sessions at ~$0 marginal, V2 triggers if 10+ daily polls within 2 weeks. Full plan in CLAUDE.md Priority 14.
@@ -78,7 +109,17 @@ Session on 2026-04-21 established the counter-positioning thesis: SolEnrich wins
 2. **Smart Money Orchestration** (Priority 9) — composed endpoints, justifies higher pricing
 3. **Data Network Effect** (Priority 8 extension) — only we have agent query history
 
-### 1. Smart Money Orchestration (Priority 9) — NEXT BUILD (2-3 sessions)
+### 1. DECIDE — smart-money-flow seed list path (Priority 9.5)
+See "PINNED" section above. User is thinking about which of the three paths to take. Don't start building until user picks direction. At minimum, the two cleanup actions (remove Solana Foundation wallet from seed list + docs note) are independent of the path choice and low-risk — can ship anytime.
+
+### 2. Intelligence Feed V1 (Priority 14) — ~$0 marginal cost, 1-2 sessions
+Now unblocked now that `trending-signals` exists. Scope: daily cron runs `trending-signals` once, caches output in Redis (24h TTL), serves via `GET /feed/latest` (JSON). List as separate paid endpoint on Orbis: "daily intelligence brief — $0.005". Validation trigger for V2 (SSE + webhooks): 10+ agents polling V1 daily within 2 weeks.
+
+**Decision point:** ship V1 before fixing smart-money-flow seed list, or fix seed list first? Arguments either way:
+- Seed list first: smart-money-flow currently returns empty results for most callers, which hurts the product-quality signal
+- Feed first: trending-signals ALONE is enough to power the feed (doesn't depend on smart-money-flow), so Feed can ship independently
+
+### 3. Smart Money Orchestration (Priority 9) — SHIPPED 2026-04-23 ✅
 
 Build before Intelligence Feed because these become Feed V1's input sources. Also they're the highest-pricing endpoints we'll have ($0.05-$0.10 per call) and hit the "composed intelligence" positioning incumbents can't match.
 
