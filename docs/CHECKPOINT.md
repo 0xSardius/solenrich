@@ -1,11 +1,22 @@
 # Session Checkpoint
 
 ## Last session date
-2026-04-20
+2026-04-22
 
 ## What was completed
 
-### This session (April 20) — DISTRIBUTION + MARKETPLACE LISTINGS
+### This session (April 22) — STRATEGIC ALIGNMENT + PRIORITY 5 CLOSEOUT
+
+- **Counter-positioning strategy captured in CLAUDE.md.** Documented incumbents table (Helius/Nansen/Birdeye/Dune/DexScreener), our 5 natural advantages, guerilla warfare heuristics, top-3 moves ranked by defensibility × leverage, and explicit "what to deprioritize" list.
+- **Intelligence Feed V1 vs V2 cost breakdown** — V1 ships in 1-2 sessions at ~$0 marginal, V2 triggers if 10+ daily polls within 2 weeks. Full plan in CLAUDE.md Priority 14.
+- **Build sequencing decision locked in** — Smart Money Orchestration (Priority 9) ships BEFORE Intelligence Feed V1 because `trending-signals` becomes Feed's primary input. Same 4-5 sessions total, zero throwaway code.
+- **Discovered Priority 5 was shipped 12 days ago** (`a27edf7`, 2026-04-10) but never marked DONE in CLAUDE.md. Functional layer live: 4 behavioral flags (regular_intervals, high_frequency, 24_7_active, repetitive_actions) + `automated_activity_pct` on protocol-profile. Drift 25%, Raydium 0% on initial test.
+- **Priority 5 polish shipped** (`f78ae65`). Surfaced the flags in LLM briefings (llm-wallet, llm-protocol), added them to `/docs` + OpenAPI descriptions, wrote 5 unit tests covering detection functions. All additive — zero risk to paid flow.
+- **Referral code + payment info published** (`9c1c9f9`). `/docs` and `/llms.txt` now include the Orbis referral header (`x-referral-code: 683TDRYV`) hint. Also fixed stale payai.network reference in `/docs` — now correctly advertises CDP facilitator.
+- **Orbis traction grew: 2 paid x402 calls landed** within 18h of listing going live. First organic agent traffic through a marketplace channel.
+- **Full paid E2E re-verified:** 18/19 passed (one pre-existing flaky failure on enrich-token-full's top-holders branch — not caused by today's changes). Payment settled 200 on all 19.
+
+### Previous session (April 20) — DISTRIBUTION + MARKETPLACE LISTINGS
 
 - **Orbis API listing LIVE.** Two tiers: Free Demo (10 req/hr per IP via `/demo/enrich`) and Pay-per-call ($0.001–$0.020 USDC). All 19 endpoints cataloged with descriptions and schemas. Payouts on Base USDC, 90% revenue share to us, 10% Orbis. Base payout wallet: `0x866112E2C9E9F61422Df8b83DC8EcEe9883cF8a5`. Referral code: `683TDRYV` (25% lifetime).
 - **Bazaar discovery metadata shipped** (`9f7a0aa`). Declared `extensions.bazaar` on every route using `@x402/extensions/declareDiscoveryExtension`. This was the missing piece for agentic.market auto-cataloging — CDP needs the bazaar extension to be declared on routes, otherwise settlements aren't indexed. Verified paid flow still works after change (19/19 passed).
@@ -117,29 +128,24 @@ Now uses `trending-signals` as its input source instead of raw new-tokens scan �
 
 **First consumers:** Our own agents (Pythia, Tidal, Cardex) — dogfoods the feed.
 
-### 2. Check agentic.market listing — did we appear?
-- First settlement with bazaar metadata was last night (2026-04-20 evening). CDP's indexer should have cataloged us within hours.
-- Query `https://api.agentic.market/v1/services` — look for "SolEnrich" / Parallax Labs / our domain
-- If still not listed after ~24h: DM the Orbis / CDP x402 team. Our discovery surface is primed (`/llms.txt`, enriched `/.well-known/x402`, bazaar metadata on routes), so any blocker is on their side.
+### 3. agentic.market listing check — STILL PENDING
+- User reached out to their team 2026-04-21; they confirmed no Solana listings yet. We're now in their queue — our discovery surface is fully primed (`/llms.txt`, enriched `/.well-known/x402`, bazaar metadata on routes, real CDP settlements).
+- Check back weekly: `https://api.agentic.market/v1/services` — look for "SolEnrich" / Parallax Labs / our domain.
+- We're already listed on x402scan and Orbis.
 
-### 3. Check x402 bazaar listing appeared
-- Same ~24h window as agentic.market. Check bazaar.x402.org or CDP's bazaar listing page.
+### 4. Real Jupiter Perps trader verify (deferred from April 18)
+- `perps-trader-profile` tested against Solana Foundation wallet (no positions) — shape checks pass but we never verified with actual open positions.
+- Find a trader via Jupiter Perps leaderboard or on-chain `getProgramAccounts` search.
+- Run paid call, confirm PnL/leverage/flags render correctly with real data.
 
-### 4. Orbis follow-ups
-- Confirm Orbis listing is live (check orbisapi.com directory)
-- Watch Orbis dashboard for first x402 settlement routed through them
-- Consider publishing our referral code (`683TDRYV`) in `/docs` and `/llms.txt` — earns 25% lifetime on any x402 call that includes `x-referral-code: 683TDRYV` header
-- If Orbis sends GET to our POST-only endpoints (we saw 404 on their preview), flag it to their founder
-
-### 5. Real Jupiter Perps trader verify (deferred from April 18)
-- `perps-trader-profile` tested against Solana Foundation wallet (no positions) — shape checks pass but we never verified with actual open positions
-- Find a trader via Jupiter Perps leaderboard or on-chain `getProgramAccounts` search
-- Run paid call, confirm PnL/leverage/flags render correctly with real data
+### 5. Fix `enrich-token-full` top-holders flakiness (LOW PRIORITY)
+- See "Known Bugs" section. Add retry/fallback for `getTokenLargestAccounts` timeouts.
+- Maintenance session work — not blocking orchestration or feed builds.
 
 ### 6. Social / hackathon surface
-- Landing page banner now leads with Jupiter Perps + live CDP settlements (`cad8635`). Hackathon judges probably check.
-- Consider a Twitter thread: "shipped Jupiter Perps intelligence + first Solana-native x402 on Coinbase CDP + listed on Orbis" — three concrete proof points in one session
-- Bags hackathon submission could use an update reflecting today's distribution wins
+- Two Orbis calls already (2026-04-21) is a tweetable proof point.
+- Consider a Twitter thread: "shipped Jupiter Perps intelligence + first Solana-native x402 on Coinbase CDP + listed on Orbis — 2 paid calls day 1" — concrete proof points stacked.
+- Bags hackathon submission could use an update reflecting distribution wins + Priority 5 behavioral signals now surfaced in briefings.
 
 ### 7. Side-quest — Bags hackathon demo video
 
@@ -208,6 +214,19 @@ Now uses `trending-signals` as its input source instead of raw new-tokens scan �
 - **Helius partnership** — Application submitted 2026-04-09, awaiting response
 - **tokens.xyz** — Tweeted from @solenrichHQ requesting API access, awaiting response
 - **Bags Hackathon** — Submitted, judging pending
+
+## Known Bugs (non-blocking)
+
+### `enrich-token-full` top-holders flakiness
+- **Symptom:** SolScout stress test (2026-04-22) showed 2/6 checks pass on `enrich-token-full` against BONK — specifically top_holders, pct_supply, concentration, and HHI fields were missing/empty. Volatility and llm_summary passed. Payment settled 200, so the flow works; the upstream holder-fetch branch dropped.
+- **Suspected cause:** Helius `getTokenLargestAccounts` rate-limit or timeout on high-holder-count tokens like BONK (~1M holders). The parallel-fetch task probably failed silently; no retry in place.
+- **Impact:** Degrades silently — agents still get price/volatility/risk_flags, lose top_holders/concentration/HHI. Most tokens with fewer holders don't trip this.
+- **Intermittent:** Other runs against BONK have passed all 6 checks. Pre-existing, not caused by today's changes.
+- **Fix options when we get to it:**
+  - Retry with backoff on `getTokenLargestAccounts`
+  - Mark holders block as `partial: true, error: "upstream_timeout"` so agents distinguish "empty" from "failed"
+  - Fallback to Birdeye's holder endpoint when Helius times out
+- **Priority:** Low. Not blocking anything. Track and revisit in a maintenance session.
 
 ## Blockers
 - **@solana/kit must stay at 5.5.1** — 6.x causes @solana/errors runtime crash in Bun
