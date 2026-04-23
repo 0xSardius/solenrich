@@ -60,6 +60,87 @@ console.log('New wallet labels:', newLabels);
 console.assert(newLabels.includes('new_wallet'), 'Should have new_wallet');
 console.assert(newLabels.includes('stablecoin_heavy'), 'Should have stablecoin_heavy');
 
+// --- 1b. Behavioral detection (pure functions) ---
+console.log('\n--- Behavioral Detection ---');
+
+import {
+  detectRegularIntervals,
+  detectHighFrequency,
+  detect247Active,
+} from '../src/enrichers/labeler';
+
+// Bot-like pattern: 90 txs at 60s cadence (89 min span — clears the 1h window threshold)
+const botPattern = Array.from({ length: 90 }, (_, i) => 1_700_000_000 + i * 60);
+console.assert(
+  detectRegularIntervals(botPattern) === true,
+  'Bot pattern should trigger regular_intervals (CV ~ 0)',
+);
+console.assert(
+  detectHighFrequency(botPattern) === true,
+  'Bot pattern at 60s cadence should trigger high_frequency (60 tx/hr)',
+);
+console.log('✓ bot pattern — regular_intervals + high_frequency');
+
+// Active human trader: 30 txs over 7 days with clear daily sleep gaps (12h+)
+// Should exercise 24_7_active negative path (meets length threshold, fails gap check).
+const humanPattern: number[] = [];
+const DAY = 24 * 3600;
+for (let day = 0; day < 7; day++) {
+  // 4-5 txs bunched during "daytime" (hours 12-18), variable intervals
+  const base = 1_700_000_000 + day * DAY + 12 * 3600;
+  humanPattern.push(base);
+  humanPattern.push(base + 1_800 + Math.floor(Math.random() * 600));
+  humanPattern.push(base + 6_000 + Math.floor(Math.random() * 2_000));
+  humanPattern.push(base + 14_000 + Math.floor(Math.random() * 3_000));
+  humanPattern.push(base + 20_000);
+}
+console.assert(
+  detectRegularIntervals(humanPattern) === false,
+  'Human pattern should NOT trigger regular_intervals (high CV)',
+);
+console.assert(
+  detect247Active(humanPattern) === false,
+  'Human pattern with 18h+ daily sleep gaps should NOT trigger 24_7_active',
+);
+console.log('✓ human pattern — no behavioral flags');
+
+// Sparse wallet (< 10 txs) — all detectors return false (not null per current impl)
+const sparse = [1_700_000_000, 1_700_000_001, 1_700_000_002];
+console.assert(
+  detectRegularIntervals(sparse) === false,
+  'Sparse (<10 tx) should not trigger regular_intervals',
+);
+console.assert(
+  detectHighFrequency(sparse) === false,
+  'Sparse (<20 tx) should not trigger high_frequency',
+);
+console.assert(
+  detect247Active(sparse) === false,
+  'Sparse (<20 tx) should not trigger 24_7_active',
+);
+console.log('✓ sparse wallet — no false positives');
+
+// 24/7 active: one tx every 2 hours over 5 days (60 txs, no gaps > 6h)
+const alwaysOn = Array.from({ length: 60 }, (_, i) => 1_700_000_000 + i * 7_200);
+console.assert(
+  detect247Active(alwaysOn) === true,
+  '2h cadence over 5 days should trigger 24_7_active',
+);
+console.log('✓ always-on pattern — 24_7_active');
+
+// Repetitive actions: via labelWallet integration (tx_type_counts route)
+const repetitiveData: WalletData = {
+  ...whaleData,
+  tx_count_30d: 50,
+  tx_type_counts: { SWAP: 40, TRANSFER: 10 }, // 80% swap
+};
+const repLabels = labelWallet(repetitiveData);
+console.assert(
+  repLabels.includes('repetitive_actions'),
+  'Wallet with 80% same-type txs should get repetitive_actions',
+);
+console.log('✓ repetitive pattern — repetitive_actions');
+
 // --- 2. Risk Scorer (pure function) ---
 console.log('\n--- Risk Scorer ---');
 

@@ -524,16 +524,15 @@ Six features to deepen SolEnrich's core value prop: getting solid Solana data to
 
 #### Phase 2A — Deepen Intelligence (next 2-3 sessions)
 
-**Priority 5 — Automated Activity Signals / Agentic Behavior Detection** (1-2 sessions)
-- Add behavioral flags to wallet labeler: `regular_intervals`, `high_frequency`, `24_7_active`, `repetitive_actions`
-- Detection logic: analyze tx timestamps from enhanced transactions for regularity (std deviation of intervals), frequency (tx/hr), sleep gaps (>6hr breaks), and action repetition (same type+amount patterns)
-- Surface flags in: wallet-profiler labels, copy-trade-signals, wallet-graph nodes, protocol-profile unique_signers
-- New protocol-level metric: `automated_activity_pct` — % of unique signers exhibiting automated behavior flags
-- No new endpoints needed — enriches existing endpoints with richer behavioral data
-- Reuses: existing Helius enhanced tx parsing, labeler (pure function addition), wallet-profiler
-- **Use case:** "Agentic ponzis" thesis — agents/bots driving perpetual DeFi protocol activity. Traders/researchers want to know what % of a protocol's volume is agent-driven, and whether specific wallets are bots or humans.
-- **Design decision:** Frame as behavioral signals, not bot/human classification. ~60-70% accuracy on binary classification isn't reliable enough to label definitively. Let consumers interpret the flags.
-- Feasibility: High — 3-4 new labeler rules + protocol-analyzer metric. No new data sources needed.
+**Priority 5 — Automated Activity Signals / Agentic Behavior Detection** — DONE (2026-04-10)
+- [x] Four behavioral flags added to labeler: `regular_intervals` (CV < 0.3), `high_frequency` (20+ tx/hr sustained), `24_7_active` (no 6h gaps over 48h+ window), `repetitive_actions` (>70% same tx type)
+- [x] Detection functions exported from `src/enrichers/labeler.ts` as pure functions (`detectRegularIntervals`, `detectHighFrequency`, `detect247Active`)
+- [x] `wallet-profiler.ts` passes `tx_timestamps` + `tx_type_counts` to the labeler; flags appear in every wallet enrichment output
+- [x] `protocol-analyzer.ts` computes `automated_activity_pct` — % of top signers exhibiting `detectRegularIntervals || detectHighFrequency`. Drift showed 25%, Raydium 0% on initial run — real differentiated signal.
+- [x] Commit: `a27edf7` (2026-04-10)
+- **Design decision:** Frame as behavioral signals, not bot/human classification. Binary classification ~60-70% accuracy isn't reliable enough. Consumer interprets the flags.
+- **Use case:** "Agentic ponzis" thesis — agents/bots driving perpetual DeFi protocol activity. Traders/researchers see what % of protocol volume is agent-driven.
+- **Bookkeeping miss 2026-04-22:** Functional layer shipped 12 days ago but LLM formatters, `/docs`, OpenAPI descriptions, and unit tests never got caught up. Remaining polish work tracked as Tasks #19, #22, #23.
 
 **Priority 6 — Slippage Estimates / Liquidity Depth** (1 session)
 - Add `slippage_estimate` field to token-light, token-full, due-diligence, compare-tokens responses

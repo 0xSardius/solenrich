@@ -57,9 +57,24 @@ export function formatWalletBriefing(data: WalletEnrichment): string {
     lines.push('');
   }
 
-  // Labels
-  if (data.labels.length > 0) {
-    lines.push(`Classified as: ${data.labels.join(', ')}.`);
+  // Labels — split behavioral flags from other labels for clarity.
+  // Behavioral flags are algorithmic signals from tx timing patterns, not classifications.
+  const BEHAVIORAL_FLAGS = new Set([
+    'regular_intervals',
+    'high_frequency',
+    '24_7_active',
+    'repetitive_actions',
+  ]);
+  const behavioralFlags = data.labels.filter((l) => BEHAVIORAL_FLAGS.has(l));
+  const otherLabels = data.labels.filter((l) => !BEHAVIORAL_FLAGS.has(l));
+
+  if (otherLabels.length > 0) {
+    lines.push(`Classified as: ${otherLabels.join(', ')}.`);
+  }
+  if (behavioralFlags.length > 0) {
+    lines.push(
+      `Behavioral signals (from tx timing): ${behavioralFlags.join(', ')}. These indicate automated activity patterns — interpret alongside other labels.`,
+    );
   }
 
   // Activity and risk

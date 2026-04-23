@@ -58,6 +58,13 @@ export function formatProtocolBriefing(data: ProtocolProfileEnrichment): string 
       const breakdown = topTypes.map(([t, c]) => `${t} ${Math.round((c / total) * 100)}%`).join(', ');
       lines.push(`Types: ${breakdown}`);
     }
+
+    // Automated-activity share of top signers (behavioral signal, not bot classification)
+    if (typeof a.automated_activity_pct === 'number') {
+      lines.push(
+        `Automated activity: ~${a.automated_activity_pct}% of top signers show regular-interval or high-frequency tx patterns.`,
+      );
+    }
     lines.push('');
   }
 

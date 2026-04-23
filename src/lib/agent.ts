@@ -518,12 +518,12 @@ app.get('/docs', (c) => {
       'enrich-wallet-light': {
         price: '0.002',
         input: { address: 'string (Solana base58)', format: 'json | llm | both' },
-        description: 'Light wallet profile: SOL balance, token holdings, labels, risk score',
+        description: 'Light wallet profile: SOL balance, token holdings, labels (including behavioral flags regular_intervals/high_frequency/24_7_active/repetitive_actions), risk score',
       },
       'enrich-wallet-full': {
         price: '0.005',
         input: { address: 'string', format: 'json | llm | both' },
-        description: 'Full wallet profile: adds DeFi positions, connected wallets, enhanced tx history',
+        description: 'Full wallet profile: adds DeFi positions, connected wallets, enhanced tx history, and automated-activity behavioral signals',
       },
       'enrich-token-light': {
         price: '0.002',
@@ -583,7 +583,7 @@ app.get('/docs', (c) => {
       'protocol-profile': {
         price: '0.008',
         input: { protocol: 'string (slug or program ID)', include_yields: 'boolean (default true)', format: 'json | llm | both' },
-        description: 'DeFi protocol analytics: TVL, yield pools, on-chain activity, health signals. Supports Raydium, Orca, marginfi, Drift, Jupiter, Kamino, Marinade, Jito.',
+        description: 'DeFi protocol analytics: TVL, yield pools, on-chain activity, health signals, and automated_activity_pct (% of top signers with regular-interval or high-frequency tx patterns — surfaces agent-driven protocol usage). Supports Raydium, Orca, marginfi, Drift, Jupiter, Kamino, Marinade, Jito.',
       },
       'perps-market-structure': {
         price: '0.012',

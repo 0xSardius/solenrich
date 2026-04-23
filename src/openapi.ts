@@ -17,7 +17,7 @@ export const ENDPOINT_META: Record<string, {
 }> = {
   'enrich-wallet-light': {
     summary: 'Light wallet profile',
-    description: 'SOL balance, token holdings, labels, risk score. Fast and cheap.',
+    description: 'SOL balance, token holdings, labels (including behavioral flags: regular_intervals, high_frequency, 24_7_active, repetitive_actions — algorithmic signals from tx timing that indicate automated activity), risk score. Fast and cheap.',
     schema: {
       type: 'object',
       required: ['address'],
@@ -29,7 +29,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'enrich-wallet-full': {
     summary: 'Full wallet profile',
-    description: 'Adds DeFi positions, connected wallets, enhanced transaction history to light profile.',
+    description: 'Adds DeFi positions, connected wallets, enhanced transaction history, and automated-activity behavioral signals to light profile.',
     schema: {
       type: 'object',
       required: ['address'],
@@ -222,7 +222,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'protocol-profile': {
     summary: 'DeFi protocol analytics',
-    description: 'Protocol TVL, yield pools, on-chain activity metrics, health signals. Supports Raydium, Orca, marginfi, Drift, Jupiter, Kamino, Marinade, Jito, and more.',
+    description: 'Protocol TVL, yield pools, on-chain activity metrics, health signals, and automated_activity_pct (% of top signers with regular-interval or high-frequency tx patterns — surfaces agent-driven protocol usage). Supports Raydium, Orca, marginfi, Drift, Jupiter, Kamino, Marinade, Jito, and more.',
     schema: {
       type: 'object',
       required: ['protocol'],
