@@ -269,6 +269,14 @@ Now uses `trending-signals` as its input source instead of raw new-tokens scan �
   - Fallback to Birdeye's holder endpoint when Helius times out
 - **Priority:** Low. Not blocking anything. Track and revisit in a maintenance session.
 
+### `enrich-wallet-light` paid stress-mode hang (2026-04-25)
+- **Symptom:** SolScout paid stress run reported `0/0 checks` on `enrich-wallet-light`. In the stress runner that means the request hung past the 30s AbortController limit OR returned a non-200/non-402 status — not a data-quality issue.
+- **Root cause (found 2026-04-25):** `@x402/svm`'s `registerExactSvmScheme` helper **has a bug** — it accepts a `{ rpcUrl }` config but never forwards it to the scheme constructor. The scheme silently falls back to `https://api.mainnet-beta.solana.com`. Under @solana/kit's transport in Bun, that public RPC drops sockets on back-to-back JSON-RPC calls (the scheme makes 2: `fetchMint` for the USDC mint, then `getLatestBlockhash`). One drops, payment payload creation throws "socket connection closed unexpectedly."
+- **Fix applied (2026-04-25):** `agents/solscout/paid-fetch.ts` now bypasses the broken helper and registers the schemes manually with `{ rpcUrl: heliusRpcUrl }`. Helius is paid, dedicated, doesn't drop sockets.
+- **Verified:** paid demo call against production succeeded in ~6s, real USDC settled, full due-diligence briefing returned.
+- **Upstream bug:** worth filing against `coinbase/x402` — the helper signature accepts a config (per `signer-BMkbhFYE.d.mts` types) but doesn't propagate `rpcUrl`. Workaround is straightforward (manual scheme registration) but the helper should just forward the option.
+- **Stress-mode flakes still possible:** the enrich-token-full top-holders timeout is independent and unfixed (server-side Helius rate limit, separate issue).
+
 ## Blockers
 - **@solana/kit must stay at 5.5.1** — 6.x causes @solana/errors runtime crash in Bun
 - **@coral-xyz/anchor pinned to 0.29.0** — 0.32+ requires new IDL format (address/metadata fields); reference IDLs are v0.29 era. Verified working under Bun 1.2.21.
