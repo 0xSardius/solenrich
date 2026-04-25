@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SolEnrich — Solana Onchain Data Enrichment for Agents & LLMs</title>
-  <meta name="description" content="Solana onchain data enrichment agent. 19 endpoints: Jupiter Perps market structure, wallet profiling, token analysis, risk scoring, automated activity detection, protocol analytics. Dual payments: USDC via x402 or credit cards via MPP/Stripe. JSON for agents, natural language for LLMs.">
+  <meta name="description" content="Solana onchain data enrichment agent. 21 endpoints: smart-money orchestration, Jupiter Perps market structure, wallet profiling, token analysis, risk scoring, automated activity detection, protocol analytics. Dual payments: USDC via x402 or credit cards via MPP/Stripe. JSON for agents, natural language for LLMs.">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://solenrich.com">
   <meta property="og:title" content="SolEnrich — Onchain Intelligence for Agents & LLMs">
-  <meta property="og:description" content="19 enrichment endpoints on Solana. Jupiter Perps market structure, automated activity detection, protocol analytics, wallet profiling, token risk, whale tracking, due diligence. Dual payments: USDC via x402 or credit cards via MPP/Stripe.">
+  <meta property="og:description" content="21 enrichment endpoints on Solana. Smart-money orchestration, Jupiter Perps market structure, automated activity detection, protocol analytics, wallet profiling, token risk, whale tracking, due diligence. Dual payments: USDC via x402 or credit cards via MPP/Stripe.">
   <meta property="og:image" content="https://raw.githubusercontent.com/0xSardius/solenrich/main/landing/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -18,7 +18,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SolEnrich — Onchain Intelligence for Agents & LLMs">
-  <meta name="twitter:description" content="19 enrichment endpoints on Solana. Jupiter Perps market structure, automated activity detection, protocol analytics, wallet profiling, token risk, whale tracking, due diligence. Dual payments: USDC via x402 or credit cards via MPP/Stripe.">
+  <meta name="twitter:description" content="21 enrichment endpoints on Solana. Smart-money orchestration, Jupiter Perps market structure, automated activity detection, protocol analytics, wallet profiling, token risk, whale tracking, due diligence. Dual payments: USDC via x402 or credit cards via MPP/Stripe.">
   <meta name="twitter:image" content="https://raw.githubusercontent.com/0xSardius/solenrich/main/landing/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1239,7 +1239,7 @@
           <span class="gradient-text">for agents & LLMs</span>
         </h1>
         <p class="hero-sub">
-          19 endpoints enriching any Solana wallet, token, or protocol with a single API call.
+          21 endpoints enriching any Solana wallet, token, or protocol with a single API call.
           Structured JSON for agents. Natural language briefings for LLMs.
           Pay with USDC (x402) or credit card (Stripe).
         </p>
@@ -1288,6 +1288,7 @@
     <div class="container">
       <span class="update-tag">New</span>
       <div class="update-items">
+        <span class="update-item"><span class="check">&#10003;</span> Smart-money orchestration — trending-signals &amp; smart-money-flow</span>
         <span class="update-item"><span class="check">&#10003;</span> Jupiter Perps — market structure &amp; trader profiles</span>
         <span class="update-item"><span class="check">&#10003;</span> Live USDC settlements via Coinbase CDP</span>
         <span class="update-item"><span class="check">&#10003;</span> Protocol analytics (TVL, yields, health)</span>
@@ -1376,7 +1377,7 @@
     <div class="container">
       <div class="reveal">
         <div class="section-label">Endpoints</div>
-        <h2 class="section-title">17 enrichment endpoints</h2>
+        <h2 class="section-title">21 enrichment endpoints</h2>
         <p class="section-desc">
           From quick wallet lookups to full due diligence reports.
           Every endpoint returns data in your choice of format.
@@ -1553,6 +1554,24 @@
           </div>
           <p class="endpoint-desc">Jupiter Perps positions for a wallet with size, leverage, entry, unrealized PnL, and trader classification (scalper / swing / position). Risk flags for high leverage and approaching liquidation.</p>
           <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">trending-signals</span>
+            <span class="endpoint-price">$0.050</span>
+          </div>
+          <p class="endpoint-desc">Ranks trending Solana tokens by composite signal: liquidity, holder concentration, whale flow, risk. Composed across new-tokens + due-diligence + whale-watch in one call. Returns ranked list with per-token reasoning + overall sentiment.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">orchestration</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">smart-money-flow</span>
+            <span class="endpoint-price">$0.100</span>
+          </div>
+          <p class="endpoint-desc">Three-phase pipeline: scores wallets via copy-trade win rates, filters to qualifying winners, surfaces accumulated tokens + cluster relationships. Highest-margin endpoint — composed across copy-trade-signals + whale-watch + wallet-graph.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">orchestration</span></div>
         </div>
       </div>
     </div>
