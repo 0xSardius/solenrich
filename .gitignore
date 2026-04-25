@@ -8,3 +8,7 @@ bun.lockb
 # Private strategy docs (not for public GitHub)
 project-context.md
 docs/helius-application.md
+
+# Local-only workspace — deliverables, drafts, screenshots, scratch notes
+# Anything in here stays on your machine, never pushed.
+local/
