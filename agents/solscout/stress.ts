@@ -260,6 +260,33 @@ const ENDPOINTS: Array<{
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' },
     ],
   },
+  {
+    key: 'trending-signals',
+    input: { limit: 5, min_liquidity_usd: 10000, format: 'both' },
+    timeout: 60000,
+    checks: [
+      { name: 'has tokens array', test: (d) => Array.isArray(d.tokens) },
+      { name: 'has total_scanned', test: (d) => typeof d.total_scanned === 'number' },
+      { name: 'has overall_sentiment', test: (d) => ['accumulation', 'distribution', 'mixed'].includes(d.overall_sentiment) },
+      { name: 'has filters', test: (d) => d.filters != null && d.filters.limit === 5 },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.length > 100 },
+    ],
+  },
+  {
+    key: 'smart-money-flow',
+    // Pass explicit wallets so we don't depend on the curated default seed list
+    // (which is placeholder-quality per Priority 9.5). TEST_WALLET won't qualify
+    // — we check shape correctness, not data quality.
+    input: { wallets: [TEST_WALLET], lookback_days: 14, format: 'both' },
+    timeout: 90000,
+    checks: [
+      { name: 'has seed_wallets_considered', test: (d) => typeof d.seed_wallets_considered === 'number' },
+      { name: 'has qualifying_smart_wallets array', test: (d) => Array.isArray(d.qualifying_smart_wallets) },
+      { name: 'has accumulated_tokens array', test: (d) => Array.isArray(d.accumulated_tokens) },
+      { name: 'has filters', test: (d) => d.filters != null && d.filters.user_provided_wallets === true },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' },
+    ],
+  },
 ];
 
 export class StressRunner {
