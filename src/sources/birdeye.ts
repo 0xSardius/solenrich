@@ -112,10 +112,28 @@ export class BirdeyeClient {
     const cached = await this.cache.get<Holder[]>(cacheKey);
     if (cached) return cached;
 
-    const data = await this.get<{ data: { items: Holder[] } }>(
+    // Birdeye returns { owner, token_account, amount: string, decimals, ui_amount }
+    // — map to our Holder type. `address` is the OWNER wallet (not token account).
+    // `percentage` isn't returned by the API — consumers should recompute from
+    // uiAmount / supply for accuracy.
+    type BirdeyeHolderItem = {
+      owner: string;
+      token_account: string;
+      amount: string | number;
+      decimals: number;
+      ui_amount: number;
+      mint: string;
+    };
+
+    const data = await this.get<{ data: { items: BirdeyeHolderItem[] } }>(
       `/defi/v3/token/holder?address=${mint}&limit=${limit}`,
     );
-    const holders = data.data?.items ?? [];
+    const holders: Holder[] = (data.data?.items ?? []).map((h) => ({
+      address: h.owner,
+      amount: typeof h.amount === 'string' ? Number(h.amount) : h.amount,
+      percentage: 0, // not returned by Birdeye; recompute from uiAmount / supply
+      uiAmount: h.ui_amount,
+    }));
     await this.cache.set(cacheKey, holders, CACHE_TTL.holderData);
     return holders;
   }

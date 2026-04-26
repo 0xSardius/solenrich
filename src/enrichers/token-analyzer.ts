@@ -44,6 +44,7 @@ export interface TokenEnrichment {
     pct_supply: number;
   }>;
   concentration?: HolderConcentration;
+  holders_source?: 'rpc' | 'birdeye' | 'unavailable';
   slippage_estimates?: SlippageEstimate[];
   liquidity: number;
   risk_flags: string[];
@@ -191,18 +192,24 @@ export class TokenAnalyzer {
     }
 
     // --- Holder concentration ---
+    // Path A: Helius RPC (getTokenLargestAccounts). Returns token-account addresses
+    // that need resolving to owner wallets. Returns [] for tokens with too many
+    // holders (BONK, USDC, JUP-class) due to RPC limits.
+    // Path B: Birdeye fallback (/defi/v3/token/holder). Returns owner addresses
+    // directly. No resolve step needed.
     let topHolders: TokenEnrichment['top_holders'];
     let concentration: HolderConcentration | undefined;
+    let holdersSource: 'rpc' | 'birdeye' | 'unavailable' = 'unavailable';
+    let holders: Array<{ address: string; uiAmount: number; isOwnerAddress: boolean }> = [];
 
-    if (largestAccounts.length > 0 && supply > 0) {
-      // Resolve token account owners to wallet addresses
+    if (largestAccounts.length > 0) {
+      // Path A — RPC. Resolve token accounts → owner wallets.
       let ownerMap: Array<{ tokenAccount: string; owner: string | null }> = [];
       try {
         ownerMap = await this.solanaRpc.resolveTokenAccountOwners(
           largestAccounts.map((a) => a.address),
         );
       } catch {
-        // Retry once — owner resolution is important for data consistency
         try {
           ownerMap = await this.solanaRpc.resolveTokenAccountOwners(
             largestAccounts.map((a) => a.address),
@@ -211,17 +218,37 @@ export class TokenAnalyzer {
           ownerMap = largestAccounts.map((a) => ({ tokenAccount: a.address, owner: null }));
         }
       }
+      holders = largestAccounts.map((a, i) => ({
+        address: ownerMap[i]?.owner ?? a.address,
+        uiAmount: a.uiAmount,
+        isOwnerAddress: !!ownerMap[i]?.owner,
+      }));
+      holdersSource = 'rpc';
+    } else if (this.birdeye) {
+      // Path B — Birdeye fallback for high-holder-count tokens.
+      try {
+        const birdeyeHolders = await this.birdeye.getTokenHolders(mint, 20);
+        const usable = birdeyeHolders.filter((h) => h.uiAmount > 0);
+        if (usable.length > 0) {
+          holders = usable.map((h) => ({
+            address: h.address,
+            uiAmount: h.uiAmount,
+            isOwnerAddress: true,
+          }));
+          holdersSource = 'birdeye';
+        }
+      } catch {
+        // Birdeye also failed — fall through to "unavailable"
+      }
+    }
 
-      topHolders = largestAccounts.map((account, i) => {
-        const owner = ownerMap[i]?.owner;
-        return {
-          address: owner ?? account.address,
-          balance: account.uiAmount,
-          pct_supply: (account.uiAmount / supply) * 100,
-          // Mark if we couldn't resolve the owner — consumers can filter on this
-          ...(owner ? {} : { is_token_account: true }),
-        };
-      });
+    if (holders.length > 0 && supply > 0) {
+      topHolders = holders.map((h) => ({
+        address: h.address,
+        balance: h.uiAmount,
+        pct_supply: (h.uiAmount / supply) * 100,
+        ...(h.isOwnerAddress ? {} : { is_token_account: true }),
+      }));
 
       const top1 = topHolders[0]?.pct_supply ?? 0;
       const top5 = topHolders.slice(0, 5).reduce((sum, h) => sum + h.pct_supply, 0);
@@ -287,6 +314,7 @@ export class TokenAnalyzer {
       volatility,
       top_holders: topHolders,
       concentration,
+      holders_source: holdersSource,
       slippage_estimates: slippageEstimates.length > 0 ? slippageEstimates : undefined,
       liquidity: dexData?.liquidity ?? birdeyeOverview?.liquidity ?? 0,
       risk_flags: riskFlags,
