@@ -1,11 +1,21 @@
 # Session Checkpoint
 
 ## Last session date
-2026-04-25
+2026-04-26
 
 ## What was completed
 
-### This session (April 25) — BAGS HACKATHON DELIVERABLES SHIPPED ✅
+### This session (April 26) — BIRDEYE HOLDER FALLBACK + STRESS COVERAGE 21/21 ✅
+
+- **Resolved the `enrich-token-full` top-holders flake** (`48fcca4`). Root cause was clearer than expected: Helius `getTokenLargestAccounts` returns `[]` (not throws) for tokens with too many holders — already handled in `solana-rpc.ts:82` as a non-retryable case. The downstream issue was that `token-analyzer.ts:197` then silently skipped the entire holder block, dropping `top_holders`, `concentration`, and HHI.
+- **Birdeye fallback wired in.** When `largestAccounts.length === 0` and Birdeye is configured, fall back to `birdeye.getTokenHolders(mint, 20)` (`/defi/v3/token/holder`, free tier). Birdeye returns owner addresses directly so the `resolveTokenAccountOwners` step is skipped on that path. Concentration recomputed from `uiAmount/supply` regardless of source for math consistency.
+- **Latent bug fixed in birdeye client** while there. `getTokenHolders` was never used in production; its response mapping was wrong (Birdeye returns `{ owner, ui_amount, token_account }`, the code treated items as already-shaped Holder objects). Now properly maps `owner→address`, `ui_amount→uiAmount`. Caught only because we became the first consumer.
+- **Added `holders_source: 'rpc' | 'birdeye' | 'unavailable'`** field to TokenEnrichment for data-provenance auditability.
+- **Stress suite expanded to all 21 endpoints** (`615aebd`). Added `trending-signals` (limit=5, ~$0.05) and `smart-money-flow` (explicit `wallets=[TEST_WALLET]` to bypass the placeholder seed list, ~$0.10) with shape-only checks.
+- **Verified end-to-end on production:** **21/21 passed**, avg latency 3804ms (down from 6232ms — Birdeye fallback is faster than the failing RPC retry on flake). `enrich-token-full` against BONK now passes 6/6 (was 2/6 all session).
+- **Discovered: BONK / JUP / USDC all route through Birdeye now.** Helius RPC's "Too many accounts" limit kicks in around ~500K holders, not just at multi-million. Concentration math is source-independent, so no behavioral change for consumers — but it means the `rpc` path is reserved for sub-500K-holder tokens.
+
+### Previous session (April 25) — BAGS HACKATHON DELIVERABLES SHIPPED ✅
 
 - **Bags hackathon submission DELIVERED.** Demo video filmed + tweet thread + roadmap doc. All three artifacts in `local/hackathon-bags/` (gitignored).
 - **paid-fetch RPC fix shipped** (`938c4d7`). Discovered upstream bug in `@x402/svm`'s `registerExactSvmScheme` helper — accepts a `{ rpcUrl }` config but never forwards it to the scheme constructor, so the scheme silently falls back to `api.mainnet-beta.solana.com`. Under @solana/kit's transport in Bun, that public RPC drops sockets on back-to-back JSON-RPC calls (`fetchMint` + `getLatestBlockhash`), surfacing as "Failed to create payment payload: socket connection closed unexpectedly." Fix: bypass the helper and register `ExactSvmScheme` + `ExactSvmSchemeV1` manually with `{ rpcUrl: heliusRpcUrl }`. **Worth filing upstream against `coinbase/x402` when there's time.** Verified with paid call against production — 6s end-to-end, real USDC settled.
@@ -100,6 +110,7 @@
 
 ## Current state
 - **Bags hackathon: SUBMITTED 2026-04-25.** Demo + tweet thread + roadmap delivered. Awaiting judging.
+- **All 21 paid endpoints verified green on production (2026-04-26).** Last paid stress: 21/21, avg 3804ms. Stress suite now covers all endpoints (was 19/21).
 - **Traction stat to update before tweet posts:** 49 paid x402 calls via Orbis as of recording day. Will likely be higher by post day — refresh the dashboard before posting Tweet 3.
 - **Hackathon rank (pre-submission):** #37 on Bags leaderboard, prize-eligible
 - **Live API:** https://api.solenrich.com
@@ -111,7 +122,8 @@
 - **Payments:** Dual-protocol — x402 (Solana USDC, default) + MPP/Stripe (fiat)
 - **Endpoints:** 21 paid + free demo + /docs + /openapi.json + /metrics + /.well-known/x402 + /llms.txt
 - **Railway:** Auto-deploying from GitHub main branch
-- **paid-fetch:** Now uses Helius RPC. Demo recordings reliable; previous public-RPC socket-close failures resolved.
+- **paid-fetch:** Uses Helius RPC. Demo recordings reliable; public-RPC socket-close failures resolved.
+- **Token holder data:** Auto-falls-back from Helius RPC to Birdeye when Helius hits the "Too many accounts" limit (~500K+ holders). Source visible via `holders_source` field.
 
 ## Next session plan (ACTION ITEMS)
 
@@ -180,16 +192,11 @@ Unblocked now that `trending-signals` is shipped. Scope: daily cron runs `trendi
 
 ## Known Bugs (non-blocking)
 
-### `enrich-token-full` top-holders flakiness
-- **Symptom:** SolScout stress test (2026-04-22) showed 2/6 checks pass on `enrich-token-full` against BONK — specifically top_holders, pct_supply, concentration, and HHI fields were missing/empty. Volatility and llm_summary passed. Payment settled 200, so the flow works; the upstream holder-fetch branch dropped.
-- **Suspected cause:** Helius `getTokenLargestAccounts` rate-limit or timeout on high-holder-count tokens like BONK (~1M holders). The parallel-fetch task probably failed silently; no retry in place.
-- **Impact:** Degrades silently — agents still get price/volatility/risk_flags, lose top_holders/concentration/HHI. Most tokens with fewer holders don't trip this.
-- **Intermittent:** Other runs against BONK have passed all 6 checks. Pre-existing, not caused by today's changes.
-- **Fix options when we get to it:**
-  - Retry with backoff on `getTokenLargestAccounts`
-  - Mark holders block as `partial: true, error: "upstream_timeout"` so agents distinguish "empty" from "failed"
-  - Fallback to Birdeye's holder endpoint when Helius times out
-- **Priority:** Low. Not blocking anything. Track and revisit in a maintenance session.
+### `enrich-token-full` top-holders flakiness — RESOLVED 2026-04-26 ✅
+- **Symptom (was):** SolScout paid stress against BONK showed 2/6 checks pass on `enrich-token-full` — `top_holders`, `pct_supply`, `concentration`, `HHI` all missing.
+- **Real root cause (found 2026-04-26):** not a timeout. Helius `getTokenLargestAccounts` returns `[]` (handled, non-throwing) when a token has too many holders for the RPC index — happens to BONK / JUP / USDC and any token with ~500K+ holders. `token-analyzer.ts` then silently skipped the entire holder block (gated on `largestAccounts.length > 0`).
+- **Fix shipped (`48fcca4`):** Birdeye fallback in `token-analyzer.ts`. When Helius returns `[]`, fall back to `birdeye.getTokenHolders(mint, 20)` (free tier `/defi/v3/token/holder`). Birdeye returns owner addresses directly, so `resolveTokenAccountOwners` is skipped on that path. Concentration math recomputed from `uiAmount/supply` regardless of source. Also fixed a latent response-mapping bug in the Birdeye client (`getTokenHolders` was never used before; mapping was wrong).
+- **Verified:** USDC, BONK, JUP all return 20 holders + concentration with `holders_source: birdeye`. Production paid stress 21/21 green.
 
 ### `enrich-wallet-light` paid stress-mode hang (2026-04-25)
 - **Symptom:** SolScout paid stress run reported `0/0 checks` on `enrich-wallet-light`. In the stress runner that means the request hung past the 30s AbortController limit OR returned a non-200/non-402 status — not a data-quality issue.
@@ -205,6 +212,9 @@ Unblocked now that `trending-signals` is shipped. Scope: daily cron runs `trendi
 - **Stripe E2E still untested** — MPP middleware is now correctly gated behind `Authorization: Payment` header. Without a test Stripe card we haven't confirmed end-to-end, but structural routing verified (no-auth requests get x402 challenge, not MPP).
 
 ## Key decisions made
+- **Birdeye holder fallback fires only on `length === 0`** (2026-04-26) — don't second-guess Helius when it returned data. The "Too many accounts" branch in `solana-rpc.ts:82` is the only natural producer of empty arrays. Keeping the trigger condition narrow avoids accidentally rerouting valid RPC results.
+- **`holders_source` field is permanent, not temporary** (2026-04-26) — debug-flavored fields are a category we want to keep adding. `holders_source: 'rpc' | 'birdeye' | 'unavailable'` lets agents audit data provenance and lets us track Birdeye fallback frequency without server logs. Pattern worth replicating elsewhere.
+- **Concentration math is source-independent** (2026-04-26) — recompute `pct_supply = uiAmount / supply * 100` regardless of whether holders came from RPC or Birdeye. Don't trust upstream `percentage` fields. Same units, same formula, same answer.
 - **paid-fetch must bypass `registerExactSvmScheme` helper** (2026-04-25) — the helper accepts a `{ rpcUrl }` config but doesn't forward it to `ExactSvmScheme`/`ExactSvmSchemeV1` constructors. The schemes silently fall back to public mainnet RPC, which drops sockets in Bun on back-to-back JSON-RPC calls. `agents/solscout/paid-fetch.ts` now registers the schemes manually with Helius RPC. Worth filing upstream against `coinbase/x402`.
 - **Demo token sourcing — re-scout same-day** (2026-04-25) — fresh pump.fun tokens shift dramatically between scouting and recording. Original ETH impersonator (morning) crashed too far by afternoon. Re-ran `new-tokens` + `due-diligence` immediately before filming, picked Barron / "Insider Trencher" with real whale accumulation data. Lesson: scout the demo token within a 1-hour window of filming, not the day before.
 - **MPP must be gated behind `Authorization: Payment` header** (2026-04-19) — Hono continues middleware chain after x402 returns a response. MPP registered as unconditional `app.use()` would overwrite x402's result. Always wrap MPP's chargeHandler in a check that calls `next()` when there's no MPP credential.
