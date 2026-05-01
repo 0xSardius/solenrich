@@ -2,9 +2,17 @@ import type { Cache } from '../cache';
 import type { CopyTradeAnalyzer, CopyTradeEnrichment } from './copy-trade-analyzer';
 import type { WhaleWatcher } from './whale-watch';
 import type { GraphMapper } from './graph-mapper';
+import type { TokenDiscovery } from './token-discovery';
 import { CACHE_TTL } from '../config';
 import { formatTimestamp, shortenAddress } from '../utils/normalize';
-import { resolveSeedWallets } from './smart-money-seeds';
+import { DEFAULT_SMART_MONEY_SEEDS } from './smart-money-seeds';
+
+const DERIVED_SEEDS_CACHE_KEY = 'smart-money:derived-seeds:v1';
+const DERIVED_SEEDS_TTL = 7 * 24 * 60 * 60; // 7 days
+const MIN_DERIVED_SEEDS = 5;
+const MAX_DERIVED_SEEDS = 50;
+const TRENDING_TOKEN_LIMIT = 10;
+const TRENDING_MIN_LIQUIDITY = 50_000;
 
 export interface SmartWallet {
   address: string;
@@ -32,6 +40,7 @@ export interface WalletCluster {
 
 export interface SmartMoneyFlowResult {
   seed_wallets_considered: number;
+  seed_source: 'user' | 'derived' | 'fallback';
   qualifying_smart_wallets: SmartWallet[];
   accumulated_tokens: AccumulatedToken[];
   clusters: WalletCluster[];
@@ -61,7 +70,62 @@ export class SmartMoneyAnalyzer {
     private whaleWatcher: WhaleWatcher,
     private graphMapper: GraphMapper,
     private cache: Cache,
+    private tokenDiscovery?: TokenDiscovery,
   ) {}
+
+  /**
+   * Programmatically derives a seed list from current on-chain trending-token
+   * whale activity. Cached 7d so we only pay the derivation cost once per week.
+   *
+   * Algorithm:
+   *   1. Discover top trending tokens via TokenDiscovery
+   *   2. For each, fetch top whales via WhaleWatcher
+   *   3. Pool unique addresses, exclude entity-labeled wallets (CEXes, protocols)
+   *   4. Cap at MAX_DERIVED_SEEDS to bound downstream copy-trade scoring cost
+   *
+   * Returns null if derivation yields fewer than MIN_DERIVED_SEEDS — caller
+   * falls back to DEFAULT_SMART_MONEY_SEEDS.
+   */
+  private async deriveDefaultSeeds(): Promise<readonly string[] | null> {
+    const cached = await this.cache.get<string[]>(DERIVED_SEEDS_CACHE_KEY);
+    if (cached && cached.length >= MIN_DERIVED_SEEDS) return cached;
+
+    if (!this.tokenDiscovery) return null;
+
+    try {
+      const discovery = await this.tokenDiscovery.discover(
+        TRENDING_MIN_LIQUIDITY,
+        0.8, // accept all but the riskiest
+        TRENDING_TOKEN_LIMIT,
+      );
+      if (discovery.tokens.length === 0) return null;
+
+      const whaleResults = await Promise.allSettled(
+        discovery.tokens.map((t) => this.whaleWatcher.enrich(t.mint, 10_000, 72)),
+      );
+
+      const candidates = new Set<string>();
+      for (const r of whaleResults) {
+        if (r.status !== 'fulfilled') continue;
+        for (const whale of r.value.whales) {
+          // Exclude entity-labeled wallets (CEX hot wallets, protocol vaults, etc.)
+          // — they're high-volume but not active traders.
+          if (whale.entity_label) continue;
+          candidates.add(whale.address);
+          if (candidates.size >= MAX_DERIVED_SEEDS) break;
+        }
+        if (candidates.size >= MAX_DERIVED_SEEDS) break;
+      }
+
+      if (candidates.size < MIN_DERIVED_SEEDS) return null;
+
+      const derived = Array.from(candidates);
+      await this.cache.set(DERIVED_SEEDS_CACHE_KEY, derived, DERIVED_SEEDS_TTL);
+      return derived;
+    } catch {
+      return null;
+    }
+  }
 
   async enrich(
     userWallets: readonly string[] | undefined,
@@ -70,8 +134,28 @@ export class SmartMoneyAnalyzer {
     topNTokens: number,
     includeGraph: boolean,
   ): Promise<SmartMoneyFlowResult> {
-    const seeds = resolveSeedWallets(userWallets);
-    const cacheKey = `smart-money:${seeds.length}:${lookbackDays}:${minWinRate}:${topNTokens}:${includeGraph}:${seeds.slice(0, 3).join(',')}`;
+    // Resolve seed wallets:
+    //   - User provided → use as-is (BYO path, unchanged)
+    //   - Default → try programmatic derivation
+    //   - Derivation failed → fallback curated list
+    let seeds: readonly string[];
+    let seedSource: 'user' | 'derived' | 'fallback';
+
+    if (userWallets && userWallets.length > 0) {
+      seeds = Array.from(new Set(userWallets));
+      seedSource = 'user';
+    } else {
+      const derived = await this.deriveDefaultSeeds();
+      if (derived && derived.length >= MIN_DERIVED_SEEDS) {
+        seeds = derived;
+        seedSource = 'derived';
+      } else {
+        seeds = DEFAULT_SMART_MONEY_SEEDS;
+        seedSource = 'fallback';
+      }
+    }
+
+    const cacheKey = `smart-money:${seedSource}:${seeds.length}:${lookbackDays}:${minWinRate}:${topNTokens}:${includeGraph}:${seeds.slice(0, 3).join(',')}`;
     const cached = await this.cache.get<SmartMoneyFlowResult>(cacheKey);
     if (cached) return cached;
 
@@ -173,6 +257,7 @@ export class SmartMoneyAnalyzer {
 
     const out: SmartMoneyFlowResult = {
       seed_wallets_considered: seeds.length,
+      seed_source: seedSource,
       qualifying_smart_wallets: qualifying,
       accumulated_tokens: accumulated,
       clusters,

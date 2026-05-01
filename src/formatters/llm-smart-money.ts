@@ -7,6 +7,16 @@ export function formatSmartMoneyBriefing(data: SmartMoneyFlowResult): string {
   lines.push('## Smart Money Flow — Where High-Performing Wallets Are Moving');
   lines.push('');
 
+  // Seed-source provenance line — agents can audit where the candidate set came from
+  const seedNote =
+    data.seed_source === 'user'
+      ? `_Seeds: your provided list (${data.seed_wallets_considered} wallets)._`
+      : data.seed_source === 'derived'
+        ? `_Seeds: programmatically derived from current trending-token whale activity (${data.seed_wallets_considered} candidates, refreshed weekly)._`
+        : `_Seeds: curated fallback list (${data.seed_wallets_considered} wallets) — programmatic derivation unavailable this cycle._`;
+  lines.push(seedNote);
+  lines.push('');
+
   if (data.qualifying_smart_wallets.length === 0) {
     lines.push(
       `Scanned ${data.seed_wallets_considered} seed wallets over the last ${data.filters.lookback_days} days. **None qualified** at the current filter (win rate ≥ ${(data.filters.min_win_rate * 100).toFixed(0)}%, ≥ 5 trades).`,

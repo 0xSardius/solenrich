@@ -1,23 +1,17 @@
-// Curated seed list of candidate "smart money" Solana wallets for smart-money-flow v1.
+// Fallback seed list for smart-money-flow when programmatic derivation fails.
 //
-// This is a starter list. Agents can pass their own via the `wallets` input param to
-// override it. Over time we'll replace this with signal-capture-derived candidates
-// (wallets that real agents have queried via copy-trade-signals and found profitable).
+// The default behavior is now to derive seeds programmatically from current
+// trending-token whale activity (see SmartMoneyAnalyzer.deriveDefaultSeeds).
+// This list is the last-resort fallback when derivation throws or yields too
+// few candidates.
 //
 // Curation rules applied:
 // - Wallets with >$500k reported activity or public reputation for profitable trading
 // - No known bots or MEV searchers (those are a different signal)
 // - No team/foundation wallets (those skew aggregate metrics)
 // - Mix of DeFi power users + memecoin traders + perps traders
-//
-// Source notes: these are public Solana addresses documented in community smart-money
-// lists and on-chain leaderboards. No private intel. Users/agents should treat as a
-// starting point, not a validated index — the actual copy-trade-signals analysis
-// applied per-wallet will filter down to what's genuinely performing right now.
 
 export const DEFAULT_SMART_MONEY_SEEDS: readonly string[] = [
-  // Solana Foundation treasury — control/baseline signal, high-volume but non-speculative
-  'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg',
   // Publicly tracked active traders (from Birdeye/Nansen-style community lists)
   'GDfnEsia2WLAW5t8yx2X5j2mkfA74i5kwGdDuZHt7XmG',
   'BTf4A2exGK9BCVDNznC9YfyQc5A61jSHGUjW4bxV6uUk',

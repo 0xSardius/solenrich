@@ -337,7 +337,7 @@ registerPerpsEntrypoints(addEntrypoint, perpsAnalyzer);
 // intelligence. Higher-margin endpoints ($0.05-$0.10) reflecting the work of
 // chaining 3-5 sub-enrichers per call.
 const trendingSignalsAnalyzer = new TrendingSignalsAnalyzer(tokenDiscovery, whaleWatcher, cache);
-const smartMoneyAnalyzer = new SmartMoneyAnalyzer(copyTradeAnalyzer, whaleWatcher, graphMapper, cache);
+const smartMoneyAnalyzer = new SmartMoneyAnalyzer(copyTradeAnalyzer, whaleWatcher, graphMapper, cache, tokenDiscovery);
 registerOrchestrationEntrypoints(addEntrypoint, trendingSignalsAnalyzer, smartMoneyAnalyzer);
 
 // --- Demo endpoint (free, rate-limited, for landing page) ---
