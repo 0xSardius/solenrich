@@ -68,6 +68,7 @@ export class DueDiligenceAnalyzer {
       total_whale_volume_usd: 0,
       net_flow_direction: 'neutral',
       whale_count: 0,
+      holders_source: 'unavailable',
       last_updated: formatTimestamp(),
     };
 

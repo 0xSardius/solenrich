@@ -29,10 +29,11 @@ export interface TokenSecurity {
 }
 
 export interface Holder {
-  address: string;
+  address: string;          // owner wallet (not the token account)
   amount: number;
   percentage: number;
   uiAmount: number;
+  tokenAccount?: string;    // ATA address, used downstream for signature lookups
 }
 
 export interface WalletPortfolioItem {
@@ -133,6 +134,7 @@ export class BirdeyeClient {
       amount: typeof h.amount === 'string' ? Number(h.amount) : h.amount,
       percentage: 0, // not returned by Birdeye; recompute from uiAmount / supply
       uiAmount: h.ui_amount,
+      tokenAccount: h.token_account,
     }));
     await this.cache.set(cacheKey, holders, CACHE_TTL.holderData);
     return holders;

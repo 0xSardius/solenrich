@@ -1,6 +1,7 @@
 import type { HeliusClient, EnhancedTransaction } from '../sources/helius';
 import type { DexScreenerClient } from '../sources/dexscreener';
 import type { SolanaRpcClient } from '../sources/solana-rpc';
+import type { BirdeyeClient } from '../sources/birdeye';
 import type { PriceAggregator } from '../utils/price-aggregator';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
@@ -31,6 +32,7 @@ export interface WhaleWatchEnrichment {
   total_whale_volume_usd: number;
   net_flow_direction: 'accumulating' | 'distributing' | 'neutral';
   whale_count: number;
+  holders_source: 'rpc' | 'birdeye' | 'unavailable';
   last_updated: string;
 }
 
@@ -41,6 +43,7 @@ export class WhaleWatcher {
     private solanaRpc: SolanaRpcClient,
     private cache: Cache,
     private priceAggregator?: PriceAggregator,
+    private birdeye?: BirdeyeClient,
   ) {}
 
   async enrich(
@@ -68,26 +71,50 @@ export class WhaleWatcher {
     const rawSupply = mintInfo?.supply ?? 0;
     const supply = decimals > 0 ? rawSupply / 10 ** decimals : rawSupply;
 
-    if (largestAccounts.length === 0) {
+    // Resolve top holders. Same dual-path pattern as token-analyzer:
+    // Path A — Helius RPC's largestAccounts (fast for sub-500K-holder tokens)
+    // Path B — Birdeye fallback when Helius hits "Too many accounts" limit
+    let holders: Array<{ walletAddress: string; tokenAccount: string; balance: number; pctSupply: number }> = [];
+    let holdersSource: 'rpc' | 'birdeye' | 'unavailable' = 'unavailable';
+
+    if (largestAccounts.length > 0) {
+      // Path A — RPC. Resolve token-account → owner.
+      const topN = largestAccounts.slice(0, 10);
+      let ownerMap: Array<{ tokenAccount: string; owner: string | null }> = [];
+      try {
+        ownerMap = await this.solanaRpc.resolveTokenAccountOwners(topN.map((a) => a.address));
+      } catch {
+        ownerMap = topN.map((a) => ({ tokenAccount: a.address, owner: null }));
+      }
+      holders = topN.map((account, i) => ({
+        walletAddress: ownerMap[i]?.owner ?? account.address,
+        tokenAccount: account.address,
+        balance: account.uiAmount,
+        pctSupply: supply > 0 ? (account.uiAmount / supply) * 100 : 0,
+      }));
+      holdersSource = 'rpc';
+    } else if (this.birdeye) {
+      // Path B — Birdeye. Returns owner + token_account directly.
+      try {
+        const birdeyeHolders = await this.birdeye.getTokenHolders(mint, 10);
+        const usable = birdeyeHolders.filter((h) => h.uiAmount > 0);
+        if (usable.length > 0) {
+          holders = usable.map((h) => ({
+            walletAddress: h.address,
+            tokenAccount: h.tokenAccount ?? h.address,
+            balance: h.uiAmount,
+            pctSupply: supply > 0 ? (h.uiAmount / supply) * 100 : 0,
+          }));
+          holdersSource = 'birdeye';
+        }
+      } catch {
+        // fall through to empty
+      }
+    }
+
+    if (holders.length === 0) {
       return this.emptyResult(mint, thresholdUsd, lookbackHours);
     }
-
-    // Phase 2: Resolve token account owners + get signatures for top holders
-    const topN = largestAccounts.slice(0, 10);
-    let ownerMap: Array<{ tokenAccount: string; owner: string | null }> = [];
-    try {
-      ownerMap = await this.solanaRpc.resolveTokenAccountOwners(topN.map((a) => a.address));
-    } catch {
-      ownerMap = topN.map((a) => ({ tokenAccount: a.address, owner: null }));
-    }
-
-    // Build holder info with wallet addresses
-    const holders = topN.map((account, i) => ({
-      walletAddress: ownerMap[i]?.owner ?? account.address,
-      tokenAccount: account.address,
-      balance: account.uiAmount,
-      pctSupply: supply > 0 ? (account.uiAmount / supply) * 100 : 0,
-    }));
 
     // Phase 3: Get recent signatures for each top holder's token account
     const sigTasks: ParallelTask<any>[] = holders.map((h) => ({
@@ -201,6 +228,7 @@ export class WhaleWatcher {
       total_whale_volume_usd: totalAccumulation + totalDistribution,
       net_flow_direction: netDirection,
       whale_count: whales.length,
+      holders_source: holdersSource,
       last_updated: formatTimestamp(),
     };
 
@@ -217,6 +245,7 @@ export class WhaleWatcher {
       total_whale_volume_usd: 0,
       net_flow_direction: 'neutral',
       whale_count: 0,
+      holders_source: 'unavailable',
       last_updated: formatTimestamp(),
     };
   }
