@@ -1,11 +1,22 @@
 # Session Checkpoint
 
 ## Last session date
-2026-04-26
+2026-05-02
 
 ## What was completed
 
-### This session (April 26) — BIRDEYE HOLDER FALLBACK + STRESS COVERAGE 21/21 ✅
+### This session (May 1–2) — SMART-MONEY DERIVATION + WHALE-WATCH FALLBACK + STRICTER STRESS
+
+**Three commits, two verified-working fixes, one tuning issue caught by the new stricter stress.**
+
+- **whale-watch Birdeye fallback shipped** (`ae640b8`). Same root cause + same fix shape as the Apr-26 token-analyzer fix, in a parallel code path that wasn't covered then. Helius `getTokenLargestAccounts` returns `[]` for tokens with ~500K+ holders (BONK, JUP, USDC, RAY); whale-watch silently returned an empty whales array. Now falls back to `birdeye.getTokenHolders` with owner+token_account passthrough so downstream signature lookups still work. Adds `holders_source` to `WhaleWatchEnrichment`. **Verified on production** — paid stress shows whale-watch 6/6 with `whale_count > 0` on BONK target.
+- **Smart-money-flow programmatic seed derivation shipped** (`7956824`). Replaces the placeholder default seed list with derivation from current trending-token whale activity: discover top trending tokens → fetch top whales for each → pool unique candidates, exclude entity-labeled CEXes/protocols → cap at 50 → cache 7 days. BYO `wallets` path unchanged. New `seed_source: 'user' | 'derived' | 'fallback'` field for data provenance.
+- **Solana Foundation wallet removed** from `DEFAULT_SMART_MONEY_SEEDS` (now 19 wallets). Cleanup that ships regardless of derivation path success.
+- **Stress suite strengthened** (uncommitted). whale-watch now requires `whale_count > 0` and validates `holders_source`. smart-money-flow now drops the explicit `wallets` arg and asserts `seed_source === 'derived'` — surfaces derivation failures instead of masking them with shape-only checks.
+- **Production paid stress: 20/21** (May 2). Single failure is the new strict `seed_source === 'derived'` check on smart-money-flow — derivation is running (~11s latency) but yielding < 5 candidates → falls back. **Most likely cause: TRENDING_MIN_LIQUIDITY=50K is too strict for current trending-token liquidity profile.** Tracked as Task #15.
+- **agentic.market check** — still no SolEnrich listing among their 50 indexed services. Watching weekly.
+
+### Previous session (April 26) — BIRDEYE HOLDER FALLBACK + STRESS COVERAGE 21/21 ✅
 
 - **Resolved the `enrich-token-full` top-holders flake** (`48fcca4`). Root cause was clearer than expected: Helius `getTokenLargestAccounts` returns `[]` (not throws) for tokens with too many holders — already handled in `solana-rpc.ts:82` as a non-retryable case. The downstream issue was that `token-analyzer.ts:197` then silently skipped the entire holder block, dropping `top_holders`, `concentration`, and HHI.
 - **Birdeye fallback wired in.** When `largestAccounts.length === 0` and Birdeye is configured, fall back to `birdeye.getTokenHolders(mint, 20)` (`/defi/v3/token/holder`, free tier). Birdeye returns owner addresses directly so the `resolveTokenAccountOwners` step is skipped on that path. Concentration recomputed from `uiAmount/supply` regardless of source for math consistency.
@@ -110,7 +121,8 @@
 
 ## Current state
 - **Bags hackathon: SUBMITTED 2026-04-25.** Demo + tweet thread + roadmap delivered. Awaiting judging.
-- **All 21 paid endpoints verified green on production (2026-04-26).** Last paid stress: 21/21, avg 3804ms. Stress suite now covers all endpoints (was 19/21).
+- **All 21 paid endpoints serving real USDC on production.** Last paid stress (2026-05-02): 20/21, avg 7118ms. Single failure is the strict `seed_source === 'derived'` check on smart-money-flow — feature didn't activate, not a regression. All agents still get valid 200 responses on every endpoint.
+- **Stress suite strengthened (uncommitted)** — whale-watch and smart-money-flow now have data-quality checks, not just shape checks. Caught a real activation gap on first run. Commit before next session.
 - **Traction stat to update before tweet posts:** 49 paid x402 calls via Orbis as of recording day. Will likely be higher by post day — refresh the dashboard before posting Tweet 3.
 - **Hackathon rank (pre-submission):** #37 on Bags leaderboard, prize-eligible
 - **Live API:** https://api.solenrich.com
@@ -138,15 +150,18 @@ Session on 2026-04-21 established the counter-positioning thesis: SolEnrich wins
 - Before posting: refresh "49 paid calls" stat from Orbis dashboard (will likely be higher), confirm `@bagsapp` / `@CoinbaseDev` / `@AnthropicAI` / `@orbisapi` handles, confirm "agentic.commerce" vs "agentic.market" wording
 - Watch judging signals + organic engagement; queue follow-up content if thread underperforms (see thread-v3.md "If thread underperforms")
 
-### 2. DECIDE — smart-money-flow seed list path (Priority 9.5)
-See "PINNED" section in completed work. Three paths still open:
-1. **Programmatic derivation (recommended)** — derive smart money from `whale-watch` top holders of trending tokens, score via copy-trade, cache winners as rotating seed list. ~1-2 sessions.
-2. **Manual curation** from Birdeye top traders + public Twitter lists + Jupiter Perps top PnL.
-3. **Stopgap** — lower default `min_win_rate` to 0.35 (last resort).
+### 2. Tune smart-money derivation thresholds (Task #15) — ~30 min + 1 paid stress
+Programmatic derivation (`7956824`) shipped May 1 but `seed_source: fallback` in production stress (May 2). 11s derivation latency means it's running but yielding <5 candidates → falls through to the curated 19-wallet fallback.
 
-**Quick wins independent of path choice:**
-- Remove `vines1...` (Solana Foundation) from default seed list
-- Update `/docs` to encourage agents to BYO `wallets` array
+**Most likely cause:** `TRENDING_MIN_LIQUIDITY = 50_000` in `src/enrichers/smart-money-flow.ts` is too strict for current pump.fun-class trending tokens (typically $10-30K liquidity). Quick fix:
+- Lower to `15_000` (matches what `new-tokens` typically returns)
+- Lower `TRENDING_TOKEN_LIMIT` from 10 to 5 (gentler on Birdeye free-tier rate limits during cold-cache derivation)
+
+**Also commit before next session:** the stress.ts strengthening from May 2 (whale-watch `whale_count > 0`, smart-money `seed_source === 'derived'`). Currently uncommitted in working tree.
+
+**If threshold tune doesn't fix it:** add server-side logging to `deriveDefaultSeeds()` to see exactly which step yields 0 candidates.
+
+**Note:** Solana Foundation wallet already removed from `DEFAULT_SMART_MONEY_SEEDS` (May 1). BYO `wallets` path unaffected by all of this — derivation only fires when caller omits `wallets` arg.
 
 ### 3. Intelligence Feed V1 (Priority 14) — ~$0 marginal cost, 1-2 sessions
 Unblocked now that `trending-signals` is shipped. Scope: daily cron runs `trending-signals` once, caches output in Redis (24h TTL), serves via `GET /feed/latest` (JSON). List as separate paid endpoint on Orbis: "daily intelligence brief — $0.005". Validation trigger for V2 (SSE + webhooks): 10+ agents polling V1 daily within 2 weeks.
@@ -212,6 +227,8 @@ Unblocked now that `trending-signals` is shipped. Scope: daily cron runs `trendi
 - **Stripe E2E still untested** — MPP middleware is now correctly gated behind `Authorization: Payment` header. Without a test Stripe card we haven't confirmed end-to-end, but structural routing verified (no-auth requests get x402 challenge, not MPP).
 
 ## Key decisions made
+- **Stress checks should include data-quality assertions, not just shape** (2026-05-02) — `Array.isArray(d.whales)` passes for empty arrays. Real data quality (`whale_count > 0`, `seed_source === 'derived'`) catches silent fallbacks. Worth the small risk of stress flakiness because the alternative is bugs landing in prod undetected.
+- **Derivation failure ≠ regression** (2026-05-02) — when smart-money-flow falls back to the curated list, agents still get a valid 200 response with the same data they got before today. The stress reports the failure because the new feature didn't activate, not because the endpoint broke. Important framing for future "production smoke test" debates.
 - **Birdeye holder fallback fires only on `length === 0`** (2026-04-26) — don't second-guess Helius when it returned data. The "Too many accounts" branch in `solana-rpc.ts:82` is the only natural producer of empty arrays. Keeping the trigger condition narrow avoids accidentally rerouting valid RPC results.
 - **`holders_source` field is permanent, not temporary** (2026-04-26) — debug-flavored fields are a category we want to keep adding. `holders_source: 'rpc' | 'birdeye' | 'unavailable'` lets agents audit data provenance and lets us track Birdeye fallback frequency without server logs. Pattern worth replicating elsewhere.
 - **Concentration math is source-independent** (2026-04-26) — recompute `pct_supply = uiAmount / supply * 100` regardless of whether holders came from RPC or Birdeye. Don't trust upstream `percentage` fields. Same units, same formula, same answer.

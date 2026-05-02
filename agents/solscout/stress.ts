@@ -104,7 +104,11 @@ const ENDPOINTS: Array<{
     checks: [
       { name: 'has mint', test: (d) => d.mint === TEST_TOKEN },
       { name: 'has whales array', test: (d) => Array.isArray(d.whales) },
+      // BONK has ~1M holders → routes through Birdeye fallback. whale_count > 0
+      // validates the May-1 holder-fallback fix actually populated whales.
+      { name: 'whale_count > 0', test: (d) => typeof d.whale_count === 'number' && d.whale_count > 0, detail: (d) => `whale_count=${d.whale_count}, holders_source=${d.holders_source}` },
       { name: 'has net_flow_direction', test: (d) => typeof d.net_flow_direction === 'string' },
+      { name: 'has holders_source', test: (d) => ['rpc', 'birdeye', 'unavailable'].includes(d.holders_source) },
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' },
     ],
   },
@@ -274,16 +278,16 @@ const ENDPOINTS: Array<{
   },
   {
     key: 'smart-money-flow',
-    // Pass explicit wallets so we don't depend on the curated default seed list
-    // (which is placeholder-quality per Priority 9.5). TEST_WALLET won't qualify
-    // — we check shape correctness, not data quality.
-    input: { wallets: [TEST_WALLET], lookback_days: 14, format: 'both' },
-    timeout: 90000,
+    // No `wallets` input — exercises the programmatic seed-derivation path
+    // (May-2 fix). seed_source should be 'derived' on success, 'fallback' if
+    // derivation is broken upstream.
+    input: { lookback_days: 14, format: 'both' },
+    timeout: 120000,
     checks: [
       { name: 'has seed_wallets_considered', test: (d) => typeof d.seed_wallets_considered === 'number' },
       { name: 'has qualifying_smart_wallets array', test: (d) => Array.isArray(d.qualifying_smart_wallets) },
       { name: 'has accumulated_tokens array', test: (d) => Array.isArray(d.accumulated_tokens) },
-      { name: 'has filters', test: (d) => d.filters != null && d.filters.user_provided_wallets === true },
+      { name: 'seed_source is derived', test: (d) => d.seed_source === 'derived', detail: (d) => `seed_source=${d.seed_source}, seeds=${d.seed_wallets_considered}` },
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' },
     ],
   },
