@@ -1,11 +1,22 @@
 # Session Checkpoint
 
 ## Last session date
-2026-05-02
+2026-05-03
 
 ## What was completed
 
-### This session (May 1–2) — SMART-MONEY DERIVATION + WHALE-WATCH FALLBACK + STRICTER STRESS
+### This session (May 3) — DERIVATION ACTIVATED + /DOCS PAGE LIVE + FEED V1 LOCKED IN
+
+**Five tasks closed, four commits shipped, one core feature decision made.**
+
+- **Smart-money derivation activated on production** (`d06c2d7`). Lowered `TRENDING_MIN_LIQUIDITY` 50K → 15K (matches what `new-tokens` typically returns on current pump.fun-class trending) and `TRENDING_TOKEN_LIMIT` 10 → 5 (gentler on Birdeye free-tier rate limits during cold-cache derivation). Paid stress now reports **21/21 with `seed_source === 'derived'`** strict check passing — first production activation. Cold-cache derivation runs ~28s; cached 7d after.
+- **`/docs` page shipped at solenrich.com/docs** (`f2ad054`, `b0b3462`). New `landing/docs.html` is design-matched to the landing site and fetches `api.solenrich.com/docs` JSON dynamically. Renders Quick Start, Payment, Output Formats, all 21 endpoint cards (with live filter input), Risk Methodology, Data Sources, Entity Labeling. Sticky sidebar nav with anchors + discovery links (openapi.json, llms.txt, /.well-known/x402, MCP server). Vercel `cleanUrls: true` enables the no-extension URL.
+- **Birdeye added to landing data sources card** (5 → 6 sources). Birdeye has been wired in since Apr-14 (Priority 7) but landing claimed 5.
+- **`perps-trader-profile` verified against a real Jupiter Perps trader** (`BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu`, 5 open positions, $35K gross exposure, 1.82x weighted leverage). Output is dramatic: `-61% net_pnl_pct` on collateral, all position flags firing (`losing_collateral`, `approaching_liquidation`, `stale_position`), holding a SOL long opened 209 days ago through ~30% drawdown. **Better demo material than what we used in the original Bags video.** Discovery utility committed at `test/find-perps-trader.ts` for future re-runs.
+- **Hackathon May update tweet drafted** at `local/hackathon-bags/tweet-thread/update-may-v1.md`. Three hook options; recommended is "Two weeks after submitting…" infrastructure-led narrative. Don't post until handles + final stat refresh.
+- **Next feature locked in: Intelligence Feed V1** — see Key decisions section. Defensibility × leverage scoring chose it over Smarter Query, Portfolio Tracker, Event-driven Alerts. Recurring-revenue model, ~$0 marginal cost, 1-2 sessions to build.
+
+### Previous session (May 1–2) — SMART-MONEY DERIVATION + WHALE-WATCH FALLBACK + STRICTER STRESS
 
 **Three commits, two verified-working fixes, one tuning issue caught by the new stricter stress.**
 
@@ -121,8 +132,9 @@
 
 ## Current state
 - **Bags hackathon: SUBMITTED 2026-04-25.** Demo + tweet thread + roadmap delivered. Awaiting judging.
-- **All 21 paid endpoints serving real USDC on production.** Last paid stress (2026-05-02): 20/21, avg 7118ms. Single failure is the strict `seed_source === 'derived'` check on smart-money-flow — feature didn't activate, not a regression. All agents still get valid 200 responses on every endpoint.
-- **Stress suite strengthened (uncommitted)** — whale-watch and smart-money-flow now have data-quality checks, not just shape checks. Caught a real activation gap on first run. Commit before next session.
+- **All 21 paid endpoints serving real USDC on production.** Last paid stress (2026-05-03): **21/21 green**, avg 7902ms. Includes the strict `seed_source === 'derived'` check passing on smart-money-flow.
+- **Public docs surface live at `solenrich.com/docs`.** Renders dynamically from `api.solenrich.com/docs` JSON.
+- **Stress suite strengthened with data-quality checks** (committed `93fdbb1`). whale-watch requires `whale_count > 0`, smart-money requires `seed_source === 'derived'`. No more shape-only false positives.
 - **Traction stat to update before tweet posts:** 49 paid x402 calls via Orbis as of recording day. Will likely be higher by post day — refresh the dashboard before posting Tweet 3.
 - **Hackathon rank (pre-submission):** #37 on Bags leaderboard, prize-eligible
 - **Live API:** https://api.solenrich.com
@@ -145,26 +157,33 @@ Session on 2026-04-21 established the counter-positioning thesis: SolEnrich wins
 2. **Smart Money Orchestration** (Priority 9) — SHIPPED 2026-04-23 ✅
 3. **Data Network Effect** (Priority 8 extension) — only we have agent query history
 
-### 1. POST-BAGS — post tweet thread + monitor
-- Final tweet thread is `local/hackathon-bags/tweet-thread/thread-v3.md` (5 tweets)
-- Before posting: refresh "49 paid calls" stat from Orbis dashboard (will likely be higher), confirm `@bagsapp` / `@CoinbaseDev` / `@AnthropicAI` / `@orbisapi` handles, confirm "agentic.commerce" vs "agentic.market" wording
-- Watch judging signals + organic engagement; queue follow-up content if thread underperforms (see thread-v3.md "If thread underperforms")
+### 1. BUILD — Intelligence Feed V1 (Priority 14, locked in 2026-05-03)
+**Scope (1-2 sessions, ~$0 marginal cost):**
+- New endpoint `GET /feed/latest` paywalled at $0.005 (x402 + MPP)
+- Daily Railway scheduled job calls `trending-signals` once internally, writes result to Redis under `feed:latest` (24h TTL)
+- Endpoint reads cache, returns JSON. Zero upstream calls during agent polls.
+- Add MCP tool, OpenAPI entry, /docs entry, /llms.txt entry, stress test
+- List on Orbis as "SolEnrich Daily Brief — $0.005"
+- Launch tweet announcing recurring-feed shape
 
-### 2. Tune smart-money derivation thresholds (Task #15) — ~30 min + 1 paid stress
-Programmatic derivation (`7956824`) shipped May 1 but `seed_source: fallback` in production stress (May 2). 11s derivation latency means it's running but yielding <5 candidates → falls through to the curated 19-wallet fallback.
+**Files to add/modify:**
+- `src/realtime/feed-cron.ts` — cron runner (Railway scheduled job entrypoint)
+- `src/realtime/feed-store.ts` — Redis SET/GET wrapper
+- `src/entrypoints/feed.ts` — paywalled GET handler
+- `src/lib/agent.ts` — register `feed-latest` entrypoint
+- `src/mcp-tools.ts`, `landing/docs.html` (auto-updates), `agents/solscout/stress.ts`
 
-**Most likely cause:** `TRENDING_MIN_LIQUIDITY = 50_000` in `src/enrichers/smart-money-flow.ts` is too strict for current pump.fun-class trending tokens (typically $10-30K liquidity). Quick fix:
-- Lower to `15_000` (matches what `new-tokens` typically returns)
-- Lower `TRENDING_TOKEN_LIMIT` from 10 to 5 (gentler on Birdeye free-tier rate limits during cold-cache derivation)
+**Validation gate:** ≥10 daily pollers within 2 weeks of launch → ship V2 (SSE + webhooks). <3 → kill the surface or rethink framing.
 
-**Also commit before next session:** the stress.ts strengthening from May 2 (whale-watch `whale_count > 0`, smart-money `seed_source === 'derived'`). Currently uncommitted in working tree.
+**Open Q at session start:** Add `?since=<timestamp>` param to dedupe poll results? Probably yes — saves agents from paying for the same data they already saw.
 
-**If threshold tune doesn't fix it:** add server-side logging to `deriveDefaultSeeds()` to see exactly which step yields 0 candidates.
+### 2. POST-BAGS — post tweet threads + monitor
+- **Original launch thread** at `local/hackathon-bags/tweet-thread/thread-v3.md` (5 tweets)
+- **May update** at `local/hackathon-bags/tweet-thread/update-may-v1.md` — three hook options (recommended: A, infrastructure-led)
+- Before posting either: refresh paid-call counts from Orbis dashboard, confirm `@bagsapp` / `@CoinbaseDev` / `@orbisapi` handles, confirm `agentic.commerce` vs `agentic.market` wording
+- Consider adding the perps-trader-profile real-data finding (`BvgzoCUMg...`, -61% PnL, 5 positions) to the May update — concrete proof of the endpoint earning its keep
 
-**Note:** Solana Foundation wallet already removed from `DEFAULT_SMART_MONEY_SEEDS` (May 1). BYO `wallets` path unaffected by all of this — derivation only fires when caller omits `wallets` arg.
-
-### 3. Intelligence Feed V1 (Priority 14) — ~$0 marginal cost, 1-2 sessions
-Unblocked now that `trending-signals` is shipped. Scope: daily cron runs `trending-signals` once, caches output in Redis (24h TTL), serves via `GET /feed/latest` (JSON). List as separate paid endpoint on Orbis: "daily intelligence brief — $0.005". Validation trigger for V2 (SSE + webhooks): 10+ agents polling V1 daily within 2 weeks.
+### 3. Intelligence Feed V1 details — see Section 1 above (now lead priority).
 
 **Sequencing call:** Feed V1 can ship independently of smart-money-flow seed-list fix because the Feed only depends on `trending-signals`. So either order works.
 
@@ -227,6 +246,7 @@ Unblocked now that `trending-signals` is shipped. Scope: daily cron runs `trendi
 - **Stripe E2E still untested** — MPP middleware is now correctly gated behind `Authorization: Payment` header. Without a test Stripe card we haven't confirmed end-to-end, but structural routing verified (no-auth requests get x402 challenge, not MPP).
 
 ## Key decisions made
+- **Next feature: Intelligence Feed V1** (2026-05-03) — chosen over Smarter Query, Portfolio Tracker, Event-driven Alerts on a defensibility × leverage scoring exercise. Wins on three axes: (1) creates a new revenue model (recurring polling) vs. improving existing endpoints; (2) hardest to clone — subscription/feed shape requires synthesis layer + per-call pricing + on-chain rails, three things incumbents structurally compromise to ship; (3) explicitly ranked #1 in CLAUDE.md > Strategic Positioning, sequenced after Smart Money Orchestration which is now shipped. Validation gate: 10+ daily pollers within 2 weeks of launch → ship V2 (SSE + webhooks). Marginal upstream cost ~$0 — fits inside Helius Pro + Birdeye free tier with the 24h Redis cache.
 - **Stress checks should include data-quality assertions, not just shape** (2026-05-02) — `Array.isArray(d.whales)` passes for empty arrays. Real data quality (`whale_count > 0`, `seed_source === 'derived'`) catches silent fallbacks. Worth the small risk of stress flakiness because the alternative is bugs landing in prod undetected.
 - **Derivation failure ≠ regression** (2026-05-02) — when smart-money-flow falls back to the curated list, agents still get a valid 200 response with the same data they got before today. The stress reports the failure because the new feature didn't activate, not because the endpoint broke. Important framing for future "production smoke test" debates.
 - **Birdeye holder fallback fires only on `length === 0`** (2026-04-26) — don't second-guess Helius when it returned data. The "Too many accounts" branch in `solana-rpc.ts:82` is the only natural producer of empty arrays. Keeping the trigger condition narrow avoids accidentally rerouting valid RPC results.
