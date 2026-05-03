@@ -11,8 +11,11 @@ const DERIVED_SEEDS_CACHE_KEY = 'smart-money:derived-seeds:v1';
 const DERIVED_SEEDS_TTL = 7 * 24 * 60 * 60; // 7 days
 const MIN_DERIVED_SEEDS = 5;
 const MAX_DERIVED_SEEDS = 50;
-const TRENDING_TOKEN_LIMIT = 10;
-const TRENDING_MIN_LIQUIDITY = 50_000;
+// Trending tokens (pump.fun-class) typically sit at $10-30K liquidity. 50K
+// floor produced 0 candidates in production stress (May 2). 15K matches what
+// new-tokens typically returns and broadens the candidate pool.
+const TRENDING_TOKEN_LIMIT = 5;
+const TRENDING_MIN_LIQUIDITY = 15_000;
 
 export interface SmartWallet {
   address: string;
