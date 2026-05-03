@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolEnrich — API Documentation</title>
+  <meta name="description" content="SolEnrich API documentation. 21 endpoints for Solana onchain enrichment. Pay-per-call USDC via x402, fiat via MPP/Stripe. JSON for agents, natural language briefings for LLMs.">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://solenrich.com/docs">
+  <meta property="og:title" content="SolEnrich API Documentation">
+  <meta property="og:description" content="21 paid endpoints for Solana onchain enrichment. Per-call USDC pricing. JSON or LLM briefings.">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --sol-green: #00FFA3;
+      --sol-purple: #9945FF;
+      --sol-blue: #14F195;
+      --bg-void: #06060A;
+      --bg-panel: #0C0C14;
+      --bg-card: #111119;
+      --bg-card-hover: #16161F;
+      --border-subtle: rgba(255,255,255,0.06);
+      --text-primary: #E8E8F0;
+      --text-secondary: #8888A8;
+      --text-muted: #555570;
+      --accent-warm: #FF6B35;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg-void);
+      color: var(--text-primary);
+      line-height: 1.6;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* ===== NAV ===== */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(6,6,10,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 16px 0;
+    }
+    nav .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--sol-green);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--text-muted); font-weight: 400; }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--sol-green); }
+
+    /* ===== LAYOUT ===== */
+    .docs-layout {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 48px 24px;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+      gap: 48px;
+    }
+    @media (max-width: 900px) {
+      .docs-layout { grid-template-columns: 1fr; }
+      .sidebar { position: static; }
+    }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      position: sticky;
+      top: 96px;
+      height: fit-content;
+      max-height: calc(100vh - 120px);
+      overflow-y: auto;
+    }
+    .sidebar h4 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      margin-top: 24px;
+    }
+    .sidebar h4:first-child { margin-top: 0; }
+    .sidebar ul { list-style: none; }
+    .sidebar li { margin: 4px 0; }
+    .sidebar a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 13px;
+      display: block;
+      padding: 4px 0;
+      transition: color 0.15s;
+    }
+    .sidebar a:hover { color: var(--sol-green); }
+
+    /* ===== MAIN ===== */
+    .main h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 40px;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    .main .lede {
+      color: var(--text-secondary);
+      font-size: 16px;
+      max-width: 640px;
+      margin-bottom: 32px;
+    }
+    .main h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 26px;
+      margin-top: 56px;
+      margin-bottom: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-subtle);
+    }
+    .main h2:first-of-type { border-top: none; }
+    .main h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 18px;
+      margin-top: 32px;
+      margin-bottom: 12px;
+    }
+    .main p { color: var(--text-secondary); margin-bottom: 16px; }
+    .main code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      background: rgba(0,255,163,0.08);
+      color: var(--sol-green);
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .main strong { color: var(--text-primary); }
+
+    /* ===== CODE BLOCKS ===== */
+    .code-block {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--text-primary);
+      overflow-x: auto;
+      margin: 16px 0;
+      white-space: pre;
+    }
+    .code-block .key { color: var(--sol-purple); }
+    .code-block .str { color: var(--sol-green); }
+    .code-block .val { color: var(--accent-warm); }
+    .code-block .dim { color: var(--text-muted); }
+    .code-block .url { color: var(--sol-blue); }
+
+    /* ===== ENDPOINT CARD ===== */
+    .endpoint {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 12px;
+      padding: 20px 24px;
+      margin: 12px 0;
+      transition: border 0.2s;
+    }
+    .endpoint:hover { border-color: rgba(0,255,163,0.2); }
+    .endpoint-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .endpoint-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 16px;
+      color: var(--text-primary);
+    }
+    .endpoint-price {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--sol-green);
+      background: rgba(0,255,163,0.1);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .endpoint-desc {
+      color: var(--text-secondary);
+      font-size: 14px;
+      margin-bottom: 12px;
+    }
+    .endpoint-input {
+      background: var(--bg-void);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 12px 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      margin-top: 8px;
+    }
+    .endpoint-input .key { color: var(--sol-purple); }
+    .endpoint-input .type { color: var(--text-muted); }
+
+    /* ===== SEARCH ===== */
+    .search-wrap {
+      margin-bottom: 24px;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      color: var(--text-primary);
+      font-family: inherit;
+      font-size: 14px;
+      transition: border 0.2s;
+    }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--sol-green);
+    }
+    .search-input::placeholder { color: var(--text-muted); }
+    .endpoint-count {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ===== INFO PILLS ===== */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin: 16px 0;
+    }
+    .info-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px 16px;
+    }
+    .info-pill-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .info-pill-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: var(--sol-green);
+    }
+
+    /* ===== LOADING ===== */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .error {
+      background: rgba(255,107,53,0.08);
+      border: 1px solid rgba(255,107,53,0.2);
+      color: var(--accent-warm);
+      padding: 16px 20px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 32px 24px;
+      margin-top: 80px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    footer a { color: var(--sol-green); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <a href="/" class="nav-logo">SolEnrich<span>.agent</span></a>
+      <div class="nav-links">
+        <a href="/#demo">Try It</a>
+        <a href="/#endpoints">Endpoints</a>
+        <a href="/docs" class="active">Docs</a>
+        <a href="https://api.solenrich.com/.well-known/agent.json" target="_blank">Agent Card</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="docs-layout">
+
+    <aside class="sidebar">
+      <h4>Get Started</h4>
+      <ul>
+        <li><a href="#overview">Overview</a></li>
+        <li><a href="#quickstart">Quick Start</a></li>
+        <li><a href="#payment">Payment</a></li>
+        <li><a href="#formats">Output Formats</a></li>
+      </ul>
+
+      <h4>Endpoints</h4>
+      <ul id="sidebar-endpoints">
+        <li><a href="#endpoints">All endpoints</a></li>
+      </ul>
+
+      <h4>Reference</h4>
+      <ul>
+        <li><a href="#methodology">Risk Methodology</a></li>
+        <li><a href="#sources">Data Sources</a></li>
+        <li><a href="#labeling">Entity Labeling</a></li>
+      </ul>
+
+      <h4>Discovery</h4>
+      <ul>
+        <li><a href="https://api.solenrich.com/openapi.json" target="_blank">openapi.json</a></li>
+        <li><a href="https://api.solenrich.com/llms.txt" target="_blank">llms.txt</a></li>
+        <li><a href="https://api.solenrich.com/.well-known/x402" target="_blank">.well-known/x402</a></li>
+        <li><a href="https://api.solenrich.com/mcp" target="_blank">MCP server</a></li>
+      </ul>
+    </aside>
+
+    <main class="main">
+      <h1>API Documentation</h1>
+      <p class="lede" id="lede">Solana onchain enrichment for autonomous agents and LLMs. Pay-per-call USDC via x402 or fiat via MPP/Stripe.</p>
+
+      <div id="content">
+        <div class="loading">Loading docs from <code>api.solenrich.com/docs</code>...</div>
+      </div>
+    </main>
+
+  </div>
+
+  <footer>
+    Built by <a href="https://solenrich.com">Parallax Labs</a> · API at <a href="https://api.solenrich.com">api.solenrich.com</a>
+  </footer>
+
+  <script>
+    const DOCS_URL = 'https://api.solenrich.com/docs';
+
+    function escapeHTML(str) {
+      return String(str ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function renderInputSchema(input) {
+      if (!input || typeof input !== 'object') return '';
+      const lines = Object.entries(input).map(([k, v]) =>
+        `  <span class="key">${escapeHTML(k)}</span>: <span class="type">${escapeHTML(v)}</span>`
+      ).join('\n');
+      return `<div class="endpoint-input">{\n${lines}\n}</div>`;
+    }
+
+    function renderEndpoint(key, ep) {
+      const inputBlock = renderInputSchema(ep.input);
+      return `
+        <div class="endpoint" id="ep-${escapeHTML(key)}">
+          <div class="endpoint-header">
+            <span class="endpoint-name">${escapeHTML(key)}</span>
+            <span class="endpoint-price">$${escapeHTML(ep.price)} USDC</span>
+          </div>
+          <p class="endpoint-desc">${escapeHTML(ep.description)}</p>
+          ${inputBlock}
+        </div>
+      `;
+    }
+
+    function renderMethodology(method) {
+      if (!method) return '';
+      return `
+        <h2 id="methodology">Risk Methodology</h2>
+        ${Object.entries(method).map(([k, v]) => `
+          <h3>${escapeHTML(k.replace(/_/g, ' '))}</h3>
+          <p>${typeof v === 'string' ? escapeHTML(v) : '<div class="code-block">' + escapeHTML(JSON.stringify(v, null, 2)) + '</div>'}</p>
+        `).join('')}
+      `;
+    }
+
+    function renderSources(sources) {
+      if (!sources) return '';
+      const items = Array.isArray(sources) ? sources : Object.entries(sources).map(([k, v]) => ({ name: k, ...v }));
+      return `
+        <h2 id="sources">Data Sources</h2>
+        <p>Every enrichment cross-references multiple sources in parallel. Prices use the median of all available sources for accuracy.</p>
+        <div class="info-grid">
+          ${items.map(s => `
+            <div class="info-pill">
+              <div class="info-pill-label">${escapeHTML(s.name ?? s)}</div>
+              <div class="info-pill-value">${escapeHTML(s.purpose ?? s.detail ?? s.description ?? '—')}</div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    function renderEntityLabeling(el) {
+      if (!el) return '';
+      return `
+        <h2 id="labeling">Entity Labeling</h2>
+        <p>${typeof el === 'string' ? escapeHTML(el) : escapeHTML(el.description ?? 'Known wallet entities (CEXes, protocols, bridges) are labeled in enrichment results.')}</p>
+        ${typeof el === 'object' && el.types ? `
+          <div class="info-grid">
+            ${Object.entries(el.types).map(([k, v]) => `
+              <div class="info-pill">
+                <div class="info-pill-label">${escapeHTML(k)}</div>
+                <div class="info-pill-value">${escapeHTML(v)}</div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      `;
+    }
+
+    async function loadDocs() {
+      const content = document.getElementById('content');
+      try {
+        const res = await fetch(DOCS_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const docs = await res.json();
+
+        // Update lede
+        if (docs.description) {
+          document.getElementById('lede').textContent = docs.description;
+        }
+
+        // Build sidebar endpoints list
+        const sidebarList = document.getElementById('sidebar-endpoints');
+        const endpointKeys = Object.keys(docs.endpoints ?? {});
+        sidebarList.innerHTML = '<li><a href="#endpoints">All (' + endpointKeys.length + ')</a></li>' +
+          endpointKeys.map(k => `<li><a href="#ep-${escapeHTML(k)}">${escapeHTML(k)}</a></li>`).join('');
+
+        // Build content
+        const html = `
+          <h2 id="overview">Overview</h2>
+          <div class="info-grid">
+            <div class="info-pill">
+              <div class="info-pill-label">Version</div>
+              <div class="info-pill-value">${escapeHTML(docs.version ?? '—')}</div>
+            </div>
+            <div class="info-pill">
+              <div class="info-pill-label">Base URL</div>
+              <div class="info-pill-value">${escapeHTML(docs.base_url ?? 'https://api.solenrich.com')}</div>
+            </div>
+            <div class="info-pill">
+              <div class="info-pill-label">Endpoints</div>
+              <div class="info-pill-value">${endpointKeys.length} paid + free demo</div>
+            </div>
+            <div class="info-pill">
+              <div class="info-pill-label">Network</div>
+              <div class="info-pill-value">Solana mainnet</div>
+            </div>
+          </div>
+
+          <h2 id="quickstart">Quick Start</h2>
+          <p>Every endpoint accepts a <code>format</code> parameter: <code>"json"</code>, <code>"llm"</code>, or <code>"both"</code>. Without a valid x402 payment header, endpoints return HTTP 402 with payment instructions.</p>
+          <div class="code-block"><span class="dim"># Free demo (rate-limited, single-address enrichment)</span>
+<span class="dim">$</span> curl -X POST <span class="url">https://api.solenrich.com/demo/enrich</span> \\
+    -H <span class="str">"Content-Type: application/json"</span> \\
+    -d <span class="str">'{"address":"JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"}'</span>
+
+<span class="dim"># Paid endpoint (x402 USDC payment required)</span>
+<span class="dim">$</span> curl -X POST <span class="url">https://api.solenrich.com/entrypoints/due-diligence/invoke</span> \\
+    -H <span class="str">"Content-Type: application/json"</span> \\
+    -H <span class="str">"X-Payment: &lt;base64 x402 token&gt;"</span> \\
+    -d <span class="str">'{"input":{"mint":"...","format":"both"}}'</span></div>
+
+          <h2 id="payment">Payment</h2>
+          <p>SolEnrich supports two payment protocols on every paid endpoint:</p>
+          <div class="info-grid">
+            <div class="info-pill">
+              <div class="info-pill-label">x402 (default)</div>
+              <div class="info-pill-value">USDC on Solana</div>
+            </div>
+            <div class="info-pill">
+              <div class="info-pill-label">MPP / Stripe</div>
+              <div class="info-pill-value">Fiat cards · Solana USDC</div>
+            </div>
+          </div>
+          <p>${docs.payment ? escapeHTML(typeof docs.payment === 'string' ? docs.payment : JSON.stringify(docs.payment)) : 'Settlement is on-chain via the Coinbase CDP facilitator. Verifiable at <a href="https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641" target="_blank">x402scan</a>.'}</p>
+
+          <h2 id="formats">Output Formats</h2>
+          <p>Every endpoint accepts a <code>format</code> param. Same enrichment, three response shapes.</p>
+          <div class="info-grid">
+            <div class="info-pill">
+              <div class="info-pill-label">format: "json"</div>
+              <div class="info-pill-value">Structured data for agents</div>
+            </div>
+            <div class="info-pill">
+              <div class="info-pill-label">format: "llm"</div>
+              <div class="info-pill-value">NL briefing for LLM context</div>
+            </div>
+            <div class="info-pill">
+              <div class="info-pill-label">format: "both"</div>
+              <div class="info-pill-value">JSON + llm_summary field</div>
+            </div>
+          </div>
+
+          <h2 id="endpoints">Endpoints (${endpointKeys.length})</h2>
+          <div class="search-wrap">
+            <input type="text" class="search-input" id="endpoint-search" placeholder="Filter endpoints..." spellcheck="false" autocomplete="off">
+            <div class="endpoint-count" id="endpoint-count">Showing all ${endpointKeys.length}</div>
+          </div>
+          <div id="endpoint-list">
+            ${endpointKeys.map(k => renderEndpoint(k, docs.endpoints[k])).join('')}
+          </div>
+
+          ${renderMethodology(docs.methodology)}
+          ${renderSources(docs.data_sources)}
+          ${renderEntityLabeling(docs.entity_labeling)}
+        `;
+
+        content.innerHTML = html;
+
+        // Wire up search filter
+        const search = document.getElementById('endpoint-search');
+        const list = document.getElementById('endpoint-list');
+        const counter = document.getElementById('endpoint-count');
+        search.addEventListener('input', () => {
+          const q = search.value.toLowerCase().trim();
+          let visible = 0;
+          list.querySelectorAll('.endpoint').forEach(el => {
+            const text = el.textContent.toLowerCase();
+            const match = !q || text.includes(q);
+            el.style.display = match ? '' : 'none';
+            if (match) visible++;
+          });
+          counter.textContent = q ? `Showing ${visible} of ${endpointKeys.length}` : `Showing all ${endpointKeys.length}`;
+        });
+
+      } catch (err) {
+        content.innerHTML = `
+          <div class="error">
+            Failed to load docs: ${escapeHTML(err.message)}<br><br>
+            Try the raw JSON: <a href="${DOCS_URL}" style="color:inherit;">${DOCS_URL}</a>
+          </div>
+        `;
+      }
+    }
+
+    loadDocs();
+  </script>
+</body>
+</html>
