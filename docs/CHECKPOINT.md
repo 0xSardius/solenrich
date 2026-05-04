@@ -1,11 +1,30 @@
 # Session Checkpoint
 
 ## Last session date
-2026-05-03
+2026-05-04
 
 ## What was completed
 
-### This session (May 3) — DERIVATION ACTIVATED + /DOCS PAGE LIVE + FEED V1 LOCKED IN
+### This session (May 4) — INTELLIGENCE FEED V1 SHIPPED ✅
+
+**One commit, one new paid endpoint, recurring-revenue model live.**
+
+- **`feed-latest` endpoint shipped** (`ce4e5ee`) at `POST /entrypoints/feed-latest/invoke`, $0.005/call. **First recurring-revenue surface** in SolEnrich's catalog.
+- **Architecture (additive — no existing endpoints touched):**
+  - `src/enrichers/feed-store.ts` — lazy 24h Redis cache wrapping `trending-signals`. Cache miss → run trending-signals inline, write, return. Cache hit → return instantly.
+  - `src/entrypoints/feed.ts` — registers via the same `addEntrypoint()` helper, inherits x402 + MPP paywall and all middleware.
+  - `src/schemas/feed.ts` — minimal input with optional `since` (ISO 8601) for poll-dedupe short-circuiting.
+  - `src/formatters/llm-feed.ts` — wraps `formatTrendingBriefing` with cadence-aware preface.
+  - `src/mcp-tools.ts` — `feed_latest` MCP tool.
+  - `src/openapi.ts` — ENDPOINT_META entry (auto-flows to `/llms.txt`).
+  - `src/config.ts` — PRICING + CACHE_TTL.feedLatest entries.
+  - `agents/solscout/stress.ts` — stress entry validates `source`, `generated_at`, `unchanged` flag, brief population.
+- **Production verified:** paid stress 22/22 green. `feed-latest` returned 200/5 checks at 3094ms (cache hit on 2nd call within session). All 21 existing endpoints unaffected.
+- **V1 design choice — no Railway cron.** Daily cadence enforced by 24h TTL alone. First poll after expiry triggers refresh. Trades perfect "fresh-each-day" for zero infra change. V2 can add a real cron once polling volume justifies the complexity.
+- **One canonical brief shape** — uses fixed params (limit=10, min_liq=$15K, max_risk=0.7, include_whale_watch=true). No per-call customization. V2 splits into specialized feeds if demand justifies.
+- **Validation gate (CLAUDE.md > Priority 14):** ≥10 daily pollers within 2 weeks → ship V2 (SSE + webhooks + hourly cadence). <3 → kill the surface and rethink.
+
+### Previous session (May 3) — DERIVATION ACTIVATED + /DOCS PAGE LIVE + FEED V1 LOCKED IN
 
 **Five tasks closed, four commits shipped, one core feature decision made.**
 
@@ -132,7 +151,8 @@
 
 ## Current state
 - **Bags hackathon: SUBMITTED 2026-04-25.** Demo + tweet thread + roadmap delivered. Awaiting judging.
-- **All 21 paid endpoints serving real USDC on production.** Last paid stress (2026-05-03): **21/21 green**, avg 7902ms. Includes the strict `seed_source === 'derived'` check passing on smart-money-flow.
+- **22 paid endpoints serving real USDC on production.** Last paid stress (2026-05-04): **22/22 green**, avg 6745ms. Includes Intelligence Feed V1 (`feed-latest`).
+- **First recurring-revenue endpoint live** — `feed-latest` at $0.005/poll, 24h cached. Validation gate: ≥10 daily pollers within 2 weeks → ship V2.
 - **Public docs surface live at `solenrich.com/docs`.** Renders dynamically from `api.solenrich.com/docs` JSON.
 - **Stress suite strengthened with data-quality checks** (committed `93fdbb1`). whale-watch requires `whale_count > 0`, smart-money requires `seed_source === 'derived'`. No more shape-only false positives.
 - **Traction stat to update before tweet posts:** 49 paid x402 calls via Orbis as of recording day. Will likely be higher by post day — refresh the dashboard before posting Tweet 3.
@@ -157,56 +177,39 @@ Session on 2026-04-21 established the counter-positioning thesis: SolEnrich wins
 2. **Smart Money Orchestration** (Priority 9) — SHIPPED 2026-04-23 ✅
 3. **Data Network Effect** (Priority 8 extension) — only we have agent query history
 
-### 1. BUILD — Intelligence Feed V1 (Priority 14, locked in 2026-05-03)
-**Scope (1-2 sessions, ~$0 marginal cost):**
-- New endpoint `GET /feed/latest` paywalled at $0.005 (x402 + MPP)
-- Daily Railway scheduled job calls `trending-signals` once internally, writes result to Redis under `feed:latest` (24h TTL)
-- Endpoint reads cache, returns JSON. Zero upstream calls during agent polls.
-- Add MCP tool, OpenAPI entry, /docs entry, /llms.txt entry, stress test
-- List on Orbis as "SolEnrich Daily Brief — $0.005"
-- Launch tweet announcing recurring-feed shape
+### 1. WATCH — Intelligence Feed V1 validation gate (next 2 weeks)
+Feed V1 shipped 2026-05-04. Watching one number: **distinct agents polling `feed-latest` per day.**
+- **<3 daily pollers within 2 weeks** → V1 didn't validate. Kill the surface or rethink framing. Don't build V2.
+- **3-9 daily pollers** → marginal. Pricing or framing iteration before deciding on V2.
+- **≥10 daily pollers within 2 weeks** → ship V2: hourly cron, SSE streaming endpoint, webhook registration, possibly split into specialized feeds (`/feed/whales`, `/feed/risks`, `/feed/new-launches`).
 
-**Files to add/modify:**
-- `src/realtime/feed-cron.ts` — cron runner (Railway scheduled job entrypoint)
-- `src/realtime/feed-store.ts` — Redis SET/GET wrapper
-- `src/entrypoints/feed.ts` — paywalled GET handler
-- `src/lib/agent.ts` — register `feed-latest` entrypoint
-- `src/mcp-tools.ts`, `landing/docs.html` (auto-updates), `agents/solscout/stress.ts`
+**To monitor:** Orbis dashboard + `/metrics` endpoint counters. Set a calendar reminder for 2026-05-18 to check.
 
-**Validation gate:** ≥10 daily pollers within 2 weeks of launch → ship V2 (SSE + webhooks). <3 → kill the surface or rethink framing.
+**First consumers (dogfooding):** Our own agents — Pythia, Tidal, Cardex, Bags agent. Plus the post-launch tweet announcing the feed.
 
-**Open Q at session start:** Add `?since=<timestamp>` param to dedupe poll results? Probably yes — saves agents from paying for the same data they already saw.
-
-### 2. POST-BAGS — post tweet threads + monitor
+### 2. POST-BAGS — post tweet threads + Orbis listing for Feed V1
 - **Original launch thread** at `local/hackathon-bags/tweet-thread/thread-v3.md` (5 tweets)
-- **May update** at `local/hackathon-bags/tweet-thread/update-may-v1.md` — three hook options (recommended: A, infrastructure-led)
-- Before posting either: refresh paid-call counts from Orbis dashboard, confirm `@bagsapp` / `@CoinbaseDev` / `@orbisapi` handles, confirm `agentic.commerce` vs `agentic.market` wording
-- Consider adding the perps-trader-profile real-data finding (`BvgzoCUMg...`, -61% PnL, 5 positions) to the May update — concrete proof of the endpoint earning its keep
+- **May update** at `local/hackathon-bags/tweet-thread/update-may-v2.md` — three hook options (recommended: A, perps-led)
+- **Feed V1 launch tweet** drafted in this session — see `local/hackathon-bags/tweet-thread/feed-v1-launch.md` (new)
+- **Orbis listing for Feed V1** — list as "SolEnrich Daily Brief — $0.005 per poll" so agents discover it. Use existing Orbis seller dashboard.
+- Before posting any: refresh paid-call counts, confirm handles, confirm `agentic.commerce` vs `agentic.market` wording
 
-### 3. Intelligence Feed V1 details — see Section 1 above (now lead priority).
-
-**Sequencing call:** Feed V1 can ship independently of smart-money-flow seed-list fix because the Feed only depends on `trending-signals`. So either order works.
-
-**First consumers:** Our own agents (Pythia, Tidal, Cardex) — dogfoods the feed.
-
-### 4. File upstream x402-svm bug
+### 3. File upstream x402-svm bug (chore, ~30 min, when ready)
 - `coinbase/x402` — the `registerExactSvmScheme` helper in `@x402/svm/exact/client` accepts a config object but doesn't forward `rpcUrl` to the scheme constructor. Helper signature implies it should (per `signer-BMkbhFYE.d.mts` types).
 - Reproduction is trivial; one-paragraph issue with a 3-line fix suggestion.
 - Low-priority chore — we already worked around it locally — but earns goodwill in the x402 ecosystem.
 
-### 5. agentic.market listing check
+### 4. agentic.market listing check
 - We're queued (per their team, 2026-04-21). Discovery surface fully primed.
 - Check back weekly: `https://api.agentic.market/v1/services` — look for "SolEnrich" / Parallax Labs / our domain.
 - Already listed on x402scan, Orbis, Smithery.
 
-### 6. Real Jupiter Perps trader verify (deferred from April 18)
-- `perps-trader-profile` shape-tested against Solana Foundation wallet (no positions). Need a real-world verification with actual open positions.
-- Find a trader via Jupiter Perps leaderboard or on-chain `getProgramAccounts` search. Run paid call, confirm PnL/leverage/flags render with real data.
+### 5. Real Jupiter Perps trader verify — DONE 2026-05-03 ✅
+Verified against `BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu` (5 positions, $35K gross, -61% PnL on collateral, all position flags firing). Discovery utility at `test/find-perps-trader.ts` for future re-runs.
 
-### 7. Fix `enrich-token-full` top-holders flakiness (LOW PRIORITY)
-- See "Known Bugs" section. Add retry/fallback for `getTokenLargestAccounts` timeouts. Maintenance session work — not blocking anything.
+### 6. Fix `enrich-token-full` top-holders flakiness — RESOLVED 2026-04-26 ✅ (see Known Bugs)
 
-### 8. Remaining roadmap (Phase 2B+)
+### 7. Remaining roadmap (Phase 2B+)
 - **Priority 11 — Smarter Query** — Multi-step orchestration. Add perps routing ("SOL-PERP funding rate?") (1 session)
 - **Priority 12 — Portfolio Tracker** — From temporal snapshots (1 session)
 - **Priority 13 — Event-Driven Alerts** — Build order: poll → SSE → webhooks (3-4 sessions)
@@ -214,7 +217,7 @@ Session on 2026-04-21 established the counter-positioning thesis: SolEnrich wins
 - **Distribution:** mcp.run, Glama, x402 bazaar deepening
 - **Multi-chain expansion** — Base + Ethereum (moonshot)
 
-### 9. Perps follow-ups (optional depth)
+### 8. Perps follow-ups (optional depth)
 - Liquidation events — parse tx logs from event authority `37hJBDnntwqhGbK7L6M1bLyvccj4u55CCUiLPdYkiqBN`
 - Cross-venue expansion — Adrena, Zeta, Mango next quarter
 - Perps-aware orchestration — fold market structure into `due-diligence` when token has perp exposure
