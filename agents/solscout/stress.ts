@@ -291,6 +291,20 @@ const ENDPOINTS: Array<{
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' },
     ],
   },
+  {
+    key: 'feed-latest',
+    // Daily brief endpoint. Lazy-cached, so first run after deploy hits
+    // cache-miss (~10-15s); subsequent runs hit cache (<1s).
+    input: { format: 'both' },
+    timeout: 60000,
+    checks: [
+      { name: 'has source', test: (d) => ['cached', 'fresh'].includes(d.source), detail: (d) => `source=${d.source}` },
+      { name: 'has generated_at', test: (d) => typeof d.generated_at === 'string' },
+      { name: 'unchanged is false (no since param)', test: (d) => d.unchanged === false },
+      { name: 'brief is populated', test: (d) => d.brief != null && Array.isArray(d.brief.tokens) },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Daily Brief') },
+    ],
+  },
 ];
 
 export class StressRunner {

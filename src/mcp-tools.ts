@@ -439,5 +439,23 @@ export function createSolEnrichMcpServer(): McpServer {
     },
   );
 
+  server.registerTool(
+    'feed_latest',
+    {
+      title: 'SolEnrich Daily Brief',
+      description: 'Daily intelligence brief — pre-computed ranking of trending Solana tokens with composite-signal scoring. Cached 24h, lazy-populated on cache miss. Pass `since` (ISO 8601) to short-circuit on no-change polls.',
+      inputSchema: {
+        since: z.string().optional().describe('Optional ISO 8601 timestamp of last successful poll. If brief is not newer, response sets unchanged=true with empty payload.'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('feed-latest', {
+        ...(args.since ? { since: args.since } : {}),
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
   return server;
 }

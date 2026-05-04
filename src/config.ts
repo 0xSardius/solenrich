@@ -56,6 +56,7 @@ export const PRICING = {
   'perps-trader-profile': '0.010',
   'trending-signals': '0.050',
   'smart-money-flow': '0.100',
+  'feed-latest': '0.005',
 } as const;
 
 /** Cache TTL in seconds per data type */
@@ -78,4 +79,5 @@ export const CACHE_TTL = {
   perpsTrader: 60,       // 1 minute — positions update on tx
   trendingSignals: 300,  // 5 minutes — trending shifts fast
   smartMoney: 600,       // 10 minutes — smart money shifts over days
+  feedLatest: 86_400,    // 24 hours — daily intelligence brief, lazy-populated
 } as const;

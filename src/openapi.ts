@@ -284,6 +284,17 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'feed-latest': {
+    summary: 'Daily SolEnrich intelligence brief',
+    description: 'Pre-computed ranking of trending Solana tokens with composite-signal scoring. Cached 24h, lazy-populated on cache miss. Designed for recurring polling at lower per-call cost than direct orchestration. Pass `since` (ISO 8601) to short-circuit on no-change polls.',
+    schema: {
+      type: 'object',
+      properties: {
+        since: { type: 'string', format: 'date-time', description: 'Optional ISO 8601 timestamp of last successful poll. If brief is not newer, response sets unchanged=true with empty payload.' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
 };
 
 const BASE_URL = 'https://api.solenrich.com';

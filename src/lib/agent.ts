@@ -50,6 +50,8 @@ import { registerDiscoveryEntrypoint } from "../entrypoints/discovery";
 import { registerProtocolEntrypoint } from "../entrypoints/protocol";
 import { registerPerpsEntrypoints } from "../entrypoints/perps";
 import { registerOrchestrationEntrypoints } from "../entrypoints/orchestration";
+import { registerFeedEntrypoint } from "../entrypoints/feed";
+import { FeedStore } from "../enrichers/feed-store";
 import { CONFIG, PRICING } from "../config";
 
 // --- Agent setup ---
@@ -340,6 +342,12 @@ const trendingSignalsAnalyzer = new TrendingSignalsAnalyzer(tokenDiscovery, whal
 const smartMoneyAnalyzer = new SmartMoneyAnalyzer(copyTradeAnalyzer, whaleWatcher, graphMapper, cache, tokenDiscovery);
 registerOrchestrationEntrypoints(addEntrypoint, trendingSignalsAnalyzer, smartMoneyAnalyzer);
 
+// Intelligence Feed V1 — daily brief lazy-cached via trending-signals.
+// Recurring-revenue model: agents poll a fixed endpoint, pay per call,
+// receive the same brief everyone else got that day.
+const feedStore = new FeedStore(trendingSignalsAnalyzer, cache);
+registerFeedEntrypoint(addEntrypoint, feedStore);
+
 // --- Demo endpoint (free, rate-limited, for landing page) ---
 
 import { formatResponse } from '../formatters/index';
@@ -616,6 +624,11 @@ app.get('/docs', (c) => {
         input: { wallets: 'string[] (optional — uses curated default if omitted)', lookback_days: 'number (default 14)', min_win_rate: 'number 0-1 (default 0.55)', top_n_tokens: 'number (default 10)', include_graph: 'boolean (default true)', format: 'json | llm | both' },
         description: 'Orchestrated smart-money intelligence. Scores seed wallets via copy-trade metrics, filters to qualifying winners, surfaces tokens they are accumulating + wallet clusters. Pass your own wallet list or use our default.',
       },
+      'feed-latest': {
+        price: '0.005',
+        input: { since: 'string (ISO 8601, optional) — last poll timestamp; if brief not newer, response sets unchanged=true', format: 'json | llm | both' },
+        description: 'Daily SolEnrich intelligence brief — pre-computed ranking of trending Solana tokens with composite-signal scoring. Cached 24h, lazy-populated on cache miss. Designed for recurring polling at lower cost than per-call orchestration.',
+      },
     },
     methodology: {
       risk_score: {
@@ -845,7 +858,7 @@ console.log('[discovery] x402 well-known available at GET /.well-known/x402');
 // publishes one; their crawler likely checks candidate services for it.
 const LLMS_TXT = `# SolEnrich
 
-> Solana onchain data enrichment API for AI agents and LLMs. Pay-per-request via x402 (USDC on Solana) or Stripe (fiat). 19 endpoints covering wallet profiling, token analysis, whale tracking, copy-trade signals, due diligence, protocol analytics, and Jupiter Perps intelligence.
+> Solana onchain data enrichment API for AI agents and LLMs. Pay-per-request via x402 (USDC on Solana) or Stripe (fiat). 22 endpoints covering wallet profiling, token analysis, whale tracking, copy-trade signals, due diligence, protocol analytics, Jupiter Perps intelligence, smart-money orchestration, and a daily intelligence feed.
 
 - Base URL: https://api.solenrich.com
 - Payment: x402 (Solana USDC, default) or MPP/Stripe (fiat cards)
