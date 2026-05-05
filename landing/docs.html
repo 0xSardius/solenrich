@@ -410,45 +410,103 @@
       `;
     }
 
+    // Render any value (string, array, object) as readable HTML.
+    // Strings render as-is. Arrays render as bulleted lists. Objects render
+    // as nested key/value blocks. Used for methodology and other JSON-shaped
+    // fields where the API returns nested structures.
+    function renderValue(v) {
+      if (v == null) return '<span style="color:var(--text-muted)">—</span>';
+      if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+        return `<span>${escapeHTML(v)}</span>`;
+      }
+      if (Array.isArray(v)) {
+        if (v.length === 0) return '<span style="color:var(--text-muted)">—</span>';
+        // Array of strings → bulleted list. Array of objects → nested list.
+        return `<ul style="margin:6px 0 12px 20px;color:var(--text-secondary);font-size:14px;line-height:1.6;">
+          ${v.map(item => `<li>${typeof item === 'object' ? renderValue(item) : escapeHTML(item)}</li>`).join('')}
+        </ul>`;
+      }
+      // Object → render entries as label/value rows
+      const entries = Object.entries(v);
+      if (entries.length === 0) return '<span style="color:var(--text-muted)">—</span>';
+      return `<div style="margin:6px 0 12px 0;">
+        ${entries.map(([k, val]) => `
+          <div style="margin-bottom:4px;font-size:14px;line-height:1.6;">
+            <span style="color:var(--sol-purple);font-family:'JetBrains Mono',monospace;font-size:13px;">${escapeHTML(k)}</span>
+            <span style="color:var(--text-secondary);"> → ${typeof val === 'object' ? '' : escapeHTML(val)}</span>
+            ${typeof val === 'object' ? `<div style="margin-left:16px;">${renderValue(val)}</div>` : ''}
+          </div>
+        `).join('')}
+      </div>`;
+    }
+
     function renderMethodology(method) {
       if (!method) return '';
       return `
-        <h2 id="methodology">Risk Methodology</h2>
+        <h2 id="methodology">Methodology</h2>
+        <p>How SolEnrich computes scores. All deterministic — no LLM inference in the pipeline.</p>
         ${Object.entries(method).map(([k, v]) => `
           <h3>${escapeHTML(k.replace(/_/g, ' '))}</h3>
-          <p>${typeof v === 'string' ? escapeHTML(v) : '<div class="code-block">' + escapeHTML(JSON.stringify(v, null, 2)) + '</div>'}</p>
+          ${renderValue(v)}
         `).join('')}
       `;
     }
 
     function renderSources(sources) {
       if (!sources) return '';
-      const items = Array.isArray(sources) ? sources : Object.entries(sources).map(([k, v]) => ({ name: k, ...v }));
+      // Two valid shapes: array of objects, or object whose values are
+      // strings (description per source) or sub-objects (more detail per source).
+      let items;
+      if (Array.isArray(sources)) {
+        items = sources;
+      } else {
+        items = Object.entries(sources).map(([name, v]) => {
+          if (typeof v === 'string') return { name, description: v };
+          if (v && typeof v === 'object') return { name, ...v };
+          return { name, description: String(v ?? '') };
+        });
+      }
       return `
         <h2 id="sources">Data Sources</h2>
         <p>Every enrichment cross-references multiple sources in parallel. Prices use the median of all available sources for accuracy.</p>
         <div class="info-grid">
-          ${items.map(s => `
-            <div class="info-pill">
-              <div class="info-pill-label">${escapeHTML(s.name ?? s)}</div>
-              <div class="info-pill-value">${escapeHTML(s.purpose ?? s.detail ?? s.description ?? '—')}</div>
-            </div>
-          `).join('')}
+          ${items.map(s => {
+            const label = s.name ?? s;
+            const value = s.description ?? s.purpose ?? s.detail ?? '—';
+            return `
+              <div class="info-pill">
+                <div class="info-pill-label">${escapeHTML(label)}</div>
+                <div class="info-pill-value" style="font-size:13px;">${escapeHTML(value)}</div>
+              </div>
+            `;
+          }).join('')}
         </div>
       `;
     }
 
     function renderEntityLabeling(el) {
       if (!el) return '';
+      const description = typeof el === 'string'
+        ? el
+        : (el.description ?? 'Known wallet entities (CEXes, protocols, bridges) are labeled in enrichment results.');
+      // `types` may be array of strings, array of objects, or object map.
+      let typeItems = [];
+      if (typeof el === 'object' && el.types) {
+        if (Array.isArray(el.types)) {
+          typeItems = el.types.map(t => (typeof t === 'string' ? { name: t, detail: '' } : t));
+        } else {
+          typeItems = Object.entries(el.types).map(([k, v]) => ({ name: k, detail: typeof v === 'string' ? v : '' }));
+        }
+      }
       return `
         <h2 id="labeling">Entity Labeling</h2>
-        <p>${typeof el === 'string' ? escapeHTML(el) : escapeHTML(el.description ?? 'Known wallet entities (CEXes, protocols, bridges) are labeled in enrichment results.')}</p>
-        ${typeof el === 'object' && el.types ? `
+        <p>${escapeHTML(description)}</p>
+        ${typeItems.length > 0 ? `
           <div class="info-grid">
-            ${Object.entries(el.types).map(([k, v]) => `
+            ${typeItems.map(t => `
               <div class="info-pill">
-                <div class="info-pill-label">${escapeHTML(k)}</div>
-                <div class="info-pill-value">${escapeHTML(v)}</div>
+                <div class="info-pill-label">${escapeHTML(t.name)}</div>
+                ${t.detail ? `<div class="info-pill-value" style="font-size:13px;">${escapeHTML(t.detail)}</div>` : ''}
               </div>
             `).join('')}
           </div>

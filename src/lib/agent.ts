@@ -599,6 +599,21 @@ app.get('/docs', (c) => {
         input: { addresses: 'string[] (2-3 wallet addresses)', depth: 'light | full', format: 'json | llm | both' },
         description: 'Side-by-side wallet comparison: portfolio, activity, risk, labels. Rankings + summary picks',
       },
+      'token-trend': {
+        price: '0.006',
+        input: { mint: 'string (Solana base58)', lookback: '7d | 14d | 30d (default 7d)', format: 'json | llm | both' },
+        description: 'Token metrics over time. Daily snapshots with direction indicators (improving/declining/stable) per metric: price, liquidity, holder concentration, risk score. Snapshots accumulate fire-and-forget on every enrichment.',
+      },
+      'wallet-history': {
+        price: '0.006',
+        input: { address: 'string (Solana base58)', lookback: '7d | 14d | 30d (default 7d)', format: 'json | llm | both' },
+        description: 'Wallet metrics over time. Tracks portfolio value, SOL balance, risk score, and position changes (added/removed holdings) across daily snapshots.',
+      },
+      'new-tokens': {
+        price: '0.012',
+        input: { min_liquidity_usd: 'number (default 1000)', max_risk_score: 'number 0-1 (default 0.8)', limit: 'number (default 20)', format: 'json | llm | both' },
+        description: 'Discover recently launched Solana tokens. Scans DexScreener latest profiles, enriches in parallel, scores risk, filters by liquidity + risk thresholds. Returns safest first.',
+      },
       'protocol-profile': {
         price: '0.008',
         input: { protocol: 'string (slug or program ID)', include_yields: 'boolean (default true)', format: 'json | llm | both' },
