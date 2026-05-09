@@ -1,11 +1,21 @@
 # Session Checkpoint
 
 ## Last session date
-2026-05-04
+2026-05-09
 
 ## What was completed
 
-### This session (May 4) — INTELLIGENCE FEED V1 SHIPPED ✅
+### This session (May 4–9) — POLISH SPRINT + AGENT PORTFOLIO SCOPED
+
+**Three commits, two production bugs found-and-fixed, agent portfolio plan written.**
+
+- **`/docs` page rendering bugs fixed** (`a7cb14a`). Production review surfaced three issues: methodology section dumped opaque JSON inside invalid `<p><div>` markup; data sources rendered "—" everywhere because the JS spread `{ ...string }` corrupted the data; entity_labeling types showed numeric indices ("0: CEX, 1: protocol"). Fixed all three with new `renderValue()` recursive helper. Same commit added 3 missing endpoints to `/docs` JSON (`token-trend`, `wallet-history`, `new-tokens` had been live for weeks but never documented). `/docs` JSON now reflects all 22 endpoints.
+- **Twitter card thumbnail fixed** (`4f8bb90`). User reported broken Twitter card on solenrich.com share. Root cause: `og:image` and `twitter:image` pointed at `raw.githubusercontent.com`, which serves with `Content-Security-Policy: sandbox` headers that crawlers respect. Switched both to `https://solenrich.com/og-image.png` (already hosted, 200 OK, clean headers). Added matching tags + 22-endpoint refresh to `landing/docs.html` (had no image tags at all).
+- **Alchemy infra credit application sized** (May 8). Provided a request-volume forecast for the application: current ~500-1000/day, 90-day target ~10K/day, 12-month projection 100K-500K/day across multi-chain. No commit — just a numbers exercise tied to a real submission.
+- **Agent portfolio scoped** (May 9, local-only). 8 agents across 2 personas (personal trading + builder demo) drafted at `local/agent-portfolio/scoping-v1.md`. **Gitignored** — stays on Sardius's machine. Recommended ship order: B2 Daily Digest → B1 Telegram bot → A1 Whale-Follower paper-trade → B3 MCP demo → A2 Memecoin Entry → B4 Template repo. A3 Perps Arb deferred.
+- **Hosting + PRD strategy decided** (May 9). Each agent gets isolated infra (no shared Railway project with SolEnrich — blast-radius hygiene). PRDs to be drafted in this Claude session, agents built in separate sessions. Agreed on Path B: draft B2 PRD first, ship it, then draft B1's PRD informed by what we learn.
+
+### Previous session (May 4) — INTELLIGENCE FEED V1 SHIPPED ✅
 
 **One commit, one new paid endpoint, recurring-revenue model live.**
 
@@ -152,7 +162,11 @@
 ## Current state
 - **Bags hackathon: SUBMITTED 2026-04-25.** Demo + tweet thread + roadmap delivered. Awaiting judging.
 - **22 paid endpoints serving real USDC on production.** Last paid stress (2026-05-04): **22/22 green**, avg 6745ms. Includes Intelligence Feed V1 (`feed-latest`).
-- **First recurring-revenue endpoint live** — `feed-latest` at $0.005/poll, 24h cached. Validation gate: ≥10 daily pollers within 2 weeks → ship V2.
+- **First recurring-revenue endpoint live** — `feed-latest` at $0.005/poll, 24h cached. Validation gate window: 2026-05-04 → 2026-05-18.
+- **Public docs surface live + clean** at `solenrich.com/docs` (22 endpoints, methodology + data sources + entity labeling rendering correctly).
+- **Twitter/social cards fixed** — sharing solenrich.com or /docs now produces proper OG thumbnail.
+- **Alchemy infra credit application submitted** (May 8) — awaiting response.
+- **Agent portfolio scoping complete** at `local/agent-portfolio/scoping-v1.md` (gitignored). 8 agents across 2 personas, ship order locked in.
 - **Public docs surface live at `solenrich.com/docs`.** Renders dynamically from `api.solenrich.com/docs` JSON.
 - **Stress suite strengthened with data-quality checks** (committed `93fdbb1`). whale-watch requires `whale_count > 0`, smart-money requires `seed_source === 'derived'`. No more shape-only false positives.
 - **Traction stat to update before tweet posts:** 49 paid x402 calls via Orbis as of recording day. Will likely be higher by post day — refresh the dashboard before posting Tweet 3.
@@ -177,7 +191,14 @@ Session on 2026-04-21 established the counter-positioning thesis: SolEnrich wins
 2. **Smart Money Orchestration** (Priority 9) — SHIPPED 2026-04-23 ✅
 3. **Data Network Effect** (Priority 8 extension) — only we have agent query history
 
-### 1. WATCH — Intelligence Feed V1 validation gate (next 2 weeks)
+### 1. NEXT BUILD — B2 Daily Intelligence Digest agent
+First agent to ship per `local/agent-portfolio/scoping-v1.md`. Cron-triggered (GitHub Actions, free), polls `feed-latest` daily, posts the brief to a Discord channel + Twitter feed + RSS. **Dogfoods Feed V1 validation.** Path: draft a PRD this session (in `local/agent-portfolio/prd-b2-daily-digest.md`), then build in a separate Claude session against a new public/private repo (TBD).
+
+**Why first:** smallest first ship (~1 session), keeps Feed V1 visible during the validation window (closing 2026-05-18), zero capital risk.
+
+**After B2:** B1 Telegram bot, then A1 Whale-Follower paper-trade phase, then B3 MCP demo + B4 template repo.
+
+### 2. WATCH — Intelligence Feed V1 validation gate (window closing 2026-05-18)
 Feed V1 shipped 2026-05-04. Watching one number: **distinct agents polling `feed-latest` per day.**
 - **<3 daily pollers within 2 weeks** → V1 didn't validate. Kill the surface or rethink framing. Don't build V2.
 - **3-9 daily pollers** → marginal. Pricing or framing iteration before deciding on V2.
