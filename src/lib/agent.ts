@@ -313,9 +313,6 @@ registerGraphEntrypoint(addEntrypoint, graphMapper);
 registerCopyTradeEntrypoint(addEntrypoint, copyTradeAnalyzer);
 registerDueDiligenceEntrypoint(addEntrypoint, dueDiligenceAnalyzer);
 
-// NL query (routes to the right enricher based on keyword matching)
-registerQueryEntrypoint(addEntrypoint, walletProfiler, tokenAnalyzer, txParser, whaleWatcher, dueDiligenceAnalyzer, copyTradeAnalyzer, graphMapper);
-
 // Comparison (side-by-side analysis)
 registerCompareEntrypoints(addEntrypoint, tokenComparator, walletComparator);
 
@@ -341,6 +338,24 @@ registerPerpsEntrypoints(addEntrypoint, perpsAnalyzer);
 const trendingSignalsAnalyzer = new TrendingSignalsAnalyzer(tokenDiscovery, whaleWatcher, cache);
 const smartMoneyAnalyzer = new SmartMoneyAnalyzer(copyTradeAnalyzer, whaleWatcher, graphMapper, cache, tokenDiscovery);
 registerOrchestrationEntrypoints(addEntrypoint, trendingSignalsAnalyzer, smartMoneyAnalyzer);
+
+// NL query — routes to the right enricher(s). Single-intent questions hit one
+// enricher; compound questions ("should I buy X?", "wallet deep dive", "what's
+// trending?") chain 2-3 enrichers in parallel and return a unified briefing.
+// Registered after all dependency analyzers are constructed above.
+registerQueryEntrypoint(
+  addEntrypoint,
+  walletProfiler,
+  tokenAnalyzer,
+  txParser,
+  whaleWatcher,
+  dueDiligenceAnalyzer,
+  copyTradeAnalyzer,
+  graphMapper,
+  trendAnalyzer,
+  perpsAnalyzer,
+  trendingSignalsAnalyzer,
+);
 
 // Intelligence Feed V1 — daily brief lazy-cached via trending-signals.
 // Recurring-revenue model: agents poll a fixed endpoint, pay per call,
@@ -587,7 +602,7 @@ app.get('/docs', (c) => {
       'query': {
         price: '0.003',
         input: { question: 'string (natural language)', format: 'json | llm | both' },
-        description: 'Plain English questions routed to the right enricher via keyword matching',
+        description: 'Plain English questions routed to the right enricher(s). Single-intent ("is X safe?", "wallet for X") hits one enricher. Compound intents chain multiple in parallel: "should I buy X?" → due-diligence + token-trend + whale-watch; "wallet deep dive on X" → wallet-full + history + perps positions; "what\'s trending?" → trending-signals; "SOL-PERP funding rate" → perps-market-structure.',
       },
       'compare-tokens': {
         price: '0.006',

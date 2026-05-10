@@ -146,7 +146,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'query': {
     summary: 'Natural language query',
-    description: 'Plain English questions routed to the right enricher via keyword matching. Example: "Is JUP safe?"',
+    description: 'Plain English questions routed to the right enricher(s). Single-intent ("is X safe?") hits one enricher; compound intents chain 2-3 in parallel: "should I buy X?" → DD + trend + whales; "wallet deep dive" → profile + history + perps; "what\'s trending?" → trending-signals; "SOL-PERP funding rate" → perps-market.',
     schema: {
       type: 'object',
       required: ['question'],

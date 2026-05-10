@@ -344,7 +344,7 @@ export function createSolEnrichMcpServer(): McpServer {
     'query',
     {
       title: 'Query',
-      description: 'Ask a plain English question about any Solana wallet, token, or protocol. Routes to the right enricher automatically. Example: "Is JUP safe?" or "What does this wallet do?"',
+      description: 'Ask a plain English question about any Solana wallet, token, or market. Single-intent routes to one enricher; compound intents chain 2-3 in parallel and return a unified briefing. Examples: "should I buy <mint>?" (DD + trend + whales), "wallet deep dive on <addr>" (profile + history + perps), "is <mint> safe?", "what\'s trending right now", "SOL-PERP funding rate".',
       inputSchema: {
         question: z.string().describe('Natural language question about a Solana wallet or token'),
       },
