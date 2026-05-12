@@ -15,6 +15,12 @@ export const WalletHistoryInput = z.object({
   format: FormatSchema,
 });
 
+export const PortfolioHistoryInput = z.object({
+  address: SolanaAddressSchema,
+  period: LookbackSchema,
+  format: FormatSchema,
+});
+
 export function parseLookback(lookback: string): number {
   return parseInt(lookback.replace('d', ''), 10);
 }

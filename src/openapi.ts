@@ -207,6 +207,19 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'portfolio-history': {
+    summary: 'Full portfolio time-series',
+    description: 'Daily portfolio snapshots (value, SOL balance, token count, risk score) for a wallet over 7/14/30 days, plus summary stats: peak, trough, max drawdown, average value, change vs period start. Designed for charting and PnL tracking; complements wallet-history which returns two-point deltas. Today\'s live point is appended automatically.',
+    schema: {
+      type: 'object',
+      required: ['address'],
+      properties: {
+        address: { type: 'string', description: 'Solana base58 wallet address', minLength: 32, maxLength: 44 },
+        period: { type: 'string', enum: ['7d', '14d', '30d'], default: '7d' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'new-tokens': {
     summary: 'Discover new Solana tokens',
     description: 'Recently launched tokens from DexScreener, filtered by liquidity and risk, ranked safest first.',

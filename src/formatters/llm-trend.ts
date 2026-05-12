@@ -1,4 +1,4 @@
-import type { TokenTrend, WalletHistory, MetricDelta } from '../enrichers/trend-analyzer';
+import type { TokenTrend, WalletHistory, MetricDelta, PortfolioHistory } from '../enrichers/trend-analyzer';
 import { shortenAddress, formatUsd } from '../utils/normalize';
 
 const ARROWS: Record<string, string> = {
@@ -77,4 +77,67 @@ function formatMetricValue(metric: string, value: number): string {
   if (metric.includes('risk_score')) return value.toFixed(2);
   if (metric.includes('pct')) return `${value.toFixed(1)}%`;
   return String(Math.round(value * 100) / 100);
+}
+
+export function formatPortfolioHistoryBriefing(data: PortfolioHistory): string {
+  const short = shortenAddress(data.address);
+  const s = data.summary;
+  const lines: string[] = [];
+
+  lines.push(`## Portfolio History: ${short} (${s.lookback_days}-day lookback)`);
+  lines.push('');
+  lines.push(
+    `Current: ${formatUsd(data.current.portfolio_value_usd)} | ` +
+      `${data.current.sol_balance.toFixed(2)} SOL | ` +
+      `${data.current.token_count} tokens | ` +
+      `Risk: ${data.current.risk_score.toFixed(2)} (${data.current.risk_level})`,
+  );
+
+  if (s.data_points === 0) {
+    lines.push('');
+    lines.push('_No historical snapshots yet. Density improves as this wallet is queried over time._');
+    return lines.join('\n');
+  }
+
+  lines.push('');
+  lines.push(`### Summary (${s.data_points} data point${s.data_points === 1 ? '' : 's'})`);
+  if (s.peak) {
+    lines.push(`- Peak: ${formatUsd(s.peak.portfolio_value_usd)} on ${s.peak.date}`);
+  }
+  if (s.trough) {
+    lines.push(`- Trough: ${formatUsd(s.trough.portfolio_value_usd)} on ${s.trough.date}`);
+  }
+  if (s.average_portfolio_value_usd !== null) {
+    lines.push(`- Average: ${formatUsd(s.average_portfolio_value_usd)}`);
+  }
+  if (s.max_drawdown_pct !== null) {
+    lines.push(`- Max drawdown: ${s.max_drawdown_pct.toFixed(2)}%`);
+  }
+  if (s.change_vs_start_pct !== null) {
+    const sign = s.change_vs_start_pct >= 0 ? '+' : '';
+    lines.push(`- Change vs period start: ${sign}${s.change_vs_start_pct.toFixed(2)}%`);
+  }
+
+  // Series table — capped at 30 rows so 30d lookbacks stay readable
+  lines.push('');
+  lines.push('### Series');
+  lines.push('');
+  lines.push('| Date | Portfolio | SOL | Tokens | Risk |');
+  lines.push('|------|-----------|-----|--------|------|');
+  for (const point of data.series) {
+    lines.push(
+      `| ${point.date} | ${formatUsd(point.portfolio_value_usd)} | ` +
+        `${point.sol_balance.toFixed(2)} | ${point.token_count} | ${point.risk_score.toFixed(2)} |`,
+    );
+  }
+
+  if (s.data_points < s.lookback_days) {
+    lines.push('');
+    lines.push(
+      `_Note: ${s.data_points} of ${s.lookback_days} possible daily points present. ` +
+        `Gaps indicate days this wallet was not queried — snapshots accumulate fire-and-forget on every enrichment call._`,
+    );
+  }
+
+  return lines.join('\n');
 }

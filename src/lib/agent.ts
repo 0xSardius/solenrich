@@ -679,6 +679,11 @@ app.get('/docs', (c) => {
         input: { type: 'token | wallet (default token)', address: 'string (optional) — single-entity report when provided', window: '1h | 6h | 24h (default 1h)', limit: 'number 1-50 (default 10) — top-N size when address absent', format: 'json | llm | both' },
         description: 'Agent attention signal — what tokens/wallets other agents are querying right now. Proprietary data: derived from SolEnrich\'s own request stream, not market volume. Returns rank/percentile/trend for a given entity, or top-N most-queried entities in the window. Signal data builds with usage.',
       },
+      'portfolio-history': {
+        price: '0.006',
+        input: { address: 'string (Solana base58)', period: '7d | 14d | 30d (default 7d)', format: 'json | llm | both' },
+        description: 'Full portfolio time-series for a wallet — daily snapshots of value, SOL balance, token count, risk score over 7/14/30 days, plus summary stats: peak, trough, max drawdown, average value, change vs period start. Today\'s live point appended automatically. Complements wallet-history (which returns two-point deltas); this returns the series for charting and PnL tracking.',
+      },
     },
     methodology: {
       risk_score: {

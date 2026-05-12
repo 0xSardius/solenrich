@@ -58,6 +58,7 @@ export const PRICING = {
   'smart-money-flow': '0.100',
   'feed-latest': '0.005',
   'consensus-signal': '0.005',
+  'portfolio-history': '0.006',
 } as const;
 
 /** Cache TTL in seconds per data type */

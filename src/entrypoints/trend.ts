@@ -1,7 +1,7 @@
 import { z } from 'zod';
-import { TokenTrendInput, WalletHistoryInput, parseLookback } from '../schemas/trend';
+import { TokenTrendInput, WalletHistoryInput, PortfolioHistoryInput, parseLookback } from '../schemas/trend';
 import { formatResponse } from '../formatters/index';
-import { formatTokenTrendBriefing, formatWalletHistoryBriefing } from '../formatters/llm-trend';
+import { formatTokenTrendBriefing, formatWalletHistoryBriefing, formatPortfolioHistoryBriefing } from '../formatters/llm-trend';
 import type { TrendAnalyzer } from '../enrichers/trend-analyzer';
 
 export function registerTrendEntrypoints(
@@ -27,6 +27,18 @@ export function registerTrendEntrypoints(
       const days = parseLookback(ctx.input.lookback);
       const data = await trendAnalyzer.analyzeWalletHistory(ctx.input.address, days);
       return { output: formatResponse(data, ctx.input.format, formatWalletHistoryBriefing) };
+    },
+  });
+
+  addEntrypoint({
+    key: 'portfolio-history',
+    description:
+      'Full portfolio time-series for a wallet — daily snapshots of value, balance, holdings, risk, plus summary stats (peak, trough, max drawdown, average, change vs period start). Distinct from wallet-history which returns two-point deltas; this returns the series for charting.',
+    input: PortfolioHistoryInput,
+    handler: async (ctx: { input: z.infer<typeof PortfolioHistoryInput> }) => {
+      const days = parseLookback(ctx.input.period);
+      const data = await trendAnalyzer.analyzePortfolioHistory(ctx.input.address, days);
+      return { output: formatResponse(data, ctx.input.format, formatPortfolioHistoryBriefing) };
     },
   });
 }

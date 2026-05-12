@@ -299,6 +299,26 @@ export function createSolEnrichMcpServer(): McpServer {
   );
 
   server.registerTool(
+    'portfolio_history',
+    {
+      title: 'Portfolio History',
+      description: 'Full portfolio time-series for a wallet: daily snapshots of value, balance, holdings, and risk score over 7/14/30 days, plus summary stats (peak, trough, max drawdown, average, change vs period start). For charting and PnL tracking.',
+      inputSchema: {
+        address: z.string().describe('Solana wallet address (base58)'),
+        period: z.enum(['7d', '14d', '30d']).default('7d').describe('Lookback period'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('portfolio-history', {
+        address: args.address,
+        period: args.period ?? '7d',
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
     'new_tokens',
     {
       title: 'New Tokens',
