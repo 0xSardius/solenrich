@@ -534,14 +534,14 @@ Six features to deepen SolEnrich's core value prop: getting solid Solana data to
 - **Use case:** "Agentic ponzis" thesis — agents/bots driving perpetual DeFi protocol activity. Traders/researchers see what % of protocol volume is agent-driven.
 - **Bookkeeping miss 2026-04-22:** Functional layer shipped 12 days ago but LLM formatters, `/docs`, OpenAPI descriptions, and unit tests never got caught up. Remaining polish work tracked as Tasks #19, #22, #23.
 
-**Priority 6 — Slippage Estimates / Liquidity Depth** (1 session)
-- Add `slippage_estimate` field to token-light, token-full, due-diligence, compare-tokens responses
-- Use Jupiter Quote API (`GET /quote`) — already routes across all Solana DEX pools, returns expected output for given input
-- Query at 4 position sizes ($100, $1K, $10K, $100K), report price impact at each
-- Add `getQuote(inputMint, outputMint, amount)` method to existing Jupiter client in `src/sources/jupiter.ts`
-- **Value:** Trading agents need "what's my slippage at this size?" before entering positions. No other enrichment API provides this.
-- **Future expansion (Phase 2B+):** Full order book depth via Birdeye Lite ($39/mo) for pool-by-pool breakdown
-- Feasibility: High — one new Jupiter client method + add to token-analyzer parallel fetch
+**Priority 6 — Slippage Estimates / Liquidity Depth** — DONE
+- [x] `getSlippageEstimates(mint)` added to JupiterClient — sequential USDC→token quotes at $100/$1K/$10K/$100K via Jupiter Quote v1 with 50bps slippage tolerance, results cached (jupiterPrice TTL)
+- [x] TokenAnalyzer parallel fetch includes slippage, exposed as `slippage_estimates` on TokenEnrichment
+- [x] LLM formatter renders price-impact table + worst-case callout in token briefings
+- [x] Auto-flows through enrich-token-light, enrich-token-full, due-diligence, compare-tokens, new-tokens, token-trend (anything that uses TokenAnalyzer)
+- [x] /docs + OpenAPI + MCP tool descriptions updated to advertise slippage (2026-05-12 polish pass)
+- **Bookkeeping note:** Functional layer was shipped in an earlier session but never marked DONE. Same shape as the Priority 5 miss caught 2026-04-22. Closeout polish landed 2026-05-12.
+- **Future expansion (Phase 2B+):** Full order book depth via Birdeye Lite ($39/mo) for pool-by-pool breakdown — remains open as the deeper version of this feature.
 
 **Priority 7 — Birdeye Integration (free tier)** — DONE (2026-04-14)
 - [x] `getDailyCandles(mint, days)` added to BirdeyeClient — `/defi/ohlcv?type=1D` with time_from/time_to

@@ -82,7 +82,7 @@ export function createSolEnrichMcpServer(): McpServer {
     'enrich_token',
     {
       title: 'Enrich Token',
-      description: 'Analyze a Solana SPL token: price, market cap, liquidity, holder concentration (top 1/5/10%), risk flags, and Jupiter verification.',
+      description: 'Analyze a Solana SPL token: price, market cap, liquidity, holder concentration (top 1/5/10%), slippage estimates at 4 position sizes ($100/$1K/$10K/$100K), risk flags, and Jupiter verification.',
       inputSchema: {
         mint: z.string().describe('Token mint address (base58)'),
         include_holders: z.boolean().default(false).describe('Include top 20 holders with balances and % supply'),

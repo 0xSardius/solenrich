@@ -577,12 +577,12 @@ app.get('/docs', (c) => {
       'enrich-token-light': {
         price: '0.002',
         input: { mint: 'string (token mint address)', format: 'json | llm | both' },
-        description: 'Token analysis: price (median of 3 sources), market cap, volume, liquidity, risk flags',
+        description: 'Token analysis: price (median of 3 sources), market cap, volume, liquidity, slippage estimates at 4 position sizes ($100/$1K/$10K/$100K via Jupiter Quote), risk flags',
       },
       'enrich-token-full': {
         price: '0.004',
         input: { mint: 'string', format: 'json | llm | both' },
-        description: 'Full token analysis: adds top 20 holders, HHI concentration, volatility metrics',
+        description: 'Full token analysis: adds top 20 holders, HHI concentration, volatility metrics, slippage estimates at 4 position sizes',
       },
       'parse-transaction': {
         price: '0.001',
