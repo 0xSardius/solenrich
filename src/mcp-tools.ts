@@ -457,5 +457,29 @@ export function createSolEnrichMcpServer(): McpServer {
     },
   );
 
+  server.registerTool(
+    'consensus_signal',
+    {
+      title: 'Agent Attention Signal',
+      description: 'What tokens or wallets are being queried by other agents right now. Proprietary data derived from SolEnrich\'s own query stream. Pass `address` for that entity\'s rank/percentile/trend; omit it for top-N. Windows: 1h, 6h, 24h.',
+      inputSchema: {
+        type: z.enum(['token', 'wallet']).default('token').describe('Entity type to query'),
+        address: z.string().optional().describe('Optional Solana address — single-entity report when provided'),
+        window: z.enum(['1h', '6h', '24h']).default('1h').describe('Lookback window'),
+        limit: z.number().int().min(1).max(50).default(10).describe('Top-N size when address is omitted'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('consensus-signal', {
+        type: args.type ?? 'token',
+        ...(args.address ? { address: args.address } : {}),
+        window: args.window ?? '1h',
+        limit: args.limit ?? 10,
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
   return server;
 }

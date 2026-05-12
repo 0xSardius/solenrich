@@ -295,6 +295,20 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'consensus-signal': {
+    summary: 'Agent attention signal (proprietary)',
+    description: 'What tokens or wallets are being queried by other agents right now. Derived from SolEnrich\'s own query stream — not market volume. Two modes: pass `address` for that entity\'s rank/percentile/trend; omit it for the top-N most-queried entities in the window. Windows: 1h, 6h, 24h. Unique data — only available because we serve agents directly.',
+    schema: {
+      type: 'object',
+      properties: {
+        type: { type: 'string', enum: ['token', 'wallet'], default: 'token' },
+        address: { type: 'string', description: 'Optional Solana address — single-entity report when provided', minLength: 32, maxLength: 44 },
+        window: { type: 'string', enum: ['1h', '6h', '24h'], default: '1h' },
+        limit: { type: 'integer', minimum: 1, maximum: 50, default: 10, description: 'Top-N size when address is omitted' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
 };
 
 const BASE_URL = 'https://api.solenrich.com';

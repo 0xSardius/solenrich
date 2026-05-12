@@ -52,6 +52,8 @@ import { registerPerpsEntrypoints } from "../entrypoints/perps";
 import { registerOrchestrationEntrypoints } from "../entrypoints/orchestration";
 import { registerFeedEntrypoint } from "../entrypoints/feed";
 import { FeedStore } from "../enrichers/feed-store";
+import { registerSignalEntrypoint } from "../entrypoints/signals";
+import { SignalTracker } from "../enrichers/signal-tracker";
 import { CONFIG, PRICING } from "../config";
 
 // --- Agent setup ---
@@ -219,7 +221,8 @@ if (PAYMENTS_ENABLED && resourceServer) {
 // --- Metrics middleware (fire-and-forget Redis counters) ---
 
 const metricsCache = new Cache();
-const METRICS_TTL = 90 * 86400; // 90 days
+const METRICS_TTL = 90 * 86400; // 90 days for daily aggregates
+const HOURLY_TTL = 48 * 3600;   // 48h for hourly buckets — enough for 24h window + prior-window comparison
 
 app.use('/entrypoints/*/invoke', async (c, next) => {
   await next();
@@ -228,7 +231,9 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
   try {
     const path = c.req.path; // e.g. /entrypoints/enrich-wallet-light/invoke
     const endpoint = path.split('/')[2]; // extract key
-    const date = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10); // YYYY-MM-DD
+    const hour = now.toISOString().slice(0, 13); // YYYY-MM-DDTHH
 
     // Fire-and-forget — don't await, don't block response
     metricsCache.incr(`metrics:calls:${endpoint}:${date}`, METRICS_TTL).catch(() => {});
@@ -242,6 +247,7 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
       if (address && typeof address === 'string') {
         const type = input?.mint ? 'token' : input?.protocol ? 'protocol' : 'wallet';
         metricsCache.incr(`metrics:${type}s:${address}:${date}`, METRICS_TTL).catch(() => {});
+        metricsCache.incr(`metrics:${type}s:${address}:hour:${hour}`, HOURLY_TTL).catch(() => {});
       }
       // Track batch items
       if (input?.items && Array.isArray(input.items)) {
@@ -250,6 +256,7 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
           if (addr) {
             const t = item?.mint ? 'token' : 'wallet';
             metricsCache.incr(`metrics:${t}s:${addr}:${date}`, METRICS_TTL).catch(() => {});
+            metricsCache.incr(`metrics:${t}s:${addr}:hour:${hour}`, HOURLY_TTL).catch(() => {});
           }
         }
       }
@@ -258,6 +265,7 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
         for (const addr of input.addresses) {
           if (typeof addr === 'string') {
             metricsCache.incr(`metrics:entities:${addr}:${date}`, METRICS_TTL).catch(() => {});
+            metricsCache.incr(`metrics:entities:${addr}:hour:${hour}`, HOURLY_TTL).catch(() => {});
           }
         }
       }
@@ -362,6 +370,13 @@ registerQueryEntrypoint(
 // receive the same brief everyone else got that day.
 const feedStore = new FeedStore(trendingSignalsAnalyzer, cache);
 registerFeedEntrypoint(addEntrypoint, feedStore);
+
+// Consensus Signal — derives "what are agents researching right now" from the
+// hourly metrics counters the middleware writes on every paid call. Proprietary
+// data: only we have agent query history. Reads metricsCache (same Redis
+// instance), no new state.
+const signalTracker = new SignalTracker(metricsCache);
+registerSignalEntrypoint(addEntrypoint, signalTracker);
 
 // --- Demo endpoint (free, rate-limited, for landing page) ---
 
@@ -658,6 +673,11 @@ app.get('/docs', (c) => {
         price: '0.005',
         input: { since: 'string (ISO 8601, optional) — last poll timestamp; if brief not newer, response sets unchanged=true', format: 'json | llm | both' },
         description: 'Daily SolEnrich intelligence brief — pre-computed ranking of trending Solana tokens with composite-signal scoring. Cached 24h, lazy-populated on cache miss. Designed for recurring polling at lower cost than per-call orchestration.',
+      },
+      'consensus-signal': {
+        price: '0.005',
+        input: { type: 'token | wallet (default token)', address: 'string (optional) — single-entity report when provided', window: '1h | 6h | 24h (default 1h)', limit: 'number 1-50 (default 10) — top-N size when address absent', format: 'json | llm | both' },
+        description: 'Agent attention signal — what tokens/wallets other agents are querying right now. Proprietary data: derived from SolEnrich\'s own request stream, not market volume. Returns rank/percentile/trend for a given entity, or top-N most-queried entities in the window. Signal data builds with usage.',
       },
     },
     methodology: {
