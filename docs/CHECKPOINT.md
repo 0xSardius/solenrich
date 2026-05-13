@@ -1,11 +1,27 @@
 # Session Checkpoint
 
 ## Last session date
-2026-05-09
+2026-05-13
 
 ## What was completed
 
-### This session (May 4–9) — POLISH SPRINT + AGENT PORTFOLIO SCOPED
+### This session (May 10–13) — PHASE 2B SHIP STREAK: 5 PRIORITIES CLOSED, 25 PAID ENDPOINTS
+
+**Five commits, four new endpoints, one polish closeout. Burned through most of Phase 2B in a single session block.**
+
+- **Smarter Query shipped — Priority 11** (`7e76325`). `/query` upgraded from single-intent routing to parallel multi-enricher orchestration. Five new compound intents matched before single-intent rules: `buy-decision` (DD + token-trend + whale-watch), `safety-check` (DD + whale-watch), `wallet-deep` (wallet-full + history + perps positions), `perps-market` (no address needed → perps-market-structure), `trending` (no address needed → trending-signals). Sub-enrichers run via `parallelFetch` with 15s per-task timeout; graceful degradation per component. Same $0.003 price, backward-compatible with all prior single-intent questions. Live-verified: buy-decision on BONK returned 3-section briefing, wallet-deep on Solana Foundation wallet returned wallet + history + (empty) perps in one call. `composeCompoundBriefing()` helper chains existing sub-formatters under section headers.
+
+- **Consensus Signal shipped — Priority 8** (`21cfc5d`). First proprietary data product in the catalog. New `consensus-signal` endpoint at $0.005/call exposes SolEnrich's own request stream as a sellable signal: agent attention. Two modes — pass `address` for that entity's rank/percentile/trend, or omit it for the top-N most-queried entities in the window. Windows 1h/6h/24h. Hourly counter writes added to existing metrics middleware (`metrics:{type}s:{addr}:hour:{YYYY-MM-DDTHH}`, 48h TTL). `SignalTracker` enricher reads counters and computes rank + percentile + rising/cooling vs prior window — no new state, all derived. **Compounds with usage:** every paid call to any other endpoint feeds the signal. Unique to us — incumbents would need to build an agent business from scratch to replicate the data.
+
+- **Slippage estimates closeout — Priority 6** (`0af85cd`). Discovered the functional layer was already wired (Jupiter Quote at 4 sizes via `getSlippageEstimates()` in TokenAnalyzer, exposed via `slippage_estimates` on every token endpoint, rendered in LLM briefings) but never marked DONE — same bookkeeping shape as Priority 5 caught 2026-04-22. Surfaced it in `/docs`, MCP tool description, and CLAUDE.md. Verified live: BONK returns realistic impact (0% at $100, 0.0125% at $100K).
+
+- **Portfolio Tracker shipped — Priority 12** (`1153660`). New `portfolio-history` endpoint at $0.006/call returns full daily time-series of wallet value, SOL balance, holdings, risk over 7/14/30 days, plus summary stats (peak, trough, max drawdown, average, change vs start). Today's live point auto-appended. Distinct from `wallet-history` (deltas + direction) — this returns the series for charting and PnL tracking. New `analyzePortfolioHistory` method on `TrendAnalyzer` extends existing snapshot infrastructure with no schema changes. Verified live on Solana Foundation wallet: peak/trough/drawdown computed correctly across 2 snapshot points, gap warning included.
+
+- **Event-Driven Alerts V1 shipped — Priority 13** (`3e5e6f7`). New `check-alerts` endpoint at $0.008/call — first recurring-poll surface with structured event detection. Step 1 of 3 (poll → SSE → webhooks). Stateless: agent owns the `since` cursor and passes the watchlist (max 10 tokens + 10 wallets per call) each request. Detects 11 alert types graded low/medium/high/critical: `price_spike/drop`, `risk_increase/decrease`, `whale_inflow/outflow`, `concentration_shift`, `portfolio_value_change`, `new_positions`, `removed_positions`, `first_observation`. `AlertChecker` composes existing token-analyzer, wallet-profiler, whale-watcher, and snapshot diffs in parallel for every entity. Pure detector functions per alert type. Tunable criteria object (defaults: 10% price, 0.15 risk, $50K whale volume, 20% portfolio, 5pt concentration). LLM briefing groups alerts by severity with icon legend. Verified live: 2 alerts fired against BONK + Solana Foundation wallet over a 3-day window (wallet risk_increase 0→0.15 medium, BONK price_drop -11.8% low). **Revenue model shift:** moves SolEnrich from one-shot calls toward subscription-shaped traffic.
+
+**Endpoint count: 22 → 25.** Three new paid surfaces in one session block.
+
+### Previous session (May 4–9) — POLISH SPRINT + AGENT PORTFOLIO SCOPED
 
 **Three commits, two production bugs found-and-fixed, agent portfolio plan written.**
 
@@ -160,25 +176,26 @@
 - April 2-3: Comparison, temporal, discovery endpoints. MPP Stage 1. SolScout E2E.
 
 ## Current state
+- **25 paid endpoints serving real USDC on production.** Three new since 2026-05-09: `consensus-signal` (proprietary attention data, $0.005), `portfolio-history` (full time-series, $0.006), `check-alerts` (poll-based event detection, $0.008). `/query` upgraded to compound-intent orchestration (same $0.003 price).
+- **Phase 2B largely closed.** Priorities 6, 8, 11, 12, 13-V1 shipped in this block. Only P13-V2 (SSE), P13-V3 (webhooks), P14-V2 (Feed scaling, gated on validation), and P15 (SDK) remain on the published roadmap.
 - **Bags hackathon: SUBMITTED 2026-04-25.** Demo + tweet thread + roadmap delivered. Awaiting judging.
-- **22 paid endpoints serving real USDC on production.** Last paid stress (2026-05-04): **22/22 green**, avg 6745ms. Includes Intelligence Feed V1 (`feed-latest`).
-- **First recurring-revenue endpoint live** — `feed-latest` at $0.005/poll, 24h cached. Validation gate window: 2026-05-04 → 2026-05-18.
-- **Public docs surface live + clean** at `solenrich.com/docs` (22 endpoints, methodology + data sources + entity labeling rendering correctly).
+- **Feed V1 validation gate still open.** Window closes 2026-05-18. Watching: distinct agents polling `feed-latest`/day.
+- **First proprietary data product live** — `consensus-signal` exposes SolEnrich's own request stream. Compounds with usage; only available because we serve agents directly.
+- **First recurring-poll structure live** — `check-alerts` is step 1 of the alerts trio. Revenue model now points toward subscriptions, not one-shot calls.
+- **Public docs surface live + clean** at `solenrich.com/docs`. Will need an endpoint refresh to bump to 25.
 - **Twitter/social cards fixed** — sharing solenrich.com or /docs now produces proper OG thumbnail.
 - **Alchemy infra credit application submitted** (May 8) — awaiting response.
 - **Agent portfolio scoping complete** at `local/agent-portfolio/scoping-v1.md` (gitignored). 8 agents across 2 personas, ship order locked in.
-- **Public docs surface live at `solenrich.com/docs`.** Renders dynamically from `api.solenrich.com/docs` JSON.
-- **Stress suite strengthened with data-quality checks** (committed `93fdbb1`). whale-watch requires `whale_count > 0`, smart-money requires `seed_source === 'derived'`. No more shape-only false positives.
-- **Traction stat to update before tweet posts:** 49 paid x402 calls via Orbis as of recording day. Will likely be higher by post day — refresh the dashboard before posting Tweet 3.
-- **Hackathon rank (pre-submission):** #37 on Bags leaderboard, prize-eligible
+- **Traction stat to update before tweet posts:** 49 paid x402 calls via Orbis as of 2026-04-25. Refresh before any external posting.
+- **Hackathon rank (pre-submission):** #37 on Bags leaderboard, prize-eligible.
 - **Live API:** https://api.solenrich.com
-- **Landing:** https://solenrich.com (now reflects 21 endpoints + smart-money cards)
+- **Landing:** https://solenrich.com — last bumped at 22 endpoints; pending refresh to 25 + Smarter Query + Consensus Signal + Portfolio + Alerts cards
 - **MCP:** https://api.solenrich.com/mcp
 - **Discovery:** https://api.solenrich.com/openapi.json + /.well-known/x402 + /llms.txt
 - **x402scan:** https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641
 - **Smithery:** Listed, public
 - **Payments:** Dual-protocol — x402 (Solana USDC, default) + MPP/Stripe (fiat)
-- **Endpoints:** 21 paid + free demo + /docs + /openapi.json + /metrics + /.well-known/x402 + /llms.txt
+- **Endpoints:** 25 paid + free demo + /docs + /openapi.json + /metrics + /.well-known/x402 + /llms.txt
 - **Railway:** Auto-deploying from GitHub main branch
 - **paid-fetch:** Uses Helius RPC. Demo recordings reliable; public-RPC socket-close failures resolved.
 - **Token holder data:** Auto-falls-back from Helius RPC to Birdeye when Helius hits the "Too many accounts" limit (~500K+ holders). Source visible via `holders_source` field.
@@ -230,11 +247,16 @@ Verified against `BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu` (5 positions, $3
 
 ### 6. Fix `enrich-token-full` top-holders flakiness — RESOLVED 2026-04-26 ✅ (see Known Bugs)
 
-### 7. Remaining roadmap (Phase 2B+)
-- **Priority 11 — Smarter Query** — Multi-step orchestration. Add perps routing ("SOL-PERP funding rate?") (1 session)
-- **Priority 12 — Portfolio Tracker** — From temporal snapshots (1 session)
-- **Priority 13 — Event-Driven Alerts** — Build order: poll → SSE → webhooks (3-4 sessions)
-- **Priority 15 — SDK Package** — `@solenrich/client` typed TS client with auto-payment (1-2 sessions)
+### 7. Remaining roadmap (Phase 2B+ → Phase 2C)
+- **Priority 6** — DONE 2026-05-12 ✅ (Slippage closeout — was already wired, surfaced in docs)
+- **Priority 8** — DONE 2026-05-10 ✅ (Consensus Signal — proprietary attention data)
+- **Priority 11** — DONE 2026-05-10 ✅ (Smarter Query — compound intents)
+- **Priority 12** — DONE 2026-05-12 ✅ (Portfolio Tracker — time-series)
+- **Priority 13 V1** — DONE 2026-05-13 ✅ (Event-Driven Alerts — poll-based check-alerts)
+- **Priority 13 V2** — Event-Driven Alerts SSE streaming (1-2 sessions). Needs `src/realtime/` build-out. Trigger when ≥3 agents using check-alerts at sustained polling cadence.
+- **Priority 13 V3** — Event-Driven Alerts webhooks (1-2 sessions). Needs persistent registry in Redis + callback HTTP client. Trigger after V2 lands.
+- **Priority 14 V2** — Intelligence Feed scaling (SSE + webhooks + hourly cadence). Gated on validation: ≥10 daily pollers by 2026-05-18.
+- **Priority 15** — SDK Package `@solenrich/client` typed TS client with auto-payment (1-2 sessions). Lowers integration friction for agent builders. Generates from existing Zod schemas + OpenAPI spec.
 - **Distribution:** mcp.run, Glama, x402 bazaar deepening
 - **Multi-chain expansion** — Base + Ethereum (moonshot)
 
