@@ -110,13 +110,14 @@ export class JupiterClient {
   /**
    * Get slippage estimates at multiple position sizes by querying Jupiter Quote API.
    * Swaps USDC → token to measure price impact at $100, $1K, $10K, $100K.
+   * Queries run in parallel with a per-call abort timeout so a single slow
+   * Jupiter response cannot starve the rest. Partial results are still cached.
    */
   async getSlippageEstimates(mint: string): Promise<SlippageEstimate[]> {
     const cacheKey = `jupiter:slippage:${mint}`;
     const cached = await this.cache.get<SlippageEstimate[]>(cacheKey);
     if (cached) return cached;
 
-    // Position sizes in USDC (6 decimals)
     const sizes = [
       { usd: 100, amount: 100_000_000 },
       { usd: 1_000, amount: 1_000_000_000 },
@@ -124,29 +125,36 @@ export class JupiterClient {
       { usd: 100_000, amount: 100_000_000_000 },
     ];
 
-    const results: SlippageEstimate[] = [];
+    const PER_CALL_TIMEOUT_MS = 4_000;
 
-    // Query each size — sequential to avoid rate limits
-    for (const size of sizes) {
-      try {
-        const url = `${this.baseUrl}/swap/v1/quote?inputMint=${USDC_MINT}&outputMint=${mint}&amount=${size.amount}&slippageBps=50`;
-        const res = await this.fetchWithKey(url);
-        if (!res.ok) continue;
+    const settled = await Promise.allSettled(
+      sizes.map(async (size): Promise<SlippageEstimate | null> => {
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), PER_CALL_TIMEOUT_MS);
+        try {
+          const url = `${this.baseUrl}/swap/v1/quote?inputMint=${USDC_MINT}&outputMint=${mint}&amount=${size.amount}&slippageBps=50`;
+          const res = await this.fetchWithKey(url, controller.signal);
+          if (!res.ok) return null;
+          const quote: any = await res.json();
+          const priceImpact = parseFloat(quote.priceImpactPct ?? '0');
+          const outAmount = Number(quote.outAmount ?? 0);
+          return {
+            size_usd: size.usd,
+            price_impact_pct: Math.round(priceImpact * 10000) / 10000,
+            output_amount: outAmount,
+            input_amount: size.amount,
+          };
+        } catch {
+          return null;
+        } finally {
+          clearTimeout(timer);
+        }
+      }),
+    );
 
-        const quote: any = await res.json();
-        const priceImpact = parseFloat(quote.priceImpactPct ?? '0');
-        const outAmount = Number(quote.outAmount ?? 0);
-
-        results.push({
-          size_usd: size.usd,
-          price_impact_pct: Math.round(priceImpact * 10000) / 10000,
-          output_amount: outAmount,
-          input_amount: size.amount,
-        });
-      } catch {
-        // Skip this size on error — partial results are fine
-      }
-    }
+    const results: SlippageEstimate[] = settled
+      .map((s) => (s.status === 'fulfilled' ? s.value : null))
+      .filter((r): r is SlippageEstimate => r !== null);
 
     if (results.length > 0) {
       await this.cache.set(cacheKey, results, CACHE_TTL.jupiterPrice);
@@ -155,9 +163,9 @@ export class JupiterClient {
     return results;
   }
 
-  private fetchWithKey(url: string): Promise<Response> {
+  private fetchWithKey(url: string, signal?: AbortSignal): Promise<Response> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (this.apiKey) headers['x-api-key'] = this.apiKey;
-    return fetch(url, { headers });
+    return fetch(url, { headers, signal });
   }
 }

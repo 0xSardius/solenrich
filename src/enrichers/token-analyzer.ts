@@ -76,15 +76,22 @@ export class TokenAnalyzer {
     const cached = await this.cache.get<TokenEnrichment>(cacheKey);
     if (cached) return cached;
 
-    // Parallel fetch: DexScreener + Jupiter + on-chain mint info + largest accounts
-    // Always fetch largest accounts so holder_count is non-zero even on light endpoint
+    // Parallel fetch: DexScreener + Jupiter + on-chain mint info + slippage.
+    // largestAccounts is only fetched when caller needs full holder data — that
+    // RPC call times out at ~15s for high-holder tokens (BONK/JUP/USDC class)
+    // and was the dominant cost on cold-cache light enrichments. Birdeye
+    // overview supplies holder_count for the light path; full-path callers
+    // still pay the cost because top-N holder resolution requires the addresses.
     const tasks: ParallelTask<any>[] = [
       { name: 'dexData', fn: () => this.dexscreener.getTokenData(mint) },
       { name: 'mintInfo', fn: () => this.solanaRpc.getMintInfo(mint) },
       { name: 'jupiterToken', fn: () => this.jupiter.getTokenInfo(mint) },
-      { name: 'largestAccounts', fn: () => this.solanaRpc.getTokenLargestAccounts(mint) },
       { name: 'slippage', fn: () => this.jupiter.getSlippageEstimates(mint) },
     ];
+
+    if (includeHolders) {
+      tasks.push({ name: 'largestAccounts', fn: () => this.solanaRpc.getTokenLargestAccounts(mint) });
+    }
 
     if (this.birdeye) {
       tasks.push(

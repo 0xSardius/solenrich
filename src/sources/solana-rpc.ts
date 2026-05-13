@@ -67,7 +67,15 @@ export class SolanaRpcClient {
     // Retry once on transient RPC errors (overloaded index, rate limits)
     for (let attempt = 0; attempt < 2; attempt++) {
       try {
-        const result = await this.connection.getTokenLargestAccounts(pubkey);
+        // Internal timeout — for BONK/JUP/USDC-class tokens this RPC call
+        // can hang for ~10s before failing. Cap it at 5s so the Birdeye
+        // fallback path in TokenAnalyzer can kick in fast.
+        const result = await Promise.race([
+          this.connection.getTokenLargestAccounts(pubkey),
+          new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('getTokenLargestAccounts timeout')), 5000),
+          ),
+        ]);
         return result.value
           .filter((a) => Number(a.amount) > 0)
           .map((account) => ({
@@ -80,6 +88,8 @@ export class SolanaRpcClient {
         const msg = err?.message ?? '';
         // Non-retryable: tokens with millions of holders exceed RPC limits
         if (msg.includes('Too many accounts')) return [];
+        // Non-retryable: our own internal timeout — return [] so fallback runs
+        if (msg.includes('getTokenLargestAccounts timeout')) return [];
         // Retryable: overloaded index service
         if (attempt === 0 && msg.includes('overloaded')) {
           await new Promise((r) => setTimeout(r, 1000));
