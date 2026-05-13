@@ -1,5 +1,8 @@
 /**
- * Stress test runner — hits all 13 endpoints and validates response quality
+ * Stress test runner — hits all 26 endpoint configurations and validates
+ * response quality. The `query` endpoint is exercised twice: once for a
+ * single-intent question and once for a compound-intent (`wallet deep dive`)
+ * to cover the parallel orchestration path added in Priority 11.
  */
 
 const TEST_WALLET = 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg';
@@ -303,6 +306,78 @@ const ENDPOINTS: Array<{
       { name: 'unchanged is false (no since param)', test: (d) => d.unchanged === false },
       { name: 'brief is populated', test: (d) => d.brief != null && Array.isArray(d.brief.tokens) },
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Daily Brief') },
+    ],
+  },
+  {
+    // Priority 8 — proprietary attention signal. Top-N mode (no address).
+    // Will return empty top_n if no other endpoint calls hit recently — that's
+    // a valid shape, just check the structure.
+    key: 'consensus-signal',
+    input: { type: 'token', window: '1h', limit: 5, format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'has type token', test: (d) => d.type === 'token' },
+      { name: 'has window 1h', test: (d) => d.window === '1h' },
+      { name: 'has window_start/end', test: (d) => typeof d.window_start === 'string' && typeof d.window_end === 'string' },
+      { name: 'has top_n array', test: (d) => Array.isArray(d.top_n) },
+      { name: 'has aggregate', test: (d) => d.aggregate != null && typeof d.aggregate.total_unique_entities === 'number' },
+      { name: 'entity is null in top-N mode', test: (d) => d.entity === null },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('attention') },
+    ],
+  },
+  {
+    // Priority 12 — portfolio time-series. Uses Solana Foundation wallet so we
+    // get reproducible snapshot density across test runs.
+    key: 'portfolio-history',
+    input: { address: TEST_WALLET, period: '7d', format: 'both' },
+    timeout: 45000,
+    checks: [
+      { name: 'has address', test: (d) => d.address === TEST_WALLET },
+      { name: 'has current block', test: (d) => d.current != null && typeof d.current.portfolio_value_usd === 'number' },
+      { name: 'has series array', test: (d) => Array.isArray(d.series), detail: (d) => `series length=${d.series?.length}` },
+      { name: 'series is sorted oldest→newest', test: (d) => d.series.length < 2 || d.series[0].date <= d.series[d.series.length - 1].date },
+      { name: 'has summary block', test: (d) => d.summary != null && typeof d.summary.data_points === 'number' },
+      { name: 'summary has lookback_days=7', test: (d) => d.summary?.lookback_days === 7 },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Portfolio History') },
+    ],
+  },
+  {
+    // Priority 13 V1 — poll-based event detection. Uses a 3-day window which
+    // should fire at least one alert on the Solana Foundation wallet from the
+    // existing snapshot history (risk_score has shifted recently in tests).
+    key: 'check-alerts',
+    input: {
+      tokens: [TEST_TOKEN],
+      wallets: [TEST_WALLET],
+      since: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+      format: 'both',
+    },
+    timeout: 60000,
+    checks: [
+      { name: 'has since timestamp', test: (d) => typeof d.since === 'string' },
+      { name: 'has checked_at', test: (d) => typeof d.checked_at === 'string' },
+      { name: 'has alerts array', test: (d) => Array.isArray(d.alerts), detail: (d) => `alerts=${d.alerts?.length}` },
+      { name: 'has watchlist echo', test: (d) => Array.isArray(d.watchlist?.tokens) && Array.isArray(d.watchlist?.wallets) },
+      { name: 'watchlist has 1 token + 1 wallet', test: (d) => d.watchlist?.tokens?.length === 1 && d.watchlist?.wallets?.length === 1 },
+      { name: 'has counts_by_severity', test: (d) => d.counts_by_severity != null && typeof d.counts_by_severity === 'object' },
+      { name: 'has counts_by_type', test: (d) => d.counts_by_type != null && typeof d.counts_by_type === 'object' },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Alert Check') },
+    ],
+  },
+  {
+    // Priority 11 — compound intent path on /query. Tests the wallet-deep
+    // compound (3-enricher parallel chain). Single-intent /query is covered by
+    // the existing entry above; this verifies the new orchestration path.
+    key: 'query',
+    input: { question: `wallet deep dive on ${TEST_WALLET}`, format: 'both' },
+    timeout: 60000,
+    checks: [
+      { name: 'returned data', test: (d) => d != null && Object.keys(d).length > 0 },
+      { name: 'compound intent: has components', test: (d) => d.intent === 'wallet-deep' && d.components != null, detail: (d) => `intent=${d.intent}` },
+      { name: 'wallet sub-component present', test: (d) => d.components?.wallet != null },
+      { name: 'history sub-component key present', test: (d) => 'history' in (d.components ?? {}) },
+      { name: 'perps sub-component key present', test: (d) => 'perps' in (d.components ?? {}) },
+      { name: 'llm_summary chains briefings', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Wallet Deep Dive') },
     ],
   },
 ];
