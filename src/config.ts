@@ -59,6 +59,7 @@ export const PRICING = {
   'feed-latest': '0.005',
   'consensus-signal': '0.005',
   'portfolio-history': '0.006',
+  'check-alerts': '0.008',
 } as const;
 
 /** Cache TTL in seconds per data type */

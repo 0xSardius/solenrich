@@ -54,6 +54,8 @@ import { registerFeedEntrypoint } from "../entrypoints/feed";
 import { FeedStore } from "../enrichers/feed-store";
 import { registerSignalEntrypoint } from "../entrypoints/signals";
 import { SignalTracker } from "../enrichers/signal-tracker";
+import { registerAlertEntrypoint } from "../entrypoints/alerts";
+import { AlertChecker } from "../enrichers/alert-checker";
 import { CONFIG, PRICING } from "../config";
 
 // --- Agent setup ---
@@ -378,6 +380,13 @@ registerFeedEntrypoint(addEntrypoint, feedStore);
 const signalTracker = new SignalTracker(metricsCache);
 registerSignalEntrypoint(addEntrypoint, signalTracker);
 
+// Event-Driven Alerts (Priority 13) — poll-based V1. Stateless: agent passes
+// watchlist + `since` cursor each call. Detection composes token-analyzer,
+// wallet-profiler, whale-watcher, and snapshot diffs in parallel. SSE + webhook
+// steps come later if poll-v1 validates.
+const alertChecker = new AlertChecker(tokenAnalyzer, walletProfiler, whaleWatcher, snapshotStore);
+registerAlertEntrypoint(addEntrypoint, alertChecker);
+
 // --- Demo endpoint (free, rate-limited, for landing page) ---
 
 import { formatResponse } from '../formatters/index';
@@ -683,6 +692,11 @@ app.get('/docs', (c) => {
         price: '0.006',
         input: { address: 'string (Solana base58)', period: '7d | 14d | 30d (default 7d)', format: 'json | llm | both' },
         description: 'Full portfolio time-series for a wallet — daily snapshots of value, SOL balance, token count, risk score over 7/14/30 days, plus summary stats: peak, trough, max drawdown, average value, change vs period start. Today\'s live point appended automatically. Complements wallet-history (which returns two-point deltas); this returns the series for charting and PnL tracking.',
+      },
+      'check-alerts': {
+        price: '0.008',
+        input: { tokens: 'string[] (max 10) — token mints to watch', wallets: 'string[] (max 10) — wallet addresses to watch', since: 'string (ISO 8601) — return alerts fired since this time', criteria: 'object (optional) — min_price_change_pct, min_risk_score_delta, min_whale_volume_usd, min_portfolio_change_pct, min_concentration_shift_pct', format: 'json | llm | both' },
+        description: 'Poll-based event detection. Pass a watchlist and a since timestamp; receive structured alerts (price spike/drop, risk change, whale inflow/outflow, concentration shift, portfolio value change, position add/remove) graded by severity. Stateless — agent owns the cursor. Step 1 of 3 (poll → SSE → webhooks). Shifts revenue model from one-shot calls to recurring polling.',
       },
     },
     methodology: {

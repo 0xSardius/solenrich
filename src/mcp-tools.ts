@@ -478,6 +478,28 @@ export function createSolEnrichMcpServer(): McpServer {
   );
 
   server.registerTool(
+    'check_alerts',
+    {
+      title: 'Check Alerts',
+      description: 'Poll-based event detection. Pass a watchlist (token mints + wallet addresses) and a since timestamp; receive alerts (price spike/drop, risk change, whale flow, concentration shift, portfolio value change, position add/remove) graded by severity. Stateless — caller owns the cursor.',
+      inputSchema: {
+        tokens: z.array(z.string()).max(10).default([]).describe('Token mints to watch (max 10)'),
+        wallets: z.array(z.string()).max(10).default([]).describe('Wallet addresses to watch (max 10)'),
+        since: z.string().describe('ISO 8601 timestamp — return alerts fired since this moment'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('check-alerts', {
+        tokens: args.tokens ?? [],
+        wallets: args.wallets ?? [],
+        since: args.since,
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
     'consensus_signal',
     {
       title: 'Agent Attention Signal',
