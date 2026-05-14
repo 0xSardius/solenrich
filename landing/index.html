@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SolEnrich — Solana Onchain Data Enrichment for Agents & LLMs</title>
-  <meta name="description" content="Solana onchain data enrichment agent. 22 endpoints: daily intelligence feed, smart-money orchestration, Jupiter Perps market structure, wallet profiling, token analysis, risk scoring, automated activity detection, protocol analytics. Dual payments: USDC via x402 or credit cards via MPP/Stripe. JSON for agents, natural language for LLMs.">
+  <meta name="description" content="Solana onchain data enrichment agent. 25 endpoints: event-driven alerts, consensus attention signal, portfolio time-series, compound natural-language queries, daily intelligence feed, smart-money orchestration, Jupiter Perps, wallet profiling, token risk, protocol analytics. Dual payments: USDC via x402 or credit cards via MPP/Stripe. JSON for agents, natural language for LLMs.">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://solenrich.com">
   <meta property="og:title" content="SolEnrich — Onchain Intelligence for Agents & LLMs">
-  <meta property="og:description" content="22 enrichment endpoints on Solana. Daily intelligence feed, smart-money orchestration, Jupiter Perps market structure, automated activity detection, protocol analytics, wallet profiling, token risk, whale tracking, due diligence. Dual payments: USDC via x402 or credit cards via MPP/Stripe.">
+  <meta property="og:description" content="25 enrichment endpoints on Solana. Event-driven alerts, consensus attention signal, portfolio time-series, compound NL queries, daily intelligence feed, smart-money orchestration, Jupiter Perps, wallet profiling, token risk, whale tracking. Dual payments: USDC via x402 or credit cards via MPP/Stripe.">
   <meta property="og:image" content="https://solenrich.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -18,7 +18,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SolEnrich — Onchain Intelligence for Agents & LLMs">
-  <meta name="twitter:description" content="22 enrichment endpoints on Solana. Daily intelligence feed, smart-money orchestration, Jupiter Perps market structure, automated activity detection, protocol analytics, wallet profiling, token risk, whale tracking, due diligence. Dual payments: USDC via x402 or credit cards via MPP/Stripe.">
+  <meta name="twitter:description" content="25 enrichment endpoints on Solana. Event-driven alerts, consensus attention signal, portfolio time-series, compound NL queries, daily intelligence feed, smart-money orchestration, Jupiter Perps, wallet profiling, token risk, whale tracking. Dual payments: USDC via x402 or credit cards via MPP/Stripe.">
   <meta name="twitter:image" content="https://solenrich.com/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1239,7 +1239,7 @@
           <span class="gradient-text">for agents & LLMs</span>
         </h1>
         <p class="hero-sub">
-          22 endpoints enriching any Solana wallet, token, or protocol with a single API call.
+          25 endpoints enriching any Solana wallet, token, or protocol with a single API call.
           Structured JSON for agents. Natural language briefings for LLMs.
           Pay with USDC (x402) or credit card (Stripe).
         </p>
@@ -1288,16 +1288,16 @@
     <div class="container">
       <span class="update-tag">New</span>
       <div class="update-items">
+        <span class="update-item"><span class="check">&#10003;</span> Event-driven alerts — poll a watchlist, get graded events since your last check</span>
+        <span class="update-item"><span class="check">&#10003;</span> Consensus signal — what tokens &amp; wallets agents are watching right now</span>
+        <span class="update-item"><span class="check">&#10003;</span> Portfolio history — daily wallet time-series with peak/trough/drawdown</span>
+        <span class="update-item"><span class="check">&#10003;</span> Smarter Query — one natural-language call, multiple enrichers in parallel</span>
         <span class="update-item"><span class="check">&#10003;</span> Intelligence Feed V1 — daily brief at $0.005 per poll</span>
         <span class="update-item"><span class="check">&#10003;</span> Smart-money orchestration — trending-signals &amp; smart-money-flow</span>
         <span class="update-item"><span class="check">&#10003;</span> Jupiter Perps — market structure &amp; trader profiles</span>
         <span class="update-item"><span class="check">&#10003;</span> Live USDC settlements via Coinbase CDP</span>
         <span class="update-item"><span class="check">&#10003;</span> Protocol analytics (TVL, yields, health)</span>
-        <span class="update-item"><span class="check">&#10003;</span> Automated activity detection</span>
-        <span class="update-item"><span class="check">&#10003;</span> Temporal trends ("what changed?")</span>
-        <span class="update-item"><span class="check">&#10003;</span> New token discovery</span>
-        <span class="update-item"><span class="check">&#10003;</span> Token &amp; wallet comparison</span>
-        <span class="update-item"><span class="check">&#10003;</span> Request metrics &amp; signal capture</span>
+        <span class="update-item"><span class="check">&#10003;</span> Slippage estimates at 4 position sizes via Jupiter Quote</span>
         <span class="update-item"><span class="check">&#10003;</span> MPP + Stripe fiat payments</span>
         <span class="update-item"><span class="check">&#10003;</span> MCP server for Claude &amp; Cursor</span>
       </div>
@@ -1378,7 +1378,7 @@
     <div class="container">
       <div class="reveal">
         <div class="section-label">Endpoints</div>
-        <h2 class="section-title">22 enrichment endpoints</h2>
+        <h2 class="section-title">25 enrichment endpoints</h2>
         <p class="section-desc">
           From quick wallet lookups to full due diligence reports.
           Every endpoint returns data in your choice of format.
@@ -1481,8 +1481,8 @@
             <span class="endpoint-name">query</span>
             <span class="endpoint-price">$0.003</span>
           </div>
-          <p class="endpoint-desc">Ask in plain English: "is X safe?", "whales for X", "wallet profile for X". Routes to the right enricher automatically.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">NL</span><span class="tag">any</span></div>
+          <p class="endpoint-desc">Plain-English questions routed to one or more enrichers. Single intent ("is X safe?", "whales for X") or compound chains in parallel ("should I buy X?" runs DD + trend + whales; "wallet deep dive on X" runs profile + history + perps; "what's trending?" calls trending-signals).</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">upgraded</span><span class="tag">NL</span><span class="tag">orchestration</span></div>
         </div>
 
         <div class="endpoint-card reveal">
@@ -1581,7 +1581,34 @@
             <span class="endpoint-price">$0.005</span>
           </div>
           <p class="endpoint-desc">Daily SolEnrich intelligence brief — pre-computed ranking of trending Solana tokens with composite-signal scoring. 24h cache, recurring-poll model. Pass <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">since</code> (ISO 8601) to short-circuit on no-change polls.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">feed</span></div>
+          <div class="tag-row"><span class="tag">feed</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">consensus-signal</span>
+            <span class="endpoint-price">$0.005</span>
+          </div>
+          <p class="endpoint-desc">What tokens and wallets agents are querying right now. Proprietary data derived from SolEnrich's own request stream, not market volume. Pass an address for rank/percentile/trend; omit it for top-N. Windows: 1h, 6h, 24h.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">proprietary</span><span class="tag">signal</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">portfolio-history</span>
+            <span class="endpoint-price">$0.006</span>
+          </div>
+          <p class="endpoint-desc">Full portfolio time-series for a wallet. Daily snapshots of value, SOL balance, holdings, risk score over 7/14/30 days, plus summary stats: peak, trough, max drawdown, average value, change vs period start. Today's live point appended automatically.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">temporal</span><span class="tag">PnL</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">check-alerts</span>
+            <span class="endpoint-price">$0.008</span>
+          </div>
+          <p class="endpoint-desc">Poll-based event detection. Pass a watchlist (up to 10 tokens + 10 wallets) and a <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">since</code> timestamp; get graded alerts (price spike/drop, risk change, whale flow, concentration shift, portfolio swing, position add/remove) since that moment. Stateless — caller owns the cursor.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">alerts</span><span class="tag">poll</span></div>
         </div>
       </div>
     </div>
