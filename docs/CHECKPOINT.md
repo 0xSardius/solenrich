@@ -1,11 +1,33 @@
 # Session Checkpoint
 
 ## Last session date
-2026-05-13
+2026-05-14
 
 ## What was completed
 
-### This session (May 10–13) — PHASE 2B SHIP STREAK: 5 PRIORITIES CLOSED, 25 PAID ENDPOINTS
+### Latest checkpoint (May 13–14) — STRESS SUITE EXPANDED + COLD-CACHE PERF FIXES
+
+**Two commits. 26/26 paid production stress green on first run. Diagnosed and fixed a 17s cold-cache outlier on `enrich-token-light`.**
+
+- **Stress suite extended to 26 endpoint configs** (`005a5a6`). Added explicit checks for the four Phase 2B additions: `consensus-signal` (7 checks, top-N mode), `portfolio-history` (7 checks including series sort + summary block), `check-alerts` (8 checks with a 3-day since window), plus a second `query` config exercising the compound `wallet-deep` intent and asserting parallel orchestration shape. Local run: 26/26 green, avg 4779ms.
+
+- **Production paid stress: 26/26 PASS** (2026-05-13). Real USDC settled on every endpoint via x402/CDP. Total settled ~$0.27 USDC. Outliers logged for follow-up: `enrich-token-light` 17.8s (vs 5.1s for the same token's full variant — diagnostic for the next fix), `check-alerts` 17.4s (whale-watch fan-out, expected), `compare-tokens` 11.8s (2-token enrichment, expected to drop after perf fix).
+
+- **Cold-cache token enrichment speedup** (`a8a48f6`). Three independent fixes in two files:
+  - `token-analyzer.ts` — skip `getTokenLargestAccounts` on `includeHolders=false`. Birdeye `holder_count` already supplied it (Priority 7 work from 2026-04-14), making the RPC call redundant for the light path. That call was the dominant cold-cache cost on high-holder tokens (BONK/JUP/USDC) because the Helius RPC index hangs and parallelFetch timed out at 15s.
+  - `solana-rpc.ts` — 5s internal timeout on `getTokenLargestAccounts` via Promise.race. Big tokens that previously hung ~10s before failing now bail fast so the TokenAnalyzer Birdeye fallback kicks in immediately. Saves ~10s on cold full-mode enrichment.
+  - `jupiter.ts` — parallelize `getSlippageEstimates`. The four position-size quotes were serial (overcautious "rate limits" comment from earlier session). Each call now has a 4s AbortController timeout. Cold-cache slippage drops from worst-case ~12s to ~3-4s.
+
+  Verified locally:
+  - light cold-cache on a fresh ~42K-holder token: **1713ms** (was ~17s) — **10x speedup**
+  - full cold-cache on a fresh ~250K-holder token: **6027ms** (was ~15s) — **2.5x speedup**, with top_holders + concentration via Birdeye fallback
+  - warm-cache: 139ms (unchanged)
+
+- **Outstanding latency follow-ups (not yet fixed):**
+  - `check-alerts` 7-17s — by design (fan-out to whale-watch). A `fast_mode` flag for snapshot-only checks (~1s) is the obvious next step if polling frequency justifies it.
+  - `compare-tokens` 11.8s — runs two parallel token enrichments. Should drop automatically with the May-14 fixes since both sub-calls share the new fast path. Re-stress will confirm.
+
+### Previous session (May 10–13) — PHASE 2B SHIP STREAK: 5 PRIORITIES CLOSED, 25 PAID ENDPOINTS
 
 **Five commits, four new endpoints, one polish closeout. Burned through most of Phase 2B in a single session block.**
 
