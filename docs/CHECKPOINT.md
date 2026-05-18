@@ -1,11 +1,42 @@
 # Session Checkpoint
 
 ## Last session date
-2026-05-14
+2026-05-18
 
 ## What was completed
 
-### Latest checkpoint (May 13–14) — STRESS SUITE EXPANDED + COLD-CACHE PERF FIXES
+### Latest checkpoint (May 16–18) — PROD VERIFICATION + PERPS RESEARCH + FEED-V1 DIAGNOSIS
+
+**No new code commits this block. Three investigations: cold-cache fixes verified in production, Solana perps market scoped for next ship, feed-latest 11.3s outlier root-caused as expected V1 behavior.**
+
+- **Landing refresh shipped earlier in window** (`c1f6b12`, May 14) — bumped hero/section title/meta/banner from 22 → 25 endpoints, added cards for `consensus-signal`, `portfolio-history`, `check-alerts`, rewrote `query` card to advertise compound intents. `landing/docs.html` meta tags bumped too. Card count verified at 25.
+
+- **Paid production stress re-run** (May 17) — **26/26 PASS, ~$0.27 USDC settled**, avg 6196ms. Cold-cache perf fixes confirmed landed: `enrich-token-light` 17.8s → 5.7s (still likely cold-cache run, ceiling demolished). `check-alerts` 17.4s → 8.1s. All 4 new May-10-13 endpoints green on production paid run.
+
+- **Slow outliers from May 17 stress** (not regressions, documented):
+  - `smart-money-flow` 26.9s — orchestration endpoint, expected (3-5 sub-enricher chain)
+  - `feed-latest` 11.3s — **investigated below**, expected V1 behavior
+  - `new-tokens` 10.2s — DexScreener scan + parallel enrich, expected
+  - Median latency across the other 23 endpoints: ~4s. Real per-endpoint table is in this session's terminal scrollback.
+
+- **`feed-latest` 11.3s diagnosis** (May 17) — **not a bug**. Cache state at probe time: `source: cached`, `generated_at: 2026-05-17T20:57:28Z` (written DURING that stress run, cache-hit latency now 424ms). The 11.3s was the once-per-24h lazy-populate cost. Yesterday's stress wrote a cache, today's stress hit it ~24h later just after TTL expiry — pure timing coincidence. `feed-store.ts:27` already documents the V1 design choice ("no Railway scheduled job; daily cadence achieved by 24h TTL alone — first poll after expiry triggers the refresh"). **Decision: leave as-is until Feed V1 validation gate resolves today (May 18).** If gate passes → V2 cron eliminates the latency tax. If gate fails → ship "stale-while-revalidate" (~10 lines, 1hr) as V1 polish. If indeterminate → ship the stale-while-revalidate fix anyway.
+
+- **Solana perps market research** (May 17, general-purpose agent) — recommendation logged for next ship:
+  - **Market state:** Jupiter Perps still ~80% share. Adrena #3 at $385M/week (institutional/whale flow, 88% long-biased, $3.87B cumulative). Bullet (Zeta rebrand, appchain testnet, 1.2ms latency) and Phoenix Perpetuals (private beta) both entering. Drift NOT operational — relaunch target May-June 2026 contingent on Ottersec + Asymmetric audits + governance vote + $147.5M Tether-led bailout. Re-evaluate Drift integration July 2026.
+  - **Phoenix Trade = Ellipsis Labs' Phoenix Perpetuals.** Same team as the $1B+ Phoenix CLOB spot DEX. Pitch: prop-AMM model, sub-1bps slippage at multimillion-$ size, 2/3 cheaper than existing Solana perps, Binance-parity execution cost. **Only credible threat to Jupiter's #1 position in the next 6 months.** Track but don't integrate until public beta exits.
+  - **Recommended next perps ship: `perps-cross-venue-funding`** — aggregate borrow/funding rates across Jupiter + Adrena now (Anchor account reads), add Phoenix/Bullet as they go live. Plus CEX reference (Binance/Bybit) for basis. **1-2 sessions.** Buyers: funding-arb agents, market-neutral bots, every trading agent sizing entries. Competitors (Ranger, Loris) are web UIs, not agent APIs. Termo only covers Drift+Flash. Highest leverage perps ship.
+  - **Other endpoint candidates ranked:** #2 `perps-venue-comparison` (1 session if #1 ships first), #3 multi-venue trader-profile (1 session per added venue), #4 liquidation-risk-map (2-3 sessions, defer), #5 perps-basis-signal (1 session as composition).
+  - **Full report:** in session scrollback May 17, also archive-able as `local/research/perps-market-may-17.md` if useful.
+
+- **Tweet drafts ready, unposted:**
+  - `local/hackathon-bags/tweet-thread/update-may-16.md` — May 13–14 perf-win update tweet (3 options, A recommended)
+  - `local/hackathon-bags/tweet-thread/consensus-signal-launch.md` — Consensus Signal standalone announcement (3 options)
+  - `local/hackathon-bags/tweet-thread/portfolio-history-launch.md` — Portfolio Tracker standalone announcement (3 options)
+  - All gitignored. Ready to post; just need a final stat refresh.
+
+- **Live demo material captured** — `portfolio-history` against the Solana Foundation wallet returned 15 daily snapshots over 30 days with peak $3.85 (2026-05-10), trough $3.34 (2026-05-02), max drawdown 10.30%. Tiny portfolio ($3.45) but clean shape — works as a tweet screenshot demonstrating real time-series + summary stats on a live wallet.
+
+### Previous checkpoint (May 13–14) — STRESS SUITE EXPANDED + COLD-CACHE PERF FIXES
 
 **Two commits. 26/26 paid production stress green on first run. Diagnosed and fixed a 17s cold-cache outlier on `enrich-token-light`.**
 
@@ -226,26 +257,38 @@
 
 ### 0. Strategic context (reference, not action)
 Session on 2026-04-21 established the counter-positioning thesis: SolEnrich wins as **agent-native first**, not dashboard-with-API. See `CLAUDE.md > Strategic Positioning` for full framework. Top 3 ranked moves by defensibility × leverage:
-1. **Intelligence Feed V1** (Priority 14) — recurring-revenue model, hardest to clone
+1. **Intelligence Feed V1** (Priority 14) — SHIPPED ✅ 2026-05-04. Validation gate closes today (2026-05-18).
 2. **Smart Money Orchestration** (Priority 9) — SHIPPED 2026-04-23 ✅
-3. **Data Network Effect** (Priority 8 extension) — only we have agent query history
+3. **Data Network Effect** (Priority 8 / Consensus Signal) — SHIPPED ✅ 2026-05-10.
 
-### 1. NEXT BUILD — B2 Daily Intelligence Digest agent
-First agent to ship per `local/agent-portfolio/scoping-v1.md`. Cron-triggered (GitHub Actions, free), polls `feed-latest` daily, posts the brief to a Discord channel + Twitter feed + RSS. **Dogfoods Feed V1 validation.** Path: draft a PRD this session (in `local/agent-portfolio/prd-b2-daily-digest.md`), then build in a separate Claude session against a new public/private repo (TBD).
+### 1. IMMEDIATE — Feed V1 validation gate decision (today, 2026-05-18)
+Pull `/metrics` for `feed-latest` daily poller counts since launch (May 4):
+- **≥10 distinct pollers/day** → ship V2 (hourly cron, SSE, webhooks)
+- **3-9 distinct pollers/day** → ship "stale-while-revalidate" V1 polish (~10 lines, 1hr) and iterate framing/pricing
+- **<3 distinct pollers/day** → kill the surface or rethink. Stop investment.
 
-**Why first:** smallest first ship (~1 session), keeps Feed V1 visible during the validation window (closing 2026-05-18), zero capital risk.
+Either outcome resolves the `feed-latest` 11.3s lazy-populate latency tax diagnosed May 17.
 
-**After B2:** B1 Telegram bot, then A1 Whale-Follower paper-trade phase, then B3 MCP demo + B4 template repo.
+### 2. NEXT BUILD — `perps-cross-venue-funding` (1-2 sessions)
+Per May 17 perps market research. Aggregate borrow/funding rates across Jupiter + Adrena (both via Anchor account reads — Jupiter client already exists, Adrena needs new IDL). Add CEX reference (Binance/Bybit) for basis. Phoenix/Bullet added as they exit testnet/private-beta.
 
-### 2. WATCH — Intelligence Feed V1 validation gate (window closing 2026-05-18)
-Feed V1 shipped 2026-05-04. Watching one number: **distinct agents polling `feed-latest` per day.**
-- **<3 daily pollers within 2 weeks** → V1 didn't validate. Kill the surface or rethink framing. Don't build V2.
-- **3-9 daily pollers** → marginal. Pricing or framing iteration before deciding on V2.
-- **≥10 daily pollers within 2 weeks** → ship V2: hourly cron, SSE streaming endpoint, webhook registration, possibly split into specialized feeds (`/feed/whales`, `/feed/risks`, `/feed/new-launches`).
+**Why next:** Perps is unambiguously a growth sector. Jupiter still 80% share but Phoenix Perpetuals (Ellipsis Labs, 2/3 cheaper than incumbents) is the only credible threat to that floor in the next 6 months. Cross-venue intelligence is the orchestration play that fits SolEnrich's thesis. No competitor exposes a paid agent API across all Solana venues.
 
-**To monitor:** Orbis dashboard + `/metrics` endpoint counters. Set a calendar reminder for 2026-05-18 to check.
+**Pricing target:** $0.015-$0.020 per call (composite, cross-venue).
 
-**First consumers (dogfooding):** Our own agents — Pythia, Tidal, Cardex, Bags agent. Plus the post-launch tweet announcing the feed.
+**Buyers:** Funding-arb agents, market-neutral bots, every trading agent sizing entries.
+
+### 3. WATCH-LIST (parallel to builds)
+- **Drift relaunch** — target May-June 2026. Re-evaluate integration in July when audits land. Keep program ID in labeler registry until then.
+- **Phoenix Perpetuals public beta exit** — only credible Jupiter Perps competitor in next 6 months. Integrate when public.
+- **Bullet (Zeta rebrand) mainnet** — appchain testnet now at 1.2ms latency. Worth tracking.
+- **agentic.market listing** — still queued since 2026-04-21. Check weekly.
+
+### 4. UNPOSTED TWEET DRAFTS (gitignored, ready)
+- `update-may-16.md` — perf-win story (cold-cache fix, "10x speedup, same endpoint, same data, same price")
+- `consensus-signal-launch.md` — Consensus Signal standalone announcement
+- `portfolio-history-launch.md` — Portfolio Tracker standalone announcement (with live demo screenshot from Solana Foundation wallet)
+Refresh Orbis paid-call counts before any traction stat reference.
 
 ### 2. POST-BAGS — post tweet threads + Orbis listing for Feed V1
 - **Original launch thread** at `local/hackathon-bags/tweet-thread/thread-v3.md` (5 tweets)
