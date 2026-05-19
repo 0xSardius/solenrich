@@ -5,7 +5,41 @@
 
 ## What was completed
 
-### Latest checkpoint (May 16–18) — PROD VERIFICATION + PERPS RESEARCH + FEED-V1 DIAGNOSIS
+### Latest checkpoint (May 18 evening) — PERPS ROADMAP LOCKED + ADRENA UNBLOCKED
+
+**No code commits. Planning session. Six perps endpoints fully specified, Adrena integration research complete, spec doc captured locally.**
+
+- **Six perps endpoints sketched in detail** (Phase 2D plan). Each has full input/output JSON shapes, build steps, buyer profiles, pricing, competitive analysis, cross-strategy coverage matrix:
+  1. `perps-cross-venue-funding` — $0.015, 1-2 sessions, foundation. Aggregate borrow/funding rates across Jupiter + Adrena + Binance + Bybit. Unblocks #2 and #3.
+  2. `perps-venue-comparison` — $0.020, 1 session after #1. Side-by-side OI/funding/depth/health for a market at a given size.
+  3. `perps-basis-signal` — $0.015, 1 session after #1. Perp-vs-spot basis with net-yield-after-borrow flag. Surfaces delta-neutral basis trades.
+  4. Perp position alerts (extend `check-alerts`, no new endpoint) — 1 session. Adds `perp_position_added/closed/at_risk/liquidation_approaching/pnl_swing`. Unlocks copy-trade bots and risk-managed strategies.
+  5. `perps-market-trend` — $0.008, 1 session. Mirror of `token-trend` for perps. Daily snapshots of market structure, regime detection enabled.
+  6. `perps-liquidation-risk-map` — $0.020, 2-3 sessions, deferred. Aggregate liquidation clusters by price level across venues. Ship after #1-#5 validate buyer demand.
+
+- **Bot-readiness assessment** — every standard perps-bot strategy mapped to endpoint coverage:
+  - Funding-rate arbitrage: fully powered by #1
+  - Basis trade (delta-neutral): fully powered by #3
+  - Copy-trade top PnL traders: fully powered by `perps-trader-profile` + #4
+  - Delta-neutral yield agent: fully powered by #1 + #3
+  - Liquidation hunter: needs #6
+  - Directional momentum: composable from token-trend + automated-activity + whale-watch (no single-call solution)
+  - **Execution boundary is deliberate.** SolEnrich is the brain (data + decisions). The bot is the body (signs and submits trades via venue SDKs directly). We do not sign or send transactions.
+
+- **Adrena Protocol integration research complete** (general-purpose agent, May 18):
+  - Mainnet program ID: `13gDzEXCdocbj8iAiqrScGo47NiSuYENGsRqi3SEAwet`
+  - IDL: `AdrenaFoundation/adrena-abi` on GitHub + `@adrena/abi` on npm. Publicly maintained. No hand-decoding needed.
+  - Account model: Cortex / Pool / Custody / Position. Position PDAs are **deterministic** (owner + pool + custody + side) — skip getProgramAccounts scans, use getMultipleAccounts on 8 known PDAs per wallet (4 custodies × 2 sides on main-pool). Faster and RPC-friendlier than Jupiter's memcmp.
+  - Borrow rate: two-slope utilization model. `borrow_rate_state.current_rate` is **per-hour, scaled by RATE_POWER = 1e9** — opposite of Jupiter's annualized scaling. Multiply by `24 * 365` for APR on Adrena, do NOT on Jupiter. Logged as gotcha.
+  - **Symbol mapping:** Adrena has no native SOL/BTC/ETH custodies. SOL exposure routes through jitoSOL, BTC through WBTC. **No ETH on Adrena mainnet.** Our `perps-cross-venue-funding` will mark `available: false` for ETH on Adrena and return Jupiter-only data for that market.
+  - **Anchor version mismatch:** Adrena IDL is Anchor 0.31, we use 0.29. Top-level `address` field may not parse cleanly. Workaround: strip `address` and pass `programId` explicitly when constructing Program. Or bump anchor for Adrena-only.
+  - **Verdict: ~1 session** for the AdrenaClient (tighter than Jupiter Perps was — IDL on npm, deterministic PDAs, pre-computed borrow rate in state).
+
+- **Spec doc captured locally** at `local/research/perps-roadmap-may-18.md` (gitignored). Contains everything above plus the implementation outline for AdrenaClient and a strategy-to-endpoint coverage matrix. Survives context resets on this machine; would need to move to `docs/` to be git-tracked.
+
+- **Drift / Phoenix / Bullet hold:** still don't integrate. Drift relaunch contingent on audits — re-evaluate July. Phoenix in private beta. Bullet on testnet. All three folded into roadmap as cheap follow-on sessions when they go live.
+
+### Previous checkpoint (May 16–18) — PROD VERIFICATION + PERPS RESEARCH + FEED-V1 DIAGNOSIS
 
 **No new code commits this block. Three investigations: cold-cache fixes verified in production, Solana perps market scoped for next ship, feed-latest 11.3s outlier root-caused as expected V1 behavior.**
 
@@ -269,14 +303,24 @@ Pull `/metrics` for `feed-latest` daily poller counts since launch (May 4):
 
 Either outcome resolves the `feed-latest` 11.3s lazy-populate latency tax diagnosed May 17.
 
-### 2. NEXT BUILD — `perps-cross-venue-funding` (1-2 sessions)
-Per May 17 perps market research. Aggregate borrow/funding rates across Jupiter + Adrena (both via Anchor account reads — Jupiter client already exists, Adrena needs new IDL). Add CEX reference (Binance/Bybit) for basis. Phoenix/Bullet added as they exit testnet/private-beta.
+### 2. NEXT BUILD — `perps-cross-venue-funding` (~1 session, UNBLOCKED)
+Foundation endpoint. Aggregate borrow/funding rates across Jupiter Perps (existing client) + Adrena (new client) + Binance + Bybit (REST). Phoenix/Bullet added as cheap follow-ons when they go live.
 
-**Why next:** Perps is unambiguously a growth sector. Jupiter still 80% share but Phoenix Perpetuals (Ellipsis Labs, 2/3 cheaper than incumbents) is the only credible threat to that floor in the next 6 months. Cross-venue intelligence is the orchestration play that fits SolEnrich's thesis. No competitor exposes a paid agent API across all Solana venues.
+**Source of truth for build:** `local/research/perps-roadmap-may-18.md` — has full input/output spec, AdrenaClient outline, gotchas, symbol mapping table. Read this first.
 
-**Pricing target:** $0.015-$0.020 per call (composite, cross-venue).
+**Adrena research complete (May 18):**
+- Program ID `13gDzEXCdocbj8iAiqrScGo47NiSuYENGsRqi3SEAwet`
+- IDL on npm as `@adrena/abi`
+- Position PDAs are deterministic (8 known PDAs per wallet on main-pool — skip memcmp scans)
+- Borrow rate is **per-hour** scaled by `RATE_POWER = 1e9` (opposite of Jupiter's annualized scaling)
+- No ETH on Adrena mainnet; SOL routes through jitoSOL, BTC through WBTC
+- Anchor 0.31 IDL vs our 0.29 — strip `address` field or pass `programId` explicitly
+
+**Pricing:** $0.015 per call.
 
 **Buyers:** Funding-arb agents, market-neutral bots, every trading agent sizing entries.
+
+**Unblocks:** #2 venue-comparison and #3 basis-signal (1 session each after #1 ships). Then #4 position alerts (extends `check-alerts`), #5 market-trend, #6 liquidation-risk-map (deferred).
 
 ### 3. WATCH-LIST (parallel to builds)
 - **Drift relaunch** — target May-June 2026. Re-evaluate integration in July when audits land. Keep program ID in labeler registry until then.
