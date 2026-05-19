@@ -268,6 +268,19 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'perps-cross-venue-funding': {
+    summary: 'Cross-venue perps funding aggregator',
+    description: 'Aggregates borrow/funding APR + open interest across Solana on-chain venues (Jupiter Perps, Adrena) and cross-chain reference venues (Hyperliquid, dYdX v4). Returns per-venue quotes, best entry per side, basis vs Hyperliquid, and arbitrage opportunities. Adrena routes SOL through jitoSOL and BTC through WBTC (wrapped collateral). ETH not supported on Adrena. BONK not tradable on Jupiter Perps. Foundation endpoint — new venues fold in additively as they go live (Phoenix Perps, Bullet).',
+    schema: {
+      type: 'object',
+      required: ['market'],
+      properties: {
+        market: { type: 'string', enum: ['SOL', 'BTC', 'ETH', 'BONK'], description: 'Asset to query' },
+        include_reference: { type: 'boolean', default: true, description: 'Include Hyperliquid + dYdX v4 reference rates' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'trending-signals': {
     summary: 'Orchestrated trending-token intelligence',
     description: 'Composes token-discovery + whale-watch + risk scoring across DexScreener trending. Returns a composite-signal ranked list (liquidity, risk, concentration, whale flow) with per-token reasoning and overall sentiment (accumulation/distribution/mixed). "What\'s worth paying attention to right now?"',

@@ -571,6 +571,21 @@ Orchestration = composed endpoints that chain multiple enrichers together. Worth
 - Blocker: No "scan all tokens" API — needs curated watchlist or DexScreener trending as input
 - Feasibility: Medium — builds on temporal + discovery features
 
+**Priority 10b — Perps Cross-Venue Funding** — DONE (2026-05-19)
+- [x] `src/sources/adrena.ts` — AdrenaClient reading main-pool custodies (USDC, BONK, jitoSOL, WBTC) via fixed-offset Borsh decoding. Skips Anchor 0.30 IDL conversion (incompatible with our pinned 0.29). Offsets verified against `@adrena/abi v2.1.0-release39` by reading all 4 custodies live — decimals, is_stable, last_update, and OI ratios all matched expected values.
+- [x] `src/sources/perp-reference.ts` — PerpReferenceClient for Hyperliquid (`POST /info` metaAndAssetCtxs) + dYdX v4 (`GET /v4/perpetualMarkets`). **Swapped from Binance/Bybit (originally planned)** — both CEXes geoblock US IPs (Binance 451, Bybit CloudFront 403). Hyperliquid + dYdX are open, no geo issues, crypto-native (better thematic match).
+- [x] `src/enrichers/perps-cross-venue.ts` — PerpsCrossVenueAnalyzer. Aggregates Jupiter + Adrena + reference into venue quotes, best-entry-per-side, basis vs Hyperliquid (bps), arbitrage opportunities (>5pt APR spread). Symbol mapping: SOL→jitoSOL on Adrena, BTC→WBTC on Adrena, ETH→Adrena unavailable, BONK→Jupiter unavailable.
+- [x] Schema (`src/schemas/perps-cross-venue.ts`), formatter (`src/formatters/llm-perps-cross-venue.ts`), entrypoint, MCP tool (`perps_cross_venue_funding`), OpenAPI, /docs all wired.
+- [x] Live verified on SOL/BTC/ETH/BONK. Cold 947ms, warm 145-260ms. Real arbitrage surfaced (BTC: Jupiter 11.57% vs Adrena 1.46% = 10.11pt spread).
+- **Pricing:** $0.015 per call. **20 total paid endpoints.**
+- **Adrena scaling gotchas (logged for future use):**
+  - `current_rate` is per-hour, scaled by `RATE_POWER = 1e9` — multiply by 24×365 for APR. **Opposite of Jupiter's annualized scaling.**
+  - USD amounts (`size_usd`, `collateral_usd`) use 6-decimal USDC convention.
+  - No native SOL/BTC/ETH custodies — wrapped only (jitoSOL, WBTC, BONK). ETH not available on Adrena mainnet at all.
+  - Closed positions reaped (unlike Jupiter where filter `size_usd > 0` is required).
+- **Cross-venue endpoint design — additive:** each new venue is a `VenueQuote` entry with `available: bool` and `unavailable_reason`. `best_entry`/`arbitrage_opportunities` recompute automatically. Adding Phoenix Perps and Bullet (when they launch publicly) is a one-file change to extend the source client list.
+- **Unblocks:** #2 `perps-venue-comparison`, #3 `perps-basis-signal`, #5 `perps-market-trend` (all 1-session adds composing this foundation).
+
 **Priority 10 — Perps Intelligence / Jupiter Perps Integration** — DONE (2026-04-18)
 - [x] `@coral-xyz/anchor@0.29.0` installed (0.32+ uses new IDL format, reference IDLs are v0.29)
 - [x] Jupiter Perps + Doves IDLs copied to `src/idl/`

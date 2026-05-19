@@ -49,6 +49,10 @@ import { registerTrendEntrypoints } from "../entrypoints/trend";
 import { registerDiscoveryEntrypoint } from "../entrypoints/discovery";
 import { registerProtocolEntrypoint } from "../entrypoints/protocol";
 import { registerPerpsEntrypoints } from "../entrypoints/perps";
+import { registerPerpsCrossVenueEntrypoint } from "../entrypoints/perps-cross-venue";
+import { AdrenaClient } from "../sources/adrena";
+import { PerpReferenceClient } from "../sources/perp-reference";
+import { PerpsCrossVenueAnalyzer } from "../enrichers/perps-cross-venue";
 import { registerOrchestrationEntrypoints } from "../entrypoints/orchestration";
 import { registerFeedEntrypoint } from "../entrypoints/feed";
 import { FeedStore } from "../enrichers/feed-store";
@@ -304,6 +308,14 @@ const defiLlama = new DefiLlamaClient(cache);
 const protocolAnalyzer = new ProtocolAnalyzer(defiLlama, helius, cache);
 const jupiterPerps = new JupiterPerpsClient(cache);
 const perpsAnalyzer = new PerpsAnalyzer(jupiterPerps);
+const adrenaClient = new AdrenaClient(cache);
+const perpReference = new PerpReferenceClient(cache);
+const perpsCrossVenueAnalyzer = new PerpsCrossVenueAnalyzer(
+  jupiterPerps,
+  adrenaClient,
+  perpReference,
+  cache,
+);
 
 import { TokenComparator, WalletComparator } from '../enrichers/comparator';
 const tokenComparator = new TokenComparator(tokenAnalyzer);
@@ -340,6 +352,11 @@ registerProtocolEntrypoint(addEntrypoint, protocolAnalyzer);
 
 // Jupiter Perps — market structure + trader profile
 registerPerpsEntrypoints(addEntrypoint, perpsAnalyzer);
+
+// Cross-venue perps funding — aggregates Jupiter Perps + Adrena + reference
+// venues (Hyperliquid, dYdX v4). Foundation endpoint for the Phase 2D perps
+// roadmap — unblocks venue-comparison, basis-signal, and market-trend.
+registerPerpsCrossVenueEntrypoint(addEntrypoint, perpsCrossVenueAnalyzer);
 
 // Smart Money Orchestration — trending-signals + smart-money-flow
 // Composes token-discovery, whale-watch, copy-trade, graph-mapper into synthesized
@@ -667,6 +684,11 @@ app.get('/docs', (c) => {
         price: '0.010',
         input: { address: 'string', format: 'json | llm | both' },
         description: 'Jupiter Perps trader profile — open positions for a wallet with size, leverage, entry, unrealized PnL, profile classification (scalper/swing/position), and risk flags.',
+      },
+      'perps-cross-venue-funding': {
+        price: '0.015',
+        input: { market: 'SOL | BTC | ETH | BONK', include_reference: 'boolean (default true)', format: 'json | llm | both' },
+        description: 'Cross-venue perps funding aggregator. Compares borrow/funding APR + open interest across Solana on-chain venues (Jupiter Perps, Adrena) and cross-chain reference venues (Hyperliquid, dYdX v4). Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities. Adrena routes SOL→jitoSOL and BTC→WBTC (wrapped). ETH not supported on Adrena. BONK not tradable on Jupiter Perps.',
       },
       'trending-signals': {
         price: '0.050',
