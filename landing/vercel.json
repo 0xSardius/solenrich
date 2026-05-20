@@ -1,5 +1,11 @@
 {
   "cleanUrls": true,
+  "rewrites": [
+    { "source": "/llms.txt", "destination": "https://api.solenrich.com/llms.txt" },
+    { "source": "/openapi.json", "destination": "https://api.solenrich.com/openapi.json" },
+    { "source": "/.well-known/x402", "destination": "https://api.solenrich.com/.well-known/x402" },
+    { "source": "/.well-known/agent.json", "destination": "https://api.solenrich.com/.well-known/agent.json" }
+  ],
   "headers": [
     {
       "source": "/og-image.png",
