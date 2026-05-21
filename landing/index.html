@@ -1484,7 +1484,7 @@
             <span class="endpoint-price">$0.006</span>
           </div>
           <p class="endpoint-desc">Side-by-side comparison of 2-3 tokens: price, liquidity, volatility, HHI concentration, risk flags. Rankings + summary picks.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">token</span></div>
+          <div class="tag-row"><span class="tag">comparison</span><span class="tag">token</span></div>
         </div>
 
         <div class="endpoint-card reveal">
@@ -1493,7 +1493,7 @@
             <span class="endpoint-price">$0.006</span>
           </div>
           <p class="endpoint-desc">Side-by-side comparison of 2-3 wallets: portfolio value, activity, risk score, labels, holdings. Rankings + summary picks.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">wallet</span></div>
+          <div class="tag-row"><span class="tag">comparison</span><span class="tag">wallet</span></div>
         </div>
 
         <div class="endpoint-card reveal">
@@ -1502,7 +1502,7 @@
             <span class="endpoint-price">$0.006</span>
           </div>
           <p class="endpoint-desc">"What changed?" — price, liquidity, concentration, and risk changes over 7/14/30 days. Direction indicators per metric. Snapshots accumulate automatically.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">token</span></div>
+          <div class="tag-row"><span class="tag">temporal</span><span class="tag">token</span></div>
         </div>
 
         <div class="endpoint-card reveal">
@@ -1511,7 +1511,7 @@
             <span class="endpoint-price">$0.006</span>
           </div>
           <p class="endpoint-desc">"What changed?" — portfolio value, SOL balance, risk score, and position changes over 7/14/30 days. Tracks added and removed holdings.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">wallet</span></div>
+          <div class="tag-row"><span class="tag">temporal</span><span class="tag">wallet</span></div>
         </div>
 
         <div class="endpoint-card reveal">
@@ -1520,7 +1520,7 @@
             <span class="endpoint-price">$0.012</span>
           </div>
           <p class="endpoint-desc">Discover recently launched Solana tokens. Scans DexScreener listings, runs risk scoring on each, filters by liquidity and risk. Safest first.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">discovery</span></div>
+          <div class="tag-row"><span class="tag">discovery</span><span class="tag">token</span></div>
         </div>
 
         <div class="endpoint-card reveal">
@@ -1538,7 +1538,7 @@
             <span class="endpoint-price">$0.012</span>
           </div>
           <p class="endpoint-desc">Jupiter Perps market structure — per-market OI, utilization, borrow APR, skew, OI caps, and health flags for SOL/BTC/ETH. Reads on-chain Anchor accounts directly.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span></div>
+          <div class="tag-row"><span class="tag">perps</span></div>
         </div>
 
         <div class="endpoint-card reveal">
@@ -1547,6 +1547,15 @@
             <span class="endpoint-price">$0.010</span>
           </div>
           <p class="endpoint-desc">Jupiter Perps positions for a wallet with size, leverage, entry, unrealized PnL, and trader classification (scalper / swing / position). Risk flags for high leverage and approaching liquidation.</p>
+          <div class="tag-row"><span class="tag">perps</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">perps-cross-venue-funding</span>
+            <span class="endpoint-price">$0.015</span>
+          </div>
+          <p class="endpoint-desc">Borrow / funding APR + open interest aggregated across Jupiter Perps, Adrena, Hyperliquid, and dYdX v4 in one call. Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities surfaced above 5pt spread.</p>
           <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span></div>
         </div>
 
@@ -1556,7 +1565,7 @@
             <span class="endpoint-price">$0.050</span>
           </div>
           <p class="endpoint-desc">Ranks trending Solana tokens by composite signal: liquidity, holder concentration, whale flow, risk. Composed across new-tokens + due-diligence + whale-watch in one call. Returns ranked list with per-token reasoning + overall sentiment.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">orchestration</span></div>
+          <div class="tag-row"><span class="tag">orchestration</span></div>
         </div>
 
         <div class="endpoint-card reveal">
@@ -1565,7 +1574,7 @@
             <span class="endpoint-price">$0.100</span>
           </div>
           <p class="endpoint-desc">Three-phase pipeline: scores wallets via copy-trade win rates, filters to qualifying winners, surfaces accumulated tokens + cluster relationships. Highest-margin endpoint — composed across copy-trade-signals + whale-watch + wallet-graph.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">orchestration</span></div>
+          <div class="tag-row"><span class="tag">orchestration</span></div>
         </div>
 
         <div class="endpoint-card reveal">
