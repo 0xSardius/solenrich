@@ -886,6 +886,70 @@
       overflow-x: auto;
     }
 
+    /* ==================== PERSONAS ==================== */
+    .personas-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-top: 48px;
+    }
+    .persona-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      padding: 32px;
+      transition: border-color 0.25s;
+    }
+    .persona-card:hover { border-color: var(--border-glow); }
+    .persona-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--sol-green);
+      background: rgba(0, 255, 163, 0.06);
+      border: 1px solid rgba(0, 255, 163, 0.12);
+      padding: 6px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      margin-bottom: 16px;
+    }
+    .persona-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .persona-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .persona-endpoints {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .persona-endpoints li {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+    .persona-endpoints code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--sol-green);
+      background: rgba(0, 255, 163, 0.06);
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-right: 6px;
+    }
+    @media (max-width: 900px) {
+      .personas-grid { grid-template-columns: 1fr; }
+    }
+
     /* ==================== MCP ==================== */
     .mcp-section { background: var(--bg-panel); }
 
@@ -1382,6 +1446,52 @@
       </div>
     </div>
   </div>
+
+  <!-- ===== PERSONAS ===== -->
+  <section class="personas-section" id="personas">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label">Who it's for</div>
+        <h2 class="section-title">Built for three kinds of agent</h2>
+        <p class="section-desc" style="max-width:560px; margin:0 auto; text-align:center;">If you're building one of these, here's where to start.</p>
+      </div>
+
+      <div class="personas-grid">
+        <div class="persona-card reveal">
+          <div class="persona-tag">&gt;_ trading bots</div>
+          <h3 class="persona-title">Size your entry on real data</h3>
+          <p class="persona-desc">Risk-aware swap decisions and cross-venue funding before opening a position.</p>
+          <ul class="persona-endpoints">
+            <li><code>due-diligence</code>SAFE / CAUTION / RISKY before swap</li>
+            <li><code>perps-cross-venue-funding</code>cheapest borrow across venues</li>
+            <li><code>check-alerts</code>risk score changes since last poll</li>
+          </ul>
+        </div>
+
+        <div class="persona-card reveal">
+          <div class="persona-tag">&gt;_ research agents</div>
+          <h3 class="persona-title">Bring onchain answers to chat</h3>
+          <p class="persona-desc">Plain-English questions about wallets, tokens, whales — for Telegram, Discord, or Farcaster bots.</p>
+          <ul class="persona-endpoints">
+            <li><code>query</code>natural language → multi-enricher answer</li>
+            <li><code>whale-watch</code>who's accumulating, who's dumping</li>
+            <li><code>portfolio-history</code>PnL over 7/14/30 days</li>
+          </ul>
+        </div>
+
+        <div class="persona-card reveal">
+          <div class="persona-tag">&gt;_ AI copilots</div>
+          <h3 class="persona-title">Inject Solana context into LLMs</h3>
+          <p class="persona-desc">Drop pre-formatted briefings straight into Claude or Cursor conversations.</p>
+          <ul class="persona-endpoints">
+            <li><code>format: "llm"</code>ready-to-paste briefings on any endpoint</li>
+            <li><code>MCP server</code>3-line config for Claude Desktop</li>
+            <li><code>consensus-signal</code>what other agents are watching</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </section>
 
   <!-- ===== DEMO ===== -->
   <section class="demo-section" id="demo">
