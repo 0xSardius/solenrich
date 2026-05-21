@@ -886,6 +886,76 @@
       overflow-x: auto;
     }
 
+    /* ==================== COMPARE ==================== */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-top: 48px;
+    }
+    .compare-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+      padding: 28px;
+      transition: border-color 0.25s;
+      display: flex;
+      flex-direction: column;
+    }
+    .compare-card-us {
+      background: linear-gradient(180deg, rgba(20, 241, 149, 0.04), rgba(153, 69, 255, 0.04));
+      border: 1px solid rgba(20, 241, 149, 0.4);
+      box-shadow: 0 0 24px rgba(20, 241, 149, 0.08);
+    }
+    .compare-card-us:hover { border-color: rgba(20, 241, 149, 0.6); }
+    .compare-card:not(.compare-card-us):hover { border-color: var(--border-glow); }
+    .compare-name {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .compare-card-us .compare-name { color: var(--sol-green); }
+    .compare-subtitle {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+    }
+    .compare-rows {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .compare-rows li {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .compare-dim {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+    }
+    .compare-disclaimer {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 24px;
+      font-style: italic;
+    }
+    @media (max-width: 900px) {
+      .compare-grid { grid-template-columns: 1fr; }
+    }
+
     /* ==================== PERSONAS ==================== */
     .personas-grid {
       display: grid;
@@ -2003,6 +2073,53 @@ Well-distributed supply.</span>
           <p class="value-desc">Herfindahl concentration index, multi-source median pricing, 7-day volatility classification, Sharpe ratios, entity-labeled whale tracking, and risk levels from LOW to CRITICAL. Analysis you can't get from any single API call.</p>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- ===== COMPARE ===== -->
+  <section class="compare-section" id="compare">
+    <div class="container">
+      <div class="reveal">
+        <div class="section-label">How we compare</div>
+        <h2 class="section-title">Where SolEnrich sits</h2>
+        <p class="section-desc" style="max-width:520px; margin:0 auto; text-align:center;">Three approaches to Solana onchain data. We picked the third.</p>
+      </div>
+
+      <div class="compare-grid">
+        <div class="compare-card reveal">
+          <div class="compare-name">Helius</div>
+          <div class="compare-subtitle">Raw data infrastructure</div>
+          <ul class="compare-rows">
+            <li><span class="compare-dim">Positioning</span>You build the synthesis layer</li>
+            <li><span class="compare-dim">Pricing</span>Per-RPC subscription tiers</li>
+            <li><span class="compare-dim">Audience</span>Engineers shipping infra</li>
+            <li><span class="compare-dim">Agent payments</span>None — API key required</li>
+          </ul>
+        </div>
+
+        <div class="compare-card reveal">
+          <div class="compare-name">Nansen</div>
+          <div class="compare-subtitle">Smart-money dashboard</div>
+          <ul class="compare-rows">
+            <li><span class="compare-dim">Positioning</span>Human-first analytics UI</li>
+            <li><span class="compare-dim">Pricing</span>$150/month subscription</li>
+            <li><span class="compare-dim">Audience</span>Traders, researchers, funds</li>
+            <li><span class="compare-dim">Agent payments</span>Agents can't sign up</li>
+          </ul>
+        </div>
+
+        <div class="compare-card compare-card-us reveal">
+          <div class="compare-name">SolEnrich</div>
+          <div class="compare-subtitle">Composed agent-native intelligence</div>
+          <ul class="compare-rows">
+            <li><span class="compare-dim">Positioning</span>Pre-synthesized briefings, not raw data</li>
+            <li><span class="compare-dim">Pricing</span>$0.002–$0.10 per call, pay-as-you-go</li>
+            <li><span class="compare-dim">Audience</span>Autonomous agents &amp; LLMs</li>
+            <li><span class="compare-dim">Agent payments</span>x402, MPP, MCP — native</li>
+          </ul>
+        </div>
+      </div>
+      <p class="compare-disclaimer reveal">Helius and Nansen are good products — they're just designed for different buyers. We use Helius as a data source.</p>
     </div>
   </section>
 
