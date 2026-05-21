@@ -268,6 +268,19 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'perps-basis-signal': {
+    summary: 'Net-yield-after-borrow basis trade scanner',
+    description: 'Computes perp mark vs spot price across venues and surfaces actually-earnable yield (funding APR on Hyperliquid + dYdX, not viable on pool perps Jupiter + Adrena). Returns per-venue trade economics, opportunities above threshold, and best trade. Threshold defaults to 5% APR.',
+    schema: {
+      type: 'object',
+      required: ['asset'],
+      properties: {
+        asset: { type: 'string', enum: ['SOL', 'BTC', 'ETH', 'BONK'], description: 'Asset to scan' },
+        min_yield_apr_pct: { type: 'number', minimum: 0, maximum: 100, default: 5, description: 'Minimum net yield (APR %) for an opportunity to be surfaced' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'perps-venue-comparison': {
     summary: 'Cross-venue perps comparison at a given size',
     description: 'Builds on cross-venue funding with size-aware fields: Jupiter Quote spot slippage at requested size, per-venue fee, OI cap headroom, first-hour borrow cost, and total entry cost. Returns rankings by entry cost / borrow APR / headroom plus a recommendation venue with warnings. Use when sizing a real position; use perps-cross-venue-funding for rates-only context.',

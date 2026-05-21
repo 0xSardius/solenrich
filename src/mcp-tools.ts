@@ -410,6 +410,26 @@ export function createSolEnrichMcpServer(): McpServer {
   );
 
   server.registerTool(
+    'perps_basis_signal',
+    {
+      title: 'Net-Yield-After-Borrow Basis Signal',
+      description: 'Computes perp mark vs spot price across venues and surfaces actually-earnable yield. Funding-rate venues (HL, dYdX) generate real yield; pool perps (Jupiter, Adrena) flagged as not viable because they charge borrow on both sides. Returns per-venue trade + filtered opportunities + best trade.',
+      inputSchema: {
+        asset: z.enum(['SOL', 'BTC', 'ETH', 'BONK']).describe('Asset to scan'),
+        min_yield_apr_pct: z.number().min(0).max(100).default(5).describe('Minimum net yield (APR %) for an opportunity to surface'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('perps-basis-signal', {
+        asset: args.asset,
+        min_yield_apr_pct: args.min_yield_apr_pct ?? 5,
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
     'perps_venue_comparison',
     {
       title: 'Cross-Venue Perps Comparison',

@@ -113,7 +113,17 @@ export class PerpReferenceClient {
 
     const fundingHourlyPct = ctx.funding * 100;
     const annualizedPct = fundingHourlyPct * 24 * 365;
-    // Hyperliquid openInterest is in tokens — convert to USD via oraclePx.
+
+    // Some Hyperliquid contracts are scaled (k-prefix = 1000-unit contract).
+    // Normalize back to per-token price so basis comparisons against spot
+    // (which prices the bare token) match units. OI is computed in USD via
+    // the contract-unit price × contract-unit OI count, so it's unaffected.
+    const isScaled = symbol.startsWith('k');
+    const contractMultiplier = isScaled ? 1000 : 1;
+    const normalizedMark = ctx.markPx / contractMultiplier;
+    const normalizedOracle = ctx.oraclePx / contractMultiplier;
+    // OI USD = (contract-unit OI count) × (contract-unit price)
+    // = (token count / multiplier) × (token price × multiplier) — multiplier cancels.
     const oiUsd = ctx.openInterest * ctx.oraclePx;
 
     return {
@@ -121,8 +131,8 @@ export class PerpReferenceClient {
       symbol,
       funding_hourly_pct: fundingHourlyPct,
       annualized_pct: annualizedPct,
-      mark_price_usd: Number.isFinite(ctx.markPx) ? ctx.markPx : null,
-      oracle_price_usd: Number.isFinite(ctx.oraclePx) ? ctx.oraclePx : null,
+      mark_price_usd: Number.isFinite(normalizedMark) ? normalizedMark : null,
+      oracle_price_usd: Number.isFinite(normalizedOracle) ? normalizedOracle : null,
       open_interest_usd: Number.isFinite(oiUsd) ? oiUsd : null,
       fetched_at: Date.now(),
     };

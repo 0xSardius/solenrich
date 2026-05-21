@@ -51,10 +51,12 @@ import { registerProtocolEntrypoint } from "../entrypoints/protocol";
 import { registerPerpsEntrypoints } from "../entrypoints/perps";
 import { registerPerpsCrossVenueEntrypoint } from "../entrypoints/perps-cross-venue";
 import { registerPerpsVenueComparisonEntrypoint } from "../entrypoints/perps-venue-comparison";
+import { registerPerpsBasisSignalEntrypoint } from "../entrypoints/perps-basis-signal";
 import { AdrenaClient } from "../sources/adrena";
 import { PerpReferenceClient } from "../sources/perp-reference";
 import { PerpsCrossVenueAnalyzer } from "../enrichers/perps-cross-venue";
 import { PerpsVenueComparator } from "../enrichers/perps-venue-comparison";
+import { PerpsBasisAnalyzer } from "../enrichers/perps-basis-signal";
 import { registerOrchestrationEntrypoints } from "../entrypoints/orchestration";
 import { registerFeedEntrypoint } from "../entrypoints/feed";
 import { FeedStore } from "../enrichers/feed-store";
@@ -324,6 +326,11 @@ const perpsVenueComparator = new PerpsVenueComparator(
   jupiterPerps,
   cache,
 );
+const perpsBasisAnalyzer = new PerpsBasisAnalyzer(
+  perpsCrossVenueAnalyzer,
+  priceAggregator,
+  cache,
+);
 
 import { TokenComparator, WalletComparator } from '../enrichers/comparator';
 const tokenComparator = new TokenComparator(tokenAnalyzer);
@@ -370,6 +377,12 @@ registerPerpsCrossVenueEntrypoint(addEntrypoint, perpsCrossVenueAnalyzer);
 // headroom to answer "where should I trade this at this size?" Returns
 // rankings + a recommendation string with warnings.
 registerPerpsVenueComparisonEntrypoint(addEntrypoint, perpsVenueComparator);
+
+// Basis signal — composes cross-venue marks + PriceAggregator spot to compute
+// net-yield-after-borrow per venue. Funding-rate venues (HL, dYdX) generate
+// real yield; pool perps (Jupiter, Adrena) flagged as not viable. Returns
+// per-venue trade + filtered opportunities + best trade.
+registerPerpsBasisSignalEntrypoint(addEntrypoint, perpsBasisAnalyzer);
 
 // Smart Money Orchestration — trending-signals + smart-money-flow
 // Composes token-discovery, whale-watch, copy-trade, graph-mapper into synthesized
@@ -720,6 +733,11 @@ app.get('/docs', (c) => {
         price: '0.020',
         input: { market: 'SOL | BTC | ETH | BONK', size_usd: 'number (100-10M)', side: 'long | short (default long)', format: 'json | llm | both' },
         description: 'Where to trade this market at this size. Builds on cross-venue funding with: Jupiter Quote spot slippage at requested size, per-venue fee, OI cap headroom, first-hour borrow cost, and total entry cost. Returns rankings by entry cost / borrow APR / headroom plus a recommendation venue with warnings (insufficient_headroom, elevated_borrow_rate, high_slippage, stressed/tilted health).',
+      },
+      'perps-basis-signal': {
+        price: '0.015',
+        input: { asset: 'SOL | BTC | ETH | BONK', min_yield_apr_pct: 'number 0-100 (default 5)', format: 'json | llm | both' },
+        description: 'Net-yield-after-borrow basis trade scanner. Computes perp mark vs spot price across venues and surfaces actually-earnable yield. Funding-rate venues (Hyperliquid, dYdX v4) generate real yield; pool perps (Jupiter, Adrena) flagged as not-viable because they charge borrow on both sides. Returns per-venue trade economics, filtered opportunities above the APR threshold, and the best trade.',
       },
       'trending-signals': {
         price: '0.050',
