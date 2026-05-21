@@ -565,7 +565,20 @@ console.log('[demo] Free demo endpoints available at POST /demo/enrich and /demo
 // --- Documentation endpoint (agent-readable) ---
 
 app.get('/docs', (c) => {
-  return c.json({
+  // Content negotiation: route humans to the rendered docs page, LLMs to
+  // llms.txt, default agents get pretty-printed JSON.
+  const accept = (c.req.header('accept') ?? '').toLowerCase();
+  // Real browsers lead with `text/html` and don't request JSON. Agents using
+  // fetch/curl/axios default to `*/*` or `application/json` — they fall through
+  // to the JSON branch below.
+  if (accept.startsWith('text/html') && !accept.includes('application/json')) {
+    return c.redirect('https://solenrich.com/docs', 302);
+  }
+  if (accept.includes('text/markdown')) {
+    return c.redirect('/llms.txt', 302);
+  }
+
+  const docs = {
     name: 'SolEnrich',
     version: '1.0.0',
     description: 'Solana onchain data enrichment agent. All scoring is deterministic — no LLM inference in the pipeline.',
@@ -790,6 +803,13 @@ app.get('/docs', (c) => {
       description: '20+ known Solana addresses auto-tagged in all enrichment results.',
       types: ['CEX (Binance, Coinbase, etc.)', 'Protocol (Raydium, Orca, etc.)', 'Bridge', 'Foundation'],
     },
+  };
+
+  // Pretty-printed JSON — same parse semantics as minified, readable to humans
+  // who hit the endpoint directly via curl or a browser-with-no-JSON-extension.
+  return c.body(JSON.stringify(docs, null, 2), 200, {
+    'Content-Type': 'application/json; charset=utf-8',
+    'Cache-Control': 'public, max-age=300',
   });
 });
 
