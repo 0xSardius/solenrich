@@ -50,9 +50,11 @@ import { registerDiscoveryEntrypoint } from "../entrypoints/discovery";
 import { registerProtocolEntrypoint } from "../entrypoints/protocol";
 import { registerPerpsEntrypoints } from "../entrypoints/perps";
 import { registerPerpsCrossVenueEntrypoint } from "../entrypoints/perps-cross-venue";
+import { registerPerpsVenueComparisonEntrypoint } from "../entrypoints/perps-venue-comparison";
 import { AdrenaClient } from "../sources/adrena";
 import { PerpReferenceClient } from "../sources/perp-reference";
 import { PerpsCrossVenueAnalyzer } from "../enrichers/perps-cross-venue";
+import { PerpsVenueComparator } from "../enrichers/perps-venue-comparison";
 import { registerOrchestrationEntrypoints } from "../entrypoints/orchestration";
 import { registerFeedEntrypoint } from "../entrypoints/feed";
 import { FeedStore } from "../enrichers/feed-store";
@@ -316,6 +318,12 @@ const perpsCrossVenueAnalyzer = new PerpsCrossVenueAnalyzer(
   perpReference,
   cache,
 );
+const perpsVenueComparator = new PerpsVenueComparator(
+  perpsCrossVenueAnalyzer,
+  jupiter,
+  jupiterPerps,
+  cache,
+);
 
 import { TokenComparator, WalletComparator } from '../enrichers/comparator';
 const tokenComparator = new TokenComparator(tokenAnalyzer);
@@ -357,6 +365,11 @@ registerPerpsEntrypoints(addEntrypoint, perpsAnalyzer);
 // venues (Hyperliquid, dYdX v4). Foundation endpoint for the Phase 2D perps
 // roadmap — unblocks venue-comparison, basis-signal, and market-trend.
 registerPerpsCrossVenueEntrypoint(addEntrypoint, perpsCrossVenueAnalyzer);
+
+// Venue comparison — composes cross-venue + Jupiter slippage quote + OI cap
+// headroom to answer "where should I trade this at this size?" Returns
+// rankings + a recommendation string with warnings.
+registerPerpsVenueComparisonEntrypoint(addEntrypoint, perpsVenueComparator);
 
 // Smart Money Orchestration — trending-signals + smart-money-flow
 // Composes token-discovery, whale-watch, copy-trade, graph-mapper into synthesized
@@ -702,6 +715,11 @@ app.get('/docs', (c) => {
         price: '0.015',
         input: { market: 'SOL | BTC | ETH | BONK', include_reference: 'boolean (default true)', format: 'json | llm | both' },
         description: 'Cross-venue perps funding aggregator. Compares borrow/funding APR + open interest across Solana on-chain venues (Jupiter Perps, Adrena) and cross-chain reference venues (Hyperliquid, dYdX v4). Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities. Adrena routes SOL→jitoSOL and BTC→WBTC (wrapped). ETH not supported on Adrena. BONK not tradable on Jupiter Perps.',
+      },
+      'perps-venue-comparison': {
+        price: '0.020',
+        input: { market: 'SOL | BTC | ETH | BONK', size_usd: 'number (100-10M)', side: 'long | short (default long)', format: 'json | llm | both' },
+        description: 'Where to trade this market at this size. Builds on cross-venue funding with: Jupiter Quote spot slippage at requested size, per-venue fee, OI cap headroom, first-hour borrow cost, and total entry cost. Returns rankings by entry cost / borrow APR / headroom plus a recommendation venue with warnings (insufficient_headroom, elevated_borrow_rate, high_slippage, stressed/tilted health).',
       },
       'trending-signals': {
         price: '0.050',

@@ -410,6 +410,28 @@ export function createSolEnrichMcpServer(): McpServer {
   );
 
   server.registerTool(
+    'perps_venue_comparison',
+    {
+      title: 'Cross-Venue Perps Comparison',
+      description: 'Where to trade this market at this size. Builds on cross-venue funding with spot slippage, per-venue fee, OI cap headroom, and total entry cost. Returns rankings + recommendation with warnings.',
+      inputSchema: {
+        market: z.enum(['SOL', 'BTC', 'ETH', 'BONK']).describe('Asset to query'),
+        size_usd: z.number().min(100).max(10_000_000).describe('Position size in USD'),
+        side: z.enum(['long', 'short']).default('long').describe('Side being sized'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('perps-venue-comparison', {
+        market: args.market,
+        size_usd: args.size_usd,
+        side: args.side ?? 'long',
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
     'perps_cross_venue_funding',
     {
       title: 'Cross-Venue Perps Funding',

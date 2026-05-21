@@ -268,6 +268,20 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'perps-venue-comparison': {
+    summary: 'Cross-venue perps comparison at a given size',
+    description: 'Builds on cross-venue funding with size-aware fields: Jupiter Quote spot slippage at requested size, per-venue fee, OI cap headroom, first-hour borrow cost, and total entry cost. Returns rankings by entry cost / borrow APR / headroom plus a recommendation venue with warnings. Use when sizing a real position; use perps-cross-venue-funding for rates-only context.',
+    schema: {
+      type: 'object',
+      required: ['market', 'size_usd'],
+      properties: {
+        market: { type: 'string', enum: ['SOL', 'BTC', 'ETH', 'BONK'], description: 'Asset to query' },
+        size_usd: { type: 'number', minimum: 100, maximum: 10_000_000, description: 'Position size in USD' },
+        side: { type: 'string', enum: ['long', 'short'], default: 'long', description: 'Side being sized' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'perps-cross-venue-funding': {
     summary: 'Cross-venue perps funding aggregator',
     description: 'Aggregates borrow/funding APR + open interest across Solana on-chain venues (Jupiter Perps, Adrena) and cross-chain reference venues (Hyperliquid, dYdX v4). Returns per-venue quotes, best entry per side, basis vs Hyperliquid, and arbitrage opportunities. Adrena routes SOL through jitoSOL and BTC through WBTC (wrapped collateral). ETH not supported on Adrena. BONK not tradable on Jupiter Perps. Foundation endpoint — new venues fold in additively as they go live (Phoenix Perps, Bullet).',
