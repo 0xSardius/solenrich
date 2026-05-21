@@ -695,6 +695,76 @@
       .update-items { flex-direction: column; gap: 8px; }
     }
 
+    .proof-strip {
+      background: var(--bg-void);
+      border-bottom: 1px solid var(--border-dim);
+      padding: 14px 0;
+    }
+    .proof-strip .container {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .proof-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--sol-green);
+      background: rgba(20, 241, 149, 0.08);
+      border: 1px solid rgba(20, 241, 149, 0.25);
+      padding: 4px 10px;
+      border-radius: 4px;
+      white-space: nowrap;
+    }
+    .proof-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--sol-green);
+      box-shadow: 0 0 8px var(--sol-green);
+      animation: proof-pulse 1.8s ease-in-out infinite;
+    }
+    @keyframes proof-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+    .proof-items {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .proof-item { white-space: nowrap; }
+    .proof-item a {
+      color: var(--text-primary);
+      text-decoration: none;
+      border-bottom: 1px dotted rgba(255, 255, 255, 0.25);
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .proof-item a:hover {
+      color: var(--sol-green);
+      border-bottom-color: var(--sol-green);
+    }
+    .proof-divider {
+      color: var(--border-dim);
+      font-size: 14px;
+      line-height: 1;
+    }
+    @media (max-width: 768px) {
+      .proof-strip .container { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .proof-items { gap: 8px; }
+      .proof-divider { display: none; }
+    }
+
     .value-card {
       background: var(--bg-card);
       border: 1px solid var(--border-dim);
@@ -1282,6 +1352,22 @@
       </div>
     </div>
   </section>
+
+  <!-- ===== PROOF STRIP ===== -->
+  <div class="proof-strip">
+    <div class="container">
+      <span class="proof-tag"><span class="proof-dot"></span>Live</span>
+      <div class="proof-items">
+        <span class="proof-item">Real USDC settlements via Coinbase CDP</span>
+        <span class="proof-divider">·</span>
+        <span class="proof-item">Listed on <a href="https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641" target="_blank" rel="noopener">x402scan</a>, <a href="https://smithery.ai/?q=solenrich" target="_blank" rel="noopener">Smithery</a>, <a href="https://orbisapi.com" target="_blank" rel="noopener">Orbis</a></span>
+        <span class="proof-divider">·</span>
+        <span class="proof-item">Registered on 8004-solana</span>
+        <span class="proof-divider">·</span>
+        <span class="proof-item">MCP for Claude &amp; Cursor</span>
+      </div>
+    </div>
+  </div>
 
   <!-- ===== UPDATE BANNER ===== -->
   <div class="update-banner">
