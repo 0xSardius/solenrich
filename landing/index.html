@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SolEnrich — Solana Onchain Data Enrichment for Agents & LLMs</title>
-  <meta name="description" content="Solana onchain data enrichment agent. 26 endpoints: cross-venue perps funding (Jupiter + Adrena + Hyperliquid + dYdX), event-driven alerts, consensus attention signal, portfolio time-series, compound NL queries, daily intelligence feed, smart-money orchestration, wallet profiling, token risk, protocol analytics. Pay USDC via x402 or cards via MPP/Stripe.">
+  <meta name="description" content="Solana onchain data enrichment agent. 28 endpoints including the perps trilogy: cross-venue funding, venue-comparison-by-size, and net-yield-after-borrow basis-signal across Jupiter + Adrena + Hyperliquid + dYdX. Plus event-driven alerts, consensus attention signal, portfolio time-series, compound NL queries, daily intelligence feed, smart-money orchestration. Pay USDC via x402 or cards via Stripe.">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://solenrich.com">
   <meta property="og:title" content="SolEnrich — Onchain Intelligence for Agents & LLMs">
-  <meta property="og:description" content="26 enrichment endpoints on Solana. Cross-venue perps funding, event-driven alerts, consensus attention signal, portfolio time-series, compound NL queries, daily intelligence feed, smart-money orchestration, Jupiter Perps, wallet profiling, token risk. Pay USDC via x402 or cards via Stripe.">
+  <meta property="og:description" content="28 enrichment endpoints on Solana. New: perps venue-comparison + basis-signal. Plus cross-venue funding, event-driven alerts, consensus signal, portfolio time-series, smart-money orchestration, daily intelligence feed. Pay USDC via x402 or cards via Stripe.">
   <meta property="og:image" content="https://solenrich.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -18,7 +18,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SolEnrich — Onchain Intelligence for Agents & LLMs">
-  <meta name="twitter:description" content="26 enrichment endpoints on Solana. Cross-venue perps funding, event-driven alerts, consensus attention signal, portfolio time-series, compound NL queries, daily intelligence feed, smart-money orchestration, Jupiter Perps, wallet profiling, token risk. Pay USDC via x402 or cards via Stripe.">
+  <meta name="twitter:description" content="28 enrichment endpoints on Solana. New: perps venue-comparison + basis-signal. Plus cross-venue funding, event-driven alerts, consensus signal, portfolio time-series, smart-money orchestration, daily intelligence feed. Pay USDC via x402 or cards via Stripe.">
   <meta name="twitter:image" content="https://solenrich.com/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1443,7 +1443,7 @@
           <span class="gradient-text">for agents & LLMs</span>
         </h1>
         <p class="hero-sub">
-          26 endpoints enriching any Solana wallet, token, or protocol with a single API call.
+          28 endpoints enriching any Solana wallet, token, or protocol with a single API call.
           Structured JSON for agents. Natural language briefings for LLMs.
           Pay with USDC (x402) or credit card (Stripe).
         </p>
@@ -1508,11 +1508,11 @@
     <div class="container">
       <span class="update-tag">New</span>
       <div class="update-items">
-        <span class="update-item"><span class="check">&#10003;</span> Cross-venue perps funding — Jupiter + Adrena + Hyperliquid + dYdX in one call</span>
-        <span class="update-item"><span class="check">&#10003;</span> Event-driven alerts — poll a watchlist, get graded events since your last check</span>
+        <span class="update-item"><span class="check">&#10003;</span> Perps basis-signal — net-yield-after-borrow scanner across 4 venues</span>
+        <span class="update-item"><span class="check">&#10003;</span> Perps venue-comparison — total entry cost + recommendation by size</span>
+        <span class="update-item"><span class="check">&#10003;</span> Perps cross-venue funding — Jupiter + Adrena + Hyperliquid + dYdX</span>
+        <span class="update-item"><span class="check">&#10003;</span> Event-driven alerts — poll a watchlist, get graded events since last check</span>
         <span class="update-item"><span class="check">&#10003;</span> Consensus signal — what tokens &amp; wallets agents are watching right now</span>
-        <span class="update-item"><span class="check">&#10003;</span> Portfolio history — daily wallet time-series with peak/trough/drawdown</span>
-        <span class="update-item"><span class="check">&#10003;</span> Intelligence Feed V1 — daily brief at $0.005 per poll</span>
       </div>
     </div>
   </div>
@@ -1528,13 +1528,13 @@
 
       <div class="personas-grid">
         <div class="persona-card reveal">
-          <div class="persona-tag">&gt;_ trading bots</div>
-          <h3 class="persona-title">Size your entry on real data</h3>
-          <p class="persona-desc">Risk-aware swap decisions and cross-venue funding before opening a position.</p>
+          <div class="persona-tag">&gt;_ perps bots</div>
+          <h3 class="persona-title">Make every venue decision one call</h3>
+          <p class="persona-desc">The perps trilogy covers the standard agent stack: rates, sizing, basis-arb. Four venues, one decision.</p>
           <ul class="persona-endpoints">
-            <li><code>due-diligence</code>SAFE / CAUTION / RISKY before swap</li>
-            <li><code>perps-cross-venue-funding</code>cheapest borrow across venues</li>
-            <li><code>check-alerts</code>risk score changes since last poll</li>
+            <li><code>perps-cross-venue-funding</code>rates across Jupiter, Adrena, HL, dYdX</li>
+            <li><code>perps-venue-comparison</code>total entry cost at your size + recommendation</li>
+            <li><code>perps-basis-signal</code>net-yield-after-borrow funding-arb scanner</li>
           </ul>
         </div>
 
@@ -1637,7 +1637,7 @@
     <div class="container">
       <div class="reveal">
         <div class="section-label">Endpoints</div>
-        <h2 class="section-title">26 enrichment endpoints</h2>
+        <h2 class="section-title">28 enrichment endpoints</h2>
         <p class="section-desc">
           From quick wallet lookups to full due diligence reports.
           Every endpoint returns data in your choice of format.
@@ -1822,7 +1822,25 @@
             <span class="endpoint-price">$0.015</span>
           </div>
           <p class="endpoint-desc">Borrow / funding APR + open interest aggregated across Jupiter Perps, Adrena, Hyperliquid, and dYdX v4 in one call. Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities surfaced above 5pt spread.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span></div>
+          <div class="tag-row"><span class="tag">perps</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">perps-venue-comparison</span>
+            <span class="endpoint-price">$0.020</span>
+          </div>
+          <p class="endpoint-desc">Where to trade at a given size. Adds Jupiter Quote spot slippage, per-venue fee, OI cap headroom, first-hour borrow cost. Returns total entry cost rankings + recommendation with warnings (insufficient_headroom, stressed health).</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span><span class="tag">sizing</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">perps-basis-signal</span>
+            <span class="endpoint-price">$0.015</span>
+          </div>
+          <p class="endpoint-desc">Net-yield-after-borrow basis trade scanner. Computes perp mark vs spot, surfaces real funding APR earnable on Hyperliquid + dYdX, correctly flags pool perps (Jupiter, Adrena) as not-viable. Returns per-venue trade + filtered opportunities + best trade.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span><span class="tag">basis</span></div>
         </div>
 
         <div class="endpoint-card reveal">
