@@ -344,7 +344,7 @@
   </nav>
 
   <div class="container-main" id="content">
-    <div class="loading">Loading agent card from <code>api.solenrich.com/.well-known/agent.json</code>...</div>
+    <div class="loading">Loading agent card&hellip;</div>
   </div>
 
   <footer>
@@ -352,7 +352,8 @@
   </footer>
 
   <script>
-    const CARD_URL = 'https://api.solenrich.com/.well-known/agent.json';
+    const CARD_URL = '/.well-known/agent.json';
+    const CARD_URL_DISPLAY = 'https://api.solenrich.com/.well-known/agent.json';
 
     function escapeHTML(str) {
       return String(str ?? '').replace(/[&<>"']/g, c => ({
@@ -493,7 +494,7 @@
             <div class="raw-actions">
               <button class="raw-toggle" id="toggle-raw" type="button">show raw JSON</button>
               <button class="raw-toggle" id="copy-raw" type="button">copy to clipboard</button>
-              <a class="raw-toggle" href="${CARD_URL}" target="_blank" style="text-decoration:none;">open in new tab</a>
+              <a class="raw-toggle" href="${CARD_URL_DISPLAY}" target="_blank" style="text-decoration:none;">open in new tab</a>
             </div>
             <pre class="raw-json" id="raw-json">${escapeHTML(JSON.stringify(card, null, 2))}</pre>
           </section>
@@ -522,7 +523,7 @@
         content.innerHTML = `
           <div class="error">
             Failed to load agent card: ${escapeHTML(err.message)}<br><br>
-            Try the raw JSON: <a href="${CARD_URL}" style="color:inherit;">${CARD_URL}</a>
+            Try the raw JSON: <a href="${CARD_URL_DISPLAY}" style="color:inherit;">${CARD_URL_DISPLAY}</a>
           </div>
         `;
       }
