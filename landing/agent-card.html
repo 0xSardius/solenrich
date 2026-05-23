@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SolEnrich — Agent Card</title>
+  <meta name="description" content="SolEnrich Agent Card. A2A protocol identity, capabilities, and skill manifest for autonomous agents discovering SolEnrich.">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://solenrich.com/agent-card">
+  <meta property="og:title" content="SolEnrich Agent Card">
+  <meta property="og:description" content="A2A protocol identity and skill manifest for SolEnrich. 28 paid endpoints, machine-discoverable.">
+  <meta property="og:image" content="https://solenrich.com/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="SolEnrich — Agent Card">
+  <meta name="twitter:description" content="A2A protocol identity and skill manifest. 28 endpoints, machine-discoverable.">
+  <meta name="twitter:image" content="https://solenrich.com/og-image.png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --sol-green: #00FFA3;
+      --sol-purple: #9945FF;
+      --sol-blue: #14F195;
+      --bg-void: #06060A;
+      --bg-panel: #0C0C14;
+      --bg-card: #111119;
+      --bg-card-hover: #16161F;
+      --border-subtle: rgba(255,255,255,0.06);
+      --text-primary: #E8E8F0;
+      --text-secondary: #8888A8;
+      --text-muted: #555570;
+      --accent-warm: #FF6B35;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; overflow-x: clip; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg-void);
+      color: var(--text-primary);
+      line-height: 1.6;
+      overflow-x: clip;
+      max-width: 100vw;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+
+    /* ===== NAV ===== */
+    nav {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(6,6,10,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-subtle);
+      padding: 16px 0;
+    }
+    nav .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 20px;
+      color: var(--sol-green);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--text-muted); font-weight: 400; }
+    .nav-links { display: flex; gap: 28px; }
+    .nav-links a {
+      color: var(--text-secondary);
+      text-decoration: none;
+      font-size: 14px;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover, .nav-links a.active { color: var(--sol-green); }
+
+    /* ===== LAYOUT ===== */
+    .container-main {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 48px 32px;
+      min-width: 0;
+    }
+    @media (max-width: 700px) {
+      .container-main { padding: 32px 20px; }
+    }
+
+    /* ===== HEADER ===== */
+    .page-header { margin-bottom: 32px; min-width: 0; overflow-wrap: break-word; }
+    .page-header h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 40px;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+    .page-header .lede {
+      color: var(--text-secondary);
+      font-size: 16px;
+      max-width: 720px;
+    }
+    .agent-meta {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(0,255,163,0.08);
+      color: var(--sol-green);
+      border: 1px solid rgba(0,255,163,0.15);
+    }
+    .badge.muted {
+      background: rgba(255,255,255,0.03);
+      color: var(--text-secondary);
+      border-color: var(--border-subtle);
+    }
+    .badge.warn {
+      background: rgba(255,107,53,0.08);
+      color: var(--accent-warm);
+      border-color: rgba(255,107,53,0.2);
+    }
+    .badge .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* ===== SECTIONS ===== */
+    section { margin-bottom: 40px; min-width: 0; }
+    section h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 22px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-subtle);
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    section h2 .meta-right {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    /* ===== INFO PILLS ===== */
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 12px;
+    }
+    .info-pill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 14px 16px;
+      min-width: 0;
+      overflow-wrap: anywhere;
+    }
+    .info-pill-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+    .info-pill-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+    .info-pill-value.green { color: var(--sol-green); }
+    .info-pill-value a { color: var(--sol-blue); text-decoration: none; }
+    .info-pill-value a:hover { text-decoration: underline; }
+
+    /* ===== SKILLS LIST ===== */
+    .skill {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 8px;
+      transition: border 0.2s;
+      min-width: 0;
+      overflow: hidden;
+    }
+    .skill:hover { border-color: rgba(0,255,163,0.2); }
+    .skill-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 6px;
+    }
+    .skill-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--text-primary);
+      overflow-wrap: anywhere;
+    }
+    .skill-modes {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+    .skill-mode-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 3px;
+      background: rgba(153,69,255,0.08);
+      color: var(--sol-purple);
+      border: 1px solid rgba(153,69,255,0.15);
+    }
+    .skill-desc {
+      color: var(--text-secondary);
+      font-size: 13px;
+      overflow-wrap: break-word;
+    }
+    .skill-schema {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: var(--bg-void);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+      overflow-x: auto;
+      max-width: 100%;
+    }
+    .skill-schema .field { color: var(--sol-purple); }
+    .skill-schema .type { color: var(--text-muted); }
+    .skill-schema .req { color: var(--accent-warm); font-size: 10px; margin-left: 4px; }
+
+    /* ===== RAW JSON VIEWER ===== */
+    .raw-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .raw-toggle:hover {
+      color: var(--sol-green);
+      border-color: rgba(0,255,163,0.2);
+    }
+    .raw-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .raw-json {
+      display: none;
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 16px 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-secondary);
+      max-height: 500px;
+      overflow: auto;
+      white-space: pre;
+      max-width: 100%;
+    }
+    .raw-json.open { display: block; }
+
+    /* ===== LOADING / ERROR ===== */
+    .loading {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .error {
+      background: rgba(255,107,53,0.08);
+      border: 1px solid rgba(255,107,53,0.2);
+      color: var(--accent-warm);
+      padding: 16px 20px;
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+
+    /* ===== FOOTER ===== */
+    footer {
+      border-top: 1px solid var(--border-subtle);
+      padding: 32px 24px;
+      margin-top: 80px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 13px;
+    }
+    footer a { color: var(--sol-green); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <div class="container">
+      <a href="/" class="nav-logo">SolEnrich<span>.agent</span></a>
+      <div class="nav-links">
+        <a href="/#demo">Try It</a>
+        <a href="/#endpoints">Endpoints</a>
+        <a href="/docs">Docs</a>
+        <a href="/agent-card" class="active">Agent Card</a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-main" id="content">
+    <div class="loading">Loading agent card from <code>api.solenrich.com/.well-known/agent.json</code>...</div>
+  </div>
+
+  <footer>
+    Built by <a href="https://twitter.com/0xSardius" target="_blank">@0xSardius</a> · API at <a href="https://api.solenrich.com">api.solenrich.com</a>
+  </footer>
+
+  <script>
+    const CARD_URL = 'https://api.solenrich.com/.well-known/agent.json';
+
+    function escapeHTML(str) {
+      return String(str ?? '').replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[c]));
+    }
+
+    function renderModes(modes) {
+      if (!Array.isArray(modes) || modes.length === 0) return '';
+      return `<div class="skill-modes">${modes.map(m =>
+        `<span class="skill-mode-tag">${escapeHTML(m)}</span>`
+      ).join('')}</div>`;
+    }
+
+    function renderSchema(schema) {
+      if (!schema || typeof schema !== 'object') return '';
+      const props = schema.properties || {};
+      const required = new Set(schema.required || []);
+      const lines = Object.entries(props).map(([key, val]) => {
+        const type = val.enum ? val.enum.map(v => `"${v}"`).join(' | ') : (val.type || 'any');
+        const req = required.has(key) ? '<span class="req">required</span>' : '';
+        return `  <span class="field">${escapeHTML(key)}</span>: <span class="type">${escapeHTML(type)}</span>${req}`;
+      });
+      if (lines.length === 0) return '';
+      return `<div class="skill-schema">{\n${lines.join('\n')}\n}</div>`;
+    }
+
+    function renderSkill(skill) {
+      const allModes = [...new Set([...(skill.inputModes || []), ...(skill.outputModes || [])])];
+      return `
+        <div class="skill">
+          <div class="skill-header">
+            <span class="skill-name">${escapeHTML(skill.id || skill.name)}</span>
+            ${renderModes(allModes)}
+          </div>
+          <p class="skill-desc">${escapeHTML(skill.description || '')}</p>
+          ${renderSchema(skill.x_input_schema)}
+        </div>
+      `;
+    }
+
+    function renderCapabilities(caps) {
+      if (!caps) return '';
+      return Object.entries(caps).map(([key, val]) => {
+        const label = key.replace(/([A-Z])/g, ' $1').replace(/^./, c => c.toUpperCase());
+        const cls = val ? 'badge' : 'badge muted';
+        const dot = val ? '<span class="dot"></span>' : '';
+        return `<span class="${cls}">${dot}${escapeHTML(label)}: ${val ? 'yes' : 'no'}</span>`;
+      }).join('');
+    }
+
+    async function loadCard() {
+      const content = document.getElementById('content');
+      try {
+        const res = await fetch(CARD_URL);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const card = await res.json();
+        const skills = Array.isArray(card.skills) ? card.skills : [];
+        const interfaces = Array.isArray(card.supportedInterfaces) ? card.supportedInterfaces : [];
+        const inputModes = card.defaultInputModes || [];
+        const outputModes = card.defaultOutputModes || [];
+
+        content.innerHTML = `
+          <div class="page-header">
+            <h1>${escapeHTML(card.name || 'Agent Card')}</h1>
+            <p class="lede">${escapeHTML(card.description || '')}</p>
+            <div class="agent-meta">
+              <span class="badge"><span class="dot"></span>v${escapeHTML(card.version || '?')}</span>
+              <span class="badge muted">A2A ${escapeHTML(card.protocolVersion || '?')}</span>
+              <span class="badge muted">${skills.length} skills</span>
+            </div>
+          </div>
+
+          <section>
+            <h2>Identity</h2>
+            <div class="info-grid">
+              <div class="info-pill">
+                <div class="info-pill-label">Name</div>
+                <div class="info-pill-value">${escapeHTML(card.name || '—')}</div>
+              </div>
+              <div class="info-pill">
+                <div class="info-pill-label">Version</div>
+                <div class="info-pill-value green">${escapeHTML(card.version || '—')}</div>
+              </div>
+              <div class="info-pill">
+                <div class="info-pill-label">Protocol</div>
+                <div class="info-pill-value">A2A ${escapeHTML(card.protocolVersion || '—')}</div>
+              </div>
+              <div class="info-pill">
+                <div class="info-pill-label">Base URL</div>
+                <div class="info-pill-value"><a href="${escapeHTML(card.url || '#')}" target="_blank">${escapeHTML(card.url || '—')}</a></div>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <h2>Capabilities</h2>
+            <div class="agent-meta">
+              ${renderCapabilities(card.capabilities)}
+            </div>
+          </section>
+
+          <section>
+            <h2>I/O Modes</h2>
+            <div class="info-grid">
+              <div class="info-pill">
+                <div class="info-pill-label">Default Input</div>
+                <div class="info-pill-value">${inputModes.map(escapeHTML).join('<br>') || '—'}</div>
+              </div>
+              <div class="info-pill">
+                <div class="info-pill-label">Default Output</div>
+                <div class="info-pill-value">${outputModes.map(escapeHTML).join('<br>') || '—'}</div>
+              </div>
+            </div>
+          </section>
+
+          ${interfaces.length > 0 ? `
+            <section>
+              <h2>Supported Interfaces</h2>
+              <div class="info-grid">
+                ${interfaces.map(i => `
+                  <div class="info-pill">
+                    <div class="info-pill-label">${escapeHTML(i.protocolBinding || 'interface')}</div>
+                    <div class="info-pill-value"><a href="${escapeHTML(i.url)}" target="_blank">${escapeHTML(i.url)}</a></div>
+                  </div>
+                `).join('')}
+              </div>
+            </section>
+          ` : ''}
+
+          <section>
+            <h2>Skills <span class="meta-right">${skills.length} total</span></h2>
+            ${skills.map(renderSkill).join('')}
+          </section>
+
+          <section>
+            <h2>Raw JSON</h2>
+            <div class="raw-actions">
+              <button class="raw-toggle" id="toggle-raw" type="button">show raw JSON</button>
+              <button class="raw-toggle" id="copy-raw" type="button">copy to clipboard</button>
+              <a class="raw-toggle" href="${CARD_URL}" target="_blank" style="text-decoration:none;">open in new tab</a>
+            </div>
+            <pre class="raw-json" id="raw-json">${escapeHTML(JSON.stringify(card, null, 2))}</pre>
+          </section>
+        `;
+
+        const rawEl = document.getElementById('raw-json');
+        const toggleBtn = document.getElementById('toggle-raw');
+        toggleBtn.addEventListener('click', () => {
+          rawEl.classList.toggle('open');
+          toggleBtn.textContent = rawEl.classList.contains('open') ? 'hide raw JSON' : 'show raw JSON';
+        });
+
+        const copyBtn = document.getElementById('copy-raw');
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(JSON.stringify(card, null, 2));
+            const original = copyBtn.textContent;
+            copyBtn.textContent = 'copied!';
+            setTimeout(() => { copyBtn.textContent = original; }, 1500);
+          } catch {
+            copyBtn.textContent = 'copy failed';
+          }
+        });
+
+      } catch (err) {
+        content.innerHTML = `
+          <div class="error">
+            Failed to load agent card: ${escapeHTML(err.message)}<br><br>
+            Try the raw JSON: <a href="${CARD_URL}" style="color:inherit;">${CARD_URL}</a>
+          </div>
+        `;
+      }
+    }
+
+    loadCard();
+  </script>
+</body>
+</html>
