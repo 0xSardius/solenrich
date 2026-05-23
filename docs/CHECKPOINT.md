@@ -1,9 +1,70 @@
 # Session Checkpoint
 
 ## Last session date
-2026-05-18
+2026-05-23
 
 ## What was completed
+
+### Latest checkpoint (May 23 — PODCAST PREP) — 28 ENDPOINTS, PERPS TRILOGY SHIPPED, LANDING FULLY MODERNIZED
+
+**Three-day session block (May 19–23). 15 commits pushed. Two major workstreams: the perps trilogy + landing/discovery infrastructure. Closed with podcast prep — no code, just content analysis.**
+
+#### Perps trilogy — Phase 2D foundation complete
+- **`perps-cross-venue-funding`** ($0.015, `ed4ce1d`, May 19) — foundation endpoint. Aggregates Jupiter Perps + Adrena + Hyperliquid + dYdX v4. Adrena via fixed-offset Borsh decoding (Anchor 0.30 IDL incompat with our pinned 0.29 — verified live against all 4 main-pool custodies). Hyperliquid + dYdX swapped in for Binance/Bybit (US geo-block). Live test surfaced 10.11pt arb spread Jupiter vs Adrena on BTC.
+- **`perps-venue-comparison`** ($0.020, `908d10b`, May 21) — composes cross-venue + Jupiter slippage + OI cap headroom. Returns total entry cost rankings + recommendation with warnings (insufficient_headroom, elevated_borrow_rate, high_slippage). Verified across SOL/BTC/ETH/BONK.
+- **`perps-basis-signal`** ($0.015, `7a7afa4`, May 21) — net-yield-after-borrow scanner. Funding-rate venues (HL, dYdX) generate real yield; pool perps (Jupiter, Adrena) correctly flagged not-viable. Live found dYdX ETH -39.37% funding → 39.37% APR long-perp/short-spot trade. Bonus fix: Hyperliquid k-prefix contract normalization (kBONK/kSHIB were blowing up basis math by 6 orders of magnitude — `0289851`).
+- **Plus landing refresh** for the trilogy (`c9376aa`) — 2 new endpoint cards, banner refreshed to lead with the trilogy, personas trading-bot card renamed → "perps bots" with all 3 endpoints listed.
+
+#### Discovery + Railway metadata fixes (May 20)
+- **CardEx (Sardius's other agent) couldn't fetch llms.txt from apex** — diagnosed: Vercel landing had no rewrites, discovery files only existed at api.solenrich.com. Fixed by adding Vercel rewrites for `/llms.txt`, `/openapi.json`, `/.well-known/x402`, `/.well-known/agent.json` (`81a4b4a`). Apex now proxies transparently to API. **TLS cert issue Sardius mentioned was no longer reproducible** — `CN=api.solenrich.com` valid, Let's Encrypt E8 — likely auto-renewed since CardEx hit it.
+- **API metadata refresh** (`13e9899`) — all 6 "Parallax Labs" references in src/lib/agent.ts swapped to @0xSardius. Endpoint count made dynamic via `${Object.keys(PRICING).length}` so it auto-updates on future ships.
+- **/docs improvements** (`f8935d3`) — JSON pretty-printed (2-space indent), Accept-header content negotiation: browsers → 302 to solenrich.com/docs (HTML), `text/markdown` → 302 to /llms.txt, default agents → pretty JSON. All five client paths verified non-breaking (curl */* default, browser, application/json, text/markdown, no Accept).
+
+#### Landing modernization — Tier 1 + Tier 2 fixes (May 20)
+- **Tier 1 (4 commits, all separate per Sardius's tracking preference):** bump 25→26 endpoint counts (`3398444`), hero CTA `/entrypoints` → `/docs` (`56ab35f`), banner trimmed 12→5 most recent (`690a6ae`), added perps-cross-venue-funding card + retired 8 stale "new" tags (`47c0851`).
+- **Tier 2 (4 commits):** demo section micro-copy clarifies cost/rate/output (`5e49521`), evergreen "Live" proof strip — distribution facts only, no aging numbers (`0289851`), 3-card "Who it's for" personas (trading bots, research agents, AI copilots — `4d25b95`), Helius/Nansen/SolEnrich comparison strip with disclaimer (`5117a9c`).
+- **Footer attribution:** "Parallax Labs" → "@0xSardius" linking to twitter.com/0xSardius (in `81a4b4a`).
+
+#### Podcast prep (May 22–23)
+- Sardius confirmed for podcast (was "tomorrow" on May 22 → recorded May 23). Comprehensive prep doc drafted covering all 6 episode sections:
+  - Core through-line ("everyone says agents are the future, almost no one's building the layer that makes them work")
+  - Top 5 questions to prepare hardest for (origin pain, x402 thesis, what people get wrong about agents, if x402 works what changes, 6–12 month vision)
+  - Per-section talking points + soundbites
+  - Deep dives drafted on request: why Solana data is hard (block-explorer interpretation gap), enrichment definition (gather/cross-ref/label/score/synthesize), JSON vs LLM format decision (rule of "schema first, formatter is pure"), format request mechanism (caller passes `format` param), why SolEnrich exists (4 problems: synthesis, payment, format, reliability).
+- **Fact-check verified before air:** zero LLM SDK dependencies (only `@modelcontextprotocol/sdk` is AI-adjacent). Zero inference calls anywhere in src/. The `query` endpoint uses regex pattern matching (5 compound rules + 7 single-intent rules), NOT LLM parsing. Honest podcast framing: "LLM is in the caller, not in us."
+
+#### Endpoint catalog now at 28 paid (was 25 at session start)
+1. enrich-wallet-light $0.002
+2. enrich-wallet-full $0.005
+3. enrich-token-light $0.002
+4. enrich-token-full $0.004
+5. parse-transaction $0.001
+6. whale-watch $0.008
+7. batch-enrich $0.015
+8. wallet-graph $0.010
+9. copy-trade-signals $0.010
+10. due-diligence $0.020
+11. query $0.003
+12. compare-tokens $0.006
+13. compare-wallets $0.006
+14. token-trend $0.006
+15. wallet-history $0.006
+16. new-tokens $0.012
+17. protocol-profile $0.008
+18. perps-market-structure $0.012
+19. perps-trader-profile $0.010
+20. **perps-cross-venue-funding $0.015** (new)
+21. **perps-venue-comparison $0.020** (new)
+22. **perps-basis-signal $0.015** (new)
+23. trending-signals $0.050
+24. smart-money-flow $0.100
+25. feed-latest $0.005
+26. consensus-signal $0.005
+27. portfolio-history $0.006
+28. check-alerts $0.008
+
+#### Memory + reference docs updated
+- `memory/project_perps_bot_dogfood.md` — captures Sardius's plan to build a perps trading bot using only SolEnrich endpoints as flagship validation of the agent-native thesis. Linked from MEMORY.md.
 
 ### Latest checkpoint (May 18 evening) — PERPS ROADMAP LOCKED + ADRENA UNBLOCKED
 
@@ -290,12 +351,13 @@
 ## Next session plan (ACTION ITEMS)
 
 ### 0. Strategic context (reference, not action)
-Session on 2026-04-21 established the counter-positioning thesis: SolEnrich wins as **agent-native first**, not dashboard-with-API. See `CLAUDE.md > Strategic Positioning` for full framework. Top 3 ranked moves by defensibility × leverage:
-1. **Intelligence Feed V1** (Priority 14) — SHIPPED ✅ 2026-05-04. Validation gate closes today (2026-05-18).
+Counter-positioning thesis: SolEnrich wins as **agent-native first**, not dashboard-with-API. See `CLAUDE.md > Strategic Positioning`. Top moves by defensibility × leverage:
+1. **Intelligence Feed V1** (Priority 14) — SHIPPED ✅ 2026-05-04. **Validation gate now 5 days overdue (was due 2026-05-18).**
 2. **Smart Money Orchestration** (Priority 9) — SHIPPED 2026-04-23 ✅
 3. **Data Network Effect** (Priority 8 / Consensus Signal) — SHIPPED ✅ 2026-05-10.
+4. **Perps trilogy (Phase 2D)** — SHIPPED ✅ 2026-05-19 + 2026-05-21. Three endpoints down (cross-venue, comparison, basis). Three remain (#4 position alerts, #5 market-trend, #6 liquidation map deferred).
 
-### 1. IMMEDIATE — Feed V1 validation gate decision (today, 2026-05-18)
+### 1. IMMEDIATE — Feed V1 validation gate decision (was due 2026-05-18, now 5 days overdue)
 Pull `/metrics` for `feed-latest` daily poller counts since launch (May 4):
 - **≥10 distinct pollers/day** → ship V2 (hourly cron, SSE, webhooks)
 - **3-9 distinct pollers/day** → ship "stale-while-revalidate" V1 polish (~10 lines, 1hr) and iterate framing/pricing
@@ -328,11 +390,30 @@ Foundation endpoint. Aggregate borrow/funding rates across Jupiter Perps (existi
 - **Bullet (Zeta rebrand) mainnet** — appchain testnet now at 1.2ms latency. Worth tracking.
 - **agentic.market listing** — still queued since 2026-04-21. Check weekly.
 
-### 4. UNPOSTED TWEET DRAFTS (gitignored, ready)
+### 4. UNPOSTED TWEET DRAFTS (gitignored or in-conversation, ready)
 - `update-may-16.md` — perf-win story (cold-cache fix, "10x speedup, same endpoint, same data, same price")
 - `consensus-signal-launch.md` — Consensus Signal standalone announcement
 - `portfolio-history-launch.md` — Portfolio Tracker standalone announcement (with live demo screenshot from Solana Foundation wallet)
-Refresh Orbis paid-call counts before any traction stat reference.
+- **Cross-venue perps launch (drafted May 19, never posted)** — three shapes (A trilogy/B findings/C builder pitch); recommended B with "10pt spread BTC, 40% APR ETH dYdX" hook
+- **Perps trilogy summary (drafted May 22)** — three shapes A/B/C; recommended **B with looser precision** ("~10pt spread", "~40% APR", "~11% SOL") because exact numbers drift hourly. Always screenshot JSON before posting for receipts.
+- Refresh Orbis paid-call counts before any traction stat reference.
+
+### 5. PODCAST (recorded 2026-05-23)
+- Full prep doc lives in conversation history — too long for a separate file. Sardius can re-request specific sections in next session.
+- Key talking points: through-line ("everyone says agents are the future, almost no one's building the layer that makes them actually work"), no-LLM-in-pipeline fact-check verified, "LLM is in the caller not in us" framing.
+
+### 6. PERPS BOT DOGFOOD PLAN — captured in memory
+- See `memory/project_perps_bot_dogfood.md` — Sardius plans to build a perps trading bot using only SolEnrich endpoints as flagship validation.
+- Strategy → endpoint coverage matrix in `local/research/perps-roadmap-may-18.md`.
+- **Per-cycle SolEnrich cost at 60s polling: ~$0.05/min = $72/day.** At $5K capital, 10% APR yield, breakeven. To make profitable: poll less frequently (5min = $14/day, profitable at $5K), trade more capital ($50K = $13.70/day yield with comfortable margin), or stack strategies (basis-arb + cross-venue routing + copy-trade overlay).
+- **Endpoint priority for the bot's profitability:** Tier 1 (every cycle): basis-signal, check-alerts, perps-trader-profile. Tier 2 (decision points): cross-venue-funding, venue-comparison. **Single biggest unblock = ship perp position alerts** (Phase 2D #4, extends check-alerts).
+
+### 7. PERPS PHASE 2D — what's left
+- **#4 Perp position alerts** (~1 session, extends `check-alerts`) — surfaces `perp_position_added/closed/at_risk/liquidation_approaching/pnl_swing`. Most impactful next ship for bot survivability. **Probably the next code session's priority.**
+- **#5 perps-market-trend** ($0.008, ~1 session) — mirror of token-trend for perps markets. Daily snapshots, direction indicators per metric.
+- **#6 perps-liquidation-risk-map** ($0.020, 2-3 sessions, deferred) — scans all positions across venues, aggregates liquidation clusters. Ship only after #4-#5 validate demand.
+- **Adrena OI cap decode** — v1 limitation. `pricing.max_cumulative_long_position_size_usd` and `max_cumulative_short_position_size_usd` not yet extracted from custody hand-decoder. Would let `venue-comparison` give Adrena a real OI headroom value instead of `null`.
+- **perps-trader-profile on Adrena** — currently Jupiter-only. Multi-venue bot needs both. 1-session add wrapping AdrenaClient with position decoder.
 
 ### 2. POST-BAGS — post tweet threads + Orbis listing for Feed V1
 - **Original launch thread** at `local/hackathon-bags/tweet-thread/thread-v3.md` (5 tweets)
