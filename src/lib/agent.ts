@@ -473,6 +473,14 @@ app.use('/demo/*', cors({
   allowHeaders: ['Content-Type'],
 }));
 
+// CORS for public discovery endpoints (browsable from landing page + agent clients)
+app.use('/docs', cors({ origin: '*', allowMethods: ['GET', 'OPTIONS'], allowHeaders: ['Accept', 'Content-Type'] }));
+app.use('/openapi.json', cors({ origin: '*', allowMethods: ['GET', 'OPTIONS'], allowHeaders: ['Accept', 'Content-Type'] }));
+app.use('/.well-known/*', cors({ origin: '*', allowMethods: ['GET', 'OPTIONS'], allowHeaders: ['Accept', 'Content-Type'] }));
+app.use('/entrypoints', cors({ origin: '*', allowMethods: ['GET', 'OPTIONS'], allowHeaders: ['Accept', 'Content-Type'] }));
+app.use('/agent-card-extended', cors({ origin: '*', allowMethods: ['GET', 'OPTIONS'], allowHeaders: ['Accept', 'Content-Type'] }));
+app.use('/health', cors({ origin: '*', allowMethods: ['GET', 'OPTIONS'], allowHeaders: ['Accept', 'Content-Type'] }));
+
 app.post('/demo/enrich', async (c) => {
   const ip = c.req.header('x-forwarded-for')?.split(',')[0]?.trim()
     || c.req.header('cf-connecting-ip')
