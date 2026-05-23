@@ -40,12 +40,14 @@
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
+    html { scroll-behavior: smooth; overflow-x: clip; }
     body {
       font-family: 'DM Sans', system-ui, sans-serif;
       background: var(--bg-void);
       color: var(--text-primary);
       line-height: 1.6;
+      overflow-x: clip;
+      max-width: 100vw;
     }
     .mono { font-family: 'JetBrains Mono', monospace; }
 
@@ -209,6 +211,11 @@
     }
 
     /* ===== MAIN ===== */
+    .main {
+      min-width: 0;
+      overflow-wrap: break-word;
+      word-wrap: break-word;
+    }
     .main h1 {
       font-family: 'Space Grotesk', sans-serif;
       font-weight: 700;
@@ -262,6 +269,8 @@
       overflow-x: auto;
       margin: 16px 0;
       white-space: pre;
+      max-width: 100%;
+      min-width: 0;
     }
     .code-block .key { color: var(--sol-purple); }
     .code-block .str { color: var(--sol-green); }
@@ -277,6 +286,9 @@
       padding: 20px 24px;
       margin: 12px 0;
       transition: border 0.2s;
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
     }
     .endpoint:hover { border-color: rgba(0,255,163,0.2); }
     .endpoint-header {
@@ -292,6 +304,8 @@
       font-weight: 600;
       font-size: 16px;
       color: var(--text-primary);
+      overflow-wrap: anywhere;
+      min-width: 0;
     }
     .endpoint-price {
       font-family: 'JetBrains Mono', monospace;
