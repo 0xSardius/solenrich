@@ -88,13 +88,16 @@
     .docs-layout {
       max-width: 1200px;
       margin: 0 auto;
-      padding: 48px 24px;
+      padding: 48px 32px;
       display: grid;
-      grid-template-columns: 240px 1fr;
+      grid-template-columns: 240px minmax(0, 1fr);
       gap: 48px;
     }
     @media (max-width: 900px) {
-      .docs-layout { grid-template-columns: 1fr; }
+      .docs-layout {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 32px 20px;
+      }
       .sidebar { position: static; }
     }
 
@@ -105,7 +108,16 @@
       height: fit-content;
       max-height: calc(100vh - 120px);
       overflow-y: auto;
+      padding-right: 12px;
+      scrollbar-gutter: stable;
     }
+    .sidebar::-webkit-scrollbar { width: 6px; }
+    .sidebar::-webkit-scrollbar-track { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb {
+      background: rgba(255,255,255,0.08);
+      border-radius: 3px;
+    }
+    .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
     .sidebar h4 {
       font-family: 'Space Grotesk', sans-serif;
       font-size: 11px;
