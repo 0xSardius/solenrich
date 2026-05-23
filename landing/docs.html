@@ -118,16 +118,57 @@
       border-radius: 3px;
     }
     .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
-    .sidebar h4 {
+    .sidebar-section { margin-top: 20px; }
+    .sidebar-section:first-child { margin-top: 0; }
+    .sidebar-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 6px 0;
       font-family: 'Space Grotesk', sans-serif;
       font-size: 11px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--text-muted);
-      margin-bottom: 12px;
-      margin-top: 24px;
+      transition: color 0.15s;
     }
-    .sidebar h4:first-child { margin-top: 0; }
+    .sidebar-toggle:hover { color: var(--text-secondary); }
+    .sidebar-toggle .chevron {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-right: 1.5px solid currentColor;
+      border-bottom: 1.5px solid currentColor;
+      transform: rotate(45deg);
+      transition: transform 0.2s ease;
+      margin-bottom: 3px;
+      margin-right: 2px;
+    }
+    .sidebar-section.collapsed .chevron { transform: rotate(-45deg); margin-bottom: 0; margin-top: 3px; }
+    .sidebar-section .count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-left: 6px;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .sidebar-body {
+      max-height: 2000px;
+      overflow: hidden;
+      transition: max-height 0.25s ease, opacity 0.2s ease;
+      opacity: 1;
+      margin-top: 6px;
+    }
+    .sidebar-section.collapsed .sidebar-body {
+      max-height: 0;
+      opacity: 0;
+      margin-top: 0;
+    }
     .sidebar ul { list-style: none; }
     .sidebar li { margin: 4px 0; }
     .sidebar a {
@@ -135,10 +176,37 @@
       text-decoration: none;
       font-size: 13px;
       display: block;
-      padding: 4px 0;
-      transition: color 0.15s;
+      padding: 4px 8px;
+      border-radius: 4px;
+      transition: color 0.15s, background 0.15s;
     }
-    .sidebar a:hover { color: var(--sol-green); }
+    .sidebar a:hover { color: var(--sol-green); background: rgba(0,255,163,0.05); }
+    .sidebar a.active {
+      color: var(--sol-green);
+      background: rgba(0,255,163,0.08);
+    }
+
+    /* Collapse-all control */
+    .sidebar-controls {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 12px;
+    }
+    .sidebar-controls button {
+      background: none;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .sidebar-controls button:hover {
+      color: var(--text-secondary);
+      border-color: rgba(255,255,255,0.15);
+    }
 
     /* ===== MAIN ===== */
     .main h1 {
@@ -355,33 +423,65 @@
   <div class="docs-layout">
 
     <aside class="sidebar">
-      <h4>Get Started</h4>
-      <ul>
-        <li><a href="#overview">Overview</a></li>
-        <li><a href="#quickstart">Quick Start</a></li>
-        <li><a href="#payment">Payment</a></li>
-        <li><a href="#formats">Output Formats</a></li>
-      </ul>
+      <div class="sidebar-controls">
+        <button id="toggle-all" type="button" title="Expand or collapse all sections">collapse all</button>
+      </div>
 
-      <h4>Endpoints</h4>
-      <ul id="sidebar-endpoints">
-        <li><a href="#endpoints">All endpoints</a></li>
-      </ul>
+      <div class="sidebar-section" data-section="get-started">
+        <button class="sidebar-toggle" type="button">
+          <span>Get Started</span>
+          <span class="chevron"></span>
+        </button>
+        <div class="sidebar-body">
+          <ul>
+            <li><a href="#overview">Overview</a></li>
+            <li><a href="#quickstart">Quick Start</a></li>
+            <li><a href="#payment">Payment</a></li>
+            <li><a href="#formats">Output Formats</a></li>
+          </ul>
+        </div>
+      </div>
 
-      <h4>Reference</h4>
-      <ul>
-        <li><a href="#methodology">Risk Methodology</a></li>
-        <li><a href="#sources">Data Sources</a></li>
-        <li><a href="#labeling">Entity Labeling</a></li>
-      </ul>
+      <div class="sidebar-section collapsed" data-section="endpoints">
+        <button class="sidebar-toggle" type="button">
+          <span>Endpoints<span class="count" id="endpoint-count-badge"></span></span>
+          <span class="chevron"></span>
+        </button>
+        <div class="sidebar-body">
+          <ul id="sidebar-endpoints">
+            <li><a href="#endpoints">All endpoints</a></li>
+          </ul>
+        </div>
+      </div>
 
-      <h4>Discovery</h4>
-      <ul>
-        <li><a href="https://api.solenrich.com/openapi.json" target="_blank">openapi.json</a></li>
-        <li><a href="https://api.solenrich.com/llms.txt" target="_blank">llms.txt</a></li>
-        <li><a href="https://api.solenrich.com/.well-known/x402" target="_blank">.well-known/x402</a></li>
-        <li><a href="https://api.solenrich.com/mcp" target="_blank">MCP server</a></li>
-      </ul>
+      <div class="sidebar-section" data-section="reference">
+        <button class="sidebar-toggle" type="button">
+          <span>Reference</span>
+          <span class="chevron"></span>
+        </button>
+        <div class="sidebar-body">
+          <ul>
+            <li><a href="#methodology">Risk Methodology</a></li>
+            <li><a href="#sources">Data Sources</a></li>
+            <li><a href="#labeling">Entity Labeling</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="sidebar-section" data-section="discovery">
+        <button class="sidebar-toggle" type="button">
+          <span>Discovery</span>
+          <span class="chevron"></span>
+        </button>
+        <div class="sidebar-body">
+          <ul>
+            <li><a href="https://api.solenrich.com/openapi.json" target="_blank">openapi.json</a></li>
+            <li><a href="https://api.solenrich.com/llms.txt" target="_blank">llms.txt</a></li>
+            <li><a href="https://api.solenrich.com/.well-known/x402" target="_blank">.well-known/x402</a></li>
+            <li><a href="https://api.solenrich.com/mcp" target="_blank">MCP server</a></li>
+          </ul>
+        </div>
+      </div>
     </aside>
 
     <main class="main">
@@ -551,6 +651,8 @@
         const endpointKeys = Object.keys(docs.endpoints ?? {});
         sidebarList.innerHTML = '<li><a href="#endpoints">All (' + endpointKeys.length + ')</a></li>' +
           endpointKeys.map(k => `<li><a href="#ep-${escapeHTML(k)}">${escapeHTML(k)}</a></li>`).join('');
+        const countBadge = document.getElementById('endpoint-count-badge');
+        if (countBadge) countBadge.textContent = ` (${endpointKeys.length})`;
 
         // Build content
         const html = `
@@ -660,7 +762,79 @@
       }
     }
 
-    loadDocs();
+    // ===== Sidebar collapse + scrollspy =====
+    const STORAGE_KEY = 'solenrich-docs-sidebar-v1';
+    const sections = Array.from(document.querySelectorAll('.sidebar-section'));
+
+    function loadCollapseState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch { return null; }
+    }
+    function saveCollapseState() {
+      try {
+        const state = {};
+        sections.forEach(s => { state[s.dataset.section] = s.classList.contains('collapsed'); });
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {}
+    }
+
+    // Apply stored state on load (overrides default markup classes)
+    const stored = loadCollapseState();
+    if (stored) {
+      sections.forEach(s => {
+        if (stored[s.dataset.section] === true) s.classList.add('collapsed');
+        else if (stored[s.dataset.section] === false) s.classList.remove('collapsed');
+      });
+    }
+
+    sections.forEach(section => {
+      const btn = section.querySelector('.sidebar-toggle');
+      btn.addEventListener('click', () => {
+        section.classList.toggle('collapsed');
+        saveCollapseState();
+        updateToggleAllLabel();
+      });
+    });
+
+    const toggleAllBtn = document.getElementById('toggle-all');
+    function updateToggleAllLabel() {
+      const allCollapsed = sections.every(s => s.classList.contains('collapsed'));
+      toggleAllBtn.textContent = allCollapsed ? 'expand all' : 'collapse all';
+    }
+    toggleAllBtn.addEventListener('click', () => {
+      const allCollapsed = sections.every(s => s.classList.contains('collapsed'));
+      sections.forEach(s => s.classList.toggle('collapsed', !allCollapsed));
+      saveCollapseState();
+      updateToggleAllLabel();
+    });
+    updateToggleAllLabel();
+
+    // Scrollspy: highlight active section as the user scrolls
+    function setupScrollspy() {
+      const links = Array.from(document.querySelectorAll('.sidebar a[href^="#"]'));
+      if (links.length === 0) return;
+      const linkByHash = new Map(links.map(a => [a.getAttribute('href'), a]));
+      const targets = links
+        .map(a => document.getElementById(a.getAttribute('href').slice(1)))
+        .filter(Boolean);
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const link = linkByHash.get('#' + entry.target.id);
+          if (!link) return;
+          links.forEach(a => a.classList.remove('active'));
+          link.classList.add('active');
+        });
+      }, { rootMargin: '-96px 0px -70% 0px', threshold: 0 });
+
+      targets.forEach(t => observer.observe(t));
+    }
+
+    loadDocs().then(setupScrollspy);
   </script>
 </body>
 </html>
