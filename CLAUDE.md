@@ -677,6 +677,13 @@ Build order: poll-based → SSE → webhooks. Same underlying detection engine, 
 - Reuses: new-tokens, due-diligence, protocol-profile, automated activity signals, temporal snapshots, signal capture (consensus detection)
 - Feasibility: V1 High (1-2 sessions). V2 Medium (3-5 sessions + infra coordination).
 
+**V1 validation gate — PARKED 2026-05-24, not resolved.** Investigation findings:
+- The gate as written ("≥10 distinct pollers/day") requires per-caller tracking. Current `/metrics` middleware (`src/lib/agent.ts:237-284`) counts total calls per endpoint per day — no payer address recorded. Need ~20-line middleware addition to a `metrics:callers:{endpoint}:{date}` set before the gate can resolve.
+- `/metrics` was also returning 0 across all endpoints for the 7 days preceding the check despite known stress runs. Either Upstash was cleared or the silent `.catch(() => {})` is masking write failures. See CHECKPOINT.md Known Bugs.
+- Only usable external data was Orbis public marketplace API: **19 total paid calls across all 28 endpoints since 2026-04-21** (~0.58/day site-wide). Per-endpoint breakdown locked behind `/api/provider/*` (401 — seller dashboard login required). x402scan public tRPC API only exposes server metadata, no transactions/payers.
+- Sardius posted the Feed V1 launch tweet only just before this investigation. Decision was to **park, not kill**, because the gate was designed to falsify *demand* but what's actually been falsified is *distribution timing*.
+- **Reopen criteria:** ship caller-tracking middleware + fix /metrics + give the launch tweet 2 weeks to land. Re-run gate with real numbers.
+
 **Priority 15 — SDK/Client Package** (1-2 sessions)
 - `npm install @solenrich/client` — typed TypeScript client
 - Auto-payment (x402 or MPP), typed responses matching Zod schemas, streaming support for alerts

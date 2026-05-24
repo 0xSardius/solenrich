@@ -1,11 +1,35 @@
 # Session Checkpoint
 
 ## Last session date
-2026-05-23
+2026-05-24
 
 ## What was completed
 
-### Latest checkpoint (May 23 — PODCAST PREP) — 28 ENDPOINTS, PERPS TRILOGY SHIPPED, LANDING FULLY MODERNIZED
+### Latest checkpoint (May 24 — LANDING POLISH + FEED V1 GATE INVESTIGATED)
+
+**No production code commits. Landing-page polish + an investigation of the Feed V1 validation gate that resolved into "park, don't kill."**
+
+#### Landing polish (4 commits, all to `landing/`)
+- **CORS for public discovery endpoints** (`2f74c39`) — `/docs`, `/openapi.json`, `/.well-known/*`, `/entrypoints`, `/agent-card-extended`, `/health` now allow `Origin: *` so the landing docs viewer at `solenrich.com/docs` can `fetch()` cross-origin. Root cause: `api.solenrich.com/docs` had no `Access-Control-Allow-Origin` header. Confirmed deployed via `curl -H Origin` check.
+- **Docs page horizontal-scroll fix** (`3f1ae19` + `1043818`) — grid track was `1fr` (grows to fit unbreakable strings); switched to `minmax(0, 1fr)`. Plus defensive `overflow-x: clip` on html/body, `overflow-wrap: anywhere` on endpoint names, `max-width: 100%` on code blocks. Sidebar got `padding-right` + `scrollbar-gutter: stable` so its scrollbar doesn't sit on the link text.
+- **Collapsible sidebar sections** (`af2b998`) — 4 sections (Get Started, Endpoints, Reference, Discovery) with chevron toggles, scrollspy via IntersectionObserver, localStorage-persisted state, top-right collapse-all button. Endpoints starts collapsed by default since 28+ items crowded the sidebar.
+- **Agent-card page** (`01fb629` + `2f2bc4f`) — replaced the raw `.well-known/agent.json` JSON dump with a styled `/agent-card` page: identity pills, capability badges, I/O modes, skill cards with input schemas, collapsible raw JSON viewer with copy-to-clipboard. Nav links + hero CTA in `index.html` + `docs.html` updated. **CORS gotcha:** Lucid SDK registers `/.well-known/agent.json` internally before our middleware runs, so `app.use('/.well-known/*', cors())` doesn't apply to it. Fix: fetch via the existing Vercel rewrite (`/.well-known/agent.json` → API) so it's same-origin and skips CORS entirely.
+
+#### Feed V1 validation gate — INVESTIGATED, PARKED (not killed)
+
+Gate was due 2026-05-18, was 6 days overdue. Pulled the actual numbers, found the measurement is broken, and concluded the gate as written can't resolve cleanly. **Decision: park, don't kill — distribution push only just happened (launch tweet posted), and we proved "no distribution test," not "no demand."**
+
+**What we found:**
+- **`/metrics` endpoint returns 0 calls across all 28 endpoints for the last 7 days.** Contradicts the May 19–23 perps trilogy paid stress runs. Either Upstash got cleared or the metrics middleware silently fails in prod (the `.catch(() => {})` swallows everything). Logged as a Known Bug.
+- **Even when working, `/metrics` doesn't track distinct callers** — it counts total calls per endpoint per day. The gate criterion "distinct pollers/day" can't be answered without caller-tracking middleware (~20 lines, deferred).
+- **x402scan public tRPC API only exposes `origins.list` and `origins.getMetadata`** — no transactions, no payer addresses. Soft signal: `agentConfigurationResources: 0` on every SolEnrich endpoint (no agents have bookmarked us in their dashboard).
+- **Orbis public marketplace API has the only real number:** SolEnrich totals **19 paid calls across all 28 endpoints since 2026-04-21** (~0.58 calls/day site-wide). 0 subscribers. Per-endpoint and per-caller breakdown is behind `/api/provider/*` (401, requires seller dashboard login).
+- **Stale Orbis listing copy:** shortDescription + description both say "19 endpoints." We're at 28.
+- **April 25 hackathon thread cited "49 paid x402 calls via Orbis"; current `callCount` is 19.** Either the thread number was aspirational or the Orbis counter reset. Worth a sanity check in the seller dashboard.
+
+**Why park instead of kill:** The launch tweet for Feed V1 was only just posted. Per Priority 14 validation rules, <3 distinct pollers/day → "kill or rethink" — but the gate was designed to falsify *demand*, and what the data actually falsifies is *distribution timing*. Pulling the only recurring-revenue product in the catalog without a real distribution attempt would retire the whole recurring-revenue thesis on bad data. Revisit when caller-tracking is in place and the tweet has been out long enough to mean something.
+
+### Previous checkpoint (May 23 — PODCAST PREP) — 28 ENDPOINTS, PERPS TRILOGY SHIPPED, LANDING FULLY MODERNIZED
 
 **Three-day session block (May 19–23). 15 commits pushed. Two major workstreams: the perps trilogy + landing/discovery infrastructure. Closed with podcast prep — no code, just content analysis.**
 
@@ -357,13 +381,23 @@ Counter-positioning thesis: SolEnrich wins as **agent-native first**, not dashbo
 3. **Data Network Effect** (Priority 8 / Consensus Signal) — SHIPPED ✅ 2026-05-10.
 4. **Perps trilogy (Phase 2D)** — SHIPPED ✅ 2026-05-19 + 2026-05-21. Three endpoints down (cross-venue, comparison, basis). Three remain (#4 position alerts, #5 market-trend, #6 liquidation map deferred).
 
-### 1. IMMEDIATE — Feed V1 validation gate decision (was due 2026-05-18, now 5 days overdue)
-Pull `/metrics` for `feed-latest` daily poller counts since launch (May 4):
-- **≥10 distinct pollers/day** → ship V2 (hourly cron, SSE, webhooks)
-- **3-9 distinct pollers/day** → ship "stale-while-revalidate" V1 polish (~10 lines, 1hr) and iterate framing/pricing
-- **<3 distinct pollers/day** → kill the surface or rethink. Stop investment.
+### 1. Feed V1 validation gate — PARKED 2026-05-24 (data unmeasurable, distribution just started)
+**Investigation done. Sardius decided not to kill — re-evaluate later with working instrumentation.**
+- Orbis: 19 total paid calls across all 28 endpoints since 2026-04-21 (~0.58/day site-wide). Per-endpoint breakdown locked behind seller dashboard login.
+- `/metrics` returns 0 for last 7 days — instrumentation broken or Upstash cleared. See Known Bugs.
+- Current `/metrics` middleware doesn't track distinct callers anyway. Gate criterion ("distinct pollers/day") needs ~20-line middleware add before it can resolve.
+- Launch tweet only just went out — no real distribution window yet.
 
-Either outcome resolves the `feed-latest` 11.3s lazy-populate latency tax diagnosed May 17.
+**Reopen criteria:** ship caller-tracking middleware + diagnose /metrics zero + give the launch tweet 2 weeks to breathe. Then re-run the gate with real numbers.
+
+**Bonus action items from the investigation:**
+- **Sardius (manual):** log into Orbis seller dashboard, confirm per-endpoint call breakdown, reconcile current `callCount: 19` against April 25 thread claim of "49 paid x402 calls"
+- **Sardius (manual):** update Orbis listing copy — shortDescription + description still say "19 endpoints," we're at 28
+
+### 1b. NEW IMMEDIATE — diagnose /metrics returning 0 (~30 min, before next stress run)
+- Check Upstash console for `metrics:calls:*` keys (last 30 days). If empty → counters were cleared. If present → middleware writes are working, /metrics read path is broken.
+- Check Railway logs for the May 19–23 stress run window for any silent throw inside the middleware's outer try/catch.
+- Either fix it or rewrite to surface failures via a `lastWriteAt` field on `/metrics`.
 
 ### 2. NEXT BUILD — `perps-cross-venue-funding` (~1 session, UNBLOCKED)
 Foundation endpoint. Aggregate borrow/funding rates across Jupiter Perps (existing client) + Adrena (new client) + Binance + Bybit (REST). Phoenix/Bullet added as cheap follow-ons when they go live.
@@ -461,6 +495,15 @@ Verified against `BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu` (5 positions, $3
 - **Bags Hackathon** — Submitted, judging pending
 
 ## Known Bugs (non-blocking)
+
+### `/metrics` returns zero across last 7 days — UNDIAGNOSED 2026-05-24
+- **Symptom:** `GET https://api.solenrich.com/metrics` returns `{ today: { total_calls: 0, by_endpoint: {} }, last_7_days: { ...all zeros... } }` despite known stress runs on May 19, 21, 23.
+- **Possible causes:**
+  1. Upstash Redis was cleared/expired (90-day TTL should cover it, but the database itself may have been migrated)
+  2. Metrics middleware silently fails in prod — `metricsCache.incr(...).catch(() => {})` swallows all errors (see `src/lib/agent.ts:249-280`)
+  3. Genuine zero traffic (contradicted by stress logs)
+- **Impact:** Can't measure ANY endpoint usage natively. Feed V1 validation gate can't resolve cleanly because of this. Also blocks Consensus Signal accuracy (it reads the same counters).
+- **Triage:** Check Upstash dashboard for key presence. If keys exist with non-zero values, the bug is in the read path. If keys are missing, the bug is in the write path.
 
 ### `enrich-token-full` top-holders flakiness — RESOLVED 2026-04-26 ✅
 - **Symptom (was):** SolScout paid stress against BONK showed 2/6 checks pass on `enrich-token-full` — `top_holders`, `pct_supply`, `concentration`, `HHI` all missing.
