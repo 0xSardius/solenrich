@@ -1,6 +1,12 @@
 import type { TokenAnalyzer, TokenEnrichment } from './token-analyzer';
 import type { WalletProfiler, WalletEnrichment } from './wallet-profiler';
-import type { SnapshotStore, TokenSnapshot, WalletSnapshot } from './snapshot-store';
+import type {
+  SnapshotStore,
+  TokenSnapshot,
+  WalletSnapshot,
+  PerpsMarketSnapshot,
+} from './snapshot-store';
+import type { JupiterPerpsClient, PerpsMarketStructure } from '../sources/jupiter-perps';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { formatTimestamp } from '../utils/normalize';
@@ -67,6 +73,33 @@ export interface PortfolioHistory {
   last_updated: string;
 }
 
+export interface PerpsMarketTrendEntry {
+  symbol: 'SOL' | 'BTC' | 'ETH';
+  current: {
+    mark_price_usd: number | null;
+    total_oi_usd: number;
+    long_pct: number;
+    short_pct: number;
+    utilization_pct: number;
+    borrow_rate_annualized_pct: number;
+  };
+  snapshots: PerpsMarketSnapshot[];
+  data_points: number;
+  deltas: MetricDelta[];
+  market_direction: Direction;
+}
+
+export interface PerpsMarketTrend {
+  pool: string;
+  lookback_days: number;
+  markets: PerpsMarketTrendEntry[];
+  totals: {
+    current_total_oi_usd: number;
+    overall_direction: Direction;
+  };
+  last_updated: string;
+}
+
 // --- Class ---
 
 export class TrendAnalyzer {
@@ -75,6 +108,7 @@ export class TrendAnalyzer {
     private walletProfiler: WalletProfiler,
     private snapshotStore: SnapshotStore,
     private cache: Cache,
+    private jupiterPerps: JupiterPerpsClient,
   ) {}
 
   async analyzeTokenTrend(mint: string, lookbackDays: number): Promise<TokenTrend> {
@@ -229,6 +263,111 @@ export class TrendAnalyzer {
     };
 
     if (series.length > 0) {
+      await this.cache.set(cacheKey, result, CACHE_TTL.trend);
+    }
+
+    return result;
+  }
+
+  /**
+   * Trend across all 3 Jupiter Perps markets (SOL/BTC/ETH). Per-symbol deltas
+   * for mark price, total OI, long%, utilization, borrow rate. Overall direction
+   * is the majority across the meaningful health metrics (OI growth, lower
+   * utilization, lower borrow, tighter skew) — mark price moves are exposed
+   * but excluded from the health verdict because price direction is not a
+   * market-health signal.
+   */
+  async analyzePerpsMarketTrend(lookbackDays: number): Promise<PerpsMarketTrend> {
+    const cacheKey = `trend:perps-market:${lookbackDays}d`;
+    const cached = await this.cache.get<PerpsMarketTrend>(cacheKey);
+    if (cached) return cached;
+
+    const current = await this.jupiterPerps.getMarketStructure();
+    // Fire-and-forget snapshot capture so we accumulate history through usage
+    this.snapshotStore.capturePerpsMarketSnapshot(current).catch(() => {});
+
+    const snapsBySymbol = await Promise.all(
+      current.markets.map(m =>
+        this.snapshotStore.getPerpsMarketSnapshots(m.symbol, lookbackDays),
+      ),
+    );
+
+    const entries: PerpsMarketTrendEntry[] = current.markets.map((m, i) => {
+      const snapshots = snapsBySymbol[i];
+      let deltas: MetricDelta[] = [];
+      let market_direction: Direction = 'insufficient_data';
+
+      if (snapshots.length > 0) {
+        const oldest = snapshots[0];
+
+        // Mark price — pure informational delta, excluded from direction verdict
+        const priceDelta =
+          m.mark_price_usd !== null && oldest.mark_price_usd !== null
+            ? [computeDelta('mark_price_usd', m.mark_price_usd, oldest.mark_price_usd, true)]
+            : [];
+
+        // Health metrics: OI growth = better, utilization/borrow/skew higher = worse
+        const skewImbalanceCurrent = Math.abs(m.open_interest.long_pct - 50);
+        const skewImbalanceOldest = Math.abs(oldest.long_pct - 50);
+
+        const healthDeltas = [
+          computeDelta('total_oi_usd', m.open_interest.total_usd, oldest.total_oi_usd, true),
+          computeDelta('utilization_pct', m.utilization_pct, oldest.utilization_pct, false),
+          computeDelta(
+            'borrow_rate_annualized_pct',
+            m.borrow_rate.annualized_pct,
+            oldest.borrow_rate_annualized_pct,
+            false,
+          ),
+          computeDelta('skew_imbalance_pct', skewImbalanceCurrent, skewImbalanceOldest, false),
+        ];
+
+        deltas = [...priceDelta, ...healthDeltas];
+        market_direction = majorityDirection(healthDeltas);
+      }
+
+      return {
+        symbol: m.symbol,
+        current: {
+          mark_price_usd: m.mark_price_usd,
+          total_oi_usd: m.open_interest.total_usd,
+          long_pct: m.open_interest.long_pct,
+          short_pct: m.open_interest.short_pct,
+          utilization_pct: m.utilization_pct,
+          borrow_rate_annualized_pct: m.borrow_rate.annualized_pct,
+        },
+        snapshots,
+        data_points: snapshots.length,
+        deltas,
+        market_direction,
+      };
+    });
+
+    // Overall direction = majority across the per-market directions
+    const directionCounts = { improving: 0, declining: 0, stable: 0 };
+    for (const e of entries) {
+      if (e.market_direction !== 'insufficient_data') directionCounts[e.market_direction]++;
+    }
+    let overall: Direction = 'insufficient_data';
+    if (directionCounts.improving + directionCounts.declining + directionCounts.stable > 0) {
+      if (directionCounts.improving > directionCounts.declining) overall = 'improving';
+      else if (directionCounts.declining > directionCounts.improving) overall = 'declining';
+      else overall = 'stable';
+    }
+
+    const result: PerpsMarketTrend = {
+      pool: current.pool,
+      lookback_days: lookbackDays,
+      markets: entries,
+      totals: {
+        current_total_oi_usd: current.totals.total_oi_usd,
+        overall_direction: overall,
+      },
+      last_updated: formatTimestamp(),
+    };
+
+    // Only cache when we have something to cache against (otherwise next call should re-fetch)
+    if (entries.some(e => e.data_points > 0)) {
       await this.cache.set(cacheKey, result, CACHE_TTL.trend);
     }
 

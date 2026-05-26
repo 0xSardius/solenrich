@@ -1,7 +1,18 @@
 import { z } from 'zod';
-import { TokenTrendInput, WalletHistoryInput, PortfolioHistoryInput, parseLookback } from '../schemas/trend';
+import {
+  TokenTrendInput,
+  WalletHistoryInput,
+  PortfolioHistoryInput,
+  PerpsMarketTrendInput,
+  parseLookback,
+} from '../schemas/trend';
 import { formatResponse } from '../formatters/index';
-import { formatTokenTrendBriefing, formatWalletHistoryBriefing, formatPortfolioHistoryBriefing } from '../formatters/llm-trend';
+import {
+  formatTokenTrendBriefing,
+  formatWalletHistoryBriefing,
+  formatPortfolioHistoryBriefing,
+  formatPerpsMarketTrendBriefing,
+} from '../formatters/llm-trend';
 import type { TrendAnalyzer } from '../enrichers/trend-analyzer';
 
 export function registerTrendEntrypoints(
@@ -39,6 +50,18 @@ export function registerTrendEntrypoints(
       const days = parseLookback(ctx.input.period);
       const data = await trendAnalyzer.analyzePortfolioHistory(ctx.input.address, days);
       return { output: formatResponse(data, ctx.input.format, formatPortfolioHistoryBriefing) };
+    },
+  });
+
+  addEntrypoint({
+    key: 'perps-market-trend',
+    description:
+      'Jupiter Perps market trend: per-symbol (SOL/BTC/ETH) deltas for mark price, total open interest, long/short skew, utilization, and borrow APR over 7/14/30 days. Direction indicators per metric and per market. Mirror of token-trend for perps markets — required for regime-detection strategies and any bot that adjusts behavior based on whether the market is growing, stressed, or rebalancing.',
+    input: PerpsMarketTrendInput,
+    handler: async (ctx: { input: z.infer<typeof PerpsMarketTrendInput> }) => {
+      const days = parseLookback(ctx.input.lookback);
+      const data = await trendAnalyzer.analyzePerpsMarketTrend(days);
+      return { output: formatResponse(data, ctx.input.format, formatPerpsMarketTrendBriefing) };
     },
   });
 }

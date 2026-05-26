@@ -2,7 +2,7 @@ import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import type { TokenEnrichment } from './token-analyzer';
 import type { WalletEnrichment } from './wallet-profiler';
-import type { PerpsTraderProfile } from '../sources/jupiter-perps';
+import type { PerpsTraderProfile, PerpsMarketStructure } from '../sources/jupiter-perps';
 
 // --- Snapshot Types ---
 
@@ -56,6 +56,19 @@ export interface PerpsSnapshot {
   total_unrealized_pnl_usd: number;
   weighted_leverage: number;
   positions: PerpsPositionSnapshotEntry[];
+}
+
+export interface PerpsMarketSnapshot {
+  date: string;
+  symbol: 'SOL' | 'BTC' | 'ETH';
+  mark_price_usd: number | null;
+  long_oi_usd: number;
+  short_oi_usd: number;
+  total_oi_usd: number;
+  long_pct: number;
+  short_pct: number;
+  utilization_pct: number;
+  borrow_rate_annualized_pct: number;
 }
 
 // --- Store ---
@@ -158,6 +171,41 @@ export class SnapshotStore {
     const keys = dateKeys(`snapshot:perps:${address}`, days);
     const results = await this.cache.mget<PerpsSnapshot>(keys);
     return results.filter((r): r is PerpsSnapshot => r !== null).sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  /** Capture one perps market snapshot per tradable symbol (SOL/BTC/ETH) per day */
+  async capturePerpsMarketSnapshot(structure: PerpsMarketStructure): Promise<void> {
+    const date = todayUTC();
+    await Promise.all(
+      structure.markets.map(m => {
+        const snapshot: PerpsMarketSnapshot = {
+          date,
+          symbol: m.symbol,
+          mark_price_usd: m.mark_price_usd,
+          long_oi_usd: m.open_interest.long_usd,
+          short_oi_usd: m.open_interest.short_usd,
+          total_oi_usd: m.open_interest.total_usd,
+          long_pct: m.open_interest.long_pct,
+          short_pct: m.open_interest.short_pct,
+          utilization_pct: m.utilization_pct,
+          borrow_rate_annualized_pct: m.borrow_rate.annualized_pct,
+        };
+        const key = `snapshot:perps-market:${m.symbol}:${date}`;
+        return this.cache.setIfAbsent(key, snapshot, CACHE_TTL.snapshot);
+      }),
+    );
+  }
+
+  /** Get perps market snapshots for one symbol over the last N days */
+  async getPerpsMarketSnapshots(
+    symbol: 'SOL' | 'BTC' | 'ETH',
+    days: number,
+  ): Promise<PerpsMarketSnapshot[]> {
+    const keys = dateKeys(`snapshot:perps-market:${symbol}`, days);
+    const results = await this.cache.mget<PerpsMarketSnapshot>(keys);
+    return results
+      .filter((r): r is PerpsMarketSnapshot => r !== null)
+      .sort((a, b) => a.date.localeCompare(b.date));
   }
 }
 

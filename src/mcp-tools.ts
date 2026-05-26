@@ -430,6 +430,24 @@ export function createSolEnrichMcpServer(): McpServer {
   );
 
   server.registerTool(
+    'perps_market_trend',
+    {
+      title: 'Jupiter Perps Market Trend',
+      description: 'Per-symbol (SOL/BTC/ETH) deltas for mark price, total open interest, long/short skew, utilization, and borrow APR over 7/14/30 days. Direction indicators per metric and per market. Overall direction excludes mark price. Use for regime detection — bots that adjust behavior based on whether markets are growing, stressed, or rebalancing.',
+      inputSchema: {
+        lookback: z.enum(['7d', '14d', '30d']).default('7d').describe('History window'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('perps-market-trend', {
+        lookback: args.lookback ?? '7d',
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
     'perps_venue_comparison',
     {
       title: 'Cross-Venue Perps Comparison',

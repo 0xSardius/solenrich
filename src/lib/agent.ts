@@ -354,7 +354,7 @@ registerDueDiligenceEntrypoint(addEntrypoint, dueDiligenceAnalyzer);
 registerCompareEntrypoints(addEntrypoint, tokenComparator, walletComparator);
 
 // Temporal context (trends over time)
-const trendAnalyzer = new TrendAnalyzer(tokenAnalyzer, walletProfiler, snapshotStore, cache);
+const trendAnalyzer = new TrendAnalyzer(tokenAnalyzer, walletProfiler, snapshotStore, cache, jupiterPerps);
 registerTrendEntrypoints(addEntrypoint, trendAnalyzer);
 
 // New token discovery
@@ -746,6 +746,11 @@ app.get('/docs', (c) => {
         price: '0.015',
         input: { asset: 'SOL | BTC | ETH | BONK', min_yield_apr_pct: 'number 0-100 (default 5)', format: 'json | llm | both' },
         description: 'Net-yield-after-borrow basis trade scanner. Computes perp mark vs spot price across venues and surfaces actually-earnable yield. Funding-rate venues (Hyperliquid, dYdX v4) generate real yield; pool perps (Jupiter, Adrena) flagged as not-viable because they charge borrow on both sides. Returns per-venue trade economics, filtered opportunities above the APR threshold, and the best trade.',
+      },
+      'perps-market-trend': {
+        price: '0.008',
+        input: { lookback: '7d | 14d | 30d (default 7d)', format: 'json | llm | both' },
+        description: 'Jupiter Perps market trend across all 3 markets (SOL/BTC/ETH). Per-symbol deltas for mark price, total open interest, long/short skew, utilization, and borrow APR over 7/14/30 days. Direction indicators per metric and per market. Overall direction excludes mark price (price moves are not health signals). Required for regime detection — bots that adjust behavior based on whether markets are growing, stressed, or rebalancing. Mirror of token-trend for perps.',
       },
       'trending-signals': {
         price: '0.050',

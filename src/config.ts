@@ -57,6 +57,7 @@ export const PRICING = {
   'perps-cross-venue-funding': '0.015',
   'perps-venue-comparison': '0.020',
   'perps-basis-signal': '0.015',
+  'perps-market-trend': '0.008',
   'trending-signals': '0.050',
   'smart-money-flow': '0.100',
   'feed-latest': '0.005',

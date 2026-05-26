@@ -1,4 +1,10 @@
-import type { TokenTrend, WalletHistory, MetricDelta, PortfolioHistory } from '../enrichers/trend-analyzer';
+import type {
+  TokenTrend,
+  WalletHistory,
+  MetricDelta,
+  PortfolioHistory,
+  PerpsMarketTrend,
+} from '../enrichers/trend-analyzer';
 import { shortenAddress, formatUsd } from '../utils/normalize';
 
 const ARROWS: Record<string, string> = {
@@ -70,13 +76,61 @@ export function formatWalletHistoryBriefing(data: WalletHistory): string {
 }
 
 function formatMetricValue(metric: string, value: number): string {
-  if (metric.includes('price') || metric.includes('value') || metric.includes('liquidity') || metric.includes('market_cap') || metric.includes('volume')) {
+  if (
+    metric.includes('price') ||
+    metric.includes('value') ||
+    metric.includes('liquidity') ||
+    metric.includes('market_cap') ||
+    metric.includes('volume') ||
+    metric.endsWith('_oi_usd')
+  ) {
     return formatUsd(value);
   }
   if (metric.includes('sol_balance')) return `${value.toFixed(2)} SOL`;
   if (metric.includes('risk_score')) return value.toFixed(2);
   if (metric.includes('pct')) return `${value.toFixed(1)}%`;
   return String(Math.round(value * 100) / 100);
+}
+
+export function formatPerpsMarketTrendBriefing(data: PerpsMarketTrend): string {
+  const lines: string[] = [];
+  lines.push(`## Jupiter Perps Market Trend (${data.lookback_days}-day lookback)`);
+  lines.push('');
+  lines.push(
+    `Total open interest now: ${formatUsd(data.totals.current_total_oi_usd)} across ${data.markets.length} markets. ` +
+      `Overall direction: **${data.totals.overall_direction}**`,
+  );
+
+  for (const m of data.markets) {
+    lines.push('');
+    lines.push(`### ${m.symbol}`);
+    const cur = m.current;
+    lines.push(
+      `Mark: ${cur.mark_price_usd !== null ? formatUsd(cur.mark_price_usd) : '—'} | ` +
+        `OI: ${formatUsd(cur.total_oi_usd)} (${cur.long_pct.toFixed(0)}% long / ${cur.short_pct.toFixed(0)}% short) | ` +
+        `Util: ${cur.utilization_pct.toFixed(1)}% | ` +
+        `Borrow APR: ${cur.borrow_rate_annualized_pct.toFixed(1)}%`,
+    );
+
+    if (m.data_points === 0) {
+      lines.push('_No prior snapshot yet — first data point captured this call._');
+      continue;
+    }
+
+    lines.push('');
+    lines.push(`Changes (${m.data_points} data point${m.data_points > 1 ? 's' : ''}):`);
+    for (const d of m.deltas) {
+      const label = d.metric.replace(/_/g, ' ');
+      lines.push(
+        `- **${label}**: ${formatMetricValue(d.metric, d.oldest)} → ${formatMetricValue(d.metric, d.current)} ${fmtDelta(d)}`,
+      );
+    }
+    lines.push(`Market direction: **${m.market_direction}**`);
+  }
+
+  lines.push('');
+  lines.push(`Data as of: ${data.last_updated}`);
+  return lines.join('\n');
 }
 
 export function formatPortfolioHistoryBriefing(data: PortfolioHistory): string {

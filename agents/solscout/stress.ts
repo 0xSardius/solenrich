@@ -368,6 +368,27 @@ const ENDPOINTS: Array<{
     ],
   },
   {
+    // Phase 2D #5 — Jupiter Perps market trend across SOL/BTC/ETH. Cold-cache
+    // first call seeds snapshots fire-and-forget; deltas populate from the next
+    // day onward. Confirms current-state + market list + lookback echo today.
+    key: 'perps-market-trend',
+    input: { lookback: '7d', format: 'both' },
+    timeout: 60000,
+    checks: [
+      { name: 'has pool address', test: (d) => typeof d.pool === 'string' && d.pool.length > 0 },
+      { name: 'has lookback_days=7', test: (d) => d.lookback_days === 7 },
+      { name: 'returns 3 markets (SOL/BTC/ETH)', test: (d) => Array.isArray(d.markets) && d.markets.length === 3 },
+      {
+        name: 'every market has current state',
+        test: (d) => Array.isArray(d.markets) && d.markets.every((m: any) => m.current && typeof m.current.total_oi_usd === 'number'),
+        detail: (d) => `markets=${(d.markets ?? []).map((m: any) => m.symbol).join(',')}`,
+      },
+      { name: 'totals.current_total_oi_usd > 0', test: (d) => typeof d.totals?.current_total_oi_usd === 'number' && d.totals.current_total_oi_usd > 0 },
+      { name: 'has overall_direction', test: (d) => typeof d.totals?.overall_direction === 'string' },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Market Trend') },
+    ],
+  },
+  {
     // Phase 2D #4 — perp position alerts. Targets a known Jupiter Perps trader
     // (5 open positions with high leverage + losing collateral as of 2026-05-03).
     // First call seeds the snapshot; subsequent calls may surface add/close/pnl_swing

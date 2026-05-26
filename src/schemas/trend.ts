@@ -21,6 +21,11 @@ export const PortfolioHistoryInput = z.object({
   format: FormatSchema,
 });
 
+export const PerpsMarketTrendInput = z.object({
+  lookback: LookbackSchema,
+  format: FormatSchema,
+});
+
 export function parseLookback(lookback: string): number {
   return parseInt(lookback.replace('d', ''), 10);
 }

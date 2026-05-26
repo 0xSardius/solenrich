@@ -281,6 +281,17 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'perps-market-trend': {
+    summary: 'Jupiter Perps market trend (SOL/BTC/ETH)',
+    description: 'Per-symbol deltas for mark price, total OI, long/short skew, utilization, and borrow APR over 7/14/30 days. Direction indicators per metric and per market. Overall direction excludes mark price (price moves are not health signals). Required for regime-detection strategies and any bot that adjusts behavior based on whether markets are growing, stressed, or rebalancing. Mirror of token-trend for perps.',
+    schema: {
+      type: 'object',
+      properties: {
+        lookback: { type: 'string', enum: ['7d', '14d', '30d'], default: '7d', description: 'History window to compare current state against' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'perps-venue-comparison': {
     summary: 'Cross-venue perps comparison at a given size',
     description: 'Builds on cross-venue funding with size-aware fields: Jupiter Quote spot slippage at requested size, per-venue fee, OI cap headroom, first-hour borrow cost, and total entry cost. Returns rankings by entry cost / borrow APR / headroom plus a recommendation venue with warnings. Use when sizing a real position; use perps-cross-venue-funding for rates-only context.',
