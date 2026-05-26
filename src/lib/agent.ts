@@ -427,7 +427,7 @@ registerSignalEntrypoint(addEntrypoint, signalTracker);
 // watchlist + `since` cursor each call. Detection composes token-analyzer,
 // wallet-profiler, whale-watcher, and snapshot diffs in parallel. SSE + webhook
 // steps come later if poll-v1 validates.
-const alertChecker = new AlertChecker(tokenAnalyzer, walletProfiler, whaleWatcher, snapshotStore);
+const alertChecker = new AlertChecker(tokenAnalyzer, walletProfiler, whaleWatcher, snapshotStore, jupiterPerps);
 registerAlertEntrypoint(addEntrypoint, alertChecker);
 
 // --- Demo endpoint (free, rate-limited, for landing page) ---
@@ -774,8 +774,8 @@ app.get('/docs', (c) => {
       },
       'check-alerts': {
         price: '0.008',
-        input: { tokens: 'string[] (max 10) — token mints to watch', wallets: 'string[] (max 10) — wallet addresses to watch', since: 'string (ISO 8601) — return alerts fired since this time', criteria: 'object (optional) — min_price_change_pct, min_risk_score_delta, min_whale_volume_usd, min_portfolio_change_pct, min_concentration_shift_pct', format: 'json | llm | both' },
-        description: 'Poll-based event detection. Pass a watchlist and a since timestamp; receive structured alerts (price spike/drop, risk change, whale inflow/outflow, concentration shift, portfolio value change, position add/remove) graded by severity. Stateless — agent owns the cursor. Step 1 of 3 (poll → SSE → webhooks). Shifts revenue model from one-shot calls to recurring polling.',
+        input: { tokens: 'string[] (max 10) — token mints to watch', wallets: 'string[] (max 10) — wallet addresses to watch (spot + Jupiter Perps)', since: 'string (ISO 8601) — return alerts fired since this time', criteria: 'object (optional) — min_price_change_pct, min_risk_score_delta, min_whale_volume_usd, min_portfolio_change_pct, min_concentration_shift_pct, perp_max_leverage (default 10), perp_min_pnl_swing_pts (default 25), perp_liquidation_buffer_pct (default 15)', format: 'json | llm | both' },
+        description: 'Poll-based event detection covering spot + Jupiter Perps. Token alerts: price_spike, price_drop, whale_inflow, whale_outflow, concentration_shift. Spot wallet alerts: risk_increase, risk_decrease, portfolio_value_change, new_positions, removed_positions. Jupiter Perps alerts per wallet: perp_position_added, perp_position_closed, perp_at_risk (high leverage or PnL ≤ -50%%), liquidation_approaching (collateral buffer < threshold), pnl_swing (PnL%% moved ≥ N points since prior snapshot). Critical for perps trading bots. Stateless — agent owns the cursor. Step 1 of 3 (poll → SSE → webhooks).',
       },
     },
     methodology: {

@@ -1,7 +1,13 @@
 import type { TokenAnalyzer, TokenEnrichment } from './token-analyzer';
 import type { WalletProfiler, WalletEnrichment } from './wallet-profiler';
 import type { WhaleWatcher } from './whale-watch';
-import type { SnapshotStore, TokenSnapshot, WalletSnapshot } from './snapshot-store';
+import type {
+  SnapshotStore,
+  TokenSnapshot,
+  WalletSnapshot,
+  PerpsSnapshot,
+} from './snapshot-store';
+import type { JupiterPerpsClient, PerpsTraderProfile } from '../sources/jupiter-perps';
 import { parallelFetch } from '../utils/parallel';
 
 // --- Types ---
@@ -19,7 +25,12 @@ export type AlertType =
   | 'portfolio_value_change'
   | 'new_positions'
   | 'removed_positions'
-  | 'first_observation';
+  | 'first_observation'
+  | 'perp_position_added'
+  | 'perp_position_closed'
+  | 'perp_at_risk'
+  | 'liquidation_approaching'
+  | 'pnl_swing';
 
 export interface Alert {
   type: AlertType;
@@ -36,6 +47,9 @@ export interface AlertCriteria {
   min_whale_volume_usd?: number;        // default 50_000
   min_portfolio_change_pct?: number;    // default 20
   min_concentration_shift_pct?: number; // default 5
+  perp_max_leverage?: number;           // default 10 — at_risk fires above this
+  perp_min_pnl_swing_pts?: number;      // default 25 — pnl_swing fires on this many pts of pnl_pct movement
+  perp_liquidation_buffer_pct?: number; // default 15 — liquidation_approaching fires when collateral buffer below this
 }
 
 export interface AlertCheckResult {
@@ -53,6 +67,9 @@ const DEFAULT_CRITERIA: Required<AlertCriteria> = {
   min_whale_volume_usd: 50_000,
   min_portfolio_change_pct: 20,
   min_concentration_shift_pct: 5,
+  perp_max_leverage: 10,
+  perp_min_pnl_swing_pts: 25,
+  perp_liquidation_buffer_pct: 15,
 };
 
 const MAX_WATCHLIST = 10; // per entity type
@@ -65,6 +82,7 @@ export class AlertChecker {
     private walletProfiler: WalletProfiler,
     private whaleWatcher: WhaleWatcher,
     private snapshotStore: SnapshotStore,
+    private jupiterPerps: JupiterPerpsClient,
   ) {}
 
   async check(
@@ -78,7 +96,8 @@ export class AlertChecker {
     const sinceMs = new Date(since).getTime();
     const lookbackHours = Math.max(1, Math.ceil((Date.now() - sinceMs) / 3_600_000));
 
-    // Fetch current state + snapshots for every entity in parallel
+    // Fetch current state + snapshots for every entity in parallel.
+    // Perp positions need mark prices for PnL — fetch market structure once for all wallets.
     const tokenTasks = cap.tokens.flatMap((mint) => [
       { name: `tok:${mint}`, fn: () => this.tokenAnalyzer.enrich(mint, false) },
       { name: `tokSnap:${mint}`, fn: () => this.snapshotStore.getTokenSnapshots(mint, 7) },
@@ -90,9 +109,37 @@ export class AlertChecker {
     const walletTasks = cap.wallets.flatMap((addr) => [
       { name: `wal:${addr}`, fn: () => this.walletProfiler.enrich(addr, 'light') },
       { name: `walSnap:${addr}`, fn: () => this.snapshotStore.getWalletSnapshots(addr, 7) },
+      { name: `perpSnap:${addr}`, fn: () => this.snapshotStore.getPerpsSnapshots(addr, 7) },
     ]);
+    const perpsMarketTask = cap.wallets.length > 0
+      ? [{ name: 'perpsMarket', fn: () => this.jupiterPerps.getMarketStructure() }]
+      : [];
 
-    const results = await parallelFetch<any>([...tokenTasks, ...walletTasks], 15_000);
+    const results = await parallelFetch<any>(
+      [...tokenTasks, ...walletTasks, ...perpsMarketTask],
+      15_000,
+    );
+
+    // Now fetch each wallet's perp positions using the shared mark-price map.
+    // Done after the first parallelFetch so we don't pay the perps RPC cost when the market
+    // structure call failed.
+    const perpProfiles = new Map<string, PerpsTraderProfile | null>();
+    if (cap.wallets.length > 0 && results['perpsMarket']) {
+      const markMap = this.jupiterPerps.buildMarkPriceMap(results['perpsMarket']);
+      const perpTasks = cap.wallets.map(addr => ({
+        name: `perp:${addr}`,
+        fn: () => this.jupiterPerps.getPositionsForWallet(addr, markMap),
+      }));
+      const perpResults = await parallelFetch<any>(perpTasks, 15_000);
+      for (const addr of cap.wallets) {
+        const profile = perpResults[`perp:${addr}`] as PerpsTraderProfile | null;
+        perpProfiles.set(addr, profile);
+        // Fire-and-forget capture so the next check has a snapshot to diff against
+        if (profile) {
+          this.snapshotStore.capturePerpsSnapshot(profile).catch(() => {});
+        }
+      }
+    }
 
     const alerts: Alert[] = [];
 
@@ -104,11 +151,15 @@ export class AlertChecker {
       alerts.push(...detectTokenAlerts(mint, cur, snaps, whale, c, sinceMs));
     }
 
-    // Wallet alerts
+    // Wallet alerts (spot + perps)
     for (const addr of cap.wallets) {
       const cur = results[`wal:${addr}`] as WalletEnrichment | null;
       const snaps = (results[`walSnap:${addr}`] as WalletSnapshot[] | null) ?? [];
       alerts.push(...detectWalletAlerts(addr, cur, snaps, c));
+
+      const perpProfile = perpProfiles.get(addr) ?? null;
+      const perpSnaps = (results[`perpSnap:${addr}`] as PerpsSnapshot[] | null) ?? [];
+      alerts.push(...detectPerpAlerts(addr, perpProfile, perpSnaps, c));
     }
 
     // Sort by severity (critical first), then by entity address for stable output
@@ -287,6 +338,157 @@ export function detectWalletAlerts(
       data: { removed, since_date: priorSnap.date },
       detected_at: now,
     });
+  }
+
+  return alerts;
+}
+
+export function detectPerpAlerts(
+  address: string,
+  current: PerpsTraderProfile | null,
+  snapshots: PerpsSnapshot[],
+  c: Required<AlertCriteria>,
+): Alert[] {
+  const alerts: Alert[] = [];
+  if (!current) return alerts;
+
+  const ent = { kind: 'wallet' as const, address };
+  const now = new Date().toISOString();
+  // Prior snapshot = oldest within window (chronological [0] after sort in store)
+  const priorSnap = snapshots[0];
+
+  const currentById = new Map<string, typeof current.positions[number]>();
+  for (const p of current.positions) {
+    currentById.set(`${p.custody}:${p.side}`, p);
+  }
+
+  // Position add/close detection (requires a prior snapshot)
+  if (priorSnap) {
+    const priorById = new Map(priorSnap.positions.map(p => [p.position_id, p]));
+
+    const addedIds = [...currentById.keys()].filter(id => !priorById.has(id));
+    const closedIds = [...priorById.keys()].filter(id => !currentById.has(id));
+
+    for (const id of addedIds) {
+      const p = currentById.get(id)!;
+      alerts.push({
+        type: 'perp_position_added',
+        severity: p.leverage >= c.perp_max_leverage ? 'high' : 'medium',
+        entity: ent,
+        summary: `${shorten(address)} opened ${p.side.toUpperCase()} ${p.market_symbol} — size $${formatNum(p.size_usd)} at ${p.leverage.toFixed(1)}x leverage`,
+        data: {
+          market_symbol: p.market_symbol,
+          side: p.side,
+          size_usd: p.size_usd,
+          collateral_usd: p.collateral_usd,
+          leverage: p.leverage,
+          entry_price_usd: p.entry_price_usd,
+          since_date: priorSnap.date,
+        },
+        detected_at: now,
+      });
+    }
+
+    for (const id of closedIds) {
+      const prior = priorById.get(id)!;
+      alerts.push({
+        type: 'perp_position_closed',
+        severity: 'medium',
+        entity: ent,
+        summary: `${shorten(address)} closed ${prior.side.toUpperCase()} ${prior.market_symbol} (was $${formatNum(prior.size_usd)} @ ${prior.leverage.toFixed(1)}x, last PnL ${prior.unrealized_pnl_pct?.toFixed(1) ?? '?'}%)`,
+        data: {
+          market_symbol: prior.market_symbol,
+          side: prior.side,
+          last_size_usd: prior.size_usd,
+          last_leverage: prior.leverage,
+          last_unrealized_pnl_pct: prior.unrealized_pnl_pct,
+          since_date: priorSnap.date,
+        },
+        detected_at: now,
+      });
+    }
+
+    // PnL swing on positions still open
+    for (const [id, cur] of currentById) {
+      const prior = priorById.get(id);
+      if (!prior) continue;
+      if (cur.unrealized_pnl_pct === null || prior.unrealized_pnl_pct === null) continue;
+      const swing = cur.unrealized_pnl_pct - prior.unrealized_pnl_pct;
+      if (Math.abs(swing) >= c.perp_min_pnl_swing_pts) {
+        alerts.push({
+          type: 'pnl_swing',
+          severity: severityFromPct(Math.abs(swing), [
+            c.perp_min_pnl_swing_pts,
+            c.perp_min_pnl_swing_pts * 2,
+            c.perp_min_pnl_swing_pts * 4,
+          ]),
+          entity: ent,
+          summary: `${shorten(address)} ${cur.side.toUpperCase()} ${cur.market_symbol} PnL swung ${swing > 0 ? '+' : ''}${swing.toFixed(1)} pts (${prior.unrealized_pnl_pct.toFixed(1)}% → ${cur.unrealized_pnl_pct.toFixed(1)}%)`,
+          data: {
+            market_symbol: cur.market_symbol,
+            side: cur.side,
+            prior_pnl_pct: prior.unrealized_pnl_pct,
+            current_pnl_pct: cur.unrealized_pnl_pct,
+            swing_pts: swing,
+            since_date: priorSnap.date,
+          },
+          detected_at: now,
+        });
+      }
+    }
+  }
+
+  // At-risk + liquidation_approaching evaluated on current state (no snapshot needed —
+  // these are "right now" conditions a trading bot needs every cycle).
+  for (const [id, p] of currentById) {
+    // At-risk: above leverage threshold, or already losing more than half of collateral
+    const overLeveraged = p.leverage >= c.perp_max_leverage;
+    const underwater = p.unrealized_pnl_pct !== null && p.unrealized_pnl_pct <= -50;
+    if (overLeveraged || underwater) {
+      const reasons: string[] = [];
+      if (overLeveraged) reasons.push(`${p.leverage.toFixed(1)}x leverage`);
+      if (underwater) reasons.push(`PnL ${p.unrealized_pnl_pct!.toFixed(1)}%`);
+      alerts.push({
+        type: 'perp_at_risk',
+        severity: overLeveraged && underwater ? 'high' : 'medium',
+        entity: ent,
+        summary: `${shorten(address)} ${p.side.toUpperCase()} ${p.market_symbol} at risk — ${reasons.join(', ')}`,
+        data: {
+          market_symbol: p.market_symbol,
+          side: p.side,
+          leverage: p.leverage,
+          unrealized_pnl_pct: p.unrealized_pnl_pct,
+          size_usd: p.size_usd,
+          collateral_usd: p.collateral_usd,
+          reasons,
+        },
+        detected_at: now,
+      });
+    }
+
+    // Liquidation-approaching: how much of collateral remains as buffer.
+    // Buffer = 100% + current PnL% (when PnL = -100%, position is liquidated).
+    if (p.unrealized_pnl_pct !== null) {
+      const bufferPct = 100 + p.unrealized_pnl_pct;
+      if (bufferPct <= c.perp_liquidation_buffer_pct && bufferPct > 0) {
+        alerts.push({
+          type: 'liquidation_approaching',
+          severity: bufferPct <= 5 ? 'critical' : bufferPct <= 10 ? 'high' : 'medium',
+          entity: ent,
+          summary: `${shorten(address)} ${p.side.toUpperCase()} ${p.market_symbol} ${bufferPct.toFixed(1)}% from liquidation (PnL ${p.unrealized_pnl_pct.toFixed(1)}%, ${p.leverage.toFixed(1)}x)`,
+          data: {
+            market_symbol: p.market_symbol,
+            side: p.side,
+            buffer_pct: bufferPct,
+            unrealized_pnl_pct: p.unrealized_pnl_pct,
+            leverage: p.leverage,
+            size_usd: p.size_usd,
+            collateral_usd: p.collateral_usd,
+          },
+          detected_at: now,
+        });
+      }
+    }
   }
 
   return alerts;

@@ -2,6 +2,7 @@ import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import type { TokenEnrichment } from './token-analyzer';
 import type { WalletEnrichment } from './wallet-profiler';
+import type { PerpsTraderProfile } from '../sources/jupiter-perps';
 
 // --- Snapshot Types ---
 
@@ -31,6 +32,30 @@ export interface WalletSnapshot {
   label_count: number;
   defi_position_count: number;
   top_holding_mints: string[];
+}
+
+export interface PerpsPositionSnapshotEntry {
+  position_id: string; // `${custody}:${side}` — stable identity across snapshots
+  market_symbol: string;
+  side: 'long' | 'short';
+  size_usd: number;
+  collateral_usd: number;
+  leverage: number;
+  entry_price_usd: number;
+  mark_price_usd: number | null;
+  unrealized_pnl_usd: number | null;
+  unrealized_pnl_pct: number | null;
+}
+
+export interface PerpsSnapshot {
+  date: string;
+  address: string;
+  has_positions: boolean;
+  position_count: number;
+  total_collateral_usd: number;
+  total_unrealized_pnl_usd: number;
+  weighted_leverage: number;
+  positions: PerpsPositionSnapshotEntry[];
 }
 
 // --- Store ---
@@ -94,6 +119,45 @@ export class SnapshotStore {
     const keys = dateKeys(`snapshot:wallet:${address}`, days);
     const results = await this.cache.mget<WalletSnapshot>(keys);
     return results.filter((r): r is WalletSnapshot => r !== null).sort((a, b) => a.date.localeCompare(b.date));
+  }
+
+  /** Capture a perps position snapshot for a wallet (fire-and-forget, one per day) */
+  async capturePerpsSnapshot(profile: PerpsTraderProfile): Promise<void> {
+    const date = todayUTC();
+    const key = `snapshot:perps:${profile.address}:${date}`;
+
+    const positions: PerpsPositionSnapshotEntry[] = profile.positions.map(p => ({
+      position_id: `${p.custody}:${p.side}`,
+      market_symbol: p.market_symbol,
+      side: p.side,
+      size_usd: p.size_usd,
+      collateral_usd: p.collateral_usd,
+      leverage: p.leverage,
+      entry_price_usd: p.entry_price_usd,
+      mark_price_usd: p.mark_price_usd,
+      unrealized_pnl_usd: p.unrealized_pnl_usd,
+      unrealized_pnl_pct: p.unrealized_pnl_pct,
+    }));
+
+    const snapshot: PerpsSnapshot = {
+      date,
+      address: profile.address,
+      has_positions: profile.has_positions,
+      position_count: profile.positions.length,
+      total_collateral_usd: profile.totals.total_collateral_usd,
+      total_unrealized_pnl_usd: profile.totals.total_unrealized_pnl_usd,
+      weighted_leverage: profile.totals.weighted_leverage,
+      positions,
+    };
+
+    await this.cache.setIfAbsent(key, snapshot, CACHE_TTL.snapshot);
+  }
+
+  /** Get perps snapshots for the last N days */
+  async getPerpsSnapshots(address: string, days: number): Promise<PerpsSnapshot[]> {
+    const keys = dateKeys(`snapshot:perps:${address}`, days);
+    const results = await this.cache.mget<PerpsSnapshot>(keys);
+    return results.filter((r): r is PerpsSnapshot => r !== null).sort((a, b) => a.date.localeCompare(b.date));
   }
 }
 

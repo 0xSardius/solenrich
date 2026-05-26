@@ -363,14 +363,14 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'check-alerts': {
-    summary: 'Poll-based event detection',
-    description: 'Pass a watchlist (tokens + wallets, max 10 of each) and a `since` ISO 8601 timestamp; receive alerts fired since that time. Detects price spikes/drops, risk score changes, whale inflow/outflow, concentration shifts, portfolio value changes, and position additions/removals. Stateless — the agent owns the cursor. Step 1 of an alerts trio (poll → SSE → webhooks).',
+    summary: 'Poll-based event detection (spot + Jupiter Perps)',
+    description: 'Pass a watchlist (tokens + wallets, max 10 of each) and a `since` ISO 8601 timestamp; receive alerts fired since that time. Token alerts: price_spike, price_drop, whale_inflow, whale_outflow, concentration_shift. Spot wallet alerts: risk_increase, risk_decrease, portfolio_value_change, new_positions, removed_positions. Jupiter Perps alerts per wallet: perp_position_added, perp_position_closed, perp_at_risk, liquidation_approaching, pnl_swing — critical for perps trading bots that need real-time position state. Stateless — the agent owns the cursor. Step 1 of an alerts trio (poll → SSE → webhooks).',
     schema: {
       type: 'object',
       required: ['since'],
       properties: {
         tokens: { type: 'array', items: { type: 'string', minLength: 32, maxLength: 44 }, maxItems: 10, description: 'Token mints to monitor' },
-        wallets: { type: 'array', items: { type: 'string', minLength: 32, maxLength: 44 }, maxItems: 10, description: 'Wallet addresses to monitor' },
+        wallets: { type: 'array', items: { type: 'string', minLength: 32, maxLength: 44 }, maxItems: 10, description: 'Wallet addresses to monitor (spot + Jupiter Perps)' },
         since: { type: 'string', format: 'date-time', description: 'ISO 8601 timestamp — return alerts fired since this moment' },
         criteria: {
           type: 'object',
@@ -381,6 +381,9 @@ export const ENDPOINT_META: Record<string, {
             min_whale_volume_usd: { type: 'number', minimum: 0, description: 'Default 50000 — fire on whale net flow ≥ this USD value' },
             min_portfolio_change_pct: { type: 'number', minimum: 0, description: 'Default 20 — fire on wallet portfolio moves ≥ this percentage' },
             min_concentration_shift_pct: { type: 'number', minimum: 0, description: 'Default 5 — fire on top-1 holder concentration shifts ≥ this magnitude' },
+            perp_max_leverage: { type: 'number', minimum: 1, maximum: 100, description: 'Default 10 — fire perp_at_risk when position leverage ≥ this' },
+            perp_min_pnl_swing_pts: { type: 'number', minimum: 0, description: 'Default 25 — fire pnl_swing when unrealized PnL%% moves by this many points since prior snapshot' },
+            perp_liquidation_buffer_pct: { type: 'number', minimum: 0, maximum: 100, description: 'Default 15 — fire liquidation_approaching when collateral buffer (100%% + PnL%%) drops below this' },
           },
         },
         format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },

@@ -8,6 +8,8 @@
 const TEST_WALLET = 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg';
 const TEST_TOKEN = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263'; // BONK
 const TEST_TOKEN_2 = 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN'; // JUP
+// Known Jupiter Perps trader with 5 open positions, all risk flags firing (verified 2026-05-03).
+const TEST_PERPS_TRADER = 'BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu';
 
 export interface EndpointResult {
   endpoint: string;
@@ -37,6 +39,7 @@ export interface StressResults {
 // All endpoint configs with their inputs and quality checks
 const ENDPOINTS: Array<{
   key: string;
+  label?: string; // optional display name when multiple entries share a key
   input: any;
   checks: Array<{ name: string; test: (data: any) => boolean; detail?: (data: any) => string }>;
   timeout?: number;
@@ -365,6 +368,30 @@ const ENDPOINTS: Array<{
     ],
   },
   {
+    // Phase 2D #4 — perp position alerts. Targets a known Jupiter Perps trader
+    // (5 open positions with high leverage + losing collateral as of 2026-05-03).
+    // First call seeds the snapshot; subsequent calls may surface add/close/pnl_swing
+    // deltas. perp_at_risk and liquidation_approaching fire on current state alone.
+    key: 'check-alerts',
+    label: 'check-alerts (perps trader)',
+    input: {
+      wallets: [TEST_PERPS_TRADER],
+      since: new Date(Date.now() - 3 * 86_400_000).toISOString(),
+      format: 'both',
+    },
+    timeout: 60000,
+    checks: [
+      { name: 'has alerts array', test: (d) => Array.isArray(d.alerts), detail: (d) => `alerts=${d.alerts?.length}` },
+      { name: 'watchlist echoes perps trader', test: (d) => d.watchlist?.wallets?.[0] === TEST_PERPS_TRADER },
+      {
+        name: 'fires at least one perp_* alert',
+        test: (d) => Array.isArray(d.alerts) && d.alerts.some((a: any) => typeof a.type === 'string' && (a.type.startsWith('perp_') || a.type === 'liquidation_approaching' || a.type === 'pnl_swing')),
+        detail: (d) => `types=${[...new Set((d.alerts ?? []).map((a: any) => a.type))].join(',')}`,
+      },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Alert Check') },
+    ],
+  },
+  {
     // Priority 11 — compound intent path on /query. Tests the wallet-deep
     // compound (3-enricher parallel chain). Single-intent /query is covered by
     // the existing entry above; this verifies the new orchestration path.
@@ -437,13 +464,14 @@ export class StressRunner {
         input.signature = testSig;
       }
 
-      console.log(`  Testing ${ep.key}...`);
-      const result = await this.testEndpoint(ep.key, input, ep.checks, ep.timeout);
+      const displayName = ep.label ?? ep.key;
+      console.log(`  Testing ${displayName}...`);
+      const result = await this.testEndpoint(ep.key, input, ep.checks, ep.timeout, displayName);
       results.push(result);
 
       const icon = result.passed ? '✓' : '✗';
       const failedChecks = result.checks.filter(c => !c.passed);
-      console.log(`  ${icon} ${ep.key} — ${result.status} — ${result.latency_ms}ms — ${result.checks.length - failedChecks.length}/${result.checks.length} checks`);
+      console.log(`  ${icon} ${displayName} — ${result.status} — ${result.latency_ms}ms — ${result.checks.length - failedChecks.length}/${result.checks.length} checks`);
       for (const fc of failedChecks) {
         console.log(`    ✗ ${fc.name}${fc.detail ? ` — ${fc.detail}` : ''}`);
       }
@@ -468,10 +496,12 @@ export class StressRunner {
     input: any,
     checks: Array<{ name: string; test: (d: any) => boolean; detail?: (d: any) => string }>,
     timeout = 30000,
+    displayName?: string,
   ): Promise<EndpointResult> {
     const start = Date.now();
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
+    const display = displayName ?? key;
 
     try {
       const res = await this.fetchFn(`${this.baseUrl}/entrypoints/${key}/invoke`, {
@@ -486,7 +516,7 @@ export class StressRunner {
       if (res.status === 402) {
         // Production with payments — 402 is expected
         return {
-          endpoint: key,
+          endpoint: display,
           status: 402,
           latency_ms: latency,
           passed: true,
@@ -497,7 +527,7 @@ export class StressRunner {
       if (res.status !== 200) {
         const body = await res.text().catch(() => '');
         return {
-          endpoint: key,
+          endpoint: display,
           status: res.status,
           latency_ms: latency,
           passed: false,
@@ -522,7 +552,7 @@ export class StressRunner {
       });
 
       return {
-        endpoint: key,
+        endpoint: display,
         status: 200,
         latency_ms: latency,
         passed: checkResults.every(c => c.passed),
@@ -531,7 +561,7 @@ export class StressRunner {
     } catch (e: any) {
       clearTimeout(timer);
       return {
-        endpoint: key,
+        endpoint: display,
         status: 0,
         latency_ms: Date.now() - start,
         passed: false,

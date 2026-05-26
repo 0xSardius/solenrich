@@ -8,6 +8,9 @@ const AlertCriteriaSchema = z
     min_whale_volume_usd: z.number().min(0).optional(),
     min_portfolio_change_pct: z.number().min(0).max(10000).optional(),
     min_concentration_shift_pct: z.number().min(0).max(100).optional(),
+    perp_max_leverage: z.number().min(1).max(100).optional(),
+    perp_min_pnl_swing_pts: z.number().min(0).max(1000).optional(),
+    perp_liquidation_buffer_pct: z.number().min(0).max(100).optional(),
   })
   .default({});
 

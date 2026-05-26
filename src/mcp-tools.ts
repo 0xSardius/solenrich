@@ -543,10 +543,10 @@ export function createSolEnrichMcpServer(): McpServer {
     'check_alerts',
     {
       title: 'Check Alerts',
-      description: 'Poll-based event detection. Pass a watchlist (token mints + wallet addresses) and a since timestamp; receive alerts (price spike/drop, risk change, whale flow, concentration shift, portfolio value change, position add/remove) graded by severity. Stateless — caller owns the cursor.',
+      description: 'Poll-based event detection covering spot + Jupiter Perps. Pass a watchlist (token mints + wallet addresses) and a since timestamp; receive alerts graded by severity. Spot alerts: price spike/drop, risk change, whale flow, concentration shift, portfolio value change, position add/remove. Jupiter Perps alerts per wallet: position opened, position closed, at-risk (high leverage or underwater), liquidation approaching, PnL swing. Stateless — caller owns the cursor.',
       inputSchema: {
         tokens: z.array(z.string()).max(10).default([]).describe('Token mints to watch (max 10)'),
-        wallets: z.array(z.string()).max(10).default([]).describe('Wallet addresses to watch (max 10)'),
+        wallets: z.array(z.string()).max(10).default([]).describe('Wallet addresses to watch — spot + Jupiter Perps (max 10)'),
         since: z.string().describe('ISO 8601 timestamp — return alerts fired since this moment'),
       },
     },
