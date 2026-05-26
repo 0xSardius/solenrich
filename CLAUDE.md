@@ -372,6 +372,18 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 
 **Smart Money Orchestration (#2) ships before Intelligence Feed V1 (#1).** Reason: `trending-signals` becomes the Feed's primary input. Building orchestration first gives Feed V1 higher-quality input with no rework. Feed V1 becomes a thin scheduled wrapper around `trending-signals` instead of a bespoke scanner. Net: same 4-5 total sessions, better composition, no throwaway code.
 
+### Strategic pivot (2026-05-25)
+
+**Platform is broad enough; next move is consumers.** 29 paid endpoints live including the full perps quintet (cross-venue funding, venue-comparison, basis-signal, perp position alerts via check-alerts, perps-market-trend). Smart Money Orchestration, Intelligence Feed V1, Consensus Signal all shipped. Most essential endpoints are built.
+
+**Pivot:** build income-generating agents that consume SolEnrich. Two parallel tracks with different design tradeoffs:
+- **Income track (private):** perps-bot dogfood plan (see `memory/project_perps_bot_dogfood.md`). Bot's Tier 1 / Tier 2 endpoint stack is now complete on Jupiter side. Adrena coverage adds multi-venue.
+- **Demo track (public):** Telegram research bot or daily-digest tweet bot. Drives traffic + signal back to SolEnrich. Showmanship beats profit.
+
+**What this means for the platform:** API additions become demand-driven (build what own bots need, not speculative endpoints). Validation gates resolve naturally because traffic shows up. Closes the loop between platform decisions and revenue.
+
+**Open until next session:** which track first, and if income first, ship Adrena closeouts before bot v1 or after.
+
 ### What to deprioritize
 
 - **Raw data breadth.** Don't add endpoints just to have them. Can't out-breadth Helius/Nansen. Out-synthesize them.
@@ -585,6 +597,7 @@ Orchestration = composed endpoints that chain multiple enrichers together. Worth
   - Closed positions reaped (unlike Jupiter where filter `size_usd > 0` is required).
 - **Cross-venue endpoint design — additive:** each new venue is a `VenueQuote` entry with `available: bool` and `unavailable_reason`. `best_entry`/`arbitrage_opportunities` recompute automatically. Adding Phoenix Perps and Bullet (when they launch publicly) is a one-file change to extend the source client list.
 - **Unblocks:** #2 `perps-venue-comparison`, #3 `perps-basis-signal`, #5 `perps-market-trend` (all 1-session adds composing this foundation).
+- **Phase 2D status (as of 2026-05-26):** #1 cross-venue-funding DONE 2026-05-19 (`ed4ce1d`), #2 venue-comparison DONE 2026-05-21 (`908d10b`), #3 basis-signal DONE 2026-05-21 (`7a7afa4`), #4 perp position alerts on `check-alerts` DONE 2026-05-25 (`05bdcd0`), #5 perps-market-trend DONE 2026-05-26 (`e999258`). Only #6 liquidation-risk-map deferred per original plan. Two follow-on closeouts queued: Adrena OI cap decode (~½ session), perps-trader-profile on Adrena (~1 session).
 
 **Priority 10 — Perps Intelligence / Jupiter Perps Integration** — DONE (2026-04-18)
 - [x] `@coral-xyz/anchor@0.29.0` installed (0.32+ uses new IDL format, reference IDLs are v0.29)
@@ -648,10 +661,10 @@ Orchestration = composed endpoints that chain multiple enrichers together. Worth
 
 **Priority 13 — Event-Driven Alerts** (3-4 sessions)
 Build order: poll-based → SSE → webhooks. Same underlying detection engine, different delivery.
-- **Step 1: `check-alerts` (poll-based)** — Agent calls periodically, gets alerts since last check. No persistent connections, no infra overhead. Alerts: whale movements, price spikes >X%, risk score changes, new token launches matching criteria. Store alerts in Redis with TTL. ~$0.003/call.
+- **Step 1: `check-alerts` (poll-based)** — DONE 2026-05-13. Spot alerts: price spikes, risk changes, whale flows, concentration shifts, portfolio value changes, position add/remove. **Phase 2D #4 extension DONE 2026-05-25** (`05bdcd0`): added five Jupiter Perps event types per wallet — `perp_position_added`, `perp_position_closed`, `perp_at_risk`, `liquidation_approaching`, `pnl_swing`. Plus three new criteria knobs (`perp_max_leverage`, `perp_min_pnl_swing_pts`, `perp_liquidation_buffer_pct`). Verified live against known perps trader. $0.008/call.
 - **Step 2: `subscribe-alerts` (SSE)** — Persistent server-sent events stream. Agent opens connection, receives alerts in real-time. Needs streaming infra in `src/realtime/`. ~$0.01/hour.
 - **Step 3: `webhook-register`** — Agent registers a callback URL + alert criteria. SolEnrich POSTs to it when triggered. Needs: webhook registry in Redis, polling loop, HTTP callback client. ~$0.005 to register.
-- Reuses: whale-watch, token-analyzer, protocol-profile for detection logic
+- Reuses: whale-watch, token-analyzer, protocol-profile, jupiter-perps for detection logic
 - **Revenue model shift:** One-shot calls → subscriptions. Stickiest feature.
 
 **Priority 14 — Intelligence Feed / Proactive Scanning** (staged V1 → V2)
