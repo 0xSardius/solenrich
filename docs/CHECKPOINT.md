@@ -1,11 +1,30 @@
 # Session Checkpoint
 
 ## Last session date
-2026-05-26
+2026-05-27
 
 ## What was completed
 
-### Latest checkpoint (May 25–26 — PERPS PHASE 2D CLEARED #4 + #5)
+### Latest checkpoint (May 27 — MULTI-VENUE TRADER-PROFILE + JUPITER PRICE V3 FIX)
+
+**Adrena coverage added to `perps-trader-profile` (`0c39092`). Plus a silent platform-wide bug fix: `JupiterClient.getPrice` was hitting a 404 endpoint, degrading every caller that needed Jupiter prices (price-aggregator + new Adrena PnL).**
+
+#### Multi-venue perps-trader-profile (`0c39092`, May 27)
+- `perps-trader-profile` now fetches BOTH Jupiter Perps and Adrena positions in parallel. Output is additively enriched — every position carries a `venue: jupiter | adrena` tag, new `by_venue` field surfaces per-venue breakdowns + totals + notes, top-level `totals` aggregate across venues, `flags.multi_venue` fires when both venues hold positions.
+- `AdrenaClient.getPositionsForWallet(address, markPrices?)` added — derives 6 deterministic position PDAs per wallet (3 markets × 2 sides on main pool), batches into one `getMultipleAccountsInfo`, decodes via fixed-offset Borsh (same approach as custody decoder — avoids the Anchor 0.30 IDL incompat with our pinned 0.29).
+- PnL math uses jitoSOL / WBTC / BONK marks from `JupiterClient.getPrice` (price-delta only; doesn't model Adrena borrow fees or recapitalization — formatter emits an honest disclaimer when |PnL%| > 100).
+- **Adrena scaling gotcha (new):** `Position.price` uses `Cortex::PRICE_DECIMALS = 10` (10^10), NOT `USD_DECIMALS = 6` (10^6) like `size_usd` / `collateral_usd`. First decode attempt produced SOL entry $1.1M and BTC entry $773M before the fix. Verified against live positions on `GYcHQX8rN1BHWh1AXFWtbBxjUswMf27mKuufEnwRzaNT` — entries now decode to $111 / $77K correctly.
+- All discovery surfaces updated in the same commit: entrypoint description, `/docs`, OpenAPI, MCP tool. Two stress entries — structural shape check against `TEST_WALLET` (empty), live multi-position check against `TEST_PERPS_TRADER`.
+- **Verified live on two traders:** Jupiter trader (`BvgzoCU...`) shows 6 Jupiter positions, 0 Adrena, `multi_venue: false`. Adrena trader (`GYcHQX...`) shows 4 Adrena positions with real PnL computed against live marks (jitoSOL $105.26, WBTC $73,985).
+- `test/find-adrena-trader.mjs` added as a discovery utility — uses `getProgramAccounts` with Position discriminator to surface live Adrena traders for future verification.
+
+#### JupiterClient.getPrice silent breakage fix (same commit)
+- `api.jup.ag/price/v2` now returns 404 (deprecated, verified by curl during Adrena verify). Three call sites silently broken: `perps-analyzer` (Adrena PnL), `price-aggregator.ts:54`, `price-aggregator.ts:93`. Empty price maps were degrading multi-source token pricing across the platform.
+- Patched to `lite-api.jup.ag/price/v3` (no API key required) with a small adapter so the `JupiterPrice` return shape stays stable — callers don't see the schema change. Removed the broken `fetchWithKey` call too.
+
+#### Endpoint catalog still at 29 (Adrena coverage is additive to existing trader-profile)
+
+### Previous checkpoint (May 25–26 — PERPS PHASE 2D CLEARED #4 + #5)
 
 **Two paid endpoints shipped in one session block. Phase 2D #4 (perp position alerts) + #5 (perps-market-trend). Endpoint count 28 → 29.**
 
@@ -426,14 +445,15 @@ Counter-positioning thesis: SolEnrich wins as **agent-native first**, not dashbo
 - Check Railway logs for the May 19–23 stress run window for any silent throw inside the middleware's outer try/catch.
 - Either fix it or rewrite to surface failures via a `lastWriteAt` field on `/metrics`.
 
-### 2. NEXT BUILDS — perps Phase 2D closeouts, then bots pivot
-Three small ships before the strategic pivot to building agents:
+### 2. NEXT BUILDS — Adrena OI cap closeout, then bots pivot
 
-**a) Adrena OI cap decode** (~½ session) — extract `pricing.max_cumulative_long_position_size_usd` and `max_cumulative_short_position_size_usd` from Adrena custody hand-decoder. Closes a v1 limitation in `perps-venue-comparison` (currently returns `null` for Adrena OI headroom). Pure quality fix, no new endpoint.
+**a) Adrena OI cap decode** (~½ session, only perps work left) — extract `pricing.max_cumulative_long_position_size_usd` and `max_cumulative_short_position_size_usd` from Adrena custody hand-decoder. Closes the last v1 limitation in `perps-venue-comparison` (currently returns `null` for Adrena OI headroom). Pure quality fix, no new endpoint.
 
-**b) `perps-trader-profile` on Adrena** (~1 session) — wrap AdrenaClient with position decoder. Multi-venue bot needs both Jupiter Perps and Adrena positions. Note for bot work: position alerts on Adrena would need the same SnapshotStore extension since current `PerpsSnapshot` only captures Jupiter Perps positions.
+**b) `perps-trader-profile` on Adrena** — DONE 2026-05-27 ✅ (`0c39092`). Multi-venue output with `by_venue.{jupiter,adrena}`, combined totals, `multi_venue` flag. Verified against live Adrena trader.
 
 **c) STRATEGIC PIVOT — build income-generating bots that consume SolEnrich.** See section 8.
+
+**Open note for perps-bot dogfood:** position alerts on Adrena would need a `PerpsSnapshot`-style extension for Adrena positions in `SnapshotStore` (current `PerpsSnapshot` only captures Jupiter). Not blocking — bot can start with Jupiter alerts + multi-venue trader-profile, add Adrena alerts when needed.
 
 ### 3. WATCH-LIST (parallel to builds)
 - **Drift relaunch** — target May-June 2026. Re-evaluate integration in July when audits land. Keep program ID in labeler registry until then.
@@ -462,9 +482,9 @@ Three small ships before the strategic pivot to building agents:
 ### 7. PERPS PHASE 2D — what's left
 - **#4 Perp position alerts** — DONE 2026-05-25 ✅ (`05bdcd0`). Five alert types added to check-alerts; verified live against the known perps trader.
 - **#5 perps-market-trend** — DONE 2026-05-26 ✅ (`e999258`). Per-symbol direction indicators over 7/14/30d; verified live with cold-cache first snapshot.
-- **#6 perps-liquidation-risk-map** ($0.020, 2-3 sessions, deferred) — scans all positions across venues, aggregates liquidation clusters. Ship only after #4-#5 validate demand.
-- **Adrena OI cap decode** (~½ session, next) — closes a v1 limitation in `perps-venue-comparison` (currently returns `null` for Adrena OI headroom). `pricing.max_cumulative_long_position_size_usd` and `max_cumulative_short_position_size_usd` not yet extracted from the custody hand-decoder. Small but visible quality win.
-- **perps-trader-profile on Adrena** (~1 session, after OI cap) — currently Jupiter-only. Multi-venue bot needs both. Wraps AdrenaClient with position decoder. **Note for the dogfood bot:** position alerts on Adrena would need the same SnapshotStore extension since the current `PerpsSnapshot` only captures Jupiter Perps positions.
+- **#6 perps-liquidation-risk-map** ($0.020, 2-3 sessions, deferred) — scans all positions across venues, aggregates liquidation clusters. Ship only after #4-#5 validate demand. Cross-venue enumeration via `getProgramAccounts` is the expensive part — Jupiter-only v1 would be ~1 session.
+- **perps-trader-profile on Adrena** — DONE 2026-05-27 ✅ (`0c39092`). Multi-venue output, verified live.
+- **Adrena OI cap decode** (~½ session, only thing left) — closes the last v1 limitation in `perps-venue-comparison` (currently returns `null` for Adrena OI headroom). `pricing.max_cumulative_long_position_size_usd` and `max_cumulative_short_position_size_usd` not yet extracted from the custody hand-decoder. Small but visible quality win.
 
 ### 2. POST-BAGS — post tweet threads + Orbis listing for Feed V1
 - **Original launch thread** at `local/hackathon-bags/tweet-thread/thread-v3.md` (5 tweets)
@@ -526,6 +546,11 @@ Verified against `BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu` (5 positions, $3
 - **Bags Hackathon** — Submitted, judging pending
 
 ## Known Bugs (non-blocking)
+
+### Jupiter Price v2 endpoint returning 404 — RESOLVED 2026-05-27 ✅ (`0c39092`)
+- **Symptom:** `JupiterClient.getPrice` was silently returning empty results because `api.jup.ag/price/v2` now returns HTTP 404. The `if (!res.ok) throw` would have surfaced this but the three call sites all caught (or were inside cached-only fast paths), so the platform-wide bug went unnoticed. Affected: `perps-analyzer` (Adrena PnL), `price-aggregator.ts:54`, `price-aggregator.ts:93`.
+- **Fix:** Swapped to `lite-api.jup.ag/price/v3` (no API key required). v3 response shape differs (`{ "<mint>": { usdPrice, ... } }` vs v2's `{ data: { "<mint>": { price, ... } } }`) — adapter normalizes to the existing `JupiterPrice` contract so callers don't see the schema change.
+- **Discovered via:** Adrena trader-profile live verify produced `mark_price_usd: null` for all positions, traced back to `getPrice` returning empty maps.
 
 ### `/metrics` returns zero across last 7 days — UNDIAGNOSED 2026-05-24
 - **Symptom:** `GET https://api.solenrich.com/metrics` returns `{ today: { total_calls: 0, by_endpoint: {} }, last_7_days: { ...all zeros... } }` despite known stress runs on May 19, 21, 23.
