@@ -57,8 +57,11 @@ const MARKET_TO_CUSTODY: Record<AdrenaTradableMarket, PublicKey> = {
 // APR = current_rate * 24 * 365 / RATE_POWER.
 // (Opposite of Jupiter Perps where targetRateBps is already annualized.)
 const RATE_POWER = 1_000_000_000n;
-// size_usd, collateral_usd etc. are scaled by 1e6 (USDC decimals).
+// size_usd, collateral_usd, exit_fee_usd, etc. are scaled by 1e6 (USD_DECIMALS).
 const USD_SCALE = 1_000_000;
+// Position.price uses PRICE_DECIMALS = 10 (Cortex::PRICE_DECIMALS in Adrena source).
+// Verified against live Position accounts on 2026-05-27 — SOL entry $111, BTC entry $77K decode cleanly with 10^10.
+const PRICE_SCALE = 10_000_000_000;
 
 // --- Custody account layout (offsets from start of account data) ---
 //
@@ -98,10 +101,77 @@ const OFF = {
   optimalUtilBps: 832,
 } as const;
 
+/**
+ * Position account field offsets (after 8-byte Anchor discriminator).
+ * Derived from adrena.json IDL Position struct, repr(C), bytemuck-serialized.
+ * Verified live against on-chain position accounts on 2026-05-27.
+ */
+const POS_OFF = {
+  bump: 8,
+  side: 9,                  // u8: 0=None, 1=Long, 2=Short
+  // padding bytes 10-15
+  owner: 16,                // pubkey (32)
+  pool: 48,                 // pubkey (32)
+  custody: 80,              // pubkey (32)
+  collateralCustody: 112,   // pubkey (32)
+  openTime: 144,            // i64
+  updateTime: 152,          // i64
+  price: 160,               // u64 — entry price, scaled by 1e6
+  sizeUsd: 168,             // u64 — scaled by 1e6
+  borrowSizeUsd: 176,       // u64
+  collateralUsd: 184,       // u64 — scaled by 1e6
+  // unrealized_interest, cumulative_interest_snapshot, locked_amount, collateral_amount
+  liquidationFeeUsd: 240,   // u64
+  id: 248,                  // u64
+} as const;
+
 // --- Types ---
 
 export type SkewLabel = 'long' | 'short' | 'balanced';
 export type AdrenaCustodySymbol = 'USDC' | 'BONK' | 'jitoSOL' | 'WBTC';
+
+/** Mint address of the underlying token for each tradable market. Used to fetch mark prices. */
+export const ADRENA_COLLATERAL_MINT: Record<AdrenaTradableMarket, string> = {
+  SOL: 'J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn',   // jitoSOL
+  BTC: '3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh',   // WBTC (Portal)
+  BONK: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',  // BONK
+};
+
+/** A single decoded Adrena position. Matches the shape PerpsPositionData uses for Jupiter. */
+export interface AdrenaPositionData {
+  pool: string;
+  custody: string;
+  market_symbol: AdrenaTradableMarket;
+  side: 'long' | 'short';
+  size_usd: number;
+  collateral_usd: number;
+  leverage: number;
+  entry_price_usd: number;
+  mark_price_usd: number | null;
+  unrealized_pnl_usd: number | null;
+  unrealized_pnl_pct: number | null;
+  open_time: number;
+  update_time: number;
+  age_hours: number;
+  /** Adrena position-id. Distinguishes multiple positions on the same custody+side after re-opens. */
+  id: number;
+  borrow_size_usd: number;
+  liquidation_fee_usd: number;
+}
+
+export interface AdrenaTraderProfile {
+  address: string;
+  has_positions: boolean;
+  positions: AdrenaPositionData[];
+  totals: {
+    gross_exposure_usd: number;
+    net_exposure_usd: number;
+    total_collateral_usd: number;
+    total_unrealized_pnl_usd: number;
+    weighted_leverage: number;
+  };
+  fetched_at: number;
+}
 
 /** What our cross-venue enricher consumes for a single Adrena market. */
 export interface AdrenaCustodyState {
@@ -265,6 +335,144 @@ export class AdrenaClient {
 
     await this.cache.set(cacheKey, state, CACHE_TTL.perpsMarket);
     return state;
+  }
+
+  /**
+   * Fetch all open Adrena positions for a wallet via deterministic PDA lookup.
+   * 6 PDAs (3 tradable markets × 2 sides), one getMultipleAccounts call.
+   * Decodes via fixed-offset Borsh (same approach as custodies — avoids
+   * Anchor 0.30 IDL incompat).
+   *
+   * @param markPrices optional map of collateral mint -> USD price for PnL.
+   *                   If a mint price is missing, that position's PnL is null.
+   */
+  async getPositionsForWallet(
+    address: string,
+    markPrices?: Map<string, number | null>,
+  ): Promise<AdrenaTraderProfile> {
+    const cacheKey = `adrena:trader:${address}`;
+    const cached = await this.cache.get<AdrenaTraderProfile>(cacheKey);
+    if (cached) return cached;
+
+    const owner = new PublicKey(address);
+    const tradableMarkets: AdrenaTradableMarket[] = ['SOL', 'BTC', 'BONK'];
+    const sides: Array<'long' | 'short'> = ['long', 'short'];
+
+    // Derive 6 deterministic position PDAs (3 markets × 2 sides)
+    const pdaTargets: Array<{
+      pda: PublicKey;
+      market: AdrenaTradableMarket;
+      side: 'long' | 'short';
+      custody: PublicKey;
+    }> = [];
+
+    for (const market of tradableMarkets) {
+      const custody = MARKET_TO_CUSTODY[market];
+      for (const side of sides) {
+        const sideByte = side === 'long' ? 1 : 2;
+        const [pda] = PublicKey.findProgramAddressSync(
+          [
+            Buffer.from('position'),
+            owner.toBuffer(),
+            ADRENA_MAIN_POOL.toBuffer(),
+            custody.toBuffer(),
+            Buffer.from([sideByte]),
+          ],
+          ADRENA_PROGRAM_ID,
+        );
+        pdaTargets.push({ pda, market, side, custody });
+      }
+    }
+
+    // Single RPC batch read — null entries = position doesn't exist (closed or never opened)
+    const accounts = await this.conn.getMultipleAccountsInfo(pdaTargets.map(t => t.pda));
+
+    const positions: AdrenaPositionData[] = [];
+    const nowSec = Math.floor(Date.now() / 1000);
+
+    for (let i = 0; i < accounts.length; i++) {
+      const info = accounts[i];
+      if (!info) continue; // PDA not initialized → no position
+      const target = pdaTargets[i];
+      const buf = info.data;
+
+      // Size 0 = closed but not yet reaped (defensive — Adrena typically reaps but be safe)
+      const sizeUsdRaw = readU64(buf, POS_OFF.sizeUsd);
+      if (sizeUsdRaw === 0n) continue;
+
+      const collateralUsdRaw = readU64(buf, POS_OFF.collateralUsd);
+      const entryPriceRaw = readU64(buf, POS_OFF.price);
+      const openTime = Number(readI64(buf, POS_OFF.openTime));
+      const updateTime = Number(readI64(buf, POS_OFF.updateTime));
+      const id = Number(readU64(buf, POS_OFF.id));
+      const borrowSizeRaw = readU64(buf, POS_OFF.borrowSizeUsd);
+      const liqFeeRaw = readU64(buf, POS_OFF.liquidationFeeUsd);
+
+      const size_usd = bnToUsd(sizeUsdRaw);
+      const collateral_usd = bnToUsd(collateralUsdRaw);
+      // Price uses PRICE_DECIMALS=10, not USD_DECIMALS=6
+      const entry_price_usd = Number(entryPriceRaw) / PRICE_SCALE;
+      const borrow_size_usd = bnToUsd(borrowSizeRaw);
+      const liquidation_fee_usd = bnToUsd(liqFeeRaw);
+
+      // PnL: needs current mark price for the collateral token
+      const mint = ADRENA_COLLATERAL_MINT[target.market];
+      const mark = markPrices?.get(mint) ?? null;
+      let unrealized_pnl_usd: number | null = null;
+      let unrealized_pnl_pct: number | null = null;
+      if (mark !== null && entry_price_usd > 0 && size_usd > 0) {
+        const sizeTokens = size_usd / entry_price_usd;
+        const direction = target.side === 'long' ? 1 : -1;
+        unrealized_pnl_usd = (mark - entry_price_usd) * direction * sizeTokens;
+        unrealized_pnl_pct =
+          collateral_usd > 0 ? (unrealized_pnl_usd / collateral_usd) * 100 : null;
+      }
+
+      const age_hours = openTime > 0 ? (nowSec - openTime) / 3600 : 0;
+
+      positions.push({
+        pool: ADRENA_MAIN_POOL.toBase58(),
+        custody: target.custody.toBase58(),
+        market_symbol: target.market,
+        side: target.side,
+        size_usd,
+        collateral_usd,
+        leverage: collateral_usd > 0 ? size_usd / collateral_usd : 0,
+        entry_price_usd,
+        mark_price_usd: mark,
+        unrealized_pnl_usd,
+        unrealized_pnl_pct,
+        open_time: openTime,
+        update_time: updateTime,
+        age_hours,
+        id,
+        borrow_size_usd,
+        liquidation_fee_usd,
+      });
+    }
+
+    const gross = positions.reduce((s, p) => s + p.size_usd, 0);
+    const net = positions.reduce((s, p) => s + p.size_usd * (p.side === 'long' ? 1 : -1), 0);
+    const collat = positions.reduce((s, p) => s + p.collateral_usd, 0);
+    const upnl = positions.reduce((s, p) => s + (p.unrealized_pnl_usd ?? 0), 0);
+    const weightedLev = collat > 0 ? gross / collat : 0;
+
+    const profile: AdrenaTraderProfile = {
+      address,
+      has_positions: positions.length > 0,
+      positions,
+      totals: {
+        gross_exposure_usd: gross,
+        net_exposure_usd: net,
+        total_collateral_usd: collat,
+        total_unrealized_pnl_usd: upnl,
+        weighted_leverage: weightedLev,
+      },
+      fetched_at: Date.now(),
+    };
+
+    await this.cache.set(cacheKey, profile, CACHE_TTL.perpsTrader);
+    return profile;
   }
 
   /** True if a market exists on Adrena mainnet. */

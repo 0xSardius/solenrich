@@ -257,8 +257,8 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'perps-trader-profile': {
-    summary: 'Jupiter Perps trader profile',
-    description: 'Open Jupiter Perps positions for a wallet with size, leverage, entry price, unrealized PnL, position age, trader classification (scalper/swing/position), and risk flags.',
+    summary: 'Multi-venue perps trader profile (Jupiter Perps + Adrena)',
+    description: 'Open positions across BOTH Jupiter Perps and Adrena for a wallet. Per-position size, leverage, entry, unrealized PnL, position age. Per-venue breakdown via `by_venue`, combined totals at top level, every position tagged with `venue`. Trader classification (scalper/swing/position), directional bias, and risk flags including `multi_venue` for cross-venue exposure. Adrena PnL uses jitoSOL/WBTC/BONK mark prices from Jupiter price API; null when unavailable.',
     schema: {
       type: 'object',
       required: ['address'],

@@ -267,7 +267,25 @@ const ENDPOINTS: Array<{
       { name: 'has profile classification', test: (d) => typeof d.profile === 'string' },
       { name: 'has directional_bias', test: (d) => ['long', 'short', 'neutral'].includes(d.directional_bias) },
       { name: 'has totals', test: (d) => d.totals != null },
+      { name: 'has by_venue.jupiter + by_venue.adrena', test: (d) => d.by_venue?.jupiter != null && d.by_venue?.adrena != null },
+      { name: 'multi_venue flag present', test: (d) => typeof d.flags?.multi_venue === 'boolean' },
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' },
+    ],
+  },
+  {
+    // Multi-venue trader-profile check against a known Jupiter Perps trader.
+    // Verifies the venue tagging + per-venue totals work when at least one
+    // venue has real positions, not just shape correctness on an empty wallet.
+    key: 'perps-trader-profile',
+    label: 'perps-trader-profile (Jupiter trader)',
+    input: { address: TEST_PERPS_TRADER, format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'has positions', test: (d) => Array.isArray(d.positions) && d.positions.length > 0, detail: (d) => `count=${d.positions?.length}` },
+      { name: 'every position tagged with venue', test: (d) => Array.isArray(d.positions) && d.positions.every((p: any) => p.venue === 'jupiter' || p.venue === 'adrena') },
+      { name: 'Jupiter venue has positions', test: (d) => d.by_venue?.jupiter?.has_positions === true, detail: (d) => `jup=${d.by_venue?.jupiter?.positions?.length}` },
+      { name: 'combined totals.gross_exposure_usd > 0', test: (d) => typeof d.totals?.gross_exposure_usd === 'number' && d.totals.gross_exposure_usd > 0 },
+      { name: 'briefing references trader', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Perps Trader') },
     ],
   },
   {

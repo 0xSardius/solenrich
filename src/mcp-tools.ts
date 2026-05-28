@@ -394,8 +394,8 @@ export function createSolEnrichMcpServer(): McpServer {
   server.registerTool(
     'perps_trader_profile',
     {
-      title: 'Jupiter Perps Trader Profile',
-      description: 'Open Jupiter Perps positions for a wallet with size, leverage, entry, unrealized PnL, trader classification (scalper/swing/position), and risk flags.',
+      title: 'Multi-Venue Perps Trader Profile',
+      description: 'Open positions across BOTH Jupiter Perps and Adrena for a wallet. Per-venue breakdown plus combined totals. Each position tagged with venue. Trader classification (scalper/swing/position), directional bias, multi-venue exposure flag, and risk flags (high leverage, approaching liquidation, concentrated market). Adrena PnL needs mark prices for jitoSOL/WBTC/BONK and is null when unavailable.',
       inputSchema: {
         address: z.string().describe('Solana wallet address'),
       },

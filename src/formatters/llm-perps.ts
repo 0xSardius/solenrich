@@ -53,14 +53,35 @@ export function formatPerpsMarketBriefing(data: EnrichedMarketStructure): string
   return lines.join('\n');
 }
 
+function renderPositionLine(p: EnrichedTraderProfile['positions'][number]): string[] {
+  const out: string[] = [];
+  const pnlPosStr =
+    p.unrealized_pnl_usd !== null
+      ? `${p.unrealized_pnl_usd >= 0 ? '+' : ''}${formatUsd(p.unrealized_pnl_usd)}${p.unrealized_pnl_pct !== null ? ` (${p.unrealized_pnl_pct >= 0 ? '+' : ''}${p.unrealized_pnl_pct.toFixed(1)}%)` : ''}`
+      : 'n/a';
+  const ageStr =
+    p.age_hours < 24 ? `${p.age_hours.toFixed(1)}h` : `${(p.age_hours / 24).toFixed(1)}d`;
+  out.push(
+    `- ${p.market_symbol} ${p.side.toUpperCase()} ${formatUsd(p.size_usd)} @ $${p.entry_price_usd.toFixed(2)} (${p.leverage.toFixed(1)}x). uPnL: ${pnlPosStr}. Age: ${ageStr}.`,
+  );
+  const posFlags: string[] = [];
+  if (p.flags.extreme_leverage) posFlags.push('extreme_leverage');
+  else if (p.flags.high_leverage) posFlags.push('high_leverage');
+  if (p.flags.approaching_liquidation) posFlags.push('approaching_liquidation');
+  else if (p.flags.losing_collateral) posFlags.push('losing_collateral');
+  if (p.flags.stale_position) posFlags.push('stale');
+  if (posFlags.length > 0) out.push(`  ⚠ ${posFlags.join(', ')}`);
+  return out;
+}
+
 export function formatPerpsTraderBriefing(data: EnrichedTraderProfile): string {
   const lines: string[] = [];
 
-  lines.push(`## Jupiter Perps Trader: ${shortenAddress(data.address)}`);
+  lines.push(`## Perps Trader: ${shortenAddress(data.address)}`);
   lines.push('');
 
   if (!data.has_positions) {
-    lines.push('No open positions on Jupiter Perps.');
+    lines.push('No open positions on Jupiter Perps or Adrena.');
     return lines.join('\n');
   }
 
@@ -71,41 +92,48 @@ export function formatPerpsTraderBriefing(data: EnrichedTraderProfile): string {
       ? `${pnl >= 0 ? '+' : ''}${formatUsd(pnl)} (${pnl >= 0 ? '+' : ''}${pnlPct.toFixed(2)}% on collateral)`
       : `${pnl >= 0 ? '+' : ''}${formatUsd(pnl)}`;
 
+  const venueList: string[] = [];
+  if (data.by_venue.jupiter.has_positions) venueList.push(`Jupiter (${data.by_venue.jupiter.positions.length})`);
+  if (data.by_venue.adrena.has_positions) venueList.push(`Adrena (${data.by_venue.adrena.positions.length})`);
+
   lines.push(
-    `${data.positions.length} open position${data.positions.length === 1 ? '' : 's'}. Profile: ${data.profile.replace('_', ' ')}. Directional bias: ${data.directional_bias}.`,
+    `${data.positions.length} open position${data.positions.length === 1 ? '' : 's'} across ${venueList.join(' + ')}. Profile: ${data.profile.replace('_', ' ')}. Directional bias: ${data.directional_bias}.`,
   );
   lines.push(
-    `Gross exposure: ${formatUsd(data.totals.gross_exposure_usd)}. Net exposure: ${data.totals.net_exposure_usd >= 0 ? '+' : ''}${formatUsd(data.totals.net_exposure_usd)}. Collateral: ${formatUsd(data.totals.total_collateral_usd)}. Unrealized PnL: ${pnlStr}. Weighted leverage: ${data.totals.weighted_leverage.toFixed(2)}x.`,
+    `Combined gross exposure: ${formatUsd(data.totals.gross_exposure_usd)}. Net exposure: ${data.totals.net_exposure_usd >= 0 ? '+' : ''}${formatUsd(data.totals.net_exposure_usd)}. Collateral: ${formatUsd(data.totals.total_collateral_usd)}. Unrealized PnL: ${pnlStr}. Weighted leverage: ${data.totals.weighted_leverage.toFixed(2)}x.`,
   );
   lines.push('');
 
-  lines.push('### Open Positions');
-  for (const p of data.positions) {
-    const pnlPosStr =
-      p.unrealized_pnl_usd !== null
-        ? `${p.unrealized_pnl_usd >= 0 ? '+' : ''}${formatUsd(p.unrealized_pnl_usd)}${p.unrealized_pnl_pct !== null ? ` (${p.unrealized_pnl_pct >= 0 ? '+' : ''}${p.unrealized_pnl_pct.toFixed(1)}%)` : ''}`
-        : 'n/a';
-    const ageStr =
-      p.age_hours < 24
-        ? `${p.age_hours.toFixed(1)}h`
-        : `${(p.age_hours / 24).toFixed(1)}d`;
+  // Per-venue sections (only show venues with positions)
+  for (const venue of ['jupiter', 'adrena'] as const) {
+    const v = data.by_venue[venue];
+    if (!v.has_positions) continue;
+    const venueLabel = venue === 'jupiter' ? 'Jupiter Perps' : 'Adrena';
+    lines.push(`### ${venueLabel} positions (${v.positions.length})`);
+    const venuePnl = v.totals.total_unrealized_pnl_usd;
+    const venuePnlPct = v.totals.net_pnl_pct;
+    const venuePnlStr =
+      venuePnlPct !== null
+        ? `${venuePnl >= 0 ? '+' : ''}${formatUsd(venuePnl)} (${venuePnl >= 0 ? '+' : ''}${venuePnlPct.toFixed(2)}%)`
+        : `${venuePnl >= 0 ? '+' : ''}${formatUsd(venuePnl)}`;
     lines.push(
-      `- ${p.market_symbol} ${p.side.toUpperCase()} ${formatUsd(p.size_usd)} @ $${p.entry_price_usd.toFixed(2)} (${p.leverage.toFixed(1)}x). uPnL: ${pnlPosStr}. Age: ${ageStr}.`,
+      `Gross ${formatUsd(v.totals.gross_exposure_usd)} · Collateral ${formatUsd(v.totals.total_collateral_usd)} · uPnL ${venuePnlStr} · Weighted leverage ${v.totals.weighted_leverage.toFixed(2)}x`,
     );
-    const posFlags: string[] = [];
-    if (p.flags.extreme_leverage) posFlags.push('extreme_leverage');
-    else if (p.flags.high_leverage) posFlags.push('high_leverage');
-    if (p.flags.approaching_liquidation) posFlags.push('approaching_liquidation');
-    else if (p.flags.losing_collateral) posFlags.push('losing_collateral');
-    if (p.flags.stale_position) posFlags.push('stale');
-    if (posFlags.length > 0) lines.push(`  ⚠ ${posFlags.join(', ')}`);
+    for (const p of v.positions) {
+      for (const line of renderPositionLine(p)) lines.push(line);
+    }
+    for (const note of v.notes) lines.push(`  _Note: ${note}_`);
+    if (venue === 'adrena' && v.positions.some(p => p.unrealized_pnl_pct !== null && p.unrealized_pnl_pct <= -100)) {
+      lines.push('  _Note: Adrena PnL is a price-delta estimate. Positions showing < -100% likely accrued borrow fees or had collateral added/removed — true PnL requires Adrena\'s position-accounting math (not yet modeled here)._');
+    }
+    lines.push('');
   }
-  lines.push('');
 
   const accFlags: string[] = [];
   if (data.flags.any_near_liquidation) accFlags.push('has position approaching liquidation');
   if (data.flags.any_high_leverage) accFlags.push('high leverage in use');
   if (data.flags.concentrated_market) accFlags.push(`>80% concentrated in ${data.flags.concentrated_market}`);
+  if (data.flags.multi_venue) accFlags.push('multi-venue exposure (Jupiter + Adrena)');
   if (accFlags.length > 0) {
     lines.push('### Risk Flags');
     for (const f of accFlags) lines.push(`- ${f}`);

@@ -311,8 +311,8 @@ const dueDiligenceAnalyzer = new DueDiligenceAnalyzer(tokenAnalyzer, whaleWatche
 const defiLlama = new DefiLlamaClient(cache);
 const protocolAnalyzer = new ProtocolAnalyzer(defiLlama, helius, cache);
 const jupiterPerps = new JupiterPerpsClient(cache);
-const perpsAnalyzer = new PerpsAnalyzer(jupiterPerps);
 const adrenaClient = new AdrenaClient(cache);
+const perpsAnalyzer = new PerpsAnalyzer(jupiterPerps, adrenaClient, jupiter);
 const perpReference = new PerpReferenceClient(cache);
 const perpsCrossVenueAnalyzer = new PerpsCrossVenueAnalyzer(
   jupiterPerps,
@@ -730,7 +730,7 @@ app.get('/docs', (c) => {
       'perps-trader-profile': {
         price: '0.010',
         input: { address: 'string', format: 'json | llm | both' },
-        description: 'Jupiter Perps trader profile — open positions for a wallet with size, leverage, entry, unrealized PnL, profile classification (scalper/swing/position), and risk flags.',
+        description: 'Multi-venue perps trader profile (Jupiter Perps + Adrena). Returns open positions per venue with size, leverage, entry, unrealized PnL, profile classification (scalper/swing/position), and risk flags. Combined totals across venues + per-venue breakdown via `by_venue`. Every position is tagged with its `venue`. Adrena PnL uses jitoSOL/WBTC/BONK mark prices from Jupiter price API; null when unavailable. Multi-venue traders get a `multi_venue: true` flag.',
       },
       'perps-cross-venue-funding': {
         price: '0.015',

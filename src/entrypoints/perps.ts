@@ -21,7 +21,7 @@ export function registerPerpsEntrypoints(addEntrypoint: AddEntrypoint, analyzer:
   addEntrypoint({
     key: 'perps-trader-profile',
     description:
-      'Jupiter Perps trader profile — open positions for a wallet with size, leverage, entry, unrealized PnL, and risk flags',
+      'Multi-venue perps trader profile — fetches open positions from BOTH Jupiter Perps and Adrena for the wallet. Returns per-position size/leverage/entry/unrealized PnL/risk flags, per-venue breakdown with venue totals, and combined totals across venues. Output includes a `venue` tag on every position and a `by_venue` breakdown alongside combined `totals`. Adrena PnL requires per-collateral mark prices (jitoSOL/WBTC/BONK via Jupiter price API) and is null when unavailable.',
     input: PerpsTraderInput,
     handler: async (ctx: { input: z.infer<typeof PerpsTraderInput> }) => {
       const data = await analyzer.analyzeTrader(ctx.input.address);

@@ -44,7 +44,16 @@ export class JupiterClient {
     this.cache = cache;
   }
 
-  /** Batch price lookup — up to 50 mints per call */
+  /**
+   * Batch price lookup — up to 50 mints per call.
+   *
+   * Uses Jupiter Price v3 at lite-api.jup.ag because:
+   *   - api.jup.ag/price/v2 returns 404 (deprecated, verified 2026-05-27)
+   *   - lite-api has no API key requirement and works for all SPL mints
+   *
+   * v3 response shape: `{ "<mint>": { usdPrice, liquidity, decimals, priceChange24h, ... } }`
+   * Mapped to our JupiterPrice contract so callers don't see the schema change.
+   */
   async getPrice(mints: string[]): Promise<Record<string, JupiterPrice>> {
     const result: Record<string, JupiterPrice> = {};
     const misses: string[] = [];
@@ -60,20 +69,20 @@ export class JupiterClient {
 
     if (misses.length === 0) return result;
 
-    const url = `${this.baseUrl}/price/v2?ids=${misses.join(',')}`;
-    const res = await this.fetchWithKey(url);
+    const url = `https://lite-api.jup.ag/price/v3?ids=${misses.join(',')}`;
+    const res = await fetch(url);
     if (!res.ok) throw new Error(`Jupiter Price HTTP ${res.status}: ${await res.text()}`);
 
-    const raw: { data: Record<string, any> } = await res.json();
+    const raw: Record<string, { usdPrice?: number; decimals?: number } | null> = await res.json();
 
-    for (const [mint, entry] of Object.entries(raw.data ?? {})) {
-      if (!entry) continue;
+    for (const [mint, entry] of Object.entries(raw ?? {})) {
+      if (!entry || typeof entry.usdPrice !== 'number') continue;
       const price: JupiterPrice = {
-        id: entry.id ?? mint,
-        mintSymbol: entry.mintSymbol ?? '',
-        vsToken: entry.vsToken ?? '',
-        vsTokenSymbol: entry.vsTokenSymbol ?? 'USDC',
-        price: Number(entry.price ?? 0),
+        id: mint,
+        mintSymbol: '',
+        vsToken: '',
+        vsTokenSymbol: 'USDC',
+        price: entry.usdPrice,
       };
       result[mint] = price;
       await this.cache.set(`jupiter:price:${mint}`, price, CACHE_TTL.jupiterPrice);
