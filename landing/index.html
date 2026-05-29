@@ -1508,11 +1508,11 @@
     <div class="container">
       <span class="update-tag">New</span>
       <div class="update-items">
+        <span class="update-item"><span class="check">&#10003;</span> Multi-venue trader-profile — Jupiter + Adrena positions in one call</span>
         <span class="update-item"><span class="check">&#10003;</span> Perp position alerts — opened, closed, at-risk, liquidation-approaching, PnL-swing</span>
         <span class="update-item"><span class="check">&#10003;</span> Perps market trend — OI, skew, utilization, borrow APR direction across SOL/BTC/ETH</span>
         <span class="update-item"><span class="check">&#10003;</span> Perps basis-signal — net-yield-after-borrow scanner across 4 venues</span>
         <span class="update-item"><span class="check">&#10003;</span> Perps venue-comparison — total entry cost + recommendation by size</span>
-        <span class="update-item"><span class="check">&#10003;</span> Perps cross-venue funding — Jupiter + Adrena + Hyperliquid + dYdX</span>
       </div>
     </div>
   </div>
@@ -1536,6 +1536,7 @@
             <li><code>perps-venue-comparison</code>total entry cost at your size + recommendation</li>
             <li><code>perps-basis-signal</code>net-yield-after-borrow funding-arb scanner</li>
             <li><code>perps-market-trend</code>OI, skew, util, borrow direction over 7/14/30d</li>
+            <li><code>perps-trader-profile</code>Jupiter + Adrena positions in one call, multi-venue tagged</li>
             <li><code>check-alerts</code>perp position opened, closed, at-risk, near-liq, PnL swing</li>
           </ul>
         </div>
@@ -1814,8 +1815,8 @@
             <span class="endpoint-name">perps-trader-profile</span>
             <span class="endpoint-price">$0.010</span>
           </div>
-          <p class="endpoint-desc">Jupiter Perps positions for a wallet with size, leverage, entry, unrealized PnL, and trader classification (scalper / swing / position). Risk flags for high leverage and approaching liquidation.</p>
-          <div class="tag-row"><span class="tag">perps</span></div>
+          <p class="endpoint-desc">Multi-venue: Jupiter Perps + Adrena positions for a wallet in one call. Per-venue breakdown + combined totals, every position tagged with venue, multi_venue flag. Size, leverage, entry, unrealized PnL, trader classification (scalper / swing / position), risk flags for high leverage and approaching liquidation.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span><span class="tag">multi-venue</span></div>
         </div>
 
         <div class="endpoint-card reveal">
