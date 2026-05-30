@@ -6,10 +6,29 @@ import {
   AnchorProvider,
   BN,
   Program,
-  Wallet,
   type IdlAccounts,
+  type Wallet as AnchorWallet,
 } from '@coral-xyz/anchor';
-import { Connection, Keypair, PublicKey } from '@solana/web3.js';
+import { Connection, Keypair, PublicKey, type Transaction, type VersionedTransaction } from '@solana/web3.js';
+
+/**
+ * Minimal read-only Wallet adapter. Anchor 0.29 ships `Wallet` in CJS but
+ * doesn't re-export it from the ESM entry, which breaks `bun build` (static
+ * bundler) even though `bun run` tolerates it. We only need .publicKey for
+ * AnchorProvider — fetch-only Program calls never invoke the sign methods.
+ */
+function makeReadOnlyWallet(keypair: Keypair): AnchorWallet {
+  return {
+    publicKey: keypair.publicKey,
+    payer: keypair,
+    async signTransaction<T extends Transaction | VersionedTransaction>(tx: T): Promise<T> {
+      throw new Error('Read-only wallet — signing not supported');
+    },
+    async signAllTransactions<T extends Transaction | VersionedTransaction>(txs: T[]): Promise<T[]> {
+      throw new Error('Read-only wallet — signing not supported');
+    },
+  };
+}
 import { CONFIG, CACHE_TTL } from '../config';
 import type { Cache } from '../cache';
 import { IDL as PERPS_IDL, type Perpetuals } from '../idl/jupiter-perpetuals-idl';
@@ -219,7 +238,7 @@ export class JupiterPerpsClient {
 
     const provider = new AnchorProvider(
       this.conn,
-      new Wallet(Keypair.generate()),
+      makeReadOnlyWallet(Keypair.generate()),
       AnchorProvider.defaultOptions(),
     );
     this.perps = new Program<Perpetuals>(PERPS_IDL, JUPITER_PERPS_PROGRAM_ID, provider);
