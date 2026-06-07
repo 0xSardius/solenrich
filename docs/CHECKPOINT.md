@@ -1,11 +1,53 @@
 # Session Checkpoint
 
 ## Last session date
-2026-05-27
+2026-06-07
 
 ## What was completed
 
-### Latest checkpoint (May 27 — MULTI-VENUE TRADER-PROFILE + JUPITER PRICE V3 FIX)
+### Latest checkpoint (Jun 1–7 — STRATEGY SESSION: BASEENRICH REVIEW + RIPTIDE SCOPED + LANDING/OG REFRESH)
+
+**Mostly a strategy + planning session (2 landing commits, no src/ changes). Resolved the "what's next" question: SolEnrich is supply-complete; bottleneck is demand. Decided the next build is a consumer/dogfood agent — Riptide, a perps signals bot. Also reviewed + corrected the BaseEnrich (EVM fork) PRD. Two planning docs written.**
+
+#### BaseEnrich PRD reviewed + corrected (`docs/baseenrich-claude-code-prd.md`, untracked→committed this checkpoint)
+- EVM/Base fork of SolEnrich. User adds it in a SEPARATE folder/repo (does NOT touch SolEnrich src/).
+- The PRD was written against SolEnrich's *original* PRD, which diverged from what shipped. Corrected to follow production `src/lib/agent.ts` + `config.ts`:
+  - **Payments:** manual `@x402/hono` middleware + EVM `ExactEvmScheme`, NOT Lucid's `.use(payments())` (that plugin caused a registration-order bug even on EVM).
+  - **Facilitator:** Coinbase CDP (`@coinbase/x402`) — Base is CDP's home network. NOT PayAI/Daydreams.
+  - **Entrypoints:** `addEntrypoint({ key })` from `createAgentApp`, handler returns `{ output }`. NOT `agent.entrypoint({ name })`.
+  - **Pricing:** USDC decimal strings (`'0.005'`), NOT base units. Separate keys for light/full.
+  - Keep DexScreener (multichain — swap slug) + GeckoTerminal feeding a median PriceAggregator.
+  - Deploy Railway-all first; Workers blocked by `alchemy-sdk` not being Workers-friendly (viem is).
+  - Perps suite + realtime re-tiered BEHIND a validation gate (first external paid query) — don't rebuild 29 endpoints on spec; if perps show demand, prefer Arbitrum (GMX/Vertex/Gains) over Base's thin venues.
+  - ERC-8004 (not 8004-solana) on EVM = real on-chain contracts; defer past first paid query.
+- Decision rationale (memory `project_baseenrich.md`): distribution hedge, low marginal cost, x402 rail is *better* on Base. Discipline: lean core + gate, not breadth.
+
+#### STRATEGIC DECISION — next build is Riptide (perps signals bot)
+- **Platform is supply-complete.** 29 endpoints cover the surface; adding more is low-leverage. Bottleneck is demand (~0.5 paid calls/day). Stop building endpoints; build a *consumer* that manufactures demand + visibility + dogfoods.
+- **Resolves the open "demo vs income first" pivot question (old §8):** Riptide is a hybrid — public signals channel (demo/visibility) → paid tier (income, v1.5) → brain of an execution bot (v2). Advisory-first, so it's all three without a leap.
+- **Full build scope written:** `docs/perps-signals-bot-scope.md` (untracked→committed this checkpoint).
+- **Roadmap (one bot, three tiers, nothing throwaway):** v1 market signals (funding/basis spreads, regime shifts, market stress — `perps-cross-venue-funding`, `perps-basis-signal`, `perps-market-trend`, `perps-market-structure`) → v1.5 smart-money/copy-alert tier (`smart-money-flow` + `copy-trade-signals` + `whale-watch` + per-wallet `check-alerts`) → v2 optional execution.
+- **Copy-trade chosen over grid for v2:** for copy-trade SolEnrich is the alpha source (core); for grid it's a peripheral safety layer. Copy reuses the signals brain directly; execution-latency risk is sidestepped by advisory-first.
+- **Key design calls (in scope doc):** post-on-change not on a timer (Redis last-seen diffing + cooldown); internal-free call mode via a new `X-Internal-Key` bypass on SolEnrich (avoids ~$150/mo circular x402; moat data builds either way); Bun + grammY + Upstash + Railway; mirror SolEnrich's enricher/formatter separation.
+- **Identity:** would be 8004-solana; defer past first human subscribers. Memory: `project_perps_signals_bot.md`.
+
+#### Portfolio status clarified (confirmed with Sardius)
+- **Tidal** — shipped & live but **chat-mode only**, not autonomous; responds to chat calls, so no real query volume yet. (Autonomous *monitoring* loop, not autonomous *trading*, is the safe demand-engine half if ever turned on.)
+- **Cardex** — stalled, no clear value prop. Don't force-revive.
+- **Pythia** — killed.
+- So Riptide is the focus agent, not a side bet.
+
+#### Landing + OG refresh (2 commits, pushed to main)
+- **`21d8bff`** — `index.html` perps social meta: og/twitter descriptions updated from "perps trilogy / New:" → full 6-endpoint perps suite framing (matches the launch tweet drafted this session).
+- **`93ea4d5`** — OG share image refreshed: `og-image.html` was hardcoded at "11 endpoints" with a stale feature list. Updated to 29 endpoints, 10+ data sources, current feature row (Wallet Profiling, Token Due Diligence, Perps Intelligence, Smart-Money Flow, Event Alerts, Consensus Signal). Re-rendered `og-image.png` at 1200×630 via headless Edge, visually verified.
+- **Verified perps suite fully integrated** across all surfaces: `/docs`, `llms.txt`, `/openapi.json` (all auto-driven by `ENDPOINT_META`), and landing (`index.html` current; `docs.html` renders live from the API). No gaps.
+- Drafted a perps-suite launch tweet (primary + short alt) — unposted.
+
+#### Identified next SolEnrich-side builds (NOT new endpoints)
+- **Observability (highest leverage):** caller-tracking middleware (~20 lines, `metrics:callers:{endpoint}:{date}` set) + diagnose the `/metrics`-returns-0 bug. The whole demand bet is currently unmeasurable. Unblocks the parked Feed V1 gate too.
+- **`X-Internal-Key` bypass:** ~10-line opt-in addition to the `/entrypoints/*` x402 middleware so first-party agents (Riptide + swarm) call free while external pays. Riptide's enabler.
+
+### Previous checkpoint (May 27 — MULTI-VENUE TRADER-PROFILE + JUPITER PRICE V3 FIX)
 
 **Adrena coverage added to `perps-trader-profile` (`0c39092`). Plus a silent platform-wide bug fix: `JupiterClient.getPrice` was hitting a 404 endpoint, degrading every caller that needed Jupiter prices (price-aggregator + new Adrena PnL).**
 
@@ -419,6 +461,13 @@ Gate was due 2026-05-18, was 6 days overdue. Pulled the actual numbers, found th
 
 ## Next session plan (ACTION ITEMS)
 
+### ⭐ IMMEDIATE — Riptide perps signals bot (the decided next build)
+Full scope: `docs/perps-signals-bot-scope.md`. Order:
+1. **SolEnrich `X-Internal-Key` bypass** (~10 lines, in `src/lib/agent.ts` `/entrypoints/*` middleware) — opt-in (only when `INTERNAL_API_KEY` env set), exact-match, header-present-AND-matches only, logged. Gives Riptide a free plain-`fetch` path. **Claude offered to implement; awaiting Sardius go (touches live payment middleware).**
+2. **Setup trio (Sardius):** Telegram bot+channel via @BotFather → token + channel ID; new `riptide` repo (copy SolEnrich `tsconfig.json` + `Dockerfile`, `bun add grammy @upstash/redis`); Upstash Redis instance.
+3. **Day 1 vertical slice:** `solenrich.ts` → `perps-cross-venue-funding` → parse spread → format → post one signal to the channel. Prove auth + parsing + Telegram posting before building the loop/state.
+- v1 = Telegram-only, internal-free calls, post-on-change, SOL/BTC/ETH. Revenue (paid tier) deferred to v1.5.
+
 ### 0. Strategic context (reference, not action)
 Counter-positioning thesis: SolEnrich wins as **agent-native first**, not dashboard-with-API. See `CLAUDE.md > Strategic Positioning`. Top moves by defensibility × leverage:
 1. **Intelligence Feed V1** (Priority 14) — SHIPPED ✅ 2026-05-04. Validation gate PARKED 2026-05-24 (data unmeasurable; tweet only just posted).
@@ -522,6 +571,13 @@ Verified against `BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu` (5 positions, $3
 - **Multi-chain expansion** — Base + Ethereum (moonshot)
 
 ### 8. STRATEGIC PIVOT — build income agents that consume SolEnrich (decided 2026-05-25)
+
+> **RESOLVED 2026-06-07 → Riptide perps signals bot.** The open scoping questions below are answered:
+> the signals bot is a hybrid (demo/visibility via public channel → income via paid tier v1.5 → brain
+> of an execution bot v2), so "income vs demo first" is moot — advisory-first does both. Copy-trade
+> chosen over grid for the eventual execution layer. See the ⭐ IMMEDIATE block at the top + scope doc
+> `docs/perps-signals-bot-scope.md` + memory `project_perps_signals_bot.md`. The text below is retained
+> for context on how we got here.
 
 **Premise:** API surface is broad enough that consumers won't outrun the platform. Two parallel tracks, different design tradeoffs:
 
