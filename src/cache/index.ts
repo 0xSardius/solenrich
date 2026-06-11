@@ -145,6 +145,47 @@ export class Cache {
     }
   }
 
+  /** Add a member to a set, refreshing the TTL. Used for distinct-caller tracking. */
+  async sadd(key: string, member: string, ttlSeconds?: number): Promise<void> {
+    const prefixed = KEY_PREFIX + key;
+    try {
+      if (this.redis) {
+        await this.redis.sadd(prefixed, member);
+        if (ttlSeconds) await this.redis.expire(prefixed, ttlSeconds);
+        return;
+      }
+      // In-memory path
+      const entry = this.memory.get(prefixed);
+      const members = new Set<string>(
+        entry && Date.now() < entry.expiry ? JSON.parse(entry.value) : [],
+      );
+      members.add(member);
+      this.memory.set(prefixed, {
+        value: JSON.stringify([...members]),
+        expiry: Date.now() + (ttlSeconds ?? 86400) * 1000,
+      });
+    } catch (err) {
+      console.warn(`[cache] sadd(${key}) failed:`, err);
+    }
+  }
+
+  /** Count members of a set. Returns 0 for missing keys. */
+  async scard(key: string): Promise<number> {
+    const prefixed = KEY_PREFIX + key;
+    try {
+      if (this.redis) {
+        return await this.redis.scard(prefixed);
+      }
+      // In-memory path
+      const entry = this.memory.get(prefixed);
+      if (!entry || Date.now() > entry.expiry) return 0;
+      return (JSON.parse(entry.value) as string[]).length;
+    } catch (err) {
+      console.warn(`[cache] scard(${key}) failed:`, err);
+      return 0;
+    }
+  }
+
   /** Scan keys matching a pattern (Redis SCAN, in-memory filter) */
   async keys(pattern: string): Promise<string[]> {
     const prefixed = KEY_PREFIX + pattern;

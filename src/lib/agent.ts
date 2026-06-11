@@ -65,6 +65,8 @@ import { SignalTracker } from "../enrichers/signal-tracker";
 import { registerAlertEntrypoint } from "../entrypoints/alerts";
 import { AlertChecker } from "../enrichers/alert-checker";
 import { CONFIG, PRICING } from "../config";
+import { VersionedTransaction } from "@solana/web3.js";
+import { createHash } from "node:crypto";
 
 // --- Agent setup ---
 
@@ -79,6 +81,121 @@ const agent = await createAgent({
   .build();
 
 const { app, addEntrypoint } = await createAgentApp(agent);
+
+// --- Shared cache ---
+// One instance for data + metrics: a silent Redis init failure can't split
+// them across different backends (Redis vs in-memory).
+
+const cache = new Cache();
+
+// --- Metrics middleware (fire-and-forget Redis counters) ---
+// Registered BEFORE the payment middleware so the request body can be cloned
+// while the stream is still pristine — Request.clone() throws once the handler
+// has consumed the body, which silently broke entity metrics when this ran last.
+
+const metricsCache = cache;
+const METRICS_TTL = 90 * 86400; // 90 days for daily aggregates
+const HOURLY_TTL = 48 * 3600;   // 48h for hourly buckets — enough for 24h window + prior-window comparison
+
+/**
+ * Best-effort caller identity for distinct-caller metrics.
+ * x402: the payer wallet co-signs the payment transaction (the CDP facilitator
+ * fee-pays at signer index 0, so the payer is the other required signer).
+ * MPP: credentials rotate per request, so the hash is an upper-bound proxy.
+ * Unpaid (dev / payments disabled): falls back to client IP.
+ */
+function extractCaller(
+  xPayment: string | undefined,
+  auth: string | undefined,
+  forwardedFor: string | undefined,
+): string | null {
+  if (xPayment) {
+    try {
+      const decoded = JSON.parse(Buffer.from(xPayment, 'base64').toString('utf8'));
+      const txB64 = decoded?.payload?.transaction;
+      if (typeof txB64 === 'string') {
+        const tx = VersionedTransaction.deserialize(Buffer.from(txB64, 'base64'));
+        const signers = tx.message.staticAccountKeys.slice(0, tx.message.header.numRequiredSignatures);
+        const payer = signers.length > 1 ? signers[1] : signers[0];
+        if (payer) return `x402:${payer.toBase58()}`;
+      }
+    } catch { /* unparseable payment header — still count the rail */ }
+    return 'x402:unknown';
+  }
+  if (auth?.startsWith('Payment ')) {
+    return 'mpp:' + createHash('sha256').update(auth).digest('hex').slice(0, 12);
+  }
+  const ip = forwardedFor?.split(',')[0]?.trim();
+  return ip ? `ip:${ip}` : null;
+}
+
+app.use('/entrypoints/*/invoke', async (c, next) => {
+  // Clone before next() — payment middleware + handler consume the body stream.
+  let reqClone: Request | null = null;
+  try { reqClone = c.req.raw.clone(); } catch { reqClone = null; }
+  const xPaymentHeader = c.req.header('x-payment');
+  const authHeader = c.req.header('authorization');
+  const forwardedFor = c.req.header('x-forwarded-for');
+
+  await next();
+  // Only count successful responses
+  if (c.res.status !== 200) return;
+  try {
+    const path = c.req.path; // e.g. /entrypoints/enrich-wallet-light/invoke
+    const endpoint = path.split('/')[2]; // extract key
+    const now = new Date();
+    const date = now.toISOString().slice(0, 10); // YYYY-MM-DD
+    const hour = now.toISOString().slice(0, 13); // YYYY-MM-DDTHH
+    const warnWrite = (err: unknown) => console.warn('[metrics] write failed:', err);
+
+    // Fire-and-forget — don't await, don't block response
+    metricsCache.incr(`metrics:calls:${endpoint}:${date}`, METRICS_TTL).catch(warnWrite);
+    metricsCache.incr(`metrics:calls:total:${date}`, METRICS_TTL).catch(warnWrite);
+
+    // Distinct-caller tracking — Feed V1 validation gate prerequisite
+    const caller = extractCaller(xPaymentHeader, authHeader, forwardedFor);
+    if (caller) {
+      metricsCache.sadd(`metrics:callers:${endpoint}:${date}`, caller, METRICS_TTL).catch(warnWrite);
+      metricsCache.sadd(`metrics:callers:total:${date}`, caller, METRICS_TTL).catch(warnWrite);
+    }
+
+    // Extract the queried address/mint from the pre-handler body clone
+    if (reqClone) {
+      try {
+        const body = await reqClone.json();
+        const input = body?.input ?? body;
+        const address = input?.address || input?.mint || input?.protocol;
+        if (address && typeof address === 'string') {
+          const type = input?.mint ? 'token' : input?.protocol ? 'protocol' : 'wallet';
+          metricsCache.incr(`metrics:${type}s:${address}:${date}`, METRICS_TTL).catch(warnWrite);
+          metricsCache.incr(`metrics:${type}s:${address}:hour:${hour}`, HOURLY_TTL).catch(warnWrite);
+        }
+        // Track batch items
+        if (input?.items && Array.isArray(input.items)) {
+          for (const item of input.items) {
+            const addr = item?.address || item?.mint;
+            if (addr) {
+              const t = item?.mint ? 'token' : 'wallet';
+              metricsCache.incr(`metrics:${t}s:${addr}:${date}`, METRICS_TTL).catch(warnWrite);
+              metricsCache.incr(`metrics:${t}s:${addr}:hour:${hour}`, HOURLY_TTL).catch(warnWrite);
+            }
+          }
+        }
+        // Track comparison addresses
+        if (input?.addresses && Array.isArray(input.addresses)) {
+          for (const addr of input.addresses) {
+            if (typeof addr === 'string') {
+              metricsCache.incr(`metrics:entities:${addr}:${date}`, METRICS_TTL).catch(warnWrite);
+              metricsCache.incr(`metrics:entities:${addr}:hour:${hour}`, HOURLY_TTL).catch(warnWrite);
+            }
+          }
+        }
+      } catch { /* body parse failed — still count the endpoint call */ }
+    }
+  } catch { /* metrics must never break the response */ }
+});
+
+console.log('[metrics] Request counter middleware enabled');
 
 // --- x402 Payment Middleware (Solana USDC) ---
 
@@ -228,63 +345,6 @@ if (PAYMENTS_ENABLED && resourceServer) {
   console.warn("[x402] Payments enabled but facilitator init failed — paid endpoints will return 402 with no verification path. MPP/Stripe routes (if configured) still work.");
 }
 
-// --- Metrics middleware (fire-and-forget Redis counters) ---
-
-const metricsCache = new Cache();
-const METRICS_TTL = 90 * 86400; // 90 days for daily aggregates
-const HOURLY_TTL = 48 * 3600;   // 48h for hourly buckets — enough for 24h window + prior-window comparison
-
-app.use('/entrypoints/*/invoke', async (c, next) => {
-  await next();
-  // Only count successful responses
-  if (c.res.status !== 200) return;
-  try {
-    const path = c.req.path; // e.g. /entrypoints/enrich-wallet-light/invoke
-    const endpoint = path.split('/')[2]; // extract key
-    const now = new Date();
-    const date = now.toISOString().slice(0, 10); // YYYY-MM-DD
-    const hour = now.toISOString().slice(0, 13); // YYYY-MM-DDTHH
-
-    // Fire-and-forget — don't await, don't block response
-    metricsCache.incr(`metrics:calls:${endpoint}:${date}`, METRICS_TTL).catch(() => {});
-    metricsCache.incr(`metrics:calls:total:${date}`, METRICS_TTL).catch(() => {});
-
-    // Try to extract the queried address/mint from the request body
-    try {
-      const body = await c.req.raw.clone().json();
-      const input = body?.input ?? body;
-      const address = input?.address || input?.mint || input?.protocol;
-      if (address && typeof address === 'string') {
-        const type = input?.mint ? 'token' : input?.protocol ? 'protocol' : 'wallet';
-        metricsCache.incr(`metrics:${type}s:${address}:${date}`, METRICS_TTL).catch(() => {});
-        metricsCache.incr(`metrics:${type}s:${address}:hour:${hour}`, HOURLY_TTL).catch(() => {});
-      }
-      // Track batch items
-      if (input?.items && Array.isArray(input.items)) {
-        for (const item of input.items) {
-          const addr = item?.address || item?.mint;
-          if (addr) {
-            const t = item?.mint ? 'token' : 'wallet';
-            metricsCache.incr(`metrics:${t}s:${addr}:${date}`, METRICS_TTL).catch(() => {});
-            metricsCache.incr(`metrics:${t}s:${addr}:hour:${hour}`, HOURLY_TTL).catch(() => {});
-          }
-        }
-      }
-      // Track comparison addresses
-      if (input?.addresses && Array.isArray(input.addresses)) {
-        for (const addr of input.addresses) {
-          if (typeof addr === 'string') {
-            metricsCache.incr(`metrics:entities:${addr}:${date}`, METRICS_TTL).catch(() => {});
-            metricsCache.incr(`metrics:entities:${addr}:hour:${hour}`, HOURLY_TTL).catch(() => {});
-          }
-        }
-      }
-    } catch { /* body parse failed — still count the endpoint call */ }
-  } catch { /* metrics must never break the response */ }
-});
-
-console.log('[metrics] Request counter middleware enabled');
-
 // --- Dependency injection ---
 
 import { PriceAggregator } from "../utils/price-aggregator";
@@ -292,7 +352,7 @@ import { PriceAggregator } from "../utils/price-aggregator";
 import { SnapshotStore } from '../enrichers/snapshot-store';
 import { TrendAnalyzer } from '../enrichers/trend-analyzer';
 
-const cache = new Cache();
+// `cache` is the shared instance created above the metrics middleware
 const snapshotStore = new SnapshotStore(cache);
 const helius = new HeliusClient(cache);
 const dexscreener = new DexScreenerClient(cache);
@@ -883,6 +943,16 @@ app.get('/metrics', async (c) => {
     })
   );
 
+  // Distinct callers per endpoint + total (x402 payer wallets; MPP/IP are proxies)
+  const callersByEndpoint: Record<string, number> = {};
+  await Promise.all(
+    endpointKeys.map(async (key) => {
+      const n = await metricsCache.scard(`metrics:callers:${key}:${today}`);
+      if (n > 0) callersByEndpoint[key] = n;
+    })
+  );
+  const uniqueCallersToday = await metricsCache.scard(`metrics:callers:total:${today}`);
+
   // Get last 7 days totals
   const dailyTotals: Record<string, number> = {};
   for (let i = 0; i < 7; i++) {
@@ -918,6 +988,8 @@ app.get('/metrics', async (c) => {
     today: {
       total_calls: todayTotal,
       by_endpoint: callCounts,
+      unique_callers: uniqueCallersToday,
+      callers_by_endpoint: callersByEndpoint,
     },
     last_7_days: dailyTotals,
     top_tokens_today: topTokens.slice(0, 10),
