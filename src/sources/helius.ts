@@ -173,18 +173,18 @@ export class HeliusClient {
     if (before) opts.before = before;
     const result = await this.dasRpc<
       Array<{ signature: string; slot: number; blockTime: number | null }>
-    >('getSignaturesForAddress', [address, opts], true);
+    >('getSignaturesForAddress', [address, opts]);
     return result;
   }
 
   // --- Internal helpers ---
 
-  private async dasRpc<T>(method: string, params: unknown, isStandardRpc = false): Promise<T> {
+  private async dasRpc<T>(method: string, params: unknown): Promise<T> {
     const body = {
       jsonrpc: '2.0',
       id: `solenrich-${Date.now()}`,
       method,
-      params: isStandardRpc ? params : params,
+      params,
     };
 
     const res = await this.fetchWithRetry(this.rpcUrl, {

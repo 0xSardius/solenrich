@@ -228,6 +228,18 @@ check('returned meaningful data', !!hasData, hasData ? undefined : JSON.stringif
 console.log(`  ⏱ ${q.ms}ms\n`);
 
 // ============================================================
+// 12. perps-market-structure
+// ============================================================
+console.log('━━━ 12. perps-market-structure ━━━');
+const pms = await invoke('perps-market-structure', { format: 'both' }, 45000);
+check('returns 200', pms.status === 200, `got ${pms.status}`);
+check('has markets (array)', Array.isArray(pms.body?.output?.markets));
+check('has 3 markets (SOL/BTC/ETH)', pms.body?.output?.markets?.length === 3);
+check('has overall_health', typeof pms.body?.output?.overall_health === 'string');
+check('has llm_summary', typeof pms.body?.output?.llm_summary === 'string' && pms.body.output.llm_summary.length > 50);
+console.log(`  ⏱ ${pms.ms}ms\n`);
+
+// ============================================================
 // Summary
 // ============================================================
 console.log('═══════════════════════════════════════════════════');

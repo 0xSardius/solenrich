@@ -31,6 +31,11 @@ export interface AccumulatedToken {
   mint: string;
   symbol: string;
   smart_money_buyers: number; // count of seed wallets accumulating this
+  /**
+   * PnL-weighted accumulation proxy: sum of avg_pnl × win_count per qualifying
+   * wallet, clamped to ≥0 (losing pairs contribute 0). NOT actual trade volume —
+   * we don't have per-trade USD sizes here. Field name kept for API stability.
+   */
   total_buy_volume_usd: number;
   avg_avg_hold_time_days: number | null;
 }
