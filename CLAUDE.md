@@ -318,6 +318,31 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] Landing page deployed to Vercel
 - [x] README with API docs, pricing table, example requests
 
+### Phase 13: Audit & Hardening (2026-06-10) — IN PROGRESS
+
+Comprehensive 4-track audit (enrichers/sources, payments/metrics, cross-surface consistency, infra/deps/security). Verified findings below, ordered by priority. No exposed secrets found; perps unit scaling verified correct; prices 100% consistent across config//docs/OpenAPI.
+
+**Bugs (verified):**
+- [ ] **Metrics entity tracking broken** — `src/lib/agent.ts:254` calls `c.req.raw.clone().json()` AFTER `await next()`; cloning a consumed Request body throws, swallowed by catch. Top-tokens/wallets/entity counters likely never recorded. Fix: capture body before `next()`. While here: add per-caller tracking (`metrics:callers:{endpoint}:{date}` set) — this is the Feed V1 reopen prerequisite.
+- [ ] **/metrics "returns 0" partly by design** — middleware only counts `status === 200`; unpaid 402 stress runs legitimately count zero. Verify with one paid call after the fix. Also: `metricsCache` is a separate `new Cache()` from data cache — silent in-memory fallback evaporates on restart.
+- [ ] **`/metrics` is public, unauthenticated, wildcard CORS** (`agent.ts:869-928`) — leaks proprietary signal (per-endpoint counts, top queried tokens/wallets). Contradicts Priority 8 "internal initially". Fix: bearer token guard (`METRICS_TOKEN`).
+- [ ] **Demo endpoints leak raw `err.message`** (`agent.ts:541, 593`) — upstream errors can embed API-key-bearing URLs (Helius key is in URL). Fix: generic message, log server-side.
+- [ ] **`smart-money-flow.ts:216`** — `total_buy_volume_usd` is actually `Math.max(0, avg_pnl × win_count)` (PnL proxy, zeroes losing pairs). Rename field or compute real volume.
+
+**Dependency/infra risks:**
+- [ ] **Pin `@lucid-agents/{core,hono,http,payments}`** — all at `"latest"` in package.json; any install can pull breaking changes (already burned twice by SDK drift). Pin to installed versions.
+- [ ] **README documents 13 of 29 endpoints** — missing entire perps suite, trending-signals ($0.05), smart-money-flow ($0.10), temporal, feed-latest, consensus-signal, check-alerts. Public sales surface understates product by half.
+- [ ] **No CI** — add `.github/workflows/ci.yml`: `tsc --noEmit` + `bun test test/unit.test.ts`.
+- [ ] `perps-market-structure` is the only endpoint with zero test coverage — add to test-all-endpoints.ts.
+- [ ] `stripe` + `wrangler` appear unused in source — verify mppx doesn't peer-depend on stripe before removing.
+
+**Minor cleanups:**
+- [ ] `helius.ts:187` — no-op ternary `isStandardRpc ? params : params` (dead code, confusing).
+- [ ] Silent `.catch(() => {})` on snapshot captures + metrics writes — add `console.warn` for observability (would have surfaced the /metrics issue weeks ago).
+- [ ] Commit untracked `test/test-cdp-auth.ts` (env-only, masked output) + `logo_black_bg.png`; delete stale `.claude/worktrees/agent-a0f84c5c/`.
+
+**Audit false positives (checked, not bugs):** `alert-checker.ts:426` PnL toFixed is null-guarded at line 415; `fetchWithRetry` always returns or throws; Jupiter/Adrena RATE_POWER and USDC decimal scaling all correct; x402/MPP dual-protocol gating sound.
+
 ## Bags Hackathon Submission
 
 - **Hackathon:** [The Bags Hackathon](https://bags.fm/hackathon) — $4M funding, $1M in grants to 100 winners ($10K-$100K each)
