@@ -15,7 +15,7 @@ curl https://api.solenrich.com/health
 # Agent card (A2A discovery)
 curl https://api.solenrich.com/.well-known/agent.json
 
-# List all 13 endpoints
+# List all 29 endpoints
 curl https://api.solenrich.com/entrypoints
 
 # Full API documentation (agent-readable JSON)
@@ -57,6 +57,47 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 |----------|-------|-------|-------------|
 | `compare-tokens` | $0.006 | `mints[]` (2-3), `format` | Side-by-side: price, liquidity, volatility, HHI, risk. Rankings + summary |
 | `compare-wallets` | $0.006 | `addresses[]` (2-3), `depth`, `format` | Side-by-side: portfolio, activity, risk, labels. Rankings + summary |
+
+### Temporal (3 endpoints)
+
+| Endpoint | Price | Input | Description |
+|----------|-------|-------|-------------|
+| `token-trend` | $0.006 | `mint`, `lookback`, `format` | Token metrics over time — daily snapshots with improving/declining/stable direction per metric |
+| `wallet-history` | $0.006 | `address`, `lookback`, `format` | Portfolio value, SOL balance, risk score deltas + position changes across daily snapshots |
+| `portfolio-history` | $0.006 | `address`, `period`, `format` | Full portfolio time-series (7/14/30d) with peak, trough, max drawdown, change vs start |
+
+### Discovery & Protocol (2 endpoints)
+
+| Endpoint | Price | Input | Description |
+|----------|-------|-------|-------------|
+| `new-tokens` | $0.012 | `min_liquidity_usd`, `max_risk_score`, `limit`, `format` | Recently launched tokens, enriched + risk-scored, safest first |
+| `protocol-profile` | $0.008 | `protocol`, `include_yields`, `format` | Protocol TVL, yields, on-chain activity, health signals, automated-activity % |
+
+### Perps Intelligence (6 endpoints)
+
+| Endpoint | Price | Input | Description |
+|----------|-------|-------|-------------|
+| `perps-market-structure` | $0.012 | `format` | Jupiter Perps OI, utilization, borrow APR, skew, health flags for SOL/BTC/ETH |
+| `perps-trader-profile` | $0.010 | `address`, `format` | Multi-venue (Jupiter + Adrena) open positions, leverage, PnL, trader classification |
+| `perps-cross-venue-funding` | $0.015 | `market`, `include_reference`, `format` | Funding/borrow APR + OI across Jupiter, Adrena, Hyperliquid, dYdX — best entry per side, arbitrage spreads |
+| `perps-venue-comparison` | $0.020 | `market`, `side`, `size_usd`, `format` | Where to trade at this size: slippage, fees, OI headroom, total entry cost, recommendation |
+| `perps-basis-signal` | $0.015 | `asset`, `min_yield_apr_pct`, `format` | Net-yield-after-borrow basis trade scanner — actually-earnable yield per venue |
+| `perps-market-trend` | $0.008 | `lookback`, `format` | Per-market deltas (price, OI, skew, utilization, borrow APR) over 7/14/30d — regime detection |
+
+### Orchestration (2 endpoints)
+
+| Endpoint | Price | Input | Description |
+|----------|-------|-------|-------------|
+| `trending-signals` | $0.050 | `min_liquidity_usd`, `max_risk_score`, `limit`, `format` | Composite ranking of trending tokens: discovery + whale-watch + risk scoring, with reasoning |
+| `smart-money-flow` | $0.100 | `wallets[]`, `min_win_rate`, `lookback_days`, `format` | Scores seed wallets, filters to winners, surfaces tokens they're accumulating + clusters |
+
+### Intelligence Feed & Signals (3 endpoints)
+
+| Endpoint | Price | Input | Description |
+|----------|-------|-------|-------------|
+| `feed-latest` | $0.005 | `since`, `format` | Daily intelligence brief — pre-computed trending ranking, cached 24h, built for recurring polling |
+| `consensus-signal` | $0.005 | `address`/`type` or `limit`, `window`, `format` | What other agents are querying right now — proprietary attention signal from our request stream |
+| `check-alerts` | $0.008 | `tokens[]`, `wallets[]`, `since`, `criteria`, `format` | Poll-based alerts: price spikes, whale flows, risk changes + perps events (position add/close, liquidation approaching, PnL swings) |
 
 ### Natural Language (1 endpoint)
 
@@ -132,8 +173,10 @@ Client → x402 Paywall → Entrypoint Router → Enrichment Engine → Format R
 | [Helius](https://helius.dev) | DAS API (assets, token accounts), enhanced transaction parsing, RPC |
 | [DexScreener](https://dexscreener.com) | Token prices, market data, liquidity, OHLCV |
 | [DeFi Llama](https://defillama.com) | Protocol TVL, yield data |
-| [Jupiter](https://jup.ag) | Token prices (cross-reference), metadata, verification status |
-| Solana RPC | SOL balances, mint info, top 20 holders |
+| [Jupiter](https://jup.ag) | Token prices (cross-reference), metadata, verification status, perps quotes |
+| [Birdeye](https://birdeye.so) | Real holder counts, daily OHLCV for volatility |
+| Solana RPC | SOL balances, mint info, top 20 holders, Jupiter Perps + Adrena on-chain accounts |
+| Hyperliquid + dYdX v4 | Cross-chain perps reference (funding rates, basis) |
 
 ### Entity Labeling
 
@@ -154,7 +197,7 @@ SolEnrich exposes an MCP endpoint for Claude Desktop, Claude Code, and Cursor. *
 }
 ```
 
-7 tools: `enrich_wallet`, `enrich_token`, `parse_transaction`, `whale_watch`, `due_diligence`, `wallet_graph`, `copy_trade_signals`.
+27 tools — every endpoint is exposed as an MCP tool (wallet/token light+full variants fold into `depth`/`include_holders` toggles). Highlights: `enrich_wallet`, `enrich_token`, `due_diligence`, `whale_watch`, `perps_cross_venue_funding`, `trending_signals`, `smart_money_flow`, `check_alerts`.
 
 ## Free Demo
 
@@ -199,6 +242,8 @@ bun run test/test-402-production.ts       # Production paywall verification
 | `UPSTASH_REDIS_REST_URL` | No | Upstash Redis for caching (falls back to in-memory) |
 | `UPSTASH_REDIS_REST_TOKEN` | No | Upstash Redis token |
 | `JUPITER_API_KEY` | No | Jupiter API key (optional, free tier works) |
+| `BIRDEYE_API_KEY` | No | Birdeye API key — real holder counts + daily OHLCV for volatility |
+| `METRICS_TOKEN` | No | Bearer token for `GET /metrics`; without it metrics are locked in production |
 
 ## Deployment
 
