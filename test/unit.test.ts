@@ -521,19 +521,19 @@ describe('formatResponse', () => {
 const TEST_ADDR = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
 
 describe('parseIntent', () => {
-  // Due diligence keywords
-  test('"is X safe?" → due-diligence', () => {
+  // Safety keywords route to the safety-check compound (due-diligence + whale-watch)
+  test('"is X safe?" → safety-check', () => {
     const r = parseIntent(`is ${TEST_ADDR} safe?`);
-    expect(r.intent).toBe('due-diligence');
+    expect(r.intent).toBe('safety-check');
     expect(r.address).toBe(TEST_ADDR);
   });
 
-  test('"rug" keyword → due-diligence', () => {
-    expect(parseIntent(`rug ${TEST_ADDR}`).intent).toBe('due-diligence');
+  test('"rug" keyword → safety-check', () => {
+    expect(parseIntent(`rug ${TEST_ADDR}`).intent).toBe('safety-check');
   });
 
-  test('"scam" keyword → due-diligence', () => {
-    expect(parseIntent(`is ${TEST_ADDR} a scam?`).intent).toBe('due-diligence');
+  test('"scam" keyword → safety-check', () => {
+    expect(parseIntent(`is ${TEST_ADDR} a scam?`).intent).toBe('safety-check');
   });
 
   // Whale keywords
@@ -625,9 +625,9 @@ describe('parseIntent', () => {
     expect(r.address).toBeNull();
   });
 
-  // Priority: due-diligence wins when keyword is clear
-  test('due-diligence with "rugpull" keyword', () => {
-    expect(parseIntent(`rugpull check ${TEST_ADDR}`).intent).toBe('due-diligence');
+  // Priority: rug keywords route to the safety-check compound
+  test('safety-check with "rugpull" keyword', () => {
+    expect(parseIntent(`rugpull check ${TEST_ADDR}`).intent).toBe('safety-check');
   });
 
   // Priority: whale-watch wins over wallet
