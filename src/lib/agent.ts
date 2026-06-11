@@ -597,8 +597,10 @@ app.post('/demo/enrich', async (c) => {
       ...result,
     });
   } catch (err: any) {
-    console.error('[demo] Enrichment error:', err.message);
-    return c.json({ error: 'Enrichment failed', message: err.message }, 500);
+    // Log full error server-side only — upstream errors can embed
+    // API-key-bearing URLs (Helius key lives in the RPC URL).
+    console.error('[demo] Enrichment error:', err);
+    return c.json({ error: 'Enrichment failed', message: 'Upstream data fetch failed — try again shortly' }, 500);
   }
 });
 
@@ -649,8 +651,8 @@ app.post('/demo/compare', async (c) => {
       ...result,
     });
   } catch (err: any) {
-    console.error('[demo] Compare error:', err.message);
-    return c.json({ error: 'Comparison failed', message: err.message }, 500);
+    console.error('[demo] Compare error:', err);
+    return c.json({ error: 'Comparison failed', message: 'Upstream data fetch failed — try again shortly' }, 500);
   }
 });
 
@@ -927,6 +929,18 @@ console.log('[docs] Documentation endpoint available at GET /docs');
 // --- Metrics endpoint (internal usage analytics) ---
 
 app.get('/metrics', async (c) => {
+  // Proprietary signal (per-endpoint traffic, top queried entities) — gated.
+  // METRICS_TOKEN set → require Bearer token. Not set → only serve when
+  // payments are disabled (local dev); locked in production.
+  const metricsToken = process.env.METRICS_TOKEN;
+  if (metricsToken) {
+    if (c.req.header('authorization') !== `Bearer ${metricsToken}`) {
+      return c.json({ error: 'Unauthorized' }, 401);
+    }
+  } else if (PAYMENTS_ENABLED) {
+    return c.json({ error: 'Metrics locked — set METRICS_TOKEN and send Authorization: Bearer <token>' }, 401);
+  }
+
   const today = new Date().toISOString().slice(0, 10);
 
   // Get call counts per endpoint for today
