@@ -318,30 +318,31 @@ The PRD (`solenrich-claude-code-prd.md`) specifies a strict dependency-ordered b
 - [x] Landing page deployed to Vercel
 - [x] README with API docs, pricing table, example requests
 
-### Phase 13: Audit & Hardening (2026-06-10) — IN PROGRESS
+### Phase 13: Audit & Hardening (2026-06-10/11) — DONE
 
-Comprehensive 4-track audit (enrichers/sources, payments/metrics, cross-surface consistency, infra/deps/security). Verified findings below, ordered by priority. No exposed secrets found; perps unit scaling verified correct; prices 100% consistent across config//docs/OpenAPI.
+Comprehensive 4-track audit (enrichers/sources, payments/metrics, cross-surface consistency, infra/deps/security). No exposed secrets found; perps unit scaling verified correct; prices 100% consistent across config//docs/OpenAPI. All findings fixed same session.
 
-**Bugs (verified):**
-- [ ] **Metrics entity tracking broken** — `src/lib/agent.ts:254` calls `c.req.raw.clone().json()` AFTER `await next()`; cloning a consumed Request body throws, swallowed by catch. Top-tokens/wallets/entity counters likely never recorded. Fix: capture body before `next()`. While here: add per-caller tracking (`metrics:callers:{endpoint}:{date}` set) — this is the Feed V1 reopen prerequisite.
-- [ ] **/metrics "returns 0" partly by design** — middleware only counts `status === 200`; unpaid 402 stress runs legitimately count zero. Verify with one paid call after the fix. Also: `metricsCache` is a separate `new Cache()` from data cache — silent in-memory fallback evaporates on restart.
-- [ ] **`/metrics` is public, unauthenticated, wildcard CORS** (`agent.ts:869-928`) — leaks proprietary signal (per-endpoint counts, top queried tokens/wallets). Contradicts Priority 8 "internal initially". Fix: bearer token guard (`METRICS_TOKEN`).
-- [ ] **Demo endpoints leak raw `err.message`** (`agent.ts:541, 593`) — upstream errors can embed API-key-bearing URLs (Helius key is in URL). Fix: generic message, log server-side.
-- [ ] **`smart-money-flow.ts:216`** — `total_buy_volume_usd` is actually `Math.max(0, avg_pnl × win_count)` (PnL proxy, zeroes losing pairs). Rename field or compute real volume.
+**Bugs fixed:**
+- [x] **Metrics entity tracking broken** (`09820e5`) — `c.req.raw.clone().json()` ran AFTER `await next()`; cloning a consumed Request body throws, swallowed by catch, so top-tokens/wallets never recorded. Middleware now registers before payment middleware and clones the pristine stream. Verified live: queried wallet appears in top_wallets.
+- [x] **Per-caller tracking added** (`09820e5`) — `metrics:callers:{endpoint}:{date}` Redis sets; x402 payer wallet extracted from X-Payment tx signers, MPP credential hash, IP fallback. Cache gained `sadd`/`scard`. `/metrics` reports `unique_callers` + `callers_by_endpoint`. **This is the Feed V1 reopen prerequisite — gate can now resolve with real numbers.**
+- [x] **Single shared Cache instance** (`09820e5`) — metrics + data no longer split across separate connections. Note: /metrics "returns 0" was partly by design — middleware only counts 200s, and unpaid 402 stress runs legitimately count zero.
+- [x] **`/metrics` auth-gated** (`a884102`) — requires `Authorization: Bearer $METRICS_TOKEN`; locked in production when token unset, open in dev. (No wildcard CORS was actually registered on it — audit overstated that.) **ACTION: set `METRICS_TOKEN` on Railway.**
+- [x] **Demo endpoints sanitized** (`a884102`) — no longer echo raw `err.message` (upstream errors can embed the Helius key from the RPC URL); full error logged server-side.
+- [x] **`smart-money-flow` `total_buy_volume_usd`** (`95dba1b`) — documented as PnL-weighted proxy (avg_pnl × win_count, clamped ≥0); field name kept for API stability rather than breaking live consumers.
 
-**Dependency/infra risks:**
-- [ ] **Pin `@lucid-agents/{core,hono,http,payments}`** — all at `"latest"` in package.json; any install can pull breaking changes (already burned twice by SDK drift). Pin to installed versions.
-- [ ] **README documents 13 of 29 endpoints** — missing entire perps suite, trending-signals ($0.05), smart-money-flow ($0.10), temporal, feed-latest, consensus-signal, check-alerts. Public sales surface understates product by half.
-- [ ] **No CI** — add `.github/workflows/ci.yml`: `tsc --noEmit` + `bun test test/unit.test.ts`.
-- [ ] `perps-market-structure` is the only endpoint with zero test coverage — add to test-all-endpoints.ts.
-- [ ] `stripe` + `wrangler` appear unused in source — verify mppx doesn't peer-depend on stripe before removing.
+**Dependency/infra:**
+- [x] **`@lucid-agents/{core,hono,http,payments}` pinned** (`53bd811`) — were `"latest"`; now 2.5.0 / 0.9.6 / 1.10.2 / 2.5.0.
+- [x] **README → 29 endpoints** (`51e9864`) — added perps suite, orchestration, temporal, discovery, feed/signals sections; MCP count 7→27; env table gains BIRDEYE_API_KEY + METRICS_TOKEN.
+- [x] **CI added** (`de71f85`) — `.github/workflows/ci.yml`: tsc + unit tests. Also fixed 4 stale parseIntent tests (safety-check compound intent). 138/138 green.
+- [x] **`perps-market-structure` test coverage** (`95dba1b`) — added to test-all-endpoints.ts; full suite 60/60 against live server.
+- [x] `stripe` is NOT unused (dynamic `await import('stripe')` in agent.ts for MPP) — audit agent false positive, kept. `wrangler` left in devDeps (still referenced in build docs).
 
-**Minor cleanups:**
-- [ ] `helius.ts:187` — no-op ternary `isStandardRpc ? params : params` (dead code, confusing).
-- [ ] Silent `.catch(() => {})` on snapshot captures + metrics writes — add `console.warn` for observability (would have surfaced the /metrics issue weeks ago).
-- [ ] Commit untracked `test/test-cdp-auth.ts` (env-only, masked output) + `logo_black_bg.png`; delete stale `.claude/worktrees/agent-a0f84c5c/`.
+**Cleanups:**
+- [x] `helius.ts` no-op ternary + dead `isStandardRpc` param removed (`95dba1b`).
+- [x] Metrics writes now `console.warn` on failure instead of silent `.catch(() => {})` (`09820e5`).
+- [x] Tracked `test/test-cdp-auth.ts` + `logo_black_bg.png`; removed stale April worktree (abandoned @solana/kit 6.x experiment) (`95dba1b`).
 
-**Audit false positives (checked, not bugs):** `alert-checker.ts:426` PnL toFixed is null-guarded at line 415; `fetchWithRetry` always returns or throws; Jupiter/Adrena RATE_POWER and USDC decimal scaling all correct; x402/MPP dual-protocol gating sound.
+**Audit false positives (checked, not bugs):** `alert-checker.ts` PnL toFixed is null-guarded upstream; `fetchWithRetry` always returns or throws; Jupiter/Adrena RATE_POWER and USDC decimal scaling all correct; x402/MPP dual-protocol gating sound; stripe dep in use.
 
 ## Bags Hackathon Submission
 
