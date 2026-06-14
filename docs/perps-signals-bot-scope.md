@@ -1,6 +1,9 @@
 # Perps Signals Bot — Build Scope
 
-> **Working name:** Riptide (placeholder — Tidal-family water theme; alts: Undertow, Current).
+> **Name:** Ananke (LOCKED 2026-06-14). Greek goddess of necessity/eternity (coiled with Chronos as the
+> serpent of time) and a moon of Jupiter — ties to Jupiter Perps (primary venue) + the Parallax astronomy
+> root. First agent in the swarm naming system (time/eternity deities). Verified clean on Solana. The perps
+> *vibe-trading* agent: SolEnrich is the brain it sights against. Build scope below is frozen as-is.
 > **What this is:** A sequential, actionable build scope for a Telegram bot that resells SolEnrich's
 > perps intelligence as real-time signals. Execute top-to-bottom. Architectural decisions are made —
 > implement, don't re-decide.
@@ -100,7 +103,7 @@ MARKETS = ["SOL", "BTC", "ETH"]
 Mirror SolEnrich's enricher/formatter separation.
 
 ```
-riptide/
+ananke/
 ├── src/
 │   ├── config.ts        # env, MARKETS, thresholds, cadence, SolEnrich base URL + auth mode
 │   ├── solenrich.ts     # client → calls perps endpoints, returns typed structs
@@ -159,16 +162,16 @@ to Railway env. (This is the only change required to SolEnrich itself.)
 
 ---
 
-## STATE MODEL (Redis, prefix `riptide:`)
+## STATE MODEL (Redis, prefix `ananke:`)
 
 ```
-riptide:state:funding:{MARKET}      → JSON { best_long_apr, best_short_apr, max_spread_pts, ts }
-riptide:state:regime:{MARKET}       → JSON { oi_dir, skew_dir, util_dir, ts }
-riptide:state:health:{MARKET}       → "HEALTHY" | "TILTED" | "STRESSED" + ts
-riptide:cooldown:{signal}:{MARKET}  → set with EX = COOLDOWN_MIN*60 (presence = in cooldown)
+ananke:state:funding:{MARKET}      → JSON { best_long_apr, best_short_apr, max_spread_pts, ts }
+ananke:state:regime:{MARKET}       → JSON { oi_dir, skew_dir, util_dir, ts }
+ananke:state:health:{MARKET}       → "HEALTHY" | "TILTED" | "STRESSED" + ts
+ananke:cooldown:{signal}:{MARKET}  → set with EX = COOLDOWN_MIN*60 (presence = in cooldown)
 # v1.5:
-riptide:subs                        → set of chat IDs (paid subscribers)
-riptide:watch:{chatId}              → set of wallet addresses to monitor
+ananke:subs                        → set of chat IDs (paid subscribers)
+ananke:watch:{chatId}              → set of wallet addresses to monitor
 ```
 
 Wrap all Redis ops in try/catch — a state failure must skip that signal, never crash the loop (same
@@ -250,7 +253,7 @@ Net v1 infra: **~$10/mo.**
 - Markets: SOL / BTC / ETH (BONK optional).
 
 **Open (resolve during build, not blocking):**
-- Final name (Riptide / Undertow / Current / other).
+- ~~Final name~~ — LOCKED: **Ananke** (2026-06-14).
 - Exact threshold values — start with the defaults above, tune from real channel output.
 - Whether to add the `X-Internal-Key` bypass to SolEnrich now (recommended) or pay x402 to start.
 

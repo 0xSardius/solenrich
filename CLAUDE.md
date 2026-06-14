@@ -410,6 +410,22 @@ Comprehensive 4-track audit (enrichers/sources, payments/metrics, cross-surface 
 
 **Open until next session:** which track first, and if income first, ship Adrena closeouts before bot v1 or after.
 
+### Vibe-trading north star + agent swarm (2026-06-14)
+
+**Thesis (locked):** "2026 = the year of vibe trading" (per the Coinbase Dev article). Trader supplies intent/thesis/taste/constraints; an AI agent does the search, monitoring, data access, routing, and (eventually) execution. The stack: *user intent → AI agent → live market data → **paid data access via x402** → wallet funds → DEX/CEX execution → feedback loop.* **SolEnrich IS the "paid agent-ready market-data" layer of that stack** — not adjacent to the thesis, a load-bearing part of it. The thesis expanding = SolEnrich's TAM expanding, with almost no change of direction required.
+
+**Positioning (the lane):** the stack's data layer is "market AND cultural data." SolEnrich is the *on-chain truth half* — do NOT chase social/sentiment (no edge there, different game). Be **the ground-truth-and-execution-intelligence layer the vibe agent checks against**: "the timeline says ape — what does the chain actually say, and where do I execute at size." SolEnrich = the brain (the Sun at the center); the consumer agents are the swarm that orbits it.
+
+**The moat:** `consensus-signal` (what agents query, from SolEnrich's own request stream) is a measure of *accelerating agent attention* — the article's "find momentum before price catches up," but proprietary and un-clonable without first owning an agent-data business. Every swarm agent feeds it. Now measurable since the 2026-06-11 caller-tracking fix.
+
+**Swarm naming system:** **deities of time & eternity across world mythology** (rooted in "Parallax" = astronomy/position-by-angle; SolEnrich = "Sol", the Sun). Every candidate name MUST be availability-checked against Solana tokens before use — crypto naming is saturated (Aion, Aeon, Aevum, Kairos all taken; several as live Solana tokens). 
+- **Ananke** = the perps agent (renamed from Riptide). Greek goddess of necessity/inevitability, coiled with Chronos as the serpent of eternity. Bonus: Ananke is a **moon of Jupiter** → ties to Jupiter Perps (a primary venue) AND the Parallax astronomy root. Verified clean on Solana 2026-06-14. Scope: `docs/perps-signals-bot-scope.md` (build frozen as-scoped; vibe-trading is the narrative wrapper + v1.5+ direction, not a v1 re-scope).
+- Future agents (RWA/equities, signals, etc.) get their own time/eternity deity names, each availability-checked.
+
+**Domains to expand (vibe-trading-shaped):** perps (complete; deepen Hyperliquid as first-class venue, not just reference) + **RWA tokenized equities** (new narrative — and buildable WITHOUT tokens.xyz: xStocks/Backed are SPL tokens with known mints; tokenized-equity-vs-real-spot is a **basis signal**, the exact machinery `perps-basis-signal` already implements). Sequence: prove ONE agent (Ananke) end-to-end with real users before fanning out the swarm — Tidal/Cardex/Pythia all stalled, so the bottleneck is proof-of-one, not quantity.
+
+**Distribution angle:** SolEnrich runs on CDP's x402 facilitator — it's a live instance of the exact stack Coinbase Dev is evangelizing. Pursue showcase/partnership (same playbook as the Helius application).
+
 ### What to deprioritize
 
 - **Raw data breadth.** Don't add endpoints just to have them. Can't out-breadth Helius/Nansen. Out-synthesize them.
