@@ -1,11 +1,38 @@
 # Session Checkpoint
 
 ## Last session date
-2026-06-07
+2026-06-15
 
 ## What was completed
 
-### Latest checkpoint (Jun 1–7 — STRATEGY SESSION: BASEENRICH REVIEW + RIPTIDE SCOPED + LANDING/OG REFRESH)
+### Latest checkpoint (Jun 10–15 — PHASE 13 AUDIT/HARDENING + VIBE-TRADING NORTH STAR + ANANKE NAMED)
+
+**Two workstreams: (1) a comprehensive 4-track audit that fixed a real metrics bug + hardened security, and (2) a strategy session that locked the vibe-trading north star, named the agent swarm, and renamed Riptide → Ananke. 8 commits pushed (`40db337` → `80c053b`).**
+
+#### Phase 13 audit & hardening
+- **Metrics body-clone bug fixed (`09820e5`) — the core of the "/metrics returns 0" mystery.** Middleware called `c.req.raw.clone().json()` AFTER `await next()`; cloning a consumed body throws, swallowed by catch — so entity metrics (top tokens/wallets) never recorded. Now registers BEFORE payment middleware and clones the pristine stream.
+- **Distinct-caller tracking added (`09820e5`)** — `metrics:callers:{endpoint}:{date}` Redis sets; x402 payer wallet decoded from the X-Payment tx, MPP hash, IP fallback. Cache gained `sadd`/`scard`. `/metrics` reports `unique_callers` + `callers_by_endpoint`. **Feed V1 reopen prerequisite — now done.** Single shared Cache instance (metrics + data). Swallowed metric writes now `console.warn`.
+- **`/metrics` auth-gated (`a884102`)** — `Authorization: Bearer $METRICS_TOKEN`; locked in prod when unset. Was leaking proprietary signal publicly. **METRICS_TOKEN set on Railway + verified live (401 no-token / 200 valid).** Note: "/metrics returns 0" was also partly by-design — middleware counts only HTTP 200, so unpaid 402 stress runs read zero, and real paid traffic is ~0.58/day.
+- **Demo endpoints sanitized (`a884102`)** — no longer echo raw `err.message` (upstream errors can embed the Helius key in the RPC URL).
+- **@lucid-agents/{core,hono,http,payments} pinned (`53bd811`)** — were `"latest"`; now 2.5.0 / 0.9.6 / 1.10.2 / 2.5.0. Keep pinned.
+- **README → 29 endpoints (`51e9864`)** — was 13; added perps/orchestration/temporal/discovery/feed/signals. MCP count 7→27.
+- **CI added (`de71f85`)** — `.github/workflows/ci.yml` (tsc + unit tests). Fixed 4 stale parseIntent tests. 138/138 green.
+- **Cleanups (`95dba1b`)** — helius no-op ternary removed; smart-money-flow `total_buy_volume_usd` documented as PnL proxy; perps-market-structure test added (suite 60/60 live); test-cdp-auth.ts + logo committed; stale April worktree removed.
+- Full record + false-positives: CLAUDE.md "Phase 13: Audit & Hardening".
+
+#### Vibe-trading north star + agent swarm (`80c053b`, 2026-06-14)
+- **Thesis locked:** "2026 = year of vibe trading" (Coinbase Dev article). SolEnrich IS the "paid agent-ready market-data" layer of the vibe-trading stack — TAM expansion, not a pivot. Lane: the on-chain *truth + execution-intelligence* layer the vibe agent checks against; do NOT chase social/sentiment. SolEnrich = the brain (Sol/the Sun); consumer agents = the swarm. Moat: `consensus-signal` = proprietary agent-attention, now measurable post caller-tracking fix.
+- **Swarm naming system:** time/eternity deities across world mythology, rooted in "Parallax" (astronomy). **Every name MUST be availability-checked vs Solana tokens** — Aion/Aeon/Aevum/Kairos all taken (several as live Solana tokens).
+- **Riptide → Ananke (perps agent), LOCKED 2026-06-14.** Greek eternity deity (coiled with Chronos) + a **moon of Jupiter** → ties to Jupiter Perps + Parallax. Verified clean on Solana. Build scope FROZEN as-is (vibe-trading = narrative wrapper + v1.5+ direction, not a v1 re-scope). Scope doc + memory renamed.
+- **Domains to expand:** perps (deepen Hyperliquid as first-class venue) + **RWA tokenized equities** (buildable WITHOUT tokens.xyz — xStocks are SPL tokens; tokenized-equity-vs-real-spot = a basis signal, reuse `perps-basis-signal`). Sequence: prove ONE agent (Ananke) with real users before fanning out (Tidal/Cardex/Pythia all stalled → proof-of-one, not quantity).
+- **Distribution:** SolEnrich runs on CDP's x402 facilitator = live instance of Coinbase's vibe-trading stack → pursue showcase/partnership.
+
+#### Open for next session
+- **Endpoint-additions workshop** — Sardius wants to brainstorm new endpoints (the active topic at session end).
+- **Build Ananke** — only SolEnrich-side dependency is the ~10-line `X-Internal-Key` bypass (pending Sardius go — touches live payment middleware).
+- **RWA domain** — stand up a tokenized-equity mint registry + reuse basis-signal.
+
+### Previous checkpoint (Jun 1–7 — STRATEGY SESSION: BASEENRICH REVIEW + RIPTIDE SCOPED + LANDING/OG REFRESH)
 
 **Mostly a strategy + planning session (2 landing commits, no src/ changes). Resolved the "what's next" question: SolEnrich is supply-complete; bottleneck is demand. Decided the next build is a consumer/dogfood agent — Riptide, a perps signals bot. Also reviewed + corrected the BaseEnrich (EVM fork) PRD. Two planning docs written.**
 
@@ -435,6 +462,14 @@ Gate was due 2026-05-18, was 6 days overdue. Pulled the actual numbers, found th
 - April 2-3: Comparison, temporal, discovery endpoints. MPP Stage 1. SolScout E2E.
 
 ## Current state
+
+### As of 2026-06-15
+- **29 paid endpoints on production** (perps quintet complete). README / `/docs` / OpenAPI / MCP all in sync.
+- **Metrics fixed + hardened (Phase 13).** Entity + distinct-caller tracking live; `/metrics` gated behind `METRICS_TOKEN` (set on Railway, verified). Feed V1 gate now measurable/reopenable.
+- **Strategy: vibe-trading north star + agent swarm, SolEnrich as the brain.** Perps agent = **Ananke** (named, scoped, NOT built). Active topic: endpoint-additions workshop. Then build Ananke (needs `X-Internal-Key` bypass) and/or open RWA-via-basis-signal. Full thesis: CLAUDE.md "Vibe-trading north star + agent swarm (2026-06-14)".
+- **@lucid-agents pinned** (core 2.5.0 / hono 0.9.6 / http 1.10.2 / payments 2.5.0) — keep pinned, was floating on `latest`.
+
+### Historical (pre-2026-06-10, may be stale)
 - **25 paid endpoints serving real USDC on production.** Three new since 2026-05-09: `consensus-signal` (proprietary attention data, $0.005), `portfolio-history` (full time-series, $0.006), `check-alerts` (poll-based event detection, $0.008). `/query` upgraded to compound-intent orchestration (same $0.003 price).
 - **Phase 2B largely closed.** Priorities 6, 8, 11, 12, 13-V1 shipped in this block. Only P13-V2 (SSE), P13-V3 (webhooks), P14-V2 (Feed scaling, gated on validation), and P15 (SDK) remain on the published roadmap.
 - **Bags hackathon: SUBMITTED 2026-04-25.** Demo + tweet thread + roadmap delivered. Awaiting judging.
@@ -461,12 +496,15 @@ Gate was due 2026-05-18, was 6 days overdue. Pulled the actual numbers, found th
 
 ## Next session plan (ACTION ITEMS)
 
-### ⭐ IMMEDIATE — Riptide perps signals bot (the decided next build)
-Full scope: `docs/perps-signals-bot-scope.md`. Order:
-1. **SolEnrich `X-Internal-Key` bypass** (~10 lines, in `src/lib/agent.ts` `/entrypoints/*` middleware) — opt-in (only when `INTERNAL_API_KEY` env set), exact-match, header-present-AND-matches only, logged. Gives Riptide a free plain-`fetch` path. **Claude offered to implement; awaiting Sardius go (touches live payment middleware).**
-2. **Setup trio (Sardius):** Telegram bot+channel via @BotFather → token + channel ID; new `riptide` repo (copy SolEnrich `tsconfig.json` + `Dockerfile`, `bun add grammy @upstash/redis`); Upstash Redis instance.
+### ⭐ IMMEDIATE — endpoint-additions workshop (active topic 2026-06-15) + Ananke perps bot
+**This session's live thread:** Sardius wants to workshop new endpoint additions (vibe-trading / perps / RWA shaped). Pick up there.
+
+**Ananke** (perps signals bot, renamed from Riptide 2026-06-14). Full scope: `docs/perps-signals-bot-scope.md`. Order:
+1. **SolEnrich `X-Internal-Key` bypass** (~10 lines, in `src/lib/agent.ts` `/entrypoints/*` middleware) — opt-in (only when `INTERNAL_API_KEY` env set), exact-match, header-present-AND-matches only, logged. Gives Ananke a free plain-`fetch` path. **Claude offered to implement; awaiting Sardius go (touches live payment middleware).**
+2. **Setup trio (Sardius):** Telegram bot+channel via @BotFather → token + channel ID; new `ananke` repo (copy SolEnrich `tsconfig.json` + `Dockerfile`, `bun add grammy @upstash/redis`); Upstash Redis instance.
 3. **Day 1 vertical slice:** `solenrich.ts` → `perps-cross-venue-funding` → parse spread → format → post one signal to the channel. Prove auth + parsing + Telegram posting before building the loop/state.
 - v1 = Telegram-only, internal-free calls, post-on-change, SOL/BTC/ETH. Revenue (paid tier) deferred to v1.5.
+- **NOTE:** caller-tracking + the /metrics fix (the old prerequisite) are now DONE (Phase 13, `09820e5`).
 
 ### 0. Strategic context (reference, not action)
 Counter-positioning thesis: SolEnrich wins as **agent-native first**, not dashboard-with-API. See `CLAUDE.md > Strategic Positioning`. Top moves by defensibility × leverage:
@@ -489,10 +527,8 @@ Counter-positioning thesis: SolEnrich wins as **agent-native first**, not dashbo
 - **Sardius (manual):** log into Orbis seller dashboard, confirm per-endpoint call breakdown, reconcile current `callCount: 19` against April 25 thread claim of "49 paid x402 calls"
 - **Sardius (manual):** update Orbis listing copy — shortDescription + description still say "19 endpoints," we're at 28
 
-### 1b. NEW IMMEDIATE — diagnose /metrics returning 0 (~30 min, before next stress run)
-- Check Upstash console for `metrics:calls:*` keys (last 30 days). If empty → counters were cleared. If present → middleware writes are working, /metrics read path is broken.
-- Check Railway logs for the May 19–23 stress run window for any silent throw inside the middleware's outer try/catch.
-- Either fix it or rewrite to surface failures via a `lastWriteAt` field on `/metrics`.
+### 1b. diagnose /metrics returning 0 — RESOLVED 2026-06-11 ✅ (`09820e5`)
+- Two-part root cause (see Known Bugs): entity-write threw on a consumed body clone (now cloned before `next()` + middleware moved ahead of payments); endpoint counters only count HTTP 200, so unpaid 402 stress legitimately read zero. Caller-tracking added; `/metrics` now reports `unique_callers` + `callers_by_endpoint`. METRICS_TOKEN gate added (set on Railway).
 
 ### 2. NEXT BUILDS — Adrena OI cap closeout, then bots pivot
 
@@ -608,8 +644,9 @@ Verified against `BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu` (5 positions, $3
 - **Fix:** Swapped to `lite-api.jup.ag/price/v3` (no API key required). v3 response shape differs (`{ "<mint>": { usdPrice, ... } }` vs v2's `{ data: { "<mint>": { price, ... } } }`) — adapter normalizes to the existing `JupiterPrice` contract so callers don't see the schema change.
 - **Discovered via:** Adrena trader-profile live verify produced `mark_price_usd: null` for all positions, traced back to `getPrice` returning empty maps.
 
-### `/metrics` returns zero across last 7 days — UNDIAGNOSED 2026-05-24
-- **Symptom:** `GET https://api.solenrich.com/metrics` returns `{ today: { total_calls: 0, by_endpoint: {} }, last_7_days: { ...all zeros... } }` despite known stress runs on May 19, 21, 23.
+### `/metrics` returns zero across last 7 days — RESOLVED 2026-06-11 ✅ (`09820e5`, `a884102`)
+- **Root cause (two parts):** (1) entity-metrics write threw — `c.req.raw.clone().json()` ran AFTER the handler consumed the body; the throw was swallowed by the outer catch, so top-tokens/wallets never recorded. Fixed by cloning the body BEFORE `next()` and registering the metrics middleware ahead of the payment middleware. (2) Endpoint counters only count HTTP 200; unpaid 402 stress runs legitimately counted zero, and real paid traffic was ~0.58/day — so the zeros were partly accurate, not purely a bug. Same commit added distinct-caller tracking (`metrics:callers:*`) and `console.warn` on write failure; `a884102` added the `METRICS_TOKEN` bearer gate. Original triage notes below (historical):
+- **Symptom (was):** `GET https://api.solenrich.com/metrics` returns `{ today: { total_calls: 0, by_endpoint: {} }, last_7_days: { ...all zeros... } }` despite known stress runs on May 19, 21, 23.
 - **Possible causes:**
   1. Upstash Redis was cleared/expired (90-day TTL should cover it, but the database itself may have been migrated)
   2. Metrics middleware silently fails in prod — `metricsCache.incr(...).catch(() => {})` swallows all errors (see `src/lib/agent.ts:249-280`)
