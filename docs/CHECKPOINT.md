@@ -28,9 +28,9 @@
 - **Distribution:** SolEnrich runs on CDP's x402 facilitator = live instance of Coinbase's vibe-trading stack → pursue showcase/partnership.
 
 #### Open for next session
-- **Endpoint-additions workshop** — Sardius wants to brainstorm new endpoints (the active topic at session end).
-- **Build Ananke** — only SolEnrich-side dependency is the ~10-line `X-Internal-Key` bypass (pending Sardius go — touches live payment middleware).
-- **RWA domain** — stand up a tokenized-equity mint registry + reuse basis-signal.
+- **Endpoint-additions workshop — RESOLVED 2026-06-16.** `hyperliquid-smart-money` locked as first new build (validation pull → 3a → 3b). Full scope: `docs/vibe-trading-endpoints-scope.md`. Roadmap behind it: vibe-check → attention-momentum → RWA basis.
+- **Build Ananke** — only SolEnrich-side dependency is the ~10-line `X-Internal-Key` bypass (pending Sardius go — touches live payment middleware). Ananke is the consumer for these new endpoints (HL smart-money powers its v1.5 copy-alert tier).
+- **RWA domain** — stand up a tokenized-equity mint registry + reuse basis-signal. Deferred behind HL track.
 
 ### Previous checkpoint (Jun 1–7 — STRATEGY SESSION: BASEENRICH REVIEW + RIPTIDE SCOPED + LANDING/OG REFRESH)
 
@@ -496,8 +496,16 @@ Gate was due 2026-05-18, was 6 days overdue. Pulled the actual numbers, found th
 
 ## Next session plan (ACTION ITEMS)
 
-### ⭐ IMMEDIATE — endpoint-additions workshop (active topic 2026-06-15) + Ananke perps bot
-**This session's live thread:** Sardius wants to workshop new endpoint additions (vibe-trading / perps / RWA shaped). Pick up there.
+### ⭐ IMMEDIATE — build `hyperliquid-smart-money` (LOCKED 2026-06-16) + Ananke perps bot
+**Endpoint workshop RESOLVED (2026-06-16).** Full detail: `docs/vibe-trading-endpoints-scope.md`. Five vibe-trading candidates ranked by buyer ROI; **`hyperliquid-smart-money` won** (provable copy-edge via HL's public PnL + live positions; powers Ananke's v1.5 copy-alert tier). Build sequence:
+- **Step 0 — validation pull (do first):** pull HL public `userFills` for ~20 top traders, backtest "copying their 30d position changes after realistic latency" → proves the ROI, sets scoring thresholds, yields marketing receipts. If flat, learn before building.
+- **Step 1 — `hyperliquid-trader-profile` (3a):** enabler. Add `clearinghouseState` + `userFills` to `PerpReferenceClient` (same `POST /info` pattern already in `perp-reference.ts`). Reuse `perps-analyzer` + `llm-perps`.
+- **Step 2 — `hyperliquid-smart-money` (3b):** watchlist + scoring + what-changed diff on top of 3a.
+- Then in ROI order: `vibe-check` → `attention-momentum` (rails) → RWA basis.
+- HL = first first-class off-Solana venue (perps intel is venue-agnostic; spot/wallet stays Solana).
+
+**Ananke perps bot — still queued (the consumer for these endpoints).**
+**This session's live thread (resolved):** endpoint-additions workshop → hyperliquid-smart-money locked.
 
 **Ananke** (perps signals bot, renamed from Riptide 2026-06-14). Full scope: `docs/perps-signals-bot-scope.md`. Order:
 1. **SolEnrich `X-Internal-Key` bypass** (~10 lines, in `src/lib/agent.ts` `/entrypoints/*` middleware) — opt-in (only when `INTERNAL_API_KEY` env set), exact-match, header-present-AND-matches only, logged. Gives Ananke a free plain-`fetch` path. **Claude offered to implement; awaiting Sardius go (touches live payment middleware).**

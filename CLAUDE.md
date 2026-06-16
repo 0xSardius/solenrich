@@ -426,6 +426,18 @@ Comprehensive 4-track audit (enrichers/sources, payments/metrics, cross-surface 
 
 **Distribution angle:** SolEnrich runs on CDP's x402 facilitator — it's a live instance of the exact stack Coinbase Dev is evangelizing. Pursue showcase/partnership (same playbook as the Helius application).
 
+### Vibe-trading endpoint roadmap (2026-06-16)
+
+Endpoint-additions workshop output. Full detail: `docs/vibe-trading-endpoints-scope.md`. Five candidates scoped against three lenses (serves a vibe-trading agent / defensible synthesis / reuses existing machinery), ranked by **buyer ROI**:
+1. **`hyperliquid-smart-money`** ($0.05–0.10) — ← **LOCKED as first new build (2026-06-16).** Highest provable buyer ROI: HL is the only high-volume venue where you can verify a trader's PnL history (`userFills`) AND live positions (`clearinghouseState`) on-chain → copy verifiably-profitable traders. Also the brain of Ananke's v1.5 copy-alert tier. "Nansen-for-Hyperliquid, agent-native."
+2. **`vibe-check`** ($0.03–0.05) — one-call ACT/WAIT/AVOID verdict. Reuses `query` buy-decision intent + `consensus-signal` + slippage. The flagship vibe-trading primitive.
+3. **`attention-momentum`** ($0.02) — agent-attention acceleration, the moat (reuses `signal-tracker`). Highest ceiling, traffic-gated → build rails now, compounds with the swarm.
+4. **RWA tokenized-equity basis** — reuses `perps-basis-signal`; deferred behind HL track.
+
+**HL track sequence:** Step 0 validation pull (backtest copying ~20 top HL traders' 30d position changes → proves the ROI + sets thresholds + yields marketing receipts) → Step 1 `hyperliquid-trader-profile` (3a, the enabler — new `clearinghouseState`/`userFills` methods on `PerpReferenceClient`) → Step 2 `hyperliquid-smart-money` (3b). HL = SolEnrich's first first-class off-Solana venue (perps intelligence is venue-agnostic; spot/wallet data stays Solana).
+
+**The flywheel:** vibe-check = the verdict the agent asks; attention-momentum = the proprietary signal feeding it; HL smart-money = premium cross-venue intel; Ananke = the consumer that calls these AND generates the traffic that sharpens attention-momentum.
+
 ### What to deprioritize
 
 - **Raw data breadth.** Don't add endpoints just to have them. Can't out-breadth Helius/Nansen. Out-synthesize them.
