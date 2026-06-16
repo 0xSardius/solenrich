@@ -131,3 +131,27 @@ Then, in ROI order: `vibe-check` → `attention-momentum` (rails) → RWA basis.
 | `vibe-check` | `query` buy-decision intent + `consensus-signal` + `slippage_estimates` |
 | `attention-momentum` | `signal-tracker` + hourly counters + price overlay |
 | RWA basis | `perps-basis-signal` machinery |
+
+---
+
+## Step 0 validation — DONE (2026-06-16): endpoint CONFIRMED, framing reframed
+
+Ran `test/hl-copy-edge-validation.ts` (two cuts) against the live HL public API.
+
+**Cut 1 (naive — rank leaderboard by absolute month PnL): INCONCLUSIVE.** Top accounts are market-makers / mega-funds (e.g. $9.5B weekly volume on a $57M account = 166x turnover); fills cap at 2000 so realized PnL undercounts; leaderboard "pnl" conflates deposits/withdrawals with trading. Only 48% of the top-25 had positive realized PnL. **Lesson: don't rank by absolute PnL; filter out MMs.**
+
+**Cut 2 (MM-filtered, consistency-tested) — the working pipeline.** Funnel: 39,401 leaderboard rows → 12,050 in the copyable band ($100k–$20M) → 10,949 after turnover filter (monthVlm/acct ≤ 40x excludes MM/HFT) → 8,498 with positive month ROI → of the top 60 by ROI, **39 (65%) passed consistency (week+month trading PnL > 0) + directional (≤15 positions).** *This funnel is the endpoint's core filtering logic.*
+
+**Findings that reshape the spec:**
+1. **Lead with POSITIONING / CONSENSUS, not "copy this genius."** The cleanest, most defensible, most marketable output is the aggregate. On 2026-06-16 the 39 copyable traders were **21:0 LONG HYPE (net +$80.8M)**, net SHORT ETH, net long WLD/JTO/LIT. Crisp, legible, hard-to-fake = the "where is HL smart money leaning?" signal a vibe trader wants.
+2. **Individual copy-trade is viable but needs guardrails.** ROI blows up at small denominators (one entry showed "25,855% month ROI" on $223 PnL — a few-dollar account that mooned) → rank individuals by a robust metric (absolute PnL within band / risk-adjusted), not raw ROI. And ROI-ranking + week>0 selects hot-streak/correlated traders (mostly the one HYPE trade) → present individuals with honest confidence (size, turnover, consistency); don't claim durable alpha.
+3. **MM-turnover filter + account band + consistency gate = the productized pipeline.** Validated and reusable as the enricher core.
+
+**Not yet validated (deferred, non-blocking):** durable per-trader alpha (needs multi-month out-of-sample); latency-adjusted copy returns (needs historical entry prices — matters less now we lead with positioning, not tight copy-execution).
+
+**Live receipt (marketable):** "SolEnrich's HL smart-money filter — 39 consistently-profitable traders are 21:0 long HYPE (net +$80M) and net short ETH (2026-06-16)." Do NOT market the 248% median month ROI (inflated by the HYPE run + hot-streak selection).
+
+**Reframed `hyperliquid-smart-money` spec:**
+- **Primary output:** aggregate positioning/consensus per coin (long/short trader counts, net notional, bias) across the MM-filtered, consistency-gated set.
+- **Secondary:** per-trader drill-down (positions, robust-ranked, honest confidence labels).
+- **Build unchanged:** 3a `hyperliquid-trader-profile` (adds `clearinghouseState` + `portfolio` to `PerpReferenceClient`) → 3b `hyperliquid-smart-money` (the funnel + positioning aggregation + `check-alerts`-style "what changed" diff). The validation script's funnel ports directly into the enricher.
