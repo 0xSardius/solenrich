@@ -16,6 +16,12 @@ export const SolanaAddressSchema = z
   .regex(BASE58_REGEX, 'Invalid Solana address: must be base58');
 export type SolanaAddress = z.infer<typeof SolanaAddressSchema>;
 
+// EVM 0x address — used for cross-chain venues (Hyperliquid traders).
+export const EvmAddressSchema = z
+  .string()
+  .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid EVM address: must be 0x followed by 40 hex chars');
+export type EvmAddress = z.infer<typeof EvmAddressSchema>;
+
 export const TxSignatureSchema = z
   .string()
   .min(86)

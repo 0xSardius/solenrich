@@ -23,6 +23,37 @@ export interface PerpReferenceSnapshot {
   fetched_at: number;
 }
 
+/** One normalized Hyperliquid open position (from clearinghouseState). */
+export interface HlPositionRaw {
+  coin: string;
+  dir: 'long' | 'short';
+  size_tokens: number;
+  notional_usd: number;
+  entry_px: number;
+  current_px: number;
+  unrealized_pnl_usd: number;
+  pnl_pct: number;            // returnOnEquity * 100 (uPnL on margin used)
+  leverage: number;
+  liquidation_px: number | null;
+  distance_to_liq_pct: number | null;
+  margin_used_usd: number;
+}
+/** A Hyperliquid trader's account snapshot. */
+export interface HlTraderState {
+  address: string;
+  account_value_usd: number;
+  total_notional_usd: number;
+  margin_used_usd: number;
+  withdrawable_usd: number;
+  positions: HlPositionRaw[];
+}
+/** Realized+unrealized trading PnL over rolling windows (from portfolio). */
+export interface HlPnl {
+  week_usd: number | null;
+  month_usd: number | null;
+  all_time_usd: number | null;
+}
+
 const HL_SYMBOL: Record<ReferenceMarket, string | null> = {
   SOL: 'SOL',
   BTC: 'BTC',
@@ -213,5 +244,99 @@ export class PerpReferenceClient {
       this.getDydx(market),
     ]);
     return { hyperliquid, dydx };
+  }
+
+  /**
+   * Hyperliquid clearinghouseState — a trader's live perp positions + margin summary.
+   * Public by EVM address; no auth. This is the transparency that makes HL smart-money
+   * tracking possible (every position is on-chain and readable).
+   */
+  async getHlTraderState(address: string): Promise<HlTraderState | null> {
+    const cacheKey = `hl:state:${address}`;
+    const cached = await this.cache.get<HlTraderState>(cacheKey);
+    if (cached) return cached;
+    try {
+      const res = await fetchWithTimeout('https://api.hyperliquid.xyz/info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'clearinghouseState', user: address }),
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as any;
+      const ms = data?.marginSummary ?? {};
+      const positions: HlPositionRaw[] = [];
+      for (const ap of data?.assetPositions ?? []) {
+        const p = ap?.position;
+        if (!p) continue;
+        const szi = Number(p.szi);
+        if (!szi) continue;
+        const notional = Math.abs(Number(p.positionValue));
+        const size = Math.abs(szi);
+        const currentPx = size > 0 ? notional / size : 0;
+        const liqPx = p.liquidationPx != null ? Number(p.liquidationPx) : null;
+        const distToLiq =
+          liqPx && currentPx > 0 ? (Math.abs(currentPx - liqPx) / currentPx) * 100 : null;
+        positions.push({
+          coin: p.coin,
+          dir: szi > 0 ? 'long' : 'short',
+          size_tokens: size,
+          notional_usd: notional,
+          entry_px: Number(p.entryPx),
+          current_px: currentPx,
+          unrealized_pnl_usd: Number(p.unrealizedPnl),
+          pnl_pct: Number(p.returnOnEquity) * 100,
+          leverage: Number(p.leverage?.value ?? 0),
+          liquidation_px: liqPx,
+          distance_to_liq_pct: distToLiq,
+          margin_used_usd: Number(p.marginUsed ?? 0),
+        });
+      }
+      const state: HlTraderState = {
+        address,
+        account_value_usd: Number(ms.accountValue ?? 0),
+        total_notional_usd: Number(ms.totalNtlPos ?? 0),
+        margin_used_usd: Number(ms.totalMarginUsed ?? 0),
+        withdrawable_usd: Number(data?.withdrawable ?? 0),
+        positions,
+      };
+      await this.cache.set(cacheKey, state, CACHE_TTL.perpsTrader);
+      return state;
+    } catch (err) {
+      console.warn(`[perp-ref:hyperliquid] state fetch failed:`, (err as Error).message);
+      return null;
+    }
+  }
+
+  /** Hyperliquid portfolio — trading PnL over rolling windows (pnlHistory tail). */
+  async getHlPnl(address: string): Promise<HlPnl | null> {
+    const cacheKey = `hl:pnl:${address}`;
+    const cached = await this.cache.get<HlPnl>(cacheKey);
+    if (cached) return cached;
+    try {
+      const res = await fetchWithTimeout('https://api.hyperliquid.xyz/info', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'portfolio', user: address }),
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as Array<[string, { pnlHistory?: Array<[number, string]> }]>;
+      const lastPnl = (window: string): number | null => {
+        const row = data?.find?.((d) => d[0] === window);
+        const hist = row?.[1]?.pnlHistory;
+        if (!hist?.length) return null;
+        const v = Number(hist[hist.length - 1][1]);
+        return Number.isFinite(v) ? v : null;
+      };
+      const pnl: HlPnl = {
+        week_usd: lastPnl('week'),
+        month_usd: lastPnl('month'),
+        all_time_usd: lastPnl('allTime'),
+      };
+      await this.cache.set(cacheKey, pnl, CACHE_TTL.perpsTrader);
+      return pnl;
+    } catch (err) {
+      console.warn(`[perp-ref:hyperliquid] portfolio fetch failed:`, (err as Error).message);
+      return null;
+    }
   }
 }

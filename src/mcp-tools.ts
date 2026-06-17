@@ -410,6 +410,24 @@ export function createSolEnrichMcpServer(): McpServer {
   );
 
   server.registerTool(
+    'hyperliquid_trader_profile',
+    {
+      title: 'Hyperliquid Trader Profile',
+      description: "Live Hyperliquid perp positions for an EVM (0x) address, read from HL's public on-chain state. Per-position side, leverage, notional, entry, unrealized PnL, distance-to-liquidation, and risk flags. Account value, directional bias, profile (directional/market-neutral/diversified), and realized+unrealized PnL over week/month/all-time. The building block for HL smart-money tracking.",
+      inputSchema: {
+        address: z.string().describe('Hyperliquid EVM (0x) address'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('hyperliquid-trader-profile', {
+        address: args.address,
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
     'perps_basis_signal',
     {
       title: 'Net-Yield-After-Borrow Basis Signal',

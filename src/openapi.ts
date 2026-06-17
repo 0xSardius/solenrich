@@ -268,6 +268,18 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'hyperliquid-trader-profile': {
+    summary: 'Hyperliquid trader profile (live positions + PnL)',
+    description: "Live perp positions for a Hyperliquid EVM (0x) address, read directly from Hyperliquid's public on-chain state. Per-position coin, side, leverage, notional, entry, unrealized PnL, distance-to-liquidation, and risk flags (high_leverage, extreme_leverage, approaching_liquidation, losing). Plus account value, directional bias, profile (directional/market-neutral/diversified), weighted leverage, and realized+unrealized PnL over week/month/all-time. Hyperliquid's full transparency makes this the building block for smart-money tracking.",
+    schema: {
+      type: 'object',
+      required: ['address'],
+      properties: {
+        address: { type: 'string', description: 'Hyperliquid EVM (0x) address', pattern: '^0x[a-fA-F0-9]{40}$' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'perps-basis-signal': {
     summary: 'Net-yield-after-borrow basis trade scanner',
     description: 'Computes perp mark vs spot price across venues and surfaces actually-earnable yield (funding APR on Hyperliquid + dYdX, not viable on pool perps Jupiter + Adrena). Returns per-venue trade economics, opportunities above threshold, and best trade. Threshold defaults to 5% APR.',

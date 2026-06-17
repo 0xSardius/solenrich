@@ -54,6 +54,7 @@ export const PRICING = {
   'protocol-profile': '0.008',
   'perps-market-structure': '0.012',
   'perps-trader-profile': '0.010',
+  'hyperliquid-trader-profile': '0.012',
   'perps-cross-venue-funding': '0.015',
   'perps-venue-comparison': '0.020',
   'perps-basis-signal': '0.015',

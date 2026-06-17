@@ -54,6 +54,8 @@ import { registerPerpsVenueComparisonEntrypoint } from "../entrypoints/perps-ven
 import { registerPerpsBasisSignalEntrypoint } from "../entrypoints/perps-basis-signal";
 import { AdrenaClient } from "../sources/adrena";
 import { PerpReferenceClient } from "../sources/perp-reference";
+import { HyperliquidAnalyzer } from "../enrichers/hyperliquid-analyzer";
+import { registerHyperliquidEntrypoints } from "../entrypoints/hyperliquid";
 import { PerpsCrossVenueAnalyzer } from "../enrichers/perps-cross-venue";
 import { PerpsVenueComparator } from "../enrichers/perps-venue-comparison";
 import { PerpsBasisAnalyzer } from "../enrichers/perps-basis-signal";
@@ -374,6 +376,7 @@ const jupiterPerps = new JupiterPerpsClient(cache);
 const adrenaClient = new AdrenaClient(cache);
 const perpsAnalyzer = new PerpsAnalyzer(jupiterPerps, adrenaClient, jupiter);
 const perpReference = new PerpReferenceClient(cache);
+const hyperliquidAnalyzer = new HyperliquidAnalyzer(perpReference);
 const perpsCrossVenueAnalyzer = new PerpsCrossVenueAnalyzer(
   jupiterPerps,
   adrenaClient,
@@ -427,6 +430,10 @@ registerProtocolEntrypoint(addEntrypoint, protocolAnalyzer);
 
 // Jupiter Perps — market structure + trader profile
 registerPerpsEntrypoints(addEntrypoint, perpsAnalyzer);
+
+// Hyperliquid trader profile — first first-class off-Solana venue (perps
+// intelligence is venue-agnostic). Building block for hyperliquid-smart-money.
+registerHyperliquidEntrypoints(addEntrypoint, hyperliquidAnalyzer);
 
 // Cross-venue perps funding — aggregates Jupiter Perps + Adrena + reference
 // venues (Hyperliquid, dYdX v4). Foundation endpoint for the Phase 2D perps
@@ -793,6 +800,11 @@ app.get('/docs', (c) => {
         price: '0.010',
         input: { address: 'string', format: 'json | llm | both' },
         description: 'Multi-venue perps trader profile (Jupiter Perps + Adrena). Returns open positions per venue with size, leverage, entry, unrealized PnL, profile classification (scalper/swing/position), and risk flags. Combined totals across venues + per-venue breakdown via `by_venue`. Every position is tagged with its `venue`. Adrena PnL uses jitoSOL/WBTC/BONK mark prices from Jupiter price API; null when unavailable. Multi-venue traders get a `multi_venue: true` flag.',
+      },
+      'hyperliquid-trader-profile': {
+        price: '0.012',
+        input: { address: 'string (EVM 0x address)', format: 'json | llm | both' },
+        description: "Hyperliquid trader profile — live perp positions for an EVM (0x) address from Hyperliquid's public on-chain state. Per-position side, leverage, notional, entry, unrealized PnL, distance-to-liquidation, risk flags. Account value, directional bias, profile (directional/market-neutral/diversified), weighted leverage, and realized+unrealized PnL over week/month/all-time. Building block for Hyperliquid smart-money tracking.",
       },
       'perps-cross-venue-funding': {
         price: '0.015',
