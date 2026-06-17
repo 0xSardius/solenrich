@@ -95,13 +95,10 @@
       grid-template-columns: 240px minmax(0, 1fr);
       gap: 48px;
     }
-    @media (max-width: 900px) {
-      .docs-layout {
-        grid-template-columns: minmax(0, 1fr);
-        padding: 32px 20px;
-      }
-      .sidebar { position: static; }
-    }
+    /* Mobile layout overrides are consolidated AFTER the sidebar styles below
+       (see the @media block following .sidebar-controls) so they reliably win
+       the cascade — a mobile override declared before the base rule it targets
+       loses on equal specificity, which is what left the nav floating. */
 
     /* ===== SIDEBAR ===== */
     .sidebar {
@@ -208,6 +205,29 @@
     .sidebar-controls button:hover {
       color: var(--text-secondary);
       border-color: rgba(255,255,255,0.15);
+    }
+
+    /* ===== MOBILE ===== */
+    /* Placed after the sidebar rules so these overrides win the cascade. On
+       mobile the nav drops into normal document flow (stacked above the content)
+       — never sticky/floating. Resets every property that gives it its desktop
+       sticky-rail behavior, so it can't detach and ghost over the text. */
+    @media (max-width: 900px) {
+      .docs-layout {
+        grid-template-columns: minmax(0, 1fr);
+        padding: 32px 20px;
+        gap: 28px;
+      }
+      .sidebar {
+        position: static;
+        top: auto;
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
+        scrollbar-gutter: auto;
+        padding-bottom: 20px;
+        border-bottom: 1px solid var(--border-subtle);
+      }
     }
 
     /* ===== MAIN ===== */
