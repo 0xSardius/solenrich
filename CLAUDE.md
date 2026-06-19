@@ -451,7 +451,7 @@ Full research + integration-feasibility matrix: `docs/solana-perps-landscape.md`
 - **Drift** — `@drift-labs/sdk` + Data API + on-chain accounts. Best surface. **Priority #1 (relaunch timing).**
 - **Pacifica** — REST + WS + Python SDK (docs.pacifica.fi). **Priority #2 (volume leader, CLOB).**
 - **Flash Trade** — REST (indexes on-chain) + Rust SDK, RWA/forex. #3.
-- **Phoenix** — Rise SDK / `perp-api.phoenix.trade`, blocked on beta. #4.
+- **Phoenix** — **LIVE + public REST** (`perp-api.phoenix.trade/exchange` → 200 JSON, no auth; verified 2026-06-19). Trading waitlisted but data is open. Institutional CLOB. Not beta-blocked — integrable now. #3.
 - **Bullet** — appchain, needs its own (non-public) API. #5, blocked.
 - Each venue is an additive `VenueQuote` entry; `best_entry`/`arbitrage` recompute automatically. The HL smart-money (3b) work generalizes to cross-venue Solana smart-money once we read per-venue trader positions.
 

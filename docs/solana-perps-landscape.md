@@ -35,7 +35,7 @@ the venues as the single agent-callable intelligence surface.
 | **Jupiter Perps** | Pool (JLP) | Still the **organic leader** by OI / fees / sustained share (~$486B cumulative, ~$86M OI, JLP ~$1.6B). Don't over-index on the daily-volume "flippening." |
 | **Drift** | Orderbook (DLOB) | ⚠️ **Relaunching before July 2026** — "security-first," perps-only, $148M Tether-led rescue, Ottersec+Asymmetric audits, USDT settlement. Historically the largest Solana orderbook perp. ([coindesk](https://www.coindesk.com/business/2026/05/05/drift-outlines-a-recovery-plan-for-users-after-usd295-million-dprk-linked-exploit)) |
 | **Adrena** | Pool | #3-ish (~$3.87B cumulative). **Pivoted Mar 2026 to a Traditional-Markets / RWA perps DEX** — equities/commodities/forex, 100x, Autonom oracle. Ties to the RWA thread. (we already integrate Adrena) ([medium](https://medium.com/@r_15629/what-are-rwa-perps-e4c65f84211c)) |
-| **Phoenix Perps** (Ellipsis) | Orderbook (CLOB) | Private beta, gradual rollout, aims −⅔ trading cost. Same team as the $1B+ Phoenix spot CLOB. ([ellipsislabs](https://www.ellipsislabs.xyz/blog-posts/introducing-phoenix-perpetuals)) |
+| **Phoenix Perps** (Ellipsis) | Orderbook (CLOB) | **LIVE** (announced Breakpoint Dec 2025; multiple "launch" articles + live mobile trading by Jun 2026). Trading access waitlisted, but **market-data API is fully public** (`perp-api.phoenix.trade/exchange` → 200 JSON, no auth). Aims −⅔ trading cost; same team as the $1B+ Phoenix spot CLOB. ([ellipsislabs](https://www.ellipsislabs.xyz/blog-posts/introducing-phoenix-perpetuals)) |
 | **Bullet** (ex-Zeta) | CLOB / appchain | Live since late Sep 2025, 1.2ms latency, "Hyperliquid of Solana," $ZEX→$BULLET. Purpose-built trading network (appchain/L2). ([mexc](https://www.mexc.com/news/1094009)) |
 | **Flash Trade** | Pool-to-peer | Declined to <1% share, but agent-native (MCP), 500x forex/inverse RWA pairs. Open-source reference impl. |
 | **GMTrade, Bulk, Imperial, JTX (Jito), PerpCore** | mixed | Smaller/newer names in "top Solana perp DEX" lists; low priority until they show sustained share. ([quicknode](https://www.quicknode.com/builders-guide/best/top-10-solana-perp-dexs)) |
@@ -58,7 +58,7 @@ hand-Borsh decode.**
 | **Drift** | `@drift-labs/sdk` (TS) + DriftPy + **Data API** (historical+realtime, no indexing) + on-chain user/market accounts (DLOB built from on-chain accounts). Open-source `protocol-v2`. | Data API (REST) for market structure/funding; SDK or account reads for trader positions. Best surface of any venue. ([docs.drift.trade/developers](https://docs.drift.trade/developers)) | ~1 session | **#1** (relaunch timing + best surface + historically major) |
 | **Pacifica** | **REST API + WebSocket + Python SDK** (docs.pacifica.fi). Orderbook impact prices, funding every 5s. | REST/WS like the Hyperliquid `/info` pattern in `perp-reference.ts`. | ~1 session | **#2** (current volume leader, CLOB, clean API) |
 | **Flash Trade** | **REST API that indexes all on-chain program accounts in realtime over HTTP/WS** + Rust SDK + open-source `flash-perpetuals`. Pool-to-peer (like Jupiter/Adrena). | REST API, or reuse our pool-account read pattern. RWA/forex angle. ([docs.flash.trade](https://docs.flash.trade/)) | ~1 session | #3 (easy + RWA/forex coverage) |
-| **Phoenix Perps** | **Rise SDK** (`@ellipsis-labs/rise`, TS+Rust) — HTTP route clients + WS at `https://perp-api.phoenix.trade`. On-chain CLOB. | REST via Rise / perp-api. **Blocked on private-beta access.** | ~1 session (post-beta) | #4 (when beta opens) |
+| **Phoenix Perps** | **Rise SDK** (`@ellipsis-labs/rise`, TS+Rust) + **public REST** `perp-api.phoenix.trade` (`/exchange`, `/exchange/markets` → 200 JSON, no auth — verified 2026-06-19). On-chain CLOB. | REST via perp-api (or Rise SDK). **Live + public now** — data not gated despite trading waitlist. | ~1 session | **#3 (live + public, jumped queue)** |
 | **Bullet** (ex-Zeta) | Appchain/L2 — old Zeta SDK (`@zetamarkets/sdk`) + REST data API are for *old Zeta*. Bullet likely needs its own (not-yet-public) API; data lives off Solana L1. | Bullet-specific API (TBD). Can't read via Solana RPC. | Unknown | #5 (blocked on public Bullet API) |
 | **Percolator** | Not live. | — | — | Watch |
 
@@ -69,7 +69,7 @@ hand-Borsh decode.**
    (SDK + Data API + on-chain accounts). We already keep its program ID in the labeler. **Time-sensitive.**
 2. **Add Pacifica.** It's the contested #1 by volume and CLOB-based (diversifies our pool-heavy coverage).
    Clean REST/WS API. Even if its volume is airdrop-inflated, agents are trading there *now*.
-3. **Then Flash Trade** (easy REST + RWA/forex perps angle) and **Phoenix** (when beta opens).
+3. **Then Phoenix** (live + public REST data API, verified 2026-06-19 — no longer beta-gated; institutional CLOB, cost-leader angle) and **Flash Trade** (easy REST + RWA/forex perps angle).
 4. **Architecture is additive.** Each venue is a `VenueQuote`-style entry in the cross-venue model
    (`available: bool` + `unavailable_reason`); `best_entry` / `arbitrage_opportunities` recompute
    automatically — the same one-file-extension pattern used for Adrena and the HL reference legs.
