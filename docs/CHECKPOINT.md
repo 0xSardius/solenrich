@@ -548,10 +548,15 @@ Counter-positioning thesis: SolEnrich wins as **agent-native first**, not dashbo
 
 **Open note for perps-bot dogfood:** position alerts on Adrena would need a `PerpsSnapshot`-style extension for Adrena positions in `SnapshotStore` (current `PerpsSnapshot` only captures Jupiter). Not blocking — bot can start with Jupiter alerts + multi-venue trader-profile, add Adrena alerts when needed.
 
-### 3. WATCH-LIST (parallel to builds)
-- **Drift relaunch** — target May-June 2026. Re-evaluate integration in July when audits land. Keep program ID in labeler registry until then.
-- **Phoenix Perpetuals public beta exit** — only credible Jupiter Perps competitor in next 6 months. Integrate when public.
-- **Bullet (Zeta rebrand) mainnet** — appchain testnet now at 1.2ms latency. Worth tracking.
+### 3. WATCH-LIST / SOLANA PERPS VENUE COVERAGE (updated 2026-06-19)
+**Full landscape + integration-feasibility research: `docs/solana-perps-landscape.md`.** Scene is accelerating + fragmenting (6+ venues, >70% agent-driven). SolEnrich = the neutral cross-venue intelligence layer. Venue-coverage priority for the cross-venue endpoints:
+- **Drift — PRIORITY #1, TIME-SENSITIVE.** Relaunching before July 2026 (security-first, Tether-rescued, Ottersec+Asymmetric audited). Our "don't integrate until relaunch+audits" gate is being met. Best dev surface of any venue (`@drift-labs/sdk` + Data API + on-chain accounts). **Be its day-one agent intelligence layer.** Program ID already in labeler.
+- **Pacifica — PRIORITY #2.** Reportedly overtook Jupiter as #1 by daily volume (CLOB; ex-FTX/Binance/Jane St team; >$100B cumulative) — caveat: pre-TGE airdrop season, volume likely inflated. REST+WS+Python SDK (docs.pacifica.fi). Diversifies our pool-heavy coverage.
+- **Flash Trade — #3.** REST (indexes on-chain) + Rust SDK; RWA/forex perps angle (500x). Pool model reuses our Jupiter/Adrena pattern.
+- **Phoenix Perps — #4.** Rise SDK / `perp-api.phoenix.trade`; blocked on private-beta access.
+- **Bullet (ex-Zeta) — #5.** Appchain/L2; needs its own (not-yet-public) API, can't read via Solana RPC. Blocked.
+- **Percolator** (Anatoly's SOL-native perp DEX) — not live, watch.
+- Most venues expose HTTP APIs/SDKs → integration ≈ the Hyperliquid `/info` work, often easier than Adrena. Each is an additive `VenueQuote` entry. The HL smart-money (3b) generalizes to cross-venue Solana smart-money.
 - **agentic.market listing** — still queued since 2026-04-21. Check weekly.
 
 ### 4. UNPOSTED TWEET DRAFTS (gitignored or in-conversation, ready)

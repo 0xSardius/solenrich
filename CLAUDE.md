@@ -438,6 +438,25 @@ Endpoint-additions workshop output. Full detail: `docs/vibe-trading-endpoints-sc
 
 **The flywheel:** vibe-check = the verdict the agent asks; attention-momentum = the proprietary signal feeding it; HL smart-money = premium cross-venue intel; Ananke = the consumer that calls these AND generates the traffic that sharpens attention-momentum.
 
+### Solana perps venue-coverage roadmap (2026-06-19)
+
+Full research + integration-feasibility matrix: `docs/solana-perps-landscape.md`. Thesis: the Solana perps scene is **accelerating AND fragmenting** (6+ live venues, mixed pool/CLOB, no unified venue, >70% agent-driven volume) — which is the argument for SolEnrich as the neutral cross-venue intelligence layer. We don't win liquidity; we sit above the venues.
+
+**Landscape updates since the May notes:**
+- **Pacifica** reportedly overtook Jupiter as #1 Solana perp DEX by daily volume (CLOB; ex-FTX/Binance/Jane St team; >$100B cumulative) — BUT pre-TGE airdrop season, so volume is likely inflated. Jupiter still leads organic/OI/fees.
+- **Drift** relaunching before July 2026 (security-first, perps-only, Tether-rescued, audited). Our "don't integrate until relaunch+audits" gate is being met.
+- **Adrena** pivoted to RWA/TradFi perps (equities/commodities/forex). **Bullet** (ex-Zeta) live (appchain). **Phoenix Perps** (Ellipsis) private beta. **Percolator** = Anatoly's upcoming SOL-native perp DEX.
+
+**Integration feasibility (most are EASIER than Adrena's hand-Borsh decode — HTTP APIs/SDKs):**
+- **Drift** — `@drift-labs/sdk` + Data API + on-chain accounts. Best surface. **Priority #1 (relaunch timing).**
+- **Pacifica** — REST + WS + Python SDK (docs.pacifica.fi). **Priority #2 (volume leader, CLOB).**
+- **Flash Trade** — REST (indexes on-chain) + Rust SDK, RWA/forex. #3.
+- **Phoenix** — Rise SDK / `perp-api.phoenix.trade`, blocked on beta. #4.
+- **Bullet** — appchain, needs its own (non-public) API. #5, blocked.
+- Each venue is an additive `VenueQuote` entry; `best_entry`/`arbitrage` recompute automatically. The HL smart-money (3b) work generalizes to cross-venue Solana smart-money once we read per-venue trader positions.
+
+**Time-sensitive:** be Drift's day-one agent intelligence layer when it relaunches.
+
 ### What to deprioritize
 
 - **Raw data breadth.** Don't add endpoints just to have them. Can't out-breadth Helius/Nansen. Out-synthesize them.
