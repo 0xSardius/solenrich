@@ -55,6 +55,7 @@ export const PRICING = {
   'perps-market-structure': '0.012',
   'perps-trader-profile': '0.010',
   'hyperliquid-trader-profile': '0.012',
+  'hyperliquid-smart-money': '0.05',
   'perps-cross-venue-funding': '0.015',
   'perps-venue-comparison': '0.020',
   'perps-basis-signal': '0.015',
@@ -85,6 +86,7 @@ export const CACHE_TTL = {
   protocolProfile: 1800, // 30 minutes — activity data is RPC-heavy
   perpsMarket: 30,       // 30 seconds — on-chain state changes every block
   perpsTrader: 60,       // 1 minute — positions update on tx
+  hlSmartMoney: 300,     // 5 minutes — leaderboard + aggregate positioning (orchestration)
   trendingSignals: 300,  // 5 minutes — trending shifts fast
   smartMoney: 600,       // 10 minutes — smart money shifts over days
   feedLatest: 86_400,    // 24 hours — daily intelligence brief, lazy-populated

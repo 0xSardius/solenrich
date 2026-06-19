@@ -496,7 +496,10 @@ Gate was due 2026-05-18, was 6 days overdue. Pulled the actual numbers, found th
 
 ## Next session plan (ACTION ITEMS)
 
-### ⭐ IMMEDIATE — build `hyperliquid-smart-money` (LOCKED 2026-06-16) + Ananke perps bot
+### ⭐ IMMEDIATE — HL track DONE (2026-06-19); next = Solana venue coverage + Ananke
+**HL smart-money track complete:** `hyperliquid-trader-profile` (3a, `d919c7e`) + `hyperliquid-smart-money` (3b, 2026-06-19) both shipped. **31 paid endpoints.** 3b is positioning-first (leaderboard funnel → consistency-gated traders → per-coin consensus + top-trader drill-down). **Agreed sequence (2026-06-19): (a) HL 3b ✓ → (b) other Solana venues around Drift — Pacifica #1 next (REST/WS, CLOB), then Flash; incorporate Drift on its relaunch (~July) → (c) explore RWA-perps wedge.** Venue feasibility: `docs/solana-perps-landscape.md`.
+
+#### Prior IMMEDIATE (HL build, now done)
 **Endpoint workshop RESOLVED (2026-06-16).** Full detail: `docs/vibe-trading-endpoints-scope.md`. Five vibe-trading candidates ranked by buyer ROI; **`hyperliquid-smart-money` won** (provable copy-edge via HL's public PnL + live positions; powers Ananke's v1.5 copy-alert tier). Build sequence:
 - **Step 0 — validation pull: DONE 2026-06-16** (`test/hl-copy-edge-validation.ts`). Endpoint CONFIRMED but REFRAMED: lead with **aggregate positioning/consensus**, not "copy one genius." Cut 1 (naive) inconclusive (leaderboard top = MMs/mega-funds, fills capped). Cut 2 funnel works: 39,401 rows → band ($100k–$20M) → turnover MM-filter (≤40x) → consistency gate (week+month PnL>0, ≤15 positions) → 39 clean copyable traders. Live signal: 21:0 long HYPE (net +$80M), net short ETH. Don't market the 248% median ROI (HYPE-bull/hot-streak inflated). Full findings: `docs/vibe-trading-endpoints-scope.md` "Step 0 validation". The funnel ports directly into the enricher.
 - **Step 1 — `hyperliquid-trader-profile` (3a):** enabler. Add `clearinghouseState` + `userFills` to `PerpReferenceClient` (same `POST /info` pattern already in `perp-reference.ts`). Reuse `perps-analyzer` + `llm-perps`.

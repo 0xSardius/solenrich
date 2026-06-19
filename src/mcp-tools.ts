@@ -428,6 +428,26 @@ export function createSolEnrichMcpServer(): McpServer {
   );
 
   server.registerTool(
+    'hyperliquid_smart_money',
+    {
+      title: 'Hyperliquid Smart-Money Positioning',
+      description: "Where Hyperliquid smart money is positioned. Filters the HL leaderboard to consistent directional traders (excludes market-makers + dust), then aggregates their live positions into a per-coin consensus (long/short counts, net notional, bias, conviction) plus a top-trader drill-down. Optionally focus one coin via `market`. A positioning signal, not a trade — use as confluence/risk context, not a standalone entry.",
+      inputSchema: {
+        market: z.string().optional().describe('Optional single-coin focus, e.g. HYPE/BTC/ETH'),
+        top_traders: z.number().int().min(1).max(25).optional().describe('How many top traders to include (default 10)'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('hyperliquid-smart-money', {
+        ...(args.market ? { market: args.market } : {}),
+        ...(args.top_traders ? { top_traders: args.top_traders } : {}),
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
     'perps_basis_signal',
     {
       title: 'Net-Yield-After-Borrow Basis Signal',

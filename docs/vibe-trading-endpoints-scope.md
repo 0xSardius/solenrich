@@ -109,6 +109,8 @@ is signal *reliability and provability*, which is what the ranking is on.
 
 ## DECISION (2026-06-16): `hyperliquid-smart-money` is the first new build
 
+**STATUS — HL TRACK DONE (2026-06-19).** 3a `hyperliquid-trader-profile` shipped `d919c7e`; 3b `hyperliquid-smart-money` shipped (positioning-first: leaderboard funnel → consistency-gated set → per-coin consensus + robust-PnL top-trader drill-down, honest "signal not a system" framing in the briefing). Live-verified: e.g. 11 qualified traders → consensus long HYPE / short BTC, 6s cold / cached after. **31 paid endpoints.** Next per the venue roadmap: Pacifica → Flash → Drift (on relaunch). See `docs/solana-perps-landscape.md`.
+
 Build sequence:
 
 - **Step 0 — validation pull (de-risk first).** Pull HL public `userFills` for ~20 top traders; backtest
@@ -155,3 +157,5 @@ Ran `test/hl-copy-edge-validation.ts` (two cuts) against the live HL public API.
 - **Primary output:** aggregate positioning/consensus per coin (long/short trader counts, net notional, bias) across the MM-filtered, consistency-gated set.
 - **Secondary:** per-trader drill-down (positions, robust-ranked, honest confidence labels).
 - **Build unchanged:** 3a `hyperliquid-trader-profile` (adds `clearinghouseState` + `portfolio` to `PerpReferenceClient`) → 3b `hyperliquid-smart-money` (the funnel + positioning aggregation + `check-alerts`-style "what changed" diff). The validation script's funnel ports directly into the enricher.
+
+**Positioning — DON'T oversell it (locked 2026-06-16).** This is a **signal, not a system**. Income comes from a system (signal + entry/exit + sizing + risk); this endpoint is one high-grade input. It cannot reliably make a *trader* money standalone — consensus positioning is often late/crowded, regime-dependent, and survivorship-flattered (the validated 39 were mostly riding one HYPE trade). Market it as **"know where informed flow is positioned and *when it shifts*,"** NOT "copy whales, get rich." The actionable edge is the **flip/what-changed** layer, not the static snapshot. Reliable income from this is the **seller's** (SolEnrich call revenue + Ananke subscription, sold as decision-support — like Nansen) more than the buyer's standalone trading. For *mechanical* buyer yield, the already-shipped funding/basis family (`perps-basis-signal`) is the more income-reliable product; smart-money is directional decision-support. Honest framing = durable framing (oversell → churn when buyers lose).

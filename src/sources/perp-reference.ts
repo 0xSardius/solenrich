@@ -54,6 +54,16 @@ export interface HlPnl {
   all_time_usd: number | null;
 }
 
+/** A filtered, copyable-candidate leaderboard row (MM/dust already excluded). */
+export interface HlLeaderboardCandidate {
+  address: string;
+  account_value_usd: number;
+  month_roi: number;
+  week_roi: number;
+  month_vlm: number;
+  turnover: number;          // month_vlm / account_value (MM/HFT signature)
+}
+
 const HL_SYMBOL: Record<ReferenceMarket, string | null> = {
   SOL: 'SOL',
   BTC: 'BTC',
@@ -337,6 +347,71 @@ export class PerpReferenceClient {
     } catch (err) {
       console.warn(`[perp-ref:hyperliquid] portfolio fetch failed:`, (err as Error).message);
       return null;
+    }
+  }
+
+  /**
+   * Hyperliquid public leaderboard, pre-filtered to copyable directional candidates:
+   * account-value band (exclude dust + mega-funds) + turnover MM/HFT filter + positive
+   * month ROI, sorted by month ROI. This is the validated funnel (see
+   * test/hl-copy-edge-validation.ts) — ranking by absolute PnL surfaces market-makers,
+   * so we band + turnover-filter instead. Returns top 100 candidates (consistency is
+   * checked per-trader downstream via portfolio PnL). Cached.
+   */
+  async getHlLeaderboard(opts?: {
+    minAcct?: number;
+    maxAcct?: number;
+    maxTurnover?: number;
+  }): Promise<HlLeaderboardCandidate[] | null> {
+    const minAcct = opts?.minAcct ?? 100_000;
+    const maxAcct = opts?.maxAcct ?? 20_000_000;
+    const maxTurnover = opts?.maxTurnover ?? 40;
+    const cacheKey = `hl:leaderboard:${minAcct}:${maxAcct}:${maxTurnover}`;
+    const cached = await this.cache.get<HlLeaderboardCandidate[]>(cacheKey);
+    if (cached) return cached;
+
+    // The leaderboard is a multi-MB payload — give it a longer timeout than the
+    // per-market reference calls.
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 9000);
+    try {
+      const res = await fetch('https://stats-data.hyperliquid.xyz/Mainnet/leaderboard', {
+        signal: controller.signal,
+      });
+      if (!res.ok) return null;
+      const data = (await res.json()) as any;
+      const rows: any[] = data?.leaderboardRows ?? [];
+      const out: HlLeaderboardCandidate[] = [];
+      for (const r of rows) {
+        const acct = Number(r.accountValue);
+        if (!Number.isFinite(acct) || acct < minAcct || acct > maxAcct) continue;
+        const perfs: Array<[string, any]> = r.windowPerformances;
+        const monthRow = perfs?.find?.((p) => p[0] === 'month');
+        if (!monthRow) continue;
+        const monthVlm = Number(monthRow[1].vlm);
+        const monthRoi = Number(monthRow[1].roi);
+        if (!(monthVlm > 0) || !(monthRoi > 0)) continue;
+        const turnover = monthVlm / acct;
+        if (turnover > maxTurnover) continue; // MM/HFT
+        const weekRow = perfs?.find?.((p) => p[0] === 'week');
+        out.push({
+          address: r.ethAddress,
+          account_value_usd: acct,
+          month_roi: monthRoi,
+          week_roi: weekRow ? Number(weekRow[1].roi) : 0,
+          month_vlm: monthVlm,
+          turnover,
+        });
+      }
+      out.sort((a, b) => b.month_roi - a.month_roi);
+      const top = out.slice(0, 100);
+      await this.cache.set(cacheKey, top, CACHE_TTL.hlSmartMoney);
+      return top;
+    } catch (err) {
+      console.warn(`[perp-ref:hyperliquid] leaderboard fetch failed:`, (err as Error).message);
+      return null;
+    } finally {
+      clearTimeout(t);
     }
   }
 }

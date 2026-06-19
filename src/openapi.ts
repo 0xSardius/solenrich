@@ -280,6 +280,18 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'hyperliquid-smart-money': {
+    summary: 'Hyperliquid smart-money positioning consensus',
+    description: "Where Hyperliquid smart money is positioned. Scans the HL leaderboard, excludes market-makers/HFT (turnover filter) + dust/mega-funds (account band), keeps only consistent directional traders (week+month PnL > 0, not a systematic book), then aggregates their live positions into a per-coin consensus signal (long/short trader counts, net notional, bias, conviction) + a top-trader drill-down ranked by robust month PnL. A positioning signal, not a trade — consensus is often late/crowded and regime-dependent; use as confluence/risk context.",
+    schema: {
+      type: 'object',
+      properties: {
+        market: { type: 'string', description: 'Optional single-coin focus, e.g. HYPE/BTC/ETH', minLength: 1, maxLength: 12 },
+        top_traders: { type: 'integer', description: 'How many top traders to include (default 10)', minimum: 1, maximum: 25 },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'perps-basis-signal': {
     summary: 'Net-yield-after-borrow basis trade scanner',
     description: 'Computes perp mark vs spot price across venues and surfaces actually-earnable yield (funding APR on Hyperliquid + dYdX, not viable on pool perps Jupiter + Adrena). Returns per-venue trade economics, opportunities above threshold, and best trade. Threshold defaults to 5% APR.',

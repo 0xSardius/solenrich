@@ -55,6 +55,7 @@ import { registerPerpsBasisSignalEntrypoint } from "../entrypoints/perps-basis-s
 import { AdrenaClient } from "../sources/adrena";
 import { PerpReferenceClient } from "../sources/perp-reference";
 import { HyperliquidAnalyzer } from "../enrichers/hyperliquid-analyzer";
+import { HyperliquidSmartMoneyAnalyzer } from "../enrichers/hyperliquid-smart-money";
 import { registerHyperliquidEntrypoints } from "../entrypoints/hyperliquid";
 import { PerpsCrossVenueAnalyzer } from "../enrichers/perps-cross-venue";
 import { PerpsVenueComparator } from "../enrichers/perps-venue-comparison";
@@ -377,6 +378,7 @@ const adrenaClient = new AdrenaClient(cache);
 const perpsAnalyzer = new PerpsAnalyzer(jupiterPerps, adrenaClient, jupiter);
 const perpReference = new PerpReferenceClient(cache);
 const hyperliquidAnalyzer = new HyperliquidAnalyzer(perpReference);
+const hyperliquidSmartMoney = new HyperliquidSmartMoneyAnalyzer(perpReference, hyperliquidAnalyzer, cache);
 const perpsCrossVenueAnalyzer = new PerpsCrossVenueAnalyzer(
   jupiterPerps,
   adrenaClient,
@@ -431,9 +433,9 @@ registerProtocolEntrypoint(addEntrypoint, protocolAnalyzer);
 // Jupiter Perps — market structure + trader profile
 registerPerpsEntrypoints(addEntrypoint, perpsAnalyzer);
 
-// Hyperliquid trader profile — first first-class off-Solana venue (perps
-// intelligence is venue-agnostic). Building block for hyperliquid-smart-money.
-registerHyperliquidEntrypoints(addEntrypoint, hyperliquidAnalyzer);
+// Hyperliquid — trader profile + smart-money positioning. First first-class
+// off-Solana venue (perps intelligence is venue-agnostic).
+registerHyperliquidEntrypoints(addEntrypoint, hyperliquidAnalyzer, hyperliquidSmartMoney);
 
 // Cross-venue perps funding — aggregates Jupiter Perps + Adrena + reference
 // venues (Hyperliquid, dYdX v4). Foundation endpoint for the Phase 2D perps
@@ -805,6 +807,11 @@ app.get('/docs', (c) => {
         price: '0.012',
         input: { address: 'string (EVM 0x address)', format: 'json | llm | both' },
         description: "Hyperliquid trader profile — live perp positions for an EVM (0x) address from Hyperliquid's public on-chain state. Per-position side, leverage, notional, entry, unrealized PnL, distance-to-liquidation, risk flags. Account value, directional bias, profile (directional/market-neutral/diversified), weighted leverage, and realized+unrealized PnL over week/month/all-time. Building block for Hyperliquid smart-money tracking.",
+      },
+      'hyperliquid-smart-money': {
+        price: '0.05',
+        input: { market: 'string (optional coin focus, e.g. HYPE)', top_traders: 'number (optional, default 10)', format: 'json | llm | both' },
+        description: "Where Hyperliquid smart money is positioned. Scans the HL leaderboard, filters out market-makers/HFT + dust/mega-funds, keeps only consistent directional traders (week+month PnL > 0), then aggregates their live positions into a per-coin consensus signal (long/short counts, net notional, bias, conviction) + a top-trader drill-down ranked by month PnL. A positioning signal, not a trade — consensus is often late/crowded and regime-dependent; use as confluence/risk context, not a standalone entry.",
       },
       'perps-cross-venue-funding': {
         price: '0.015',
