@@ -62,6 +62,19 @@ hand-Borsh decode.**
 | **Bullet** (ex-Zeta) | Appchain/L2 — old Zeta SDK (`@zetamarkets/sdk`) + REST data API are for *old Zeta*. Bullet likely needs its own (not-yet-public) API; data lives off Solana L1. | Bullet-specific API (TBD). Can't read via Solana RPC. | Unknown | #5 (blocked on public Bullet API) |
 | **Percolator** | Not live. | — | — | Watch |
 
+## Verified API probe (2026-06-22) — the "easy REST" premise corrected
+
+Probed Phoenix and Flash live APIs directly (same diligence that's paid off before). **Finding: neither exposes clean REST funding+OI like Hyperliquid does.** The reliable pattern for Solana pool/CLOB venues is **on-chain reads** (how we already do Jupiter + Adrena), not REST.
+
+- **Phoenix** (`perp-api.phoenix.trade`): mark price via REST (`/exchange/prices`, all markets incl. RWA/NVDA ✅). But current funding + OI are NOT in REST — the per-market endpoint and the OpenAPI spec both confirm only *static config* (funding interval, OI cap); live funding/OI is WebSocket-stream / on-chain only.
+- **Flash** (`flashapi.trade`): `/pool-data` gives per-custody utilization + locked/owned (OI proxy) + price ✅ and exposes custody pubkeys. BUT the documented `/custodies` + `/perpetuals` + `/markets` routes return 404/empty on the live API, so explicit borrow rate + long/short OI split aren't cleanly REST-available either. Flash is a **Jupiter-Perps-lineage** program ("Solana perpetuals reference implementation"), so its on-chain custody layout likely mirrors Jupiter's — meaning our existing `JupiterPerpsClient` decode logic (jump-rate borrow APR + OI from custody state) probably ports to Flash on-chain using the custody pubkeys we already pulled from `/pool-data`.
+
+**Implication:** there's no REST shortcut for Solana funding/OI. Two real paths to add a venue:
+1. **On-chain reads** (our proven Jupiter/Adrena pattern) — robust, ~1 focused session per venue. **Flash is the best candidate** (Jupiter lineage → likely layout reuse; custody pubkeys in hand).
+2. **CEX-style REST** — only CLOB venues with HL/dYdX-style APIs. **Pacifica** is the candidate (CLOB, CEX-style REST + a documented Funding Rates page) — unverified, deprioritized on mindshare, but may be the one venue with clean REST funding.
+
+**Corrected recommendation:** do **Flash via on-chain** (reuse `JupiterPerpsClient` decode against Flash custody accounts) as the next focused session. Park Phoenix funding for a later on-chain pass (keep its REST mark price for basis). Re-evaluate Pacifica post-TGE (or probe its REST if we want a fast CEX-style add).
+
 ## Strategic recommendations (sequencing)
 
 1. **Be Drift's day-one agent intelligence layer.** Relaunch is imminent (before July). First-mover window
