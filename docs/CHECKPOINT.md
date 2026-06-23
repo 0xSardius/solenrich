@@ -1,11 +1,34 @@
 # Session Checkpoint
 
 ## Last session date
-2026-06-15
+2026-06-22
 
 ## What was completed
 
-### Latest checkpoint (Jun 10–15 — PHASE 13 AUDIT/HARDENING + VIBE-TRADING NORTH STAR + ANANKE NAMED)
+### Latest checkpoint (Jun 16–22 — HL SMART-MONEY TRACK SHIPPED + PERPS LANDSCAPE RESEARCH + MOBILE FIX)
+
+**Big build+research block. Shipped the full Hyperliquid smart-money track (3a + 3b, 31 paid endpoints), fixed the mobile docs sidebar, and did deep Solana-perps landscape + venue-integration research that corrected the venue-coverage plan.**
+
+#### Hyperliquid smart-money track — SHIPPED (the highest-ROI endpoint, idea → validated → built)
+- **Step 0 validation** (`test/hl-copy-edge-validation.ts`): proved the copy-edge thesis but REFRAMED it — lead with aggregate *positioning/consensus*, not "copy one genius" (individual ROI is survivorship-flattered; leaderboard top is MMs). The funnel (account band + turnover MM-filter + consistency gate) became the endpoint's core logic.
+- **3a `hyperliquid-trader-profile`** (`d919c7e`, $0.012) — HL = first first-class off-Solana venue. EVM 0x address → live positions, leverage, liq distance, risk flags, week/month/all-time PnL. Reads HL public `clearinghouseState` + `portfolio` via new `PerpReferenceClient` methods.
+- **3b `hyperliquid-smart-money`** (`98a4e7d`, $0.05) — leaderboard funnel → consistency-gated traders → per-coin positioning consensus (long/short counts, net notional, bias, conviction) + top-trader drill-down ranked by robust month PnL. Honest "signal not a system" framing baked in. Live-verified (e.g. consensus long HYPE / short BTC, 6s cold / cached). **31 paid endpoints.**
+
+#### Mobile docs fix (`1655ed1`)
+- Sidebar "ghosted" over content on mobile scroll. Root cause: CSS source-order cascade bug — `.sidebar{position:static}` mobile override declared BEFORE the base `position:sticky` rule (media queries add no specificity → later base rule won). Fix: relocate mobile overrides after sidebar styles + full normal-flow reset + divider. Verified via headless mobile render.
+- **Noted-but-unfixed:** top nav crowds/clips on narrow viewports (separate pre-existing issue; offered to fix).
+
+#### Solana perps landscape + venue-integration research (`docs/solana-perps-landscape.md`)
+- Scene: accelerating + fragmenting (6+ venues, >70% agent-driven volume) → SolEnrich = the neutral cross-venue intelligence layer. **Pacifica reportedly overtook Jupiter as #1 by daily volume** (CLOB; caveat: pre-TGE airdrop-inflated). **Drift relaunching ~July** (security-first, audited) — be its day-one intel layer. Adrena pivoted to RWA perps. Percolator = Anatoly's upcoming SOL-native DEX.
+- **Phoenix correction:** it's LIVE (not private beta) with a public data API.
+- **VERIFIED API REALITY (2026-06-22, important):** probed Phoenix + Flash live APIs — **neither exposes clean REST funding/OI** like Hyperliquid. Phoenix: mark price via REST (incl. RWA/NVDA) but funding/OI = WS/on-chain only. Flash: `/pool-data` gives utilization + OI-proxy + price + custody pubkeys, but documented `/custodies`+`/perpetuals`+`/markets` routes 404 live. **The reliable Solana-venue pattern is ON-CHAIN reads (our Jupiter/Adrena pattern), not REST.** Flash is Jupiter-Perps-lineage → `JupiterPerpsClient` decode logic likely ports to Flash on-chain (custody pubkeys in hand).
+- **User's gut call (well-connected on CT):** lead with Phoenix over Pacifica on mindshare (Pacifica invisible despite volume = airdrop-farm fingerprint). Reconciled with data.
+
+#### ⏭️ NEXT (decided): **Flash via on-chain** — reuse `JupiterPerpsClient` decode against Flash custody accounts (program ID + layout-diff vs Jupiter → borrow APR + OI → `VenueQuote`). Park Phoenix funding for a later on-chain pass (keep its REST mark for basis). Re-evaluate Pacifica post-TGE. **User ready to do the Flash exploration next session.**
+
+#### 🆕 OPEN IDEA (user raised 2026-06-22): **"the trenches" — memecoin intelligence for agents.** Memecoins kicking off hard on Solana. Brainstormed trenches-specific products (see this session's chat). Most defensible/reuse-heavy: dev/deployer reputation (data-moat, compounds like consensus-signal), insider/sniper/bundle detection (graph+holders+timing synthesis), smart-money-in-memecoins (reuse copy-trade winner ID), agent-attention-on-fresh-tokens (consensus-signal moat). Position as the agent-native *intelligence layer* for memecoin trading bots, NOT another terminal (space is crowded: gmgn/photon/bullx/trojan). Adjacent vibe-trading vertical; dogfoolable by a future "trenches" swarm agent. Not yet scoped/committed.
+
+### Previous checkpoint (Jun 10–15 — PHASE 13 AUDIT/HARDENING + VIBE-TRADING NORTH STAR + ANANKE NAMED)
 
 **Two workstreams: (1) a comprehensive 4-track audit that fixed a real metrics bug + hardened security, and (2) a strategy session that locked the vibe-trading north star, named the agent swarm, and renamed Riptide → Ananke. 8 commits pushed (`40db337` → `80c053b`).**
 
@@ -462,6 +485,10 @@ Gate was due 2026-05-18, was 6 days overdue. Pulled the actual numbers, found th
 - April 2-3: Comparison, temporal, discovery endpoints. MPP Stage 1. SolScout E2E.
 
 ## Current state
+
+### As of 2026-06-22
+- **31 paid endpoints on production.** +`hyperliquid-trader-profile` ($0.012) +`hyperliquid-smart-money` ($0.05). HL = first first-class off-Solana venue. README/`/docs`/OpenAPI/MCP all in sync.
+- **Next build: Flash via on-chain** (reuse `JupiterPerpsClient` decode). Open idea: memecoin/"trenches" intelligence layer. Landscape + venue feasibility: `docs/solana-perps-landscape.md`.
 
 ### As of 2026-06-15
 - **29 paid endpoints on production** (perps quintet complete). README / `/docs` / OpenAPI / MCP all in sync.
