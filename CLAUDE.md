@@ -457,6 +457,22 @@ Full research + integration-feasibility matrix: `docs/solana-perps-landscape.md`
 
 **Time-sensitive:** be Drift's day-one agent intelligence layer when it relaunches.
 
+### "The Trenches" — memecoin intelligence vertical (open idea, 2026-06-22)
+
+Memecoins are the most agent-driven segment on Solana (>70% of DEX volume on peak launch days is bots) and pure vibe trading (narrative/momentum/speed). A strong NEXT vertical that reuses our existing token/wallet/graph/copy-trade/consensus stack. **Framing: we are the agent-native *intelligence layer* memecoin bots call (pay-per-call verdicts) — NOT a terminal** (that space is crowded: gmgn/photon/bullx/trojan/axiom). Be the research layer, not the sniper bot.
+
+**Standout plays (most defensible, ranked):**
+1. **Dev/deployer reputation** — "has this dev rugged before?" Tracks deployer wallet launch history (count, rug rate, outcomes). **Compounding data moat like `consensus-signal`** — improves with every launch we see; incumbents can't replicate without the history. Reuses Helius tx/asset history. Pure demonstrable loss-avoidance ROI.
+2. **Insider/sniper/bundle detection** — "is this launch rigged?" % of supply held by block-0 buyers or wallets graph-connected to the dev. Defensible **synthesis** (wallet-graph + token-analyzer + launch-tx timing). Sells the verdict, not holder lists.
+3. **Smart-money-in-the-trenches** — "which fresh launches are proven winners aping?" Reuses `copy-trade-analyzer` (winner ID) + `new-tokens` + `whale-watch`. `smart-money-flow` applied to new tokens.
+4. **Agent-attention on fresh tokens** — extends `consensus-signal` (attention before price; uniquely ours).
+
+**Orchestration headliner:** `trenches-scan` — fresh launches → filter rugs → insider/sniper check → dev reputation → smart-money + attention overlay → ranked ape-able list w/ reasoning ($0.05–0.10). The trenches `trending-signals`.
+
+**Caveats:** (a) **Latency boundary** — block-0 sniping needs sub-second tx data (Geyser/streams), a different game we don't chase; the *intelligence* plays (dev rep, insider %, smart-money) are seconds-to-minutes "pre-ape research" that fits our request/response model. (b) ROI story is *stronger* than perps — meme outcomes are binary (rug −100% / runner +1000%), so avoiding one rug or catching one 10x pays for thousands of calls. (c) Fast rug-check alone is commoditized (rugcheck.xyz) — only valuable folded into the synthesis above. (d) Dogfoolable by a future "trenches" swarm agent (trickster/chaos deity name — availability-checked later).
+
+**Sequencing:** adjacent vertical, doesn't block perps. Finish Flash on-chain (close out perps venue coverage) first, then open the trenches leading with dev-reputation + insider-detection.
+
 ### What to deprioritize
 
 - **Raw data breadth.** Don't add endpoints just to have them. Can't out-breadth Helius/Nansen. Out-synthesize them.

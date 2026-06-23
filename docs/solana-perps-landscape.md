@@ -75,6 +75,22 @@ Probed Phoenix and Flash live APIs directly (same diligence that's paid off befo
 
 **Corrected recommendation:** do **Flash via on-chain** (reuse `JupiterPerpsClient` decode against Flash custody accounts) as the next focused session. Park Phoenix funding for a later on-chain pass (keep its REST mark price for basis). Re-evaluate Pacifica post-TGE (or probe its REST if we want a fast CEX-style add).
 
+## Flash on-chain integration — KICKED OFF (2026-06-22)
+
+Probed the chain directly (`test/flash-onchain-probe.ts`, `test/flash-idl-fetch.ts`). Path confirmed + de-risked:
+- **Program ID:** `FLASH6Lo6h3iasJKWDs2F8TkW2UKf3s15C8PMGuVfgBn`. Custody discriminator `01b830515d833f91` == Jupiter's → same `Custody` struct lineage (Solana Labs perps reference fork). Layout diverged though (Flash 704B vs Jupiter 2000B).
+- **IDL fetched on-chain + saved:** `src/idl/flash-perpetuals-idl.json`. It's **new Anchor 0.30+ format** (incompatible with our pinned Anchor 0.29 — SAME as Adrena) → use **fixed-offset Borsh decode** (Adrena pattern), NOT the Anchor Program/IDL path.
+- **Custody struct** (offsets derivable from saved IDL): `pool, mint, token_account, decimals, is_stable, depeg_adjustment, is_virtual, inverse_price, oracle(OracleParams), pricing(PricingParams), permissions, fees, borrow_rate(BorrowRateParams), token_amount_multiplier(u64), assets(Assets{collateral,owned,locked}), fees_stats, borrow_rate_state(BorrowRateState), bump, ...`. → utilization = locked/owned; borrow APR from `borrow_rate` + `borrow_rate_state`.
+- **Key difference from Jupiter:** Flash splits OI OUT of Custody. `assets` is only `{collateral, owned, locked}` (no guaranteedUsd/globalShortSizes). **Open interest lives in the separate `Market` account** (Flash has a `Market` account; Jupiter packs OI into custody). So OI = a second decode.
+- **RWA bonus:** Flash lists 34 markets incl. **SPY/NVDA/TSLA/AAPL/AMD/AMZN** (equities), **XAU/XAG** (metals), **EUR/GBP/USDJPY/USDCNH** (forex), **CRUDEOIL/NATGAS** (commodities), XAUt. Flash = crypto + tokenized-equity + forex + commodity perps in one venue (ties to the RWA wedge).
+
+**Remaining build (next session, ~1 focused session):**
+1. Inspect `BorrowRateParams` + `BorrowRateState` + `Market` structs in the saved IDL → compute byte offsets (and confirm Flash's borrow formula vs Jupiter's jump-rate).
+2. `src/sources/flash-perps.ts` — `FlashPerpsClient` (Adrena-style fixed-offset Borsh): decode Custody (utilization + borrow APR) + Market (OI long/short). Reuse the `computeBorrowRate` math if Flash's curve matches; else Flash-specific.
+3. Add Flash `VenueQuote` to `perps-cross-venue.ts` (additive — best_entry/arbitrage recompute automatically).
+4. Verify live vs SOL/BTC/ETH. Optionally expose the RWA/forex/commodity markets.
+- Custody pubkeys via `flashapi.trade/pool-data`; per-market Market pubkeys via the Pool/IDL.
+
 ## Strategic recommendations (sequencing)
 
 1. **Be Drift's day-one agent intelligence layer.** Relaunch is imminent (before July). First-mover window
