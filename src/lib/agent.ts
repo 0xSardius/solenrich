@@ -54,6 +54,7 @@ import { registerPerpsVenueComparisonEntrypoint } from "../entrypoints/perps-ven
 import { registerPerpsBasisSignalEntrypoint } from "../entrypoints/perps-basis-signal";
 import { AdrenaClient } from "../sources/adrena";
 import { PerpReferenceClient } from "../sources/perp-reference";
+import { FlashPerpsClient } from "../sources/flash-perps";
 import { HyperliquidAnalyzer } from "../enrichers/hyperliquid-analyzer";
 import { HyperliquidSmartMoneyAnalyzer } from "../enrichers/hyperliquid-smart-money";
 import { registerHyperliquidEntrypoints } from "../entrypoints/hyperliquid";
@@ -377,12 +378,14 @@ const jupiterPerps = new JupiterPerpsClient(cache);
 const adrenaClient = new AdrenaClient(cache);
 const perpsAnalyzer = new PerpsAnalyzer(jupiterPerps, adrenaClient, jupiter);
 const perpReference = new PerpReferenceClient(cache);
+const flashPerps = new FlashPerpsClient(cache);
 const hyperliquidAnalyzer = new HyperliquidAnalyzer(perpReference);
 const hyperliquidSmartMoney = new HyperliquidSmartMoneyAnalyzer(perpReference, hyperliquidAnalyzer, cache);
 const perpsCrossVenueAnalyzer = new PerpsCrossVenueAnalyzer(
   jupiterPerps,
   adrenaClient,
   perpReference,
+  flashPerps,
   cache,
 );
 const perpsVenueComparator = new PerpsVenueComparator(

@@ -75,7 +75,9 @@ Probed Phoenix and Flash live APIs directly (same diligence that's paid off befo
 
 **Corrected recommendation:** do **Flash via on-chain** (reuse `JupiterPerpsClient` decode against Flash custody accounts) as the next focused session. Park Phoenix funding for a later on-chain pass (keep its REST mark price for basis). Re-evaluate Pacifica post-TGE (or probe its REST if we want a fast CEX-style add).
 
-## Flash on-chain integration — KICKED OFF (2026-06-22)
+## Flash on-chain integration — borrow rate + utilization SHIPPED (2026-06-23); OI pending
+
+**STATUS:** `src/sources/flash-perps.ts` (`FlashPerpsClient`) live in the cross-venue analyzer. Borrow APR (on-chain `borrow_rate_state.current_rate` @ offset 596, `/1e9` hourly → annualized) + utilization + mark (via `/pool-data`) verified live: SOL 0.21% APR @ 1.02% util, BONK 14.75% @ 42% util (Flash adds BONK, which Jupiter Perps lacks). Flows into `perps-cross-venue-funding`, `perps-venue-comparison`, `perps-basis-signal`. **Remaining: OI/skew** (separate `Market` accounts — see below).
 
 Probed the chain directly (`test/flash-onchain-probe.ts`, `test/flash-idl-fetch.ts`). Path confirmed + de-risked:
 - **Program ID:** `FLASH6Lo6h3iasJKWDs2F8TkW2UKf3s15C8PMGuVfgBn`. Custody discriminator `01b830515d833f91` == Jupiter's → same `Custody` struct lineage (Solana Labs perps reference fork). Layout diverged though (Flash 704B vs Jupiter 2000B).
@@ -84,12 +86,9 @@ Probed the chain directly (`test/flash-onchain-probe.ts`, `test/flash-idl-fetch.
 - **Key difference from Jupiter:** Flash splits OI OUT of Custody. `assets` is only `{collateral, owned, locked}` (no guaranteedUsd/globalShortSizes). **Open interest lives in the separate `Market` account** (Flash has a `Market` account; Jupiter packs OI into custody). So OI = a second decode.
 - **RWA bonus:** Flash lists 34 markets incl. **SPY/NVDA/TSLA/AAPL/AMD/AMZN** (equities), **XAU/XAG** (metals), **EUR/GBP/USDJPY/USDCNH** (forex), **CRUDEOIL/NATGAS** (commodities), XAUt. Flash = crypto + tokenized-equity + forex + commodity perps in one venue (ties to the RWA wedge).
 
-**Remaining build (next session, ~1 focused session):**
-1. Inspect `BorrowRateParams` + `BorrowRateState` + `Market` structs in the saved IDL → compute byte offsets (and confirm Flash's borrow formula vs Jupiter's jump-rate).
-2. `src/sources/flash-perps.ts` — `FlashPerpsClient` (Adrena-style fixed-offset Borsh): decode Custody (utilization + borrow APR) + Market (OI long/short). Reuse the `computeBorrowRate` math if Flash's curve matches; else Flash-specific.
-3. Add Flash `VenueQuote` to `perps-cross-venue.ts` (additive — best_entry/arbitrage recompute automatically).
-4. Verify live vs SOL/BTC/ETH. Optionally expose the RWA/forex/commodity markets.
-- Custody pubkeys via `flashapi.trade/pool-data`; per-market Market pubkeys via the Pool/IDL.
+**Remaining: OI/skew** (~½ session). OI lives in `Market` accounts, `collective_position` (PositionStats), one Market per (pool, target_custody, side). Plan: `getProgramAccounts(FLASH_PROGRAM, filters=[Market disc, memcmp target_custody @ offset 40 = <symbol custody>])` → decode `Market.collective_position.size_usd` (Market.collective_position @ offset 126; PositionStats layout in saved IDL) → sum long/short → populate `open_interest_usd` + `skew` on the Flash `VenueQuote`. Market discriminator available from `idl.accounts` in `src/idl/flash-perpetuals-idl.json`. Offset-derivation reference: `test/flash-layout.ts`.
+
+**Also open:** expose Flash's RWA/forex/commodity markets (SPY/NVDA/XAU/EUR/CRUDEOIL…) — a distinct RWA-perps surface; ties to the RWA wedge.
 
 ## Strategic recommendations (sequencing)
 

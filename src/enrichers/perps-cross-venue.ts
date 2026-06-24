@@ -16,11 +16,12 @@ import { parallelFetch } from '../utils/parallel';
 import type { JupiterPerpsClient } from '../sources/jupiter-perps';
 import type { AdrenaClient, AdrenaMarket } from '../sources/adrena';
 import type { PerpReferenceClient, ReferenceMarket } from '../sources/perp-reference';
+import type { FlashPerpsClient, FlashMarket } from '../sources/flash-perps';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 
 export type CrossVenueMarket = 'SOL' | 'BTC' | 'ETH' | 'BONK';
-export type VenueId = 'jupiter-perps' | 'adrena' | 'hyperliquid' | 'dydx-v4';
+export type VenueId = 'jupiter-perps' | 'adrena' | 'flash' | 'hyperliquid' | 'dydx-v4';
 
 export interface VenueQuote {
   venue: VenueId;
@@ -93,6 +94,7 @@ export class PerpsCrossVenueAnalyzer {
     private jupiter: JupiterPerpsClient,
     private adrena: AdrenaClient,
     private reference: PerpReferenceClient,
+    private flash: FlashPerpsClient,
     private cache: Cache,
   ) {}
 
@@ -108,6 +110,7 @@ export class PerpsCrossVenueAnalyzer {
     const tasks = [
       { name: 'jupiter', fn: () => this.jupiter.getMarketStructure() },
       { name: 'adrena', fn: () => this.adrena.getMarket(market as AdrenaMarket) },
+      { name: 'flash', fn: () => this.flash.getMarket(market as FlashMarket) },
     ];
     if (includeReference) {
       tasks.push(
@@ -209,6 +212,37 @@ export class PerpsCrossVenueAnalyzer {
         skew: 'unknown',
         mark_price_usd: null,
         unavailable_reason: 'Adrena fetch failed.',
+      });
+    }
+
+    // --- Flash Trade (pool perp, Jupiter-lineage; borrow rate read on-chain) ---
+    const flashMarket = results.flash;
+    if (flashMarket && flashMarket.borrow_apr_pct !== null) {
+      venues.push({
+        venue: 'flash',
+        available: true,
+        type: 'solana-onchain',
+        // Pool perp — both sides pay the same utilization-based borrow rate.
+        borrow_apr_long: flashMarket.borrow_apr_pct,
+        borrow_apr_short: flashMarket.borrow_apr_pct,
+        open_interest_usd: null,
+        utilization_pct: flashMarket.utilization_pct,
+        skew: 'unknown',
+        mark_price_usd: flashMarket.mark_price_usd,
+        notes: ['Flash OI/skew live in separate Market accounts — borrow rate + utilization wired; OI pending.'],
+      });
+    } else {
+      venues.push({
+        venue: 'flash',
+        available: false,
+        type: 'solana-onchain',
+        borrow_apr_long: null,
+        borrow_apr_short: null,
+        open_interest_usd: null,
+        utilization_pct: null,
+        skew: 'unknown',
+        mark_price_usd: flashMarket?.mark_price_usd ?? null,
+        unavailable_reason: flashMarket ? 'Flash borrow-rate read failed.' : `${market} not available on Flash.`,
       });
     }
 
