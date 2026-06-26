@@ -90,6 +90,22 @@ Probed the chain directly (`test/flash-onchain-probe.ts`, `test/flash-idl-fetch.
 
 **Also open:** expose Flash's RWA/forex/commodity markets (SPY/NVDA/XAU/EUR/CRUDEOIL…) — a distinct RWA-perps surface; ties to the RWA wedge.
 
+### Flash v2 API — HIGH PRIORITY (2026-06-25, Flash reached out to Sardius personally)
+
+Docs: `https://docs.flash.trade/flash-trade/flash-trade-protocol/build-on-flash/flash-trade-api/flash-trade-v2` (sub-pages: `apireference.md`, `websocketstreaming.md`, `protocolconcepts.md`, `workflows.md`; docs are agent-native — support `.md?ask=`).
+
+**v2 serves the Anchor-DESERIALIZED on-chain accounts as clean REST JSON — i.e. everything we hand-decoded via Borsh in v1, PLUS the OI we deferred. Verified live 2026-06-25:**
+- `GET /v2/raw/markets` (98 markets) → `collectivePosition.sizeUsd` + `side` + `targetCustody` = **OI long/short per market** (closes the OI/skew gap — no getProgramAccounts/Borsh).
+- `GET /v2/raw/custodies` (50) → `borrowRateState.currentRate` + `assets.owned/locked` = borrow APR + utilization.
+- `GET /v2/prices` → mark price. `GET /v2/raw/pools`. All **unauthenticated REST**.
+- v2 redesign (not relevant to our read-only use): one `Basket` per wallet; wallet state via WebSocket (`/v2/owner/{owner}/ws`).
+
+**Caveat:** `/v2/health` reports `"env":"dev"` (live but staging; published 2026-06-17, 1 pool). Don't depend on a dev endpoint for production paid endpoints — gate prod use on v2 going prod-stable.
+
+**Opportunity (the real prize):** Flash reached out personally → be the **first-mover / launch-partner integrator** ("the agent-native intelligence layer on Flash v2"); unlocks Flash's RWA/forex/commodity catalog as a unique agent-readable surface; co-marketing.
+
+**Plan:** (1) **Sardius:** confirm v2 prod timeline + stable base URL + launch-partner co-marketing with the Flash contact. (2) Build a **v2-ready `FlashPerpsClient`** (pure REST; OI/skew included) behind a flag → flip to v2 day-one at prod. v1 borrow/util stays live meanwhile (no regression).
+
 ## Strategic recommendations (sequencing)
 
 1. **Be Drift's day-one agent intelligence layer.** Relaunch is imminent (before July). First-mover window

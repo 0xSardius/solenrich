@@ -455,6 +455,8 @@ Full research + integration-feasibility matrix: `docs/solana-perps-landscape.md`
 - **Bullet** — appchain, needs its own (non-public) API. #5, blocked.
 - Each venue is an additive `VenueQuote` entry; `best_entry`/`arbitrage` recompute automatically. The HL smart-money (3b) work generalizes to cross-venue Solana smart-money once we read per-venue trader positions.
 
+**HIGH PRIORITY — Flash v2 API (2026-06-25):** Flash reached out to Sardius personally. v2 (`docs.flash.trade/.../flash-trade-v2`) serves Anchor-deserialized accounts as clean REST JSON — `/v2/raw/markets` (OI via `collectivePosition.sizeUsd`+`side`), `/v2/raw/custodies` (`borrowRateState.currentRate` + `assets`), `/v2/prices` — closing our v1 OI gap AND simplifying Flash to pure REST. Currently `env:dev` (don't depend on for prod yet). First-mover/launch-partner opportunity + unlocks Flash's RWA/forex/commodity catalog. Plan: Sardius confirms v2 prod timeline w/ Flash; build v2-ready client behind a flag, flip day-one at prod. Detail: `docs/solana-perps-landscape.md` "Flash v2 API".
+
 **Time-sensitive:** be Drift's day-one agent intelligence layer when it relaunches.
 
 ### "The Trenches" — memecoin intelligence vertical (open idea, 2026-06-22)
