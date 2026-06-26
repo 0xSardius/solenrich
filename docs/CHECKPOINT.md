@@ -1,7 +1,15 @@
 # Session Checkpoint
 
 ## Last session date
-2026-06-22
+2026-06-26
+
+## ⏰ PENDING — re-check 2026-06-27 (afternoon): CDP x402 Bazaar indexing
+
+The bazaar-extension double-nest fix (`bb13cf5`) is deployed + verified live (correct single-level `extensions.bazaar.{info,schema}`; `accepts[]` intact). Seeded **29/31 endpoints via SolScout `--paid`** on 2026-06-26, but SolEnrich was NOT yet in the CDP catalog immediately after (indexer lag). **Tomorrow PM, re-check:**
+- `curl 'https://api.cdp.coinbase.com/platform/v2/x402/discovery/resources?limit=200'` → grep `solenrich` / `api.solenrich.com` / payTo `66Qvhr1xnwqbCT36KfHfZF1JpoWdmCQ3uFYTN335CGXe`
+- `curl 'https://api.cdp.coinbase.com/platform/v2/x402/discovery/search?query=Solana%20wallet%20perps%20funding'`
+- **If present → P0 confirmed ✅.** If still absent after indexer should've caught up → deeper CDP requirement to chase (registration/format), but proceed to **P1 distribution sprint** regardless (MCP directories + awesome-lists + MPPScan; content drafted by Claude, manual submits by Sardius).
+- Also still pending: **seed the 5 new endpoints** (`hyperliquid-*`, `perps-cross-venue-*`) — re-run SolScout `--paid` (now covers all 31). Full detail: `docs/discoverability-audit.md` P0 section.
 
 ## What was completed
 
