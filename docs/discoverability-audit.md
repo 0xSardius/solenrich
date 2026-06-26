@@ -87,11 +87,17 @@ assign `declareDiscoveryExtension(...)` directly to `extensions`. Metadata-only 
 and handlers untouched. Verified live: prod 402 now shows correct `extensions.bazaar.{info,schema}` and
 unchanged `accepts[]`; all endpoints green.
 
-**REMAINING to actually appear in the bazaar:** CDP catalogs resources on **settlement** through its
-facilitator with a valid bazaar extension. Now that the extension is well-formed, **seed it with a fresh
-CDP-settled paid call** (one per endpoint ideally — a scripted self-call), then confirm routes appear in
-`GET https://api.cdp.coinbase.com/platform/v2/x402/discovery/resources` + `/discovery/search`. (Prior 287
-settlements happened with the malformed extension, so they didn't catalog us correctly.)
+**SEEDED 2026-06-26:** ran SolScout `--paid --mode stress` → **29/29 endpoints settled real USDC through
+CDP** (full paid E2E also re-verified). Immediately after, SolEnrich is **NOT yet in CDP `/discovery/resources`**
+(253 items, mostly EVM/Base; our solana payTo absent). Most likely **CDP indexer lag** (async cataloging) —
+the extension is confirmed well-formed + `accepts[]` valid, so re-check `/discovery/resources` + `/discovery/search`
+in a few hours / next day. If still absent after the indexer should have caught up, there's a deeper CDP-side
+requirement to chase (registration step, or extension format nuance) — not the malformed-nesting bug, which is fixed.
+
+**Follow-up — SolScout stress list is STALE:** it does NOT include the 5 newest endpoints
+(`hyperliquid-trader-profile`, `hyperliquid-smart-money`, `perps-cross-venue-funding`,
+`perps-venue-comparison`, `perps-basis-signal`), so those did NOT get seeded. Update `agents/solscout/stress.ts`
++ re-run paid to seed them for full bazaar coverage. Also `check-alerts` 402'd in the run (didn't settle).
 
 #### Original audit notes (superseded by the correction above):
 - **Inspect our live 402 first** (touches payment middleware — don't break payments). Current per-route 402
