@@ -75,7 +75,25 @@ occupying our positioning with far more authority).
 
 ## Prioritized fix plan
 
-### P0 — Fix CDP Bazaar indexing (structural, unlocks the canonical agent discovery path)
+### P0 — Fix CDP Bazaar indexing — ✅ FIXED + DEPLOYED 2026-06-26 (`bb13cf5`)
+
+**CORRECTION to the audit's root cause:** our 402 was NOT non-standard. The standard payment
+requirements (`x402Version: 2`, `accepts[]` with scheme/network/asset/payTo/feePayer) + the bazaar
+extension are emitted in the **`payment-required` HTTP header** (base64) — the audit only inspected the
+JSON body and missed it. The *real* bug: `declareDiscoveryExtension()` already returns `{ bazaar: {...} }`,
+but `routeConfig` wrapped it AGAIN under `extensions: { bazaar: ... }`, producing malformed
+`extensions.bazaar.bazaar.{info,schema}` that CDP's indexer can't parse. Fix (one line in `agent.ts`):
+assign `declareDiscoveryExtension(...)` directly to `extensions`. Metadata-only — `accepts[]`, verification,
+and handlers untouched. Verified live: prod 402 now shows correct `extensions.bazaar.{info,schema}` and
+unchanged `accepts[]`; all endpoints green.
+
+**REMAINING to actually appear in the bazaar:** CDP catalogs resources on **settlement** through its
+facilitator with a valid bazaar extension. Now that the extension is well-formed, **seed it with a fresh
+CDP-settled paid call** (one per endpoint ideally — a scripted self-call), then confirm routes appear in
+`GET https://api.cdp.coinbase.com/platform/v2/x402/discovery/resources` + `/discovery/search`. (Prior 287
+settlements happened with the malformed extension, so they didn't catalog us correctly.)
+
+#### Original audit notes (superseded by the correction above):
 - **Inspect our live 402 first** (touches payment middleware — don't break payments). Current per-route 402
   is a custom `{"error":"Payment Required","pricing":{...},"all_endpoints":{...}}` body (likely from
   `build402Body` in `src/index.ts`). It must emit/also-offer the **standard x402 payment-requirements**:
