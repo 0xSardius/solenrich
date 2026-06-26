@@ -251,19 +251,22 @@ if (PAYMENTS_ENABLED && resourceServer) {
       }],
       description: meta?.description ?? "SolEnrich enrichment endpoint",
       mimeType: "application/json",
-      extensions: {
-        bazaar: declareDiscoveryExtension({
-          bodyType: 'json',
-          inputSchema: inputSchema as Record<string, unknown>,
-          output: {
-            example: {
-              run_id: 'uuid',
-              status: 'succeeded',
-              output: { briefing: 'string (llm format) or object (json format)' },
-            },
+      // `declareDiscoveryExtension` already returns `{ bazaar: {...} }`, so assign it
+      // DIRECTLY to `extensions`. Wrapping it again under `bazaar` double-nested the
+      // metadata (`extensions.bazaar.bazaar.{info,schema}`), which CDP's bazaar indexer
+      // can't parse — the root cause of SolEnrich being absent from the x402 Bazaar.
+      // This changes only discovery metadata; `accepts[]` and the payment flow are untouched.
+      extensions: declareDiscoveryExtension({
+        bodyType: 'json',
+        inputSchema: inputSchema as Record<string, unknown>,
+        output: {
+          example: {
+            run_id: 'uuid',
+            status: 'succeeded',
+            output: { briefing: 'string (llm format) or object (json format)' },
           },
-        }),
-      },
+        },
+      }),
     };
   };
 
