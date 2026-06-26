@@ -17,6 +17,16 @@ import { lookupEntity, tagAddress, tagAddresses } from '../src/utils/entities';
 import { median, spreadPct } from '../src/utils/price-aggregator';
 import { formatResponse } from '../src/formatters/index';
 import { parseIntent } from '../src/entrypoints/query';
+import { STRESS_COVERAGE } from '../agents/solscout/stress';
+
+// --- SolScout stress coverage guard ---
+// Enforces the "new endpoint checklist" rule: every paid endpoint (PRICING) must
+// have a SolScout stress config. Fails CI if an endpoint was added without one.
+describe('SolScout stress coverage', () => {
+  test('every paid endpoint has a stress config', () => {
+    expect(STRESS_COVERAGE.missing).toEqual([]);
+  });
+});
 
 // --- Helpers ---
 

@@ -1,15 +1,20 @@
 /**
- * Stress test runner — hits all 26 endpoint configurations and validates
- * response quality. The `query` endpoint is exercised twice: once for a
- * single-intent question and once for a compound-intent (`wallet deep dive`)
- * to cover the parallel orchestration path added in Priority 11.
+ * Stress test runner — hits a config for EVERY paid endpoint and validates
+ * response quality. Coverage is guarded against `PRICING` (see `STRESS_COVERAGE`
+ * below + the CLAUDE.md "new endpoint checklist" rule): adding an endpoint to
+ * PRICING without a config here logs a warning at runtime AND fails the unit
+ * coverage test in `test/unit.test.ts`.
  */
+
+import { PRICING } from '../../src/config';
 
 const TEST_WALLET = 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg';
 const TEST_TOKEN = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263'; // BONK
 const TEST_TOKEN_2 = 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN'; // JUP
 // Known Jupiter Perps trader with 5 open positions, all risk flags firing (verified 2026-05-03).
 const TEST_PERPS_TRADER = 'BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu';
+// Known active Hyperliquid trader (EVM 0x). Positions move, so checks are shape-based.
+const TEST_HL_TRADER = '0xd21d931890d27b6e7e2e668f27931e17698e90f1';
 
 export interface EndpointResult {
   endpoint: string;
@@ -446,7 +451,84 @@ const ENDPOINTS: Array<{
       { name: 'llm_summary chains briefings', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Wallet Deep Dive') },
     ],
   },
+  // --- Cross-venue perps suite (Jupiter + Adrena + Flash + Hyperliquid + dYdX) ---
+  {
+    key: 'perps-cross-venue-funding',
+    input: { market: 'SOL', include_reference: true, format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'market is SOL', test: (d) => d.market === 'SOL' },
+      { name: 'has venues array (>=4)', test: (d) => Array.isArray(d.venues) && d.venues.length >= 4, detail: (d) => `venues=${(d.venues ?? []).map((v: any) => v.venue).join(',')}` },
+      { name: 'jupiter + flash venues present', test: (d) => d.venues?.some((v: any) => v.venue === 'jupiter-perps') && d.venues?.some((v: any) => v.venue === 'flash') },
+      { name: 'has best_entry long/short', test: (d) => d.best_entry?.long != null && d.best_entry?.short != null },
+      { name: 'has basis + arbitrage_opportunities', test: (d) => d.basis != null && Array.isArray(d.arbitrage_opportunities) },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.length > 50 },
+    ],
+  },
+  {
+    key: 'perps-venue-comparison',
+    input: { market: 'SOL', size_usd: 5000, side: 'long', format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'market/side/size echoed', test: (d) => d.market === 'SOL' && d.side === 'long' && d.size_usd === 5000 },
+      { name: 'has venues array (>=4)', test: (d) => Array.isArray(d.venues) && d.venues.length >= 4 },
+      { name: 'has rankings.by_entry_cost', test: (d) => Array.isArray(d.rankings?.by_entry_cost) },
+      { name: 'has recommendation', test: (d) => d.recommendation != null },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.length > 50 },
+    ],
+  },
+  {
+    key: 'perps-basis-signal',
+    input: { asset: 'SOL', min_yield_apr_pct: 5, format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'asset is SOL', test: (d) => d.asset === 'SOL' },
+      { name: 'min_yield_apr_pct=5', test: (d) => d.min_yield_apr_pct === 5 },
+      { name: 'has venues array', test: (d) => Array.isArray(d.venues) },
+      { name: 'has opportunities array', test: (d) => Array.isArray(d.opportunities) },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.length > 50 },
+    ],
+  },
+  // --- Hyperliquid (first first-class off-Solana venue) ---
+  {
+    key: 'hyperliquid-trader-profile',
+    input: { address: TEST_HL_TRADER, format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'address echoed', test: (d) => d.address === TEST_HL_TRADER },
+      { name: 'venue is hyperliquid', test: (d) => d.venue === 'hyperliquid' },
+      { name: 'has account.value_usd', test: (d) => typeof d.account?.value_usd === 'number' },
+      { name: 'has positions array', test: (d) => Array.isArray(d.positions) },
+      { name: 'has profile', test: (d) => typeof d.profile === 'string' },
+      { name: 'directional_bias valid', test: (d) => ['long', 'short', 'neutral'].includes(d.directional_bias) },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Hyperliquid Trader') },
+    ],
+  },
+  {
+    key: 'hyperliquid-smart-money',
+    // Orchestration — scans the HL leaderboard + per-trader pulls; slow on cold cache.
+    input: { format: 'both', top_traders: 5 },
+    timeout: 90000,
+    checks: [
+      { name: 'has trader_universe.qualified', test: (d) => typeof d.trader_universe?.qualified === 'number', detail: (d) => `qualified=${d.trader_universe?.qualified}` },
+      { name: 'has positioning array', test: (d) => Array.isArray(d.positioning) },
+      { name: 'has consensus_longs/shorts arrays', test: (d) => Array.isArray(d.consensus_longs) && Array.isArray(d.consensus_shorts) },
+      { name: 'has top_traders array', test: (d) => Array.isArray(d.top_traders) },
+      { name: 'has summary', test: (d) => typeof d.summary === 'string' },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Hyperliquid Smart Money') },
+    ],
+  },
 ];
+
+// --- Coverage guard ---------------------------------------------------------
+// Every paid endpoint in PRICING MUST have at least one stress config above.
+// `STRESS_COVERAGE.missing` is asserted empty by test/unit.test.ts (CI), and
+// warned at runtime in run(). When you add an endpoint, add a config here too.
+const COVERED_KEYS = new Set(ENDPOINTS.map((e) => e.key));
+export const STRESS_COVERAGE = {
+  covered: [...COVERED_KEYS],
+  missing: Object.keys(PRICING).filter((k) => !COVERED_KEYS.has(k)),
+};
 
 export class StressRunner {
   private baseUrl: string;
@@ -459,6 +541,10 @@ export class StressRunner {
 
   async run(): Promise<StressResults> {
     const results: EndpointResult[] = [];
+
+    if (STRESS_COVERAGE.missing.length) {
+      console.warn(`\n⚠️  STRESS COVERAGE GAP — these paid endpoints have NO stress config: ${STRESS_COVERAGE.missing.join(', ')}.\n    Add them to agents/solscout/stress.ts (see CLAUDE.md "new endpoint checklist").\n`);
+    }
 
     // Fetch a real tx signature for parse-transaction
     let testSig: string | null = null;

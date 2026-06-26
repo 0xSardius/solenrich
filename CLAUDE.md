@@ -6,6 +6,17 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **Commit and push after each feature or modular change.** Don't let work accumulate uncommitted — each phase, feature, or logical unit of work should be committed and pushed before moving on.
 
+- **New endpoint checklist — when you add a paid endpoint, update ALL of these in the same change (or it ships half-wired):**
+  1. `src/config.ts` — `PRICING` (+ `CACHE_TTL` if needed)
+  2. Entrypoint handler + Zod schema + LLM formatter, registered in `src/lib/agent.ts`
+  3. `src/mcp-tools.ts` — matching MCP tool
+  4. `src/openapi.ts` — `ENDPOINT_META` entry (auto-flows to `/llms.txt`)
+  5. `/docs` JSON in `src/lib/agent.ts`
+  6. **`agents/solscout/stress.ts` — a stress config** (input + quality checks). Enforced: `STRESS_COVERAGE` + the `test/unit.test.ts` coverage test FAIL CI if a `PRICING` endpoint has no stress config.
+  7. `test/test-all-endpoints.ts` — a verification entry
+  8. README endpoint table + landing page if user-facing
+  After deploy, a SolScout `--paid` run seeds the endpoint into the CDP x402 Bazaar (settlement-driven discovery).
+
 ## Project Overview
 
 **SolEnrich** is a Solana onchain data enrichment agent. It accepts USDC micropayments via x402 protocol and returns enriched wallet/token/transaction data in JSON (for agents) or natural language (for LLMs).
