@@ -18,6 +18,8 @@ import { median, spreadPct } from '../src/utils/price-aggregator';
 import { formatResponse } from '../src/formatters/index';
 import { parseIntent } from '../src/entrypoints/query';
 import { STRESS_COVERAGE } from '../agents/solscout/stress';
+import { ENDPOINT_META } from '../src/openapi';
+import { PRICING } from '../src/config';
 
 // --- SolScout stress coverage guard ---
 // Enforces the "new endpoint checklist" rule: every paid endpoint (PRICING) must
@@ -26,6 +28,24 @@ describe('SolScout stress coverage', () => {
   test('every paid endpoint has a stress config', () => {
     expect(STRESS_COVERAGE.missing).toEqual([]);
   });
+});
+
+// --- CDP payment guard: resource.description length ---
+// CDP's x402 facilitator REJECTS any payment whose resource.description exceeds
+// ~500 chars (verify 400: "'paymentPayload' is invalid"). The resource.description
+// is ENDPOINT_META[key].description. An over-long description makes the endpoint
+// return 402 even on a valid payment — a SILENT failure that blocked check-alerts +
+// both Hyperliquid endpoints from ever settling (root-caused 2026-06-27). Cap at 480
+// for safe margin (perps-cross-venue-funding settled at 489; hl-trader failed at 536).
+describe('CDP payment: endpoint description length', () => {
+  const MAX_DESCRIPTION = 480;
+  for (const key of Object.keys(PRICING)) {
+    test(`${key} description <= ${MAX_DESCRIPTION} chars`, () => {
+      const meta = (ENDPOINT_META as Record<string, { description?: string }>)[key];
+      const len = (meta?.description ?? '').length;
+      expect(len).toBeLessThanOrEqual(MAX_DESCRIPTION);
+    });
+  }
 });
 
 // --- Helpers ---

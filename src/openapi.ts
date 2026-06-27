@@ -270,7 +270,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'hyperliquid-trader-profile': {
     summary: 'Hyperliquid trader profile (live positions + PnL)',
-    description: "Live perp positions for a Hyperliquid EVM (0x) address, read directly from Hyperliquid's public on-chain state. Per-position coin, side, leverage, notional, entry, unrealized PnL, distance-to-liquidation, and risk flags (high_leverage, extreme_leverage, approaching_liquidation, losing). Plus account value, directional bias, profile (directional/market-neutral/diversified), weighted leverage, and realized+unrealized PnL over week/month/all-time. Hyperliquid's full transparency makes this the building block for smart-money tracking.",
+    description: "Live perp positions for a Hyperliquid EVM (0x) address, read from Hyperliquid's public on-chain state. Per-position coin, side, leverage, notional, entry, unrealized PnL, distance-to-liquidation, and risk flags (high/extreme leverage, approaching liquidation, losing). Plus account value, directional bias, profile, weighted leverage, and realized+unrealized PnL over week/month/all-time. The building block for smart-money tracking.",
     schema: {
       type: 'object',
       required: ['address'],
@@ -282,7 +282,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'hyperliquid-smart-money': {
     summary: 'Hyperliquid smart-money positioning consensus',
-    description: "Where Hyperliquid smart money is positioned. Scans the HL leaderboard, excludes market-makers/HFT (turnover filter) + dust/mega-funds (account band), keeps only consistent directional traders (week+month PnL > 0, not a systematic book), then aggregates their live positions into a per-coin consensus signal (long/short trader counts, net notional, bias, conviction) + a top-trader drill-down ranked by robust month PnL. A positioning signal, not a trade — consensus is often late/crowded and regime-dependent; use as confluence/risk context.",
+    description: "Where Hyperliquid smart money is positioned. Scans the HL leaderboard, excludes market-makers/HFT and dust/mega accounts, keeps consistent directional traders (week+month PnL > 0), then aggregates their live positions into a per-coin consensus (long/short counts, net notional, bias, conviction) plus a top-trader drill-down ranked by month PnL. A positioning signal, not a trade: consensus is often crowded and regime-dependent.",
     schema: {
       type: 'object',
       properties: {
@@ -332,7 +332,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'perps-cross-venue-funding': {
     summary: 'Cross-venue perps funding aggregator',
-    description: 'Aggregates borrow/funding APR + open interest across Solana on-chain venues (Jupiter Perps, Adrena) and cross-chain reference venues (Hyperliquid, dYdX v4). Returns per-venue quotes, best entry per side, basis vs Hyperliquid, and arbitrage opportunities. Adrena routes SOL through jitoSOL and BTC through WBTC (wrapped collateral). ETH not supported on Adrena. BONK not tradable on Jupiter Perps. Foundation endpoint — new venues fold in additively as they go live (Phoenix Perps, Bullet).',
+    description: 'Aggregates borrow/funding APR + open interest across Solana on-chain venues (Jupiter Perps, Adrena) and cross-chain reference venues (Hyperliquid, dYdX v4). Returns per-venue quotes, best entry per side, basis vs Hyperliquid, and arbitrage opportunities. Adrena uses wrapped collateral (SOL via jitoSOL, BTC via WBTC); ETH unsupported there, BONK not on Jupiter Perps. New venues fold in additively as they launch.',
     schema: {
       type: 'object',
       required: ['market'],
@@ -399,7 +399,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'check-alerts': {
     summary: 'Poll-based event detection (spot + Jupiter Perps)',
-    description: 'Pass a watchlist (tokens + wallets, max 10 of each) and a `since` ISO 8601 timestamp; receive alerts fired since that time. Token alerts: price_spike, price_drop, whale_inflow, whale_outflow, concentration_shift. Spot wallet alerts: risk_increase, risk_decrease, portfolio_value_change, new_positions, removed_positions. Jupiter Perps alerts per wallet: perp_position_added, perp_position_closed, perp_at_risk, liquidation_approaching, pnl_swing — critical for perps trading bots that need real-time position state. Stateless — the agent owns the cursor. Step 1 of an alerts trio (poll → SSE → webhooks).',
+    description: 'Poll-based event detection for spot + Jupiter Perps. Pass a watchlist (<=10 tokens, <=10 wallets) and a `since` ISO 8601 timestamp; get alerts fired since then. Token alerts: price spikes/drops, whale inflow/outflow, concentration shifts. Wallet alerts: risk changes, portfolio value moves, position add/remove. Perps alerts per wallet: position add/close, at-risk, liquidation-approaching, pnl-swing. Stateless; the agent owns the `since` cursor.',
     schema: {
       type: 'object',
       required: ['since'],
