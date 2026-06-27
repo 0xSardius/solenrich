@@ -249,6 +249,12 @@ if (PAYMENTS_ENABLED && resourceServer) {
         network: PAYMENT_NETWORK,
         payTo: PAY_TO,
       }],
+      // Pin the canonical HTTPS resource URL. Without this, @x402/core derives the
+      // URL from the inbound request — which is `http://` behind Railway's
+      // TLS-terminating proxy (it doesn't honor X-Forwarded-Proto). CDP's bazaar
+      // indexer drops/mis-keys insecure-scheme resources, which is why our 31 direct
+      // per-endpoint resources never cataloged (only the https Orbis proxy row did).
+      resource: `https://api.solenrich.com/entrypoints/${key}/invoke`,
       description: meta?.description ?? "SolEnrich enrichment endpoint",
       mimeType: "application/json",
       // `declareDiscoveryExtension` already returns `{ bazaar: {...} }`, so assign it
