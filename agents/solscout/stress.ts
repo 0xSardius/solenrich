@@ -639,13 +639,24 @@ export class StressRunner {
       const latency = Date.now() - start;
 
       if (res.status === 402) {
-        // Production with payments — 402 is expected
+        // FREE mode (no --paid): a 402 is the expected paywall response → pass.
+        // PAID mode: paidFetch should have settled and returned 200. A 402 here means
+        // the payment FAILED (most commonly the SolScout wallet is out of USDC) → fail
+        // loudly. Previously this returned passed:true unconditionally, which silently
+        // under-seeded the bazaar (a seed run reported "all passed" while N endpoints
+        // never settled).
+        const paidMode = this.fetchFn !== globalThis.fetch;
         return {
           endpoint: display,
           status: 402,
           latency_ms: latency,
-          passed: true,
-          checks: [{ name: '402 paywall active', passed: true }],
+          passed: !paidMode,
+          checks: [{
+            name: paidMode
+              ? 'payment FAILED — 402 despite --paid (check SolScout USDC balance)'
+              : '402 paywall active',
+            passed: !paidMode,
+          }],
         };
       }
 
