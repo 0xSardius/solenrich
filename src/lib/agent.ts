@@ -226,7 +226,7 @@ if (PAYMENTS_ENABLED) {
   // endpoint, plus the verify result, so we can diff a failing endpoint
   // (check-alerts) against a working one (new-tokens). Log-only: returns the
   // original verify result untouched, never alters the payment path.
-  const __verifyDebug: Record<string, unknown> = {};
+  const __verifyDebug: unknown[] = [];
   (globalThis as Record<string, unknown>).__verifyDebug = __verifyDebug;
   const __origVerify = facilitatorClient.verify.bind(facilitatorClient);
   (facilitatorClient as unknown as { verify: unknown }).verify = async (
@@ -234,14 +234,25 @@ if (PAYMENTS_ENABLED) {
     requirements: Parameters<typeof __origVerify>[1],
   ) => {
     let result: Awaited<ReturnType<typeof __origVerify>> | undefined;
+    let threw: string | undefined;
     try {
       result = await __origVerify(payload, requirements);
       return result;
+    } catch (e) {
+      threw = e instanceof Error ? e.message : String(e);
+      throw e;
     } finally {
       try {
-        const res = (requirements as { resource?: string })?.resource ?? 'unknown';
-        const key = String(res).split('/entrypoints/')[1]?.split('/')[0] ?? res;
-        __verifyDebug[key] = { at: new Date().toISOString(), result, requirements, payload };
+        __verifyDebug.push({
+          at: new Date().toISOString(),
+          amount: (requirements as { amount?: string })?.amount,
+          result,
+          threw,
+          requirements,
+          payloadTopKeys: Object.keys((payload as Record<string, unknown>) ?? {}),
+          payloadInner: payload && (payload as { payload?: unknown }).payload,
+        });
+        if (__verifyDebug.length > 12) __verifyDebug.shift();
       } catch { /* never let debug capture affect payments */ }
     }
   };
