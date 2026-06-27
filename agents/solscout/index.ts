@@ -24,6 +24,9 @@ const mode = args.includes('--mode')
   ? args[args.indexOf('--mode') + 1]
   : 'stress';
 const paid = args.includes('--paid');
+const only = args.includes('--only')
+  ? (args[args.indexOf('--only') + 1] ?? '').split(',').map((s) => s.trim()).filter(Boolean)
+  : undefined;
 
 const BASE_URLS: Record<string, string> = {
   local: 'http://127.0.0.1:3000',
@@ -68,7 +71,7 @@ try {
 
 // --- Run mode ---
 if (mode === 'stress' || mode === 'report') {
-  const runner = new StressRunner(baseUrl, paid ? fetchFn : undefined);
+  const runner = new StressRunner(baseUrl, paid ? fetchFn : undefined, only);
   const results = await runner.run();
   const reporter = new Reporter(results, target);
   reporter.print();

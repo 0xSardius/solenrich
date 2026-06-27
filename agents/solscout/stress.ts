@@ -42,7 +42,7 @@ export interface StressResults {
 }
 
 // All endpoint configs with their inputs and quality checks
-const ENDPOINTS: Array<{
+export const ENDPOINTS: Array<{
   key: string;
   label?: string; // optional display name when multiple entries share a key
   input: any;
@@ -533,10 +533,12 @@ export const STRESS_COVERAGE = {
 export class StressRunner {
   private baseUrl: string;
   private fetchFn: typeof fetch;
+  private only: Set<string> | null;
 
-  constructor(baseUrl: string, fetchFn?: typeof fetch) {
+  constructor(baseUrl: string, fetchFn?: typeof fetch, only?: string[]) {
     this.baseUrl = baseUrl;
     this.fetchFn = fetchFn ?? globalThis.fetch;
+    this.only = only && only.length ? new Set(only) : null;
   }
 
   async run(): Promise<StressResults> {
@@ -564,8 +566,12 @@ export class StressRunner {
       }
     } catch {}
 
-    for (let i = 0; i < ENDPOINTS.length; i++) {
-      const ep = ENDPOINTS[i];
+    const targets = this.only ? ENDPOINTS.filter((e) => this.only!.has(e.key)) : ENDPOINTS;
+    if (this.only) {
+      console.log(`  --only filter: ${[...this.only].join(', ')} → ${targets.length} config(s)\n`);
+    }
+    for (let i = 0; i < targets.length; i++) {
+      const ep = targets[i];
       const input = { ...ep.input };
 
       // Small delay between paid calls to avoid facilitator rate limiting
