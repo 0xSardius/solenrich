@@ -75,7 +75,10 @@ occupying our positioning with far more authority).
 
 ## Prioritized fix plan
 
-### P0 — Fix CDP Bazaar indexing — ✅ FIXED + DEPLOYED 2026-06-26 (`bb13cf5`)
+### P0 — Fix CDP Bazaar indexing — ✅ DONE + CONFIRMED 2026-06-27 (`bb13cf5`)
+
+**CONFIRMED in the bazaar:** `/discovery/search?query=solenrich` → `serviceName: "SolEnrich"`. The fix + seeding worked; indexer caught up overnight. Ranking nuance: we surface for brand/exact-description but NOT for capability queries (wallet risk, perps funding) — intent-match metadata optimization is the follow-on (P1/P2).
+
 
 **CORRECTION to the audit's root cause:** our 402 was NOT non-standard. The standard payment
 requirements (`x402Version: 2`, `accepts[]` with scheme/network/asset/payTo/feePayer) + the bazaar

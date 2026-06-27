@@ -3,13 +3,14 @@
 ## Last session date
 2026-06-26
 
-## ⏰ PENDING — re-check 2026-06-27 (afternoon): CDP x402 Bazaar indexing
+## ✅ CDP x402 Bazaar — SolEnrich INDEXED (confirmed 2026-06-27)
 
-The bazaar-extension double-nest fix (`bb13cf5`) is deployed + verified live (correct single-level `extensions.bazaar.{info,schema}`; `accepts[]` intact). Seeded **29/31 endpoints via SolScout `--paid`** on 2026-06-26, but SolEnrich was NOT yet in the CDP catalog immediately after (indexer lag). **Tomorrow PM, re-check:**
-- `curl 'https://api.cdp.coinbase.com/platform/v2/x402/discovery/resources?limit=200'` → grep `solenrich` / `api.solenrich.com` / payTo `66Qvhr1xnwqbCT36KfHfZF1JpoWdmCQ3uFYTN335CGXe`
-- `curl 'https://api.cdp.coinbase.com/platform/v2/x402/discovery/search?query=Solana%20wallet%20perps%20funding'`
-- **If present → P0 confirmed ✅.** If still absent after indexer should've caught up → deeper CDP requirement to chase (registration/format), but proceed to **P1 distribution sprint** regardless (MCP directories + awesome-lists + MPPScan; content drafted by Claude, manual submits by Sardius).
-- Also still pending: **seed the 5 new endpoints** (`hyperliquid-*`, `perps-cross-venue-*`) — re-run SolScout `--paid` (now covers all 31). Full detail: `docs/discoverability-audit.md` P0 section.
+P0 worked. The bazaar-extension double-nest fix (`bb13cf5`) + paid seeding got us into the CDP catalog (indexer caught up overnight). `/discovery/search?query=solenrich` → `serviceName: "SolEnrich"` ✅; we also surface for "Solana onchain data enrichment agents". The catalog has ~24,730 resources total (paginated — search is the right query tool, not resource-listing).
+
+**Open follow-ups (non-blocking):**
+- **Bazaar ranking is weak for CAPABILITY queries** — we rank for brand + exact description, but NOT "Solana wallet risk score" / "cross-venue perps funding" (intent-named competitors win: Wallet Risk Scorer API, ApiToll Perps). Optimize discovery metadata (service name / tags / per-resource descriptions with intent phrases). Ties to the P1/P2 intent-match work.
+- **5 new endpoints not yet seeded** (`hyperliquid-*`, `perps-cross-venue-*`) — re-run SolScout `--paid` (now covers all 31, post the coverage-guard fix) to add them to the catalog.
+- **Next:** P1 free-distribution sprint (MCP directories, awesome-lists, MPPScan; Claude drafts content, Sardius submits). Detail: `docs/discoverability-audit.md`.
 
 ## What was completed
 
