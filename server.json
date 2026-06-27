@@ -1,0 +1,16 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-07-09/server.json",
+  "name": "io.github.0xsardius/solenrich",
+  "description": "Solana onchain intelligence for AI agents: wallet risk scoring, token due-diligence, cross-venue perps funding, and smart-money tracking. Pay-per-call via x402.",
+  "repository": {
+    "url": "https://github.com/0xSardius/solenrich",
+    "source": "github"
+  },
+  "version": "1.0.0",
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://api.solenrich.com/mcp"
+    }
+  ]
+}
