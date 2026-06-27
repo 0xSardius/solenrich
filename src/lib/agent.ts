@@ -249,8 +249,7 @@ if (PAYMENTS_ENABLED) {
           result,
           threw,
           requirements,
-          payloadTopKeys: Object.keys((payload as Record<string, unknown>) ?? {}),
-          payloadInner: payload && (payload as { payload?: unknown }).payload,
+          payload,
         });
         if (__verifyDebug.length > 12) __verifyDebug.shift();
       } catch { /* never let debug capture affect payments */ }
