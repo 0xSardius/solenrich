@@ -1,16 +1,43 @@
 # Session Checkpoint
 
 ## Last session date
-2026-06-26
+2026-06-27 (PM)
 
-## ✅ CDP x402 Bazaar — SolEnrich INDEXED (confirmed 2026-06-27)
+## ✅ Bazaar indexing + a money-losing payment bug — BOTH FIXED (2026-06-27 PM)
 
-P0 worked. The bazaar-extension double-nest fix (`bb13cf5`) + paid seeding got us into the CDP catalog (indexer caught up overnight). `/discovery/search?query=solenrich` → `serviceName: "SolEnrich"` ✅; we also surface for "Solana onchain data enrichment agents". The catalog has ~24,730 resources total (paginated — search is the right query tool, not resource-listing).
+The earlier "INDEXED ✅" was a **false positive** — the only catalog row was the **Orbis proxy**
+(`orbisapi.com/proxy/solenrich-767f04`, stale "19 endpoints"); our 31 direct `api.solenrich.com` rows
+were never cataloged. Root-caused + fixed two distinct issues:
 
-**Open follow-ups (non-blocking):**
-- **Bazaar ranking is weak for CAPABILITY queries** — we rank for brand + exact description, but NOT "Solana wallet risk score" / "cross-venue perps funding" (intent-named competitors win: Wallet Risk Scorer API, ApiToll Perps). Optimize discovery metadata (service name / tags / per-resource descriptions with intent phrases). Ties to the P1/P2 intent-match work.
-- **5 new endpoints not yet seeded** (`hyperliquid-*`, `perps-cross-venue-*`) — re-run SolScout `--paid` (now covers all 31, post the coverage-guard fix) to add them to the catalog.
-- **Next:** P1 free-distribution sprint (MCP directories, awesome-lists, MPPScan; Claude drafts content, Sardius submits). Detail: `docs/discoverability-audit.md`.
+1. **Bazaar indexing — `http://` resource URL (`d12a2b6`).** `@x402/core` derived `resource.url` from the
+   inbound request, which is `http://` behind Railway's TLS-terminating proxy (no X-Forwarded-Proto). CDP's
+   indexer drops insecure-scheme resources. Fix: pin the canonical `https://...` URL per route. Verified
+   live. Also shipped capability-led, perps-first service description (`76f7fc8`).
+2. **Payment bug — CDP rejects descriptions >~500 chars (`c53b6f2`).** Re-seeding (funded SolScout) uncovered
+   that `check-alerts` + both Hyperliquid endpoints **deterministically 402'd valid payments**: CDP's
+   facilitator 400s "`paymentPayload` is invalid" when `resource.description` (= `ENDPOINT_META[key].description`)
+   exceeds ~500 chars. Empirical: perps-cross-venue settled at 489, hl-trader failed at 536. **Pre-existing +
+   silent** (check-alerts never settled). Fix: trimmed 4 descriptions to ≤457 (kept capability keywords) +
+   **CI guard caps all at 480** (`test/unit.test.ts`, 170 pass). Diagnosed via temporary log-only verify
+   capture (removed).
+
+**VERIFIED:** full paid run **34/34 settle, 0 failures** — all 31 paid endpoints now settle through CDP and
+seed into the bazaar. Tooling: SolScout `--only <keys>` flag (`71ad2bf`) + paid-402-fails-loudly harness fix
+(`5b59049`).
+
+**Baseline `/metrics` (2026-06-27, pre-distribution):** 73 calls today, **2 unique callers** (all dogfood —
+test fixtures: vines1/BONK/HL+perps test traders). Feed V1 gate wants ≥10 distinct callers. The "before"
+number to watch climb.
+
+**TOMORROW (re-check, passive — CDP indexer runs on its own clock):**
+- `GET https://api.cdp.coinbase.com/platform/v2/x402/discovery/search?query=solenrich` + capability queries
+  (e.g. "cross-venue perps funding") → confirm `api.solenrich.com` rows now appear (not just Orbis) and we
+  rank for capability terms.
+- Re-pull `/metrics` → compare unique_callers vs baseline of 2.
+- x402scan server page for settlement stats.
+
+**NEXT (session pivot):** P1 free-distribution — MCP directories first (Official MCP Registry, Smithery fix,
+Glama/PulseMCP/mcp.so), then awesome-lists + MPPScan. Content drafted in `docs/distribution-submissions.md`.
 
 ## What was completed
 
