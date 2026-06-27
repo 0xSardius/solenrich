@@ -220,6 +220,33 @@ if (PAYMENTS_ENABLED) {
   // and auto-registers us on the x402 bazaar. Reads CDP_API_KEY_ID + CDP_API_KEY_SECRET from env.
   const { facilitator } = await import("@coinbase/x402");
   const facilitatorClient = new HTTPFacilitatorClient(facilitator);
+
+  // --- TEMP DEBUG (remove after diagnosing the 3-endpoint CDP verify failure) ---
+  // Captures the EXACT {paymentPayload, paymentRequirements} we send CDP per
+  // endpoint, plus the verify result, so we can diff a failing endpoint
+  // (check-alerts) against a working one (new-tokens). Log-only: returns the
+  // original verify result untouched, never alters the payment path.
+  const __verifyDebug: Record<string, unknown> = {};
+  (globalThis as Record<string, unknown>).__verifyDebug = __verifyDebug;
+  const __origVerify = facilitatorClient.verify.bind(facilitatorClient);
+  (facilitatorClient as unknown as { verify: unknown }).verify = async (
+    payload: Parameters<typeof __origVerify>[0],
+    requirements: Parameters<typeof __origVerify>[1],
+  ) => {
+    let result: Awaited<ReturnType<typeof __origVerify>> | undefined;
+    try {
+      result = await __origVerify(payload, requirements);
+      return result;
+    } finally {
+      try {
+        const res = (requirements as { resource?: string })?.resource ?? 'unknown';
+        const key = String(res).split('/entrypoints/')[1]?.split('/')[0] ?? res;
+        __verifyDebug[key] = { at: new Date().toISOString(), result, requirements, payload };
+      } catch { /* never let debug capture affect payments */ }
+    }
+  };
+  // --- END TEMP DEBUG ---
+
   try {
     const rs = new x402ResourceServer(facilitatorClient)
       .register(PAYMENT_NETWORK, new ExactSvmScheme());
@@ -956,6 +983,18 @@ app.get('/docs', (c) => {
 });
 
 console.log('[docs] Documentation endpoint available at GET /docs');
+
+// --- TEMP DEBUG endpoint (remove after diagnosing the 3-endpoint verify failure) ---
+// Returns the last {paymentPayload, paymentRequirements, result} captured per
+// endpoint at CDP verify time. Auth-gated by METRICS_TOKEN. Lets us diff a
+// failing endpoint vs a working one without Railway-log access.
+app.get('/debug/verify', (c) => {
+  const token = process.env.METRICS_TOKEN;
+  if (!token || c.req.header('authorization') !== `Bearer ${token}`) {
+    return c.json({ error: 'Unauthorized' }, 401);
+  }
+  return c.json((globalThis as Record<string, unknown>).__verifyDebug ?? {});
+});
 
 // --- Metrics endpoint (internal usage analytics) ---
 
