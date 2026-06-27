@@ -79,7 +79,7 @@ const agent = await createAgent({
   version: process.env.AGENT_VERSION ?? "1.0.0",
   description:
     process.env.AGENT_DESCRIPTION ??
-    "Solana onchain data enrichment. Wallet profiling, token analysis, risk scoring. JSON for agents, natural language for LLMs.",
+    "Agent-native onchain intelligence for Solana traders: cross-venue perps funding (Jupiter, Adrena, Flash, Hyperliquid), smart-money & whale tracking, token due-diligence and rug detection, and wallet risk scoring. Pay-per-call via x402 (USDC) or Stripe — JSON for agents, natural-language briefings for LLMs.",
 })
   .use(http())
   .build();
@@ -1116,7 +1116,7 @@ app.get('/.well-known/x402', (c) => {
     version: 1,
     service: {
       name: 'SolEnrich',
-      description: 'Solana onchain data enrichment for AI agents and LLMs. Wallet profiling, token analysis, risk scoring, Jupiter Perps intelligence, and more.',
+      description: 'Agent-native onchain intelligence for Solana traders: cross-venue perps funding (Jupiter, Adrena, Flash, Hyperliquid), smart-money & whale tracking, token due-diligence and rug detection, and wallet risk scoring. Pay-per-call via x402 (USDC) or Stripe.',
       provider: '@0xSardius',
       providerUrl: 'https://twitter.com/0xSardius',
       categories: ['onchain-data', 'solana', 'defi', 'risk-intelligence', 'perps'],
