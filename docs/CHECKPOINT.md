@@ -3,7 +3,7 @@
 ## Last session date
 2026-06-28
 
-## 📋 POST-IMPLEMENTATION AUDIT — re-check in a few days (queued 2026-06-28)
+## 📋 POST-IMPLEMENTATION AUDIT — re-check 2026-07-02 (queued 2026-06-28; Sardius self-reminder, no auto-schedule)
 
 The discoverability rails are in and **verified working** (2026-06-28 re-check):
 - **CDP bazaar:** went from 1 row (Orbis proxy) → **8+ direct `api.solenrich.com` endpoints indexed**, each
@@ -19,7 +19,7 @@ The discoverability rails are in and **verified working** (2026-06-28 re-check):
 - `/metrics` baselines: 2026-06-27 = 2 unique_callers; 2026-06-28 = **1 unique_caller** (all dogfood —
   every call is our own SolScout verification/seeding). **0 organic agent discovery so far.**
 
-**RE-CHECK (~end of week / next audit) — does the supply-side fix convert to demand:**
+**RE-CHECK (2026-07-02) — does the supply-side fix convert to demand:**
 1. `/metrics` `unique_callers` — is it rising with addresses we DON'T recognize? (vs baseline 1–2)
 2. agentic.market — did we propagate from the CDP bazaar? (`https://agentic.market`, check for SolEnrich)
 3. Glama / PulseMCP / mcp.so — did they auto-index from the Official MCP Registry?
