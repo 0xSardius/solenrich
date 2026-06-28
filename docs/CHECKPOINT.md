@@ -1,6 +1,35 @@
 # Session Checkpoint
 
 ## Last session date
+2026-06-28
+
+## 📋 POST-IMPLEMENTATION AUDIT — re-check in a few days (queued 2026-06-28)
+
+The discoverability rails are in and **verified working** (2026-06-28 re-check):
+- **CDP bazaar:** went from 1 row (Orbis proxy) → **8+ direct `api.solenrich.com` endpoints indexed**, each
+  with `serviceName: "SolEnrich"` + per-endpoint capability tags. We now **surface for "cross-venue perps
+  funding rate"** (perps rows w/ funding-rate tags). The http→https fix + @x402 2.17 tags both landed. ✅
+- **Official MCP Registry:** live (`io.github.0xSardius/solenrich` v1.0.0). ✅
+- **Smithery:** old `SE01` stub still in their registry API; web description updated by Sardius; expect a
+  registry-synced refresh. 🟡
+- **agentic.market:** NOT listed yet — indexes downstream from the CDP bazaar (where we just landed today),
+  so should propagate in the coming days. 🟡
+
+**Demand is the lagging indicator and has NOT moved — watch this:**
+- `/metrics` baselines: 2026-06-27 = 2 unique_callers; 2026-06-28 = **1 unique_caller** (all dogfood —
+  every call is our own SolScout verification/seeding). **0 organic agent discovery so far.**
+
+**RE-CHECK (~end of week / next audit) — does the supply-side fix convert to demand:**
+1. `/metrics` `unique_callers` — is it rising with addresses we DON'T recognize? (vs baseline 1–2)
+2. agentic.market — did we propagate from the CDP bazaar? (`https://agentic.market`, check for SolEnrich)
+3. Glama / PulseMCP / mcp.so — did they auto-index from the Official MCP Registry?
+4. CDP bazaar capability ranking — do we rank for "Solana wallet risk score" yet (0 of ours today), and are
+   more of the 31 endpoints surfacing? x402scan settlement stats.
+5. Smithery — did a registry-synced entry appear; dedupe `SE01`.
+
+---
+
+## (prev session) Last session date
 2026-06-27 (PM)
 
 ## ✅ Bazaar indexing + a money-losing payment bug — BOTH FIXED (2026-06-27 PM)
