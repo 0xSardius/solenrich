@@ -239,6 +239,47 @@ if (PAYMENTS_ENABLED && resourceServer) {
   // Without this, CDP sees our payments but never indexes us into agentic.market
   // or the x402 bazaar.
   const { declareDiscoveryExtension } = await import('@x402/extensions');
+
+  // Per-endpoint bazaar search tags (@x402 2.17+). Up to 5 per resource, each <=32
+  // ASCII chars. These are the DEDICATED bazaar search field — they make us rank for
+  // the capability queries agents type ("cross-venue perps funding", "wallet risk",
+  // "rug check"), not just brand/description matches. DEFAULT_TAGS covers anything
+  // unmapped. Invalid values are soft-dropped by the facilitator (never break the 402).
+  const DEFAULT_TAGS = ['solana', 'onchain-data', 'ai-agents', 'defi', 'x402'];
+  const BAZAAR_TAGS: Record<string, string[]> = {
+    'enrich-wallet-light': ['solana', 'wallet-risk', 'wallet-profiling', 'onchain', 'ai-agents'],
+    'enrich-wallet-full': ['solana', 'wallet-risk', 'defi-positions', 'onchain', 'ai-agents'],
+    'wallet-graph': ['solana', 'wallet-graph', 'wallet-clustering', 'smart-money', 'onchain'],
+    'wallet-history': ['solana', 'wallet-history', 'portfolio', 'onchain', 'ai-agents'],
+    'compare-wallets': ['solana', 'wallet-comparison', 'wallet-risk', 'onchain', 'ai-agents'],
+    'copy-trade-signals': ['solana', 'copy-trade', 'smart-money', 'trader-pnl', 'ai-agents'],
+    'portfolio-history': ['solana', 'portfolio', 'wallet-history', 'onchain', 'ai-agents'],
+    'enrich-token-light': ['solana', 'token-risk', 'onchain', 'ai-agents', 'defi'],
+    'enrich-token-full': ['solana', 'token-risk', 'holder-analysis', 'rug-detection', 'onchain'],
+    'due-diligence': ['solana', 'due-diligence', 'rug-detection', 'token-risk', 'ai-agents'],
+    'compare-tokens': ['solana', 'token-comparison', 'token-risk', 'due-diligence', 'onchain'],
+    'token-trend': ['solana', 'token-trend', 'onchain', 'ai-agents', 'defi'],
+    'new-tokens': ['solana', 'new-tokens', 'token-discovery', 'rug-detection', 'trending'],
+    'protocol-profile': ['solana', 'defi', 'protocol-analytics', 'tvl', 'yield'],
+    'parse-transaction': ['solana', 'transaction', 'tx-parsing', 'onchain', 'ai-agents'],
+    'batch-enrich': ['solana', 'batch', 'enrichment', 'onchain', 'ai-agents'],
+    'whale-watch': ['solana', 'whale-tracking', 'smart-money', 'onchain', 'ai-agents'],
+    'smart-money-flow': ['solana', 'smart-money', 'netflow', 'whale-tracking', 'trending'],
+    'trending-signals': ['solana', 'trending', 'smart-money', 'new-tokens', 'signals'],
+    'consensus-signal': ['solana', 'agent-attention', 'consensus', 'signals', 'smart-money'],
+    'query': ['solana', 'onchain-data', 'natural-language', 'ai-agents', 'defi'],
+    'feed-latest': ['solana', 'intelligence-feed', 'trending', 'onchain', 'ai-agents'],
+    'check-alerts': ['solana', 'alerts', 'perps-alerts', 'whale-tracking', 'ai-agents'],
+    'perps-market-structure': ['solana', 'perps', 'funding-rate', 'jupiter-perps', 'open-interest'],
+    'perps-trader-profile': ['solana', 'perps', 'trader-profile', 'trader-pnl', 'smart-money'],
+    'perps-cross-venue-funding': ['solana', 'perps', 'funding-rate', 'cross-venue', 'arbitrage'],
+    'perps-venue-comparison': ['solana', 'perps', 'venue-comparison', 'funding-rate', 'best-entry'],
+    'perps-basis-signal': ['solana', 'perps', 'basis-trade', 'funding-rate', 'yield'],
+    'perps-market-trend': ['solana', 'perps', 'market-trend', 'open-interest', 'funding-rate'],
+    'hyperliquid-trader-profile': ['hyperliquid', 'perps', 'trader-profile', 'trader-pnl', 'smart-money'],
+    'hyperliquid-smart-money': ['hyperliquid', 'smart-money', 'perps', 'positioning', 'copy-trade'],
+  };
+
   const routeConfig = (key: string, price: string) => {
     const meta = ENDPOINT_META[key];
     const inputSchema = meta?.schema ?? { type: 'object', properties: {} };
@@ -255,6 +296,10 @@ if (PAYMENTS_ENABLED && resourceServer) {
       // indexer drops/mis-keys insecure-scheme resources, which is why our 31 direct
       // per-endpoint resources never cataloged (only the https Orbis proxy row did).
       resource: `https://api.solenrich.com/entrypoints/${key}/invoke`,
+      // Bazaar ranking fields (@x402 2.17+): serviceName + per-endpoint tags are the
+      // dedicated SEARCH fields the bazaar/agentic.market rank on.
+      serviceName: "SolEnrich",
+      tags: BAZAAR_TAGS[key] ?? DEFAULT_TAGS,
       description: meta?.description ?? "SolEnrich enrichment endpoint",
       mimeType: "application/json",
       // `declareDiscoveryExtension` already returns `{ bazaar: {...} }`, so assign it
