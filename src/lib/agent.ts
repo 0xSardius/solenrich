@@ -280,19 +280,44 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'hyperliquid-smart-money': ['hyperliquid', 'smart-money', 'perps', 'positioning', 'copy-trade'],
   };
 
-  // --- CANARY EXPERIMENT (2026-06-28, verify @ 2026-07-02 audit) ---------------
-  // HYPOTHESIS: CDP's bazaar only catalogs endpoints callable with NO required input
-  // params (verified: all 8 cataloged endpoints have required=[]; all 23 missing have
-  // required=[address|mint|market|...]). Providing a concrete `input` EXAMPLE (vs only
-  // an inputSchema with required fields) may make a parameterized endpoint "demonstrably
-  // callable" -> cataloged. TEST on these 3 only; the other 20 parameterized endpoints are
-  // the CONTROL group (unchanged, no example). BACKTEST 2026-07-02: if these 3 catalog and
-  // the controls don't -> confirmed, roll out `input` examples to all 23. If not -> CDP's
-  // rule is stricter (zero-input only); revert. Metadata-only; payment flow untouched.
+  // --- Bazaar input examples (ROLLOUT 2026-06-28; canary CONFIRMED) ------------
+  // CDP's bazaar only catalogs endpoints it can demonstrate as callable. No-required-input
+  // endpoints catalog automatically; parameterized ones need a concrete `input` EXAMPLE
+  // (not just an inputSchema with required fields). Canary (3 endpoints) CONFIRMED this
+  // 2026-06-28 — they cataloged ~11min after re-seed-with-example, while the controls
+  // (settled fresh the prior day, no example) never did. Rolled out to all 23 parameterized
+  // endpoints to take discoverable surface 8 -> 31. Examples reuse SolScout test fixtures.
+  // Metadata-only; payment flow untouched.
   const BAZAAR_INPUT_EXAMPLES: Record<string, Record<string, unknown>> = {
+    // wallet
     'enrich-wallet-light': { address: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg' },
+    'enrich-wallet-full': { address: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg' },
+    'wallet-graph': { address: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg' },
+    'wallet-history': { address: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg' },
+    'portfolio-history': { address: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg' },
+    'copy-trade-signals': { address: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg' },
+    'compare-wallets': { addresses: ['vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg', 'BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu'] },
+    // token
+    'enrich-token-light': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
+    'enrich-token-full': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
     'due-diligence': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
+    'whale-watch': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
+    'token-trend': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
+    'compare-tokens': { mints: ['DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN'] },
+    // tx / batch / query / protocol
+    'parse-transaction': { signature: 'bqTH7u2PJ33gDQwZMy9BXVxABRpgUbY8xSuK6y9PpKYxucFKhiJyiD7JTrH1zxFvMEJGz4847tvotMoP1Ekavaa' },
+    'batch-enrich': { addresses: ['vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg'], type: 'wallet' },
+    'query': { question: 'Is BONK a safe token to hold?' },
+    'protocol-profile': { protocol: 'jupiter' },
+    // perps
+    'perps-trader-profile': { address: 'BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu' },
     'perps-cross-venue-funding': { market: 'SOL' },
+    'perps-venue-comparison': { market: 'SOL', size_usd: 5000 },
+    'perps-basis-signal': { asset: 'SOL' },
+    // hyperliquid
+    'hyperliquid-trader-profile': { address: '0xd21d931890d27b6e7e2e668f27931e17698e90f1' },
+    // alerts
+    'check-alerts': { since: '2026-06-01T00:00:00Z' },
   };
 
   const routeConfig = (key: string, price: string) => {
