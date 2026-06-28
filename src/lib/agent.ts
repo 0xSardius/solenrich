@@ -280,6 +280,21 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'hyperliquid-smart-money': ['hyperliquid', 'smart-money', 'perps', 'positioning', 'copy-trade'],
   };
 
+  // --- CANARY EXPERIMENT (2026-06-28, verify @ 2026-07-02 audit) ---------------
+  // HYPOTHESIS: CDP's bazaar only catalogs endpoints callable with NO required input
+  // params (verified: all 8 cataloged endpoints have required=[]; all 23 missing have
+  // required=[address|mint|market|...]). Providing a concrete `input` EXAMPLE (vs only
+  // an inputSchema with required fields) may make a parameterized endpoint "demonstrably
+  // callable" -> cataloged. TEST on these 3 only; the other 20 parameterized endpoints are
+  // the CONTROL group (unchanged, no example). BACKTEST 2026-07-02: if these 3 catalog and
+  // the controls don't -> confirmed, roll out `input` examples to all 23. If not -> CDP's
+  // rule is stricter (zero-input only); revert. Metadata-only; payment flow untouched.
+  const BAZAAR_INPUT_EXAMPLES: Record<string, Record<string, unknown>> = {
+    'enrich-wallet-light': { address: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg' },
+    'due-diligence': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
+    'perps-cross-venue-funding': { market: 'SOL' },
+  };
+
   const routeConfig = (key: string, price: string) => {
     const meta = ENDPOINT_META[key];
     const inputSchema = meta?.schema ?? { type: 'object', properties: {} };
@@ -309,6 +324,9 @@ if (PAYMENTS_ENABLED && resourceServer) {
       // This changes only discovery metadata; `accepts[]` and the payment flow are untouched.
       extensions: declareDiscoveryExtension({
         bodyType: 'json',
+        // CANARY: concrete example input for 3 parameterized endpoints (see BAZAAR_INPUT_EXAMPLES).
+        // undefined for all others = unchanged control behavior.
+        input: BAZAAR_INPUT_EXAMPLES[key],
         inputSchema: inputSchema as Record<string, unknown>,
         output: {
           example: {
