@@ -21,7 +21,16 @@ The discoverability rails are in and **verified working** (2026-06-28 re-check):
 
 **RE-CHECK (2026-07-02) — does the supply-side fix convert to demand:**
 1. `/metrics` `unique_callers` — is it rising with addresses we DON'T recognize? (vs baseline 1–2)
-2. agentic.market — did we propagate from the CDP bazaar? (`https://agentic.market`, check for SolEnrich)
+2. agentic.market — **LISTED as of 2026-06-28** (8/31 endpoints, via the bazaar cascade; validate page
+   `https://agentic.market/validate`). (a) Confirm the other 23 endpoints propagated. (b) INVESTIGATE the two
+   quality signals their validate flagged — both are ranking levers, NOT service bugs (our live 402 emits the
+   full `extensions.bazaar.{info,schema}` + tags + serviceName, verified 2026-06-28):
+   - **"Input schema present: no"** — @x402's `declareDiscoveryExtension` nests the real params inside an
+     HTTP-body envelope (`schema.properties.input.properties.body.properties.{fields}`), so their shallow
+     parser sees the transport envelope, not the params. Check if a flatter/more-recognized input schema
+     lifts their quality score.
+   - **"Dedicated domain: not yet exposed"** — we DO serve `/.well-known/x402` + `/llms.txt`; figure out what
+     agentic.market wants crawled/exposed at the domain to flip this to yes.
 3. Glama / PulseMCP / mcp.so — did they auto-index from the Official MCP Registry?
 4. CDP bazaar capability ranking — do we rank for "Solana wallet risk score" yet (0 of ours today), and are
    more of the 31 endpoints surfacing? x402scan settlement stats.
