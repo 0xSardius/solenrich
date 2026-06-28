@@ -15,7 +15,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
   6. **`agents/solscout/stress.ts` — a stress config** (input + quality checks). Enforced: `STRESS_COVERAGE` + the `test/unit.test.ts` coverage test FAIL CI if a `PRICING` endpoint has no stress config.
   7. `test/test-all-endpoints.ts` — a verification entry
   8. README endpoint table + landing page if user-facing
-  After deploy, a SolScout `--paid` run seeds the endpoint into the CDP x402 Bazaar (settlement-driven discovery).
+  9. **`src/lib/agent.ts` — `BAZAAR_INPUT_EXAMPLES` entry IF the endpoint has required input params.** CDP's bazaar only catalogs endpoints it can demonstrate as callable: no-required-input endpoints catalog automatically, but a parameterized one (required `address`/`mint`/`market`/`signature`/etc.) needs a concrete `input` example or it stays **invisible** in the bazaar + agentic.market (confirmed empirically 2026-06-28 — input example → cataloged in ~11 min; without one, parameterized endpoints never catalog despite settling). Reuse the SolScout stress fixture as the example.
+  After deploy, a SolScout `--paid` run seeds the endpoint into the CDP x402 Bazaar (settlement-driven discovery). Parameterized endpoints only appear there if step 9 is done.
 
 ## Project Overview
 
