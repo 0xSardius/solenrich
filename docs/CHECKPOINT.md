@@ -55,14 +55,20 @@ an empty example body (`info.input.body: {}`); now populated for the test endpoi
 - **CONTROL (20 other parameterized endpoints):** unchanged, no example — should stay un-cataloged.
 - Mechanism: `BAZAAR_INPUT_EXAMPLES` map in `src/lib/agent.ts` → `declareDiscoveryExtension({ input, inputSchema, ... })`.
 
-**BACKTEST 2026-07-02:** search the CDP bazaar (`/discovery/search?query=solenrich` + the validate page).
-- ✅ **If the 3 treatment endpoints are now cataloged AND the 20 controls are not** → hypothesis CONFIRMED →
-  roll out `input` examples to all 23 parameterized endpoints (8 → 31 discoverable, ~4x). Trivial extension of
-  the existing map (reuse SolScout stress fixtures for examples).
-- ❌ **If the 3 did NOT catalog** → CDP's rule is stricter (zero-required-input only). Revert the canary;
-  parameterized endpoints simply won't appear in the discovery feed (they're still callable, just not browsable).
-- ⚠️ Confound to note: the 3 were also re-seeded today, so if ALL re-seeded endpoints catalog regardless, the
-  signal is muddier — compare against the un-re-seeded controls.
+**✅ RESULT (2026-06-28) — CONFIRMED, same day.** The 3 treatment endpoints cataloged **~11 min** after the
+re-seed-with-example (validate page: **8 → 11** endpoints; the 3 new = exactly the treatment group, timestamped
+"11m ago" vs the original 8 at "14h ago"). **Confound ruled out:** the prior day's full run settled ALL 31
+fresh (34/34) yet the parameterized controls never cataloged — so the *example input*, not the fresh
+settlement, is the cause.
+
+**ROLLED OUT (commit `4996880`):** extended `BAZAAR_INPUT_EXAMPLES` from 3 → **all 23** parameterized endpoints
+(reuse SolScout fixtures incl. a real tx signature for `parse-transaction`). Deployed + full re-seed (34/34
+settled) 2026-06-28. **Target: 8 → 31 discoverable.**
+
+**BACKTEST 2026-07-02:** confirm all 31 (or near) are now cataloged in the CDP bazaar + agentic.market (was 11
+mid-rollout). If any parameterized endpoint is still missing, inspect its `BAZAAR_INPUT_EXAMPLES` shape vs its
+required schema. New general rule for future endpoints: **any endpoint with required input params needs a
+`BAZAAR_INPUT_EXAMPLES` entry to be bazaar-discoverable** (candidate for the CLAUDE.md new-endpoint checklist).
 
 ---
 
