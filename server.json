@@ -1,6 +1,6 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
-  "name": "io.github.0xsardius/solenrich",
+  "name": "io.github.0xSardius/solenrich",
   "description": "Solana onchain intelligence for AI agents: wallet risk, due-diligence, perps funding, smart money.",
   "repository": {
     "url": "https://github.com/0xSardius/solenrich",
