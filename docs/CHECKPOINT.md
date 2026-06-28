@@ -36,6 +36,34 @@ The discoverability rails are in and **verified working** (2026-06-28 re-check):
    more of the 31 endpoints surfacing? x402scan settlement stats.
 5. Smithery — did a registry-synced entry appear; dedupe `SE01`.
 
+### 🧪 CANARY EXPERIMENT — "input example unlocks parameterized-endpoint cataloging" (run 2026-06-28, commit `77464d0`)
+
+**Finding that motivated it:** only **8 of 31** endpoints are in the CDP bazaar (and thus agentic.market).
+100% clean pattern (verified against our schemas): the **8 cataloged ALL have `required: []`** (no required
+input — feed-latest, trending-signals, perps-market-structure, smart-money-flow, new-tokens, consensus-signal,
+perps-market-trend, hyperliquid-smart-money); the **23 missing ALL require an input** (`address`/`mint`/
+`market`/`signature`/...). So CDP appears to only catalog endpoints callable with no required input.
+
+**HYPOTHESIS:** providing a concrete `input` EXAMPLE (not just an `inputSchema` with required fields) makes a
+parameterized endpoint "demonstrably callable" → CDP catalogs it. Our discovery extension previously emitted
+an empty example body (`info.input.body: {}`); now populated for the test endpoints (verified live:
+`perps-cross-venue-funding` 402 shows `info.input.body: {"market":"SOL"}`).
+
+**DESIGN (controlled):**
+- **TREATMENT (3, given `input` examples + re-seeded 2026-06-28):** `enrich-wallet-light` (`{address}`),
+  `due-diligence` (`{mint}`), `perps-cross-venue-funding` (`{market}`). All currently NOT cataloged (have required params).
+- **CONTROL (20 other parameterized endpoints):** unchanged, no example — should stay un-cataloged.
+- Mechanism: `BAZAAR_INPUT_EXAMPLES` map in `src/lib/agent.ts` → `declareDiscoveryExtension({ input, inputSchema, ... })`.
+
+**BACKTEST 2026-07-02:** search the CDP bazaar (`/discovery/search?query=solenrich` + the validate page).
+- ✅ **If the 3 treatment endpoints are now cataloged AND the 20 controls are not** → hypothesis CONFIRMED →
+  roll out `input` examples to all 23 parameterized endpoints (8 → 31 discoverable, ~4x). Trivial extension of
+  the existing map (reuse SolScout stress fixtures for examples).
+- ❌ **If the 3 did NOT catalog** → CDP's rule is stricter (zero-required-input only). Revert the canary;
+  parameterized endpoints simply won't appear in the discovery feed (they're still callable, just not browsable).
+- ⚠️ Confound to note: the 3 were also re-seeded today, so if ALL re-seeded endpoints catalog regardless, the
+  signal is muddier — compare against the un-re-seeded controls.
+
 ---
 
 ## (prev session) Last session date
