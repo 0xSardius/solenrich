@@ -36,8 +36,25 @@ number to watch climb.
 - Re-pull `/metrics` → compare unique_callers vs baseline of 2.
 - x402scan server page for settlement stats.
 
-**NEXT (session pivot):** P1 free-distribution — MCP directories first (Official MCP Registry, Smithery fix,
-Glama/PulseMCP/mcp.so), then awesome-lists + MPPScan. Content drafted in `docs/distribution-submissions.md`.
+## ✅ @x402 2.6→2.17 upgrade + bazaar serviceName/tags (2026-06-27 PM)
+
+After the indexing/payment fixes, checked our impl against the x402-foundation bazaar spec
+(`docs/extensions/bazaar.mdx`). Findings: dynamic routes correctly N/A (our params are in the POST
+body, not the URL path — each endpoint is rightly its own static resource); core extension correct;
+BUT the spec's resource-level **`tags`** (≤5, ≤32 ASCII each) + **`serviceName`** — the bazaar's
+**dedicated search-ranking field** — weren't being emitted because our pinned `@x402 2.6` didn't have
+them (added in 2.17). Upgraded `@x402/{core,hono,svm,extensions,fetch}` 2.6→2.17 on an isolated branch:
+**type-compatible (tsc clean), 170 tests, server boots, all 31 settle, 0 fail.** Added `serviceName`
+'SolEnrich' + 5 capability tags per endpoint (`BAZAAR_TAGS` map in `agent.ts`). Verified live: prod 402
+emits per-endpoint tags (perps→funding-rate/cross-venue, wallet→wallet-risk, token→due-diligence/
+rug-detection, HL→hyperliquid/smart-money). `@coinbase/x402` 2.1.0 unchanged (compatible). Re-seeded all
+31 with tags. **This is the capability-ranking lever** — confirm ranking lift on the bazaar tomorrow.
+
+**Also done:** SolEnrich published to the **Official MCP Registry** (`io.github.0xSardius/solenrich`,
+`server.json` validated; one interactive GitHub auth from Sardius). Downstream MCP dirs mirror from there.
+
+**NEXT:** Smithery fix (stale listing, Sardius login) + Glama/PulseMCP/mcp.so (likely auto-index now) +
+awesome-lists + MPPScan. Content in `docs/distribution-submissions.md`.
 
 ## What was completed
 
