@@ -21,19 +21,21 @@ The discoverability rails are in and **verified working** (2026-06-28 re-check):
 
 **RE-CHECK (2026-07-02) — does the supply-side fix convert to demand:**
 1. `/metrics` `unique_callers` — is it rising with addresses we DON'T recognize? (vs baseline 1–2)
-2. agentic.market — **LISTED as of 2026-06-28** (8/31 endpoints, via the bazaar cascade; validate page
-   `https://agentic.market/validate`). (a) Confirm the other 23 endpoints propagated. (b) INVESTIGATE the two
-   quality signals their validate flagged — both are ranking levers, NOT service bugs (our live 402 emits the
-   full `extensions.bazaar.{info,schema}` + tags + serviceName, verified 2026-06-28):
-   - **"Input schema present: no"** — @x402's `declareDiscoveryExtension` nests the real params inside an
-     HTTP-body envelope (`schema.properties.input.properties.body.properties.{fields}`), so their shallow
-     parser sees the transport envelope, not the params. Check if a flatter/more-recognized input schema
-     lifts their quality score.
-   - **"Dedicated domain: not yet exposed"** — we DO serve `/.well-known/x402` + `/llms.txt`; figure out what
-     agentic.market wants crawled/exposed at the domain to flip this to yes.
+2. agentic.market — **CORRECTED 2026-06-29 (was a dead lead).** Their searchable `/v1/services` catalog is a
+   HAND-CURATED list of **~50 major-brand providers** (OpenAI, Anthropic, Exa, The Graph, TripAdvisor — all
+   `enriched=true`, several with `tags=0`), **NOT an auto-index of the CDP bazaar.** We show in their *validate*
+   page (raw bazaar mirror — all 31 endpoints) but NOT in *search* (the curated catalog; even the stale Orbis
+   entry dropped out). **The quality signals "Input schema present: no" / "Dedicated domain: not yet exposed"
+   are NOT the promotion gate** — curation is by provider prominence, not metadata (enriched samples have
+   `tags=0` and still made it). ⛔ DO NOT chase those signals to get into agentic.market search — wrong lead.
+   → Getting in is EDITORIAL/OUTREACH, same lane as the Coinbase/CDP showcase pursuit (we're a live instance of
+   the x402 stack Coinbase Dev evangelizes). A low-effort partnership ask at most; not an engineering task.
+   The canonical CDP bazaar (where agents query programmatically) already has all 31 — that's what matters.
 3. Glama / PulseMCP / mcp.so — did they auto-index from the Official MCP Registry?
-4. CDP bazaar capability ranking — do we rank for "Solana wallet risk score" yet (0 of ours today), and are
-   more of the 31 endpoints surfacing? x402scan settlement stats.
+4. CDP bazaar — **30/31 cataloged as of 2026-06-29** (only `consensus-signal` not surfaced by search — a
+   search-coverage artifact; it was in the original 8, so almost certainly all 31 are in). Confirm 31/31 +
+   whether we rank for capability queries like "Solana wallet risk score" (0 of ours on 2026-06-28). x402scan
+   settlement stats.
 5. Smithery — did a registry-synced entry appear; dedupe `SE01`.
 
 ### 🧪 CANARY EXPERIMENT — "input example unlocks parameterized-endpoint cataloging" (run 2026-06-28, commit `77464d0`)
