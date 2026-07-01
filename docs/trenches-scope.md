@@ -1,6 +1,6 @@
-# The Trenches — memecoin intelligence vertical + Loki bot (scope, 2026-07-01)
+# The Trenches — memecoin intelligence vertical + Eris bot (scope, 2026-07-01)
 
-Bot-first build: **Loki** (a public "calls" Telegram bot) is the R&D lab *and* the marketing/proof
+Bot-first build: **Eris** (a public "calls" Telegram bot) is the R&D lab *and* the marketing/proof
 engine. It's given maximum tools to make good calls; the **paid endpoints are extracted downstream**
 from whatever synthesis proves it wins. Grounded in Spyzer's "A Complete (Meme)coin Guide"
 (`docs/A complete (meme)coin guide.pdf`) — see "What the guide gave us" below.
@@ -59,26 +59,20 @@ synthesis moat (we're not inventing rules, we're implementing a proven trencher'
 - The decision anchor: **"Would I buy this coin if I found it only now?"** → our synthesis verdict.
 
 **Market context (macro gate):** BTC/ETH/SOL trend + trenches heat (how high are launches topping,
-volume). In cold conditions, be quiet. Loki should *self-gate call frequency to market conditions*.
+volume). In cold conditions, be quiet. Eris should *self-gate call frequency to market conditions*.
 
 ---
 
-## 3. Naming — "Loki" ⚠️ availability
+## 3. Naming — **Eris** (DECIDED 2026-07-01)
 
-Loki is thematically **perfect** (trickster/chaos deity = the chaos of the trenches; fits the
-"trickster/chaos deity" slot reserved for the trenches swarm agent in CLAUDE.md). **BUT** the naming
-rule requires an availability check vs Solana tokens, and Loki is **heavily collided: 24 live LOKI
-tokens on Solana** ("LokiCoin", "Loki", "Loki!" — all small memecoins, verified DexScreener 2026-07-01).
-For a *memecoin* bot specifically, sharing a name with 24 memecoins is doubly confusing.
+**Eris** — Greek goddess of discord/chaos — chosen for the trenches bot (the "trickster/chaos deity" slot
+reserved in CLAUDE.md). Thematically ideal: discord/chaos = the chaos of the trenches.
 
-**Options (Sardius decides):**
-- **(a) Keep Loki** — accept the collision; it's a *bot handle*, not a token. Differentiate via a distinct
-  handle (`@LokiTrenches` / `@LokiScanBot`) and clear branding. Simplest; the theme is strong.
-- **(b) Cleaner trickster/chaos deity** — candidates to availability-check: **Eris** (Greek goddess of
-  discord/chaos — thematically ideal for the trenches), **Ate** (goddess of ruin/folly/delusion — trader
-  delusion), **Dolos** (spirit of trickery/deception — apt for rug detection), **Momus** (god of mockery).
-  Each MUST be token-checked before use (likely some are taken too).
-- Recommendation: lean **(a) Loki** if you love it — the collision is livable for a bot. Otherwise Eris.
+Availability-checked 2026-07-01: only **2 tiny/dead ERIS tokens on Solana** (~$2k mcap each) — vs the 24
+live LOKI tokens that ruled out the earlier "Loki" candidate. Effectively clean for a bot handle — use a
+distinct handle (e.g. `@ErisTrenches` / `@ErisScanBot`).
+
+**Launch feed CONFIRMED: pump.fun / pumpportal** (real-time new-launch + trade websocket).
 
 ---
 
@@ -107,8 +101,8 @@ proprietary analysis) + a fresh-launch feed + `whale-watch`. **Zero new-traffic 
 
 **T4. `attention-momentum` ($0.02) — the moat, rails now.** Accelerating *agent* queries per fresh token,
 from our own request stream (extends `consensus-signal`/`signal-tracker`). Un-clonable ("momentum before
-price, but proprietary"). Traffic-gated → quiet today, compounds as Loki + the swarm generate queries.
-Build the rails now; every Loki lookup feeds it. *Data moat #2.*
+price, but proprietary"). Traffic-gated → quiet today, compounds as Eris + the swarm generate queries.
+Build the rails now; every Eris lookup feeds it. *Data moat #2.*
 
 **T5. `trenches-scan` ($0.05–0.10) — the orchestration headliner.** Fresh launches → filter rugs
 (`token-x-ray`) → dev-rep gate → smart-money + attention overlay → ranked "ape-able now" list *with
@@ -120,7 +114,7 @@ T1–T4 + `new-tokens`. Ship after T1–T4 validate individually.
 
 ---
 
-## 5. Loki — the bot-as-lab (the actual first build)
+## 5. Eris — the bot-as-lab (the actual first build)
 
 **What it is:** a Telegram bot that (a) responds to a pasted CA/ticker with a fast SolEnrich-powered
 verdict (Rick-bot style), and (b) posts *public calls* to a channel with reasoning + a transparently
@@ -129,11 +123,11 @@ tracked hit rate. It's the R&D vehicle (discover what synthesis wins) AND the ma
 
 **The guide validates this exact format:** the "Rick bot" it teaches *is* a Telegram bot that returns
 name/chain/price/mcap/liq/vol/top-holders on a pasted CA, **and tracks who called a coin first + shows
-the multiple** ("you called it at 100k a day ago = 10x call"). Our differentiator over Rick: Loki adds
+the multiple** ("you called it at 100k a day ago = 10x call"). Our differentiator over Rick: Eris adds
 the *synthesis verdict* (rug/bundle/smart-money/attention), not just raw stats.
 
 **Design principles (the "maximum tools" the user asked for, bounded by the thesis):**
-1. **The moat is the synthesis, not the tools.** Give Loki every data source to *discover what wins*; the
+1. **The moat is the synthesis, not the tools.** Give Eris every data source to *discover what wins*; the
    defensible, productizable output is the synthesis (T1–T5), not raw access.
 2. **Dogfood SolEnrich where it can** — route through existing endpoints (copy-trade winner ID,
    wallet-graph, whale-watch, consensus) so every call feeds the moat; use raw sources only for the
@@ -141,12 +135,12 @@ the *synthesis verdict* (rug/bundle/smart-money/attention), not just raw stats.
 3. **Transparent track record from post #1** (the guide is emphatic: scam call channels retroactively
    post only winners; credibility is everything). Timestamp every call at its mcap, post the *reasoning*,
    publicly track win rate — no cherry-picking. This is also the anti-pattern the guide warns about, so
-   Loki being honest *is* the differentiation.
+   Eris being honest *is* the differentiation.
 4. **Self-gate to market conditions** (guide's "reading the market"): fewer/quieter calls when the
    trenches are cold; NFA framing always.
-5. **Latency honesty**: Loki does *pre-ape research* (seconds-to-minutes), explicitly not block-0 sniping.
+5. **Latency honesty**: Eris does *pre-ape research* (seconds-to-minutes), explicitly not block-0 sniping.
 
-**Intelligence layer (what Loki computes per candidate):**
+**Intelligence layer (what Eris computes per candidate):**
 - Rug/insider gate (→ becomes `token-x-ray`): the guide's safety checklist.
 - Dev reputation (→ `dev-reputation`): deployer history.
 - Smart-money overlay (→ `smart-money-trenches`): winner wallets in the token.
@@ -185,7 +179,7 @@ metrics, not per-token real-time). Optionally **Bitquery** (real-time DEX/token-
   synthesis/verdict*, never standalone.
 - **Transparency is the whole value** — a public calls bot lives or dies on a verifiable, honest track
   record. One caught overclaim kills it.
-- **The game is hard and getting harder** ("exponential decay," PvP arena, widening skill gap) — Loki's
+- **The game is hard and getting harder** ("exponential decay," PvP arena, widening skill gap) — Eris's
   edge is *processing more variables faster*, not being first; frame conservatively, NFA always.
 - **Latency boundary** — we are pre-ape research, not sniping. Don't chase sub-second.
 
@@ -193,11 +187,11 @@ metrics, not per-token real-time). Optionally **Bitquery** (real-time DEX/token-
 
 ## 8. Sequencing
 
-1. **Confirm the launch feed** (pump.fun/pumpportal) + Loki naming (Loki vs Eris).
+1. **Confirm the launch feed** (pump.fun/pumpportal) + Eris naming (Eris vs Eris).
 2. **Build `smart-money-trenches`** (highest ROI, zero new-traffic dependency) as the first endpoint AND
-   Loki's first signal.
-3. **Stand up Loki** pointed at it → public calls with reasoning + honest hit-rate tracking (the lab).
-4. Add `dev-reputation` + `token-x-ray` (the safety moat) as Loki proves what matters.
+   Eris's first signal.
+3. **Stand up Eris** pointed at it → public calls with reasoning + honest hit-rate tracking (the lab).
+4. Add `dev-reputation` + `token-x-ray` (the safety moat) as Eris proves what matters.
 5. `trenches-scan` orchestration once T1–T4 validate.
 6. Productize each proven synthesis into a paid endpoint (checklist-complete). The bot's winning logic IS
    the downstream endpoint.

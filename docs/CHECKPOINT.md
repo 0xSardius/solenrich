@@ -1,7 +1,48 @@
 # Session Checkpoint
 
 ## Last session date
-2026-06-28
+2026-07-01
+
+## ▶️ RESUME HERE (2026-07-01) — Trenches vertical scoped + named; two decisions LOCKED
+
+Session restarting for a computer update. State is clean — **all work committed + pushed, no
+uncommitted src changes.** Pick up here.
+
+**What happened this session:**
+1. **Discoverability arc — DONE and shipped** (details in the audit block below). Supply-side is fully
+   solved: CDP bazaar 30–31/31 cataloged, @x402 2.17 tags/serviceName live, MCP Registry published,
+   input-example cataloging mechanism proven. **Demand (organic calls) is still ~0 — that's the real
+   frontier now, not more plumbing.**
+2. **Trenches / memecoin vertical — SCOPED.** Full plan in **`docs/trenches-scope.md`** (committed
+   `bb9d2f2`, updated this session). Grounded in Spyzer's memecoin guide (`docs/A complete (meme)coin
+   guide.pdf`, read fully). Product framing: **we are the agent-native intelligence layer memecoin bots
+   call — NOT a terminal.** 5 endpoints (T1 `dev-reputation`, T2 `token-x-ray`, T3 `smart-money-trenches`
+   [build FIRST], T4 `attention-momentum`, T5 `trenches-scan`) + a public Telegram "calls" bot as the
+   R&D lab / proof engine.
+
+**✅ DECISIONS LOCKED THIS SESSION (were the two open questions):**
+- **Bot name = Eris** (not Loki). Greek goddess of discord/chaos. Availability-checked 2026-07-01: only
+  2 tiny/dead ERIS tokens on Solana (~$2k each) vs Loki's 24 live ones → effectively clean. Handle e.g.
+  `@ErisTrenches`. (First trenches entry in the swarm naming system: time/eternity + now trickster/chaos deities.)
+- **Launch feed = pump.fun / pumpportal** (real-time new-launch + trade websocket). NOT `solana.com/data`
+  (that's day-lagged network metrics — wrong tool, confirmed).
+
+**▶️ NEXT ACTIONABLE (in order):**
+1. **Sequencing gate:** per the scope doc + CLAUDE.md, finish **Flash on-chain (perps venue coverage)**
+   before opening the trenches — trenches is an adjacent vertical, doesn't block perps. Confirm with
+   Sardius whether to honor that gate or start trenches now (he may want to lead with Eris for demand).
+2. **First trenches build = `smart-money-trenches`** ($0.05–0.10) — highest buyer-ROI, zero new-traffic
+   dependency (reuses copy-trade-analyzer + new-tokens + whale-watch). This is also Eris's first signal.
+3. **Stand up Eris** pointed at it (Telegram bot, Rick-bot-style call+track format, transparent
+   non-cherry-picked track record = the differentiator). Then T1 `dev-reputation` + T2 `token-x-ray`
+   (the safety half — 99% of trencher losses are rugs/bundles), then T5 `trenches-scan` orchestration.
+4. Follow the CLAUDE.md new-endpoint checklist for each (incl. **step 9: `BAZAAR_INPUT_EXAMPLES` entry**
+   or the endpoint stays invisible in the bazaar).
+
+**Also still open (unchanged):** the 2026-07-02 post-implementation audit below (unique_callers, bazaar
+31/31, MCP mirror auto-index); Flash v2 API (perps); P1 awesome-list PRs + MPPScan (tasks #23–25).
+
+---
 
 ## 📋 POST-IMPLEMENTATION AUDIT — re-check 2026-07-02 (queued 2026-06-28; Sardius self-reminder, no auto-schedule)
 
