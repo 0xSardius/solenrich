@@ -81,6 +81,14 @@ distinct handle (e.g. `@ErisTrenches` / `@ErisScanBot`).
 Ranked by buyer-ROI × defensibility. Each maps to guide variables + reuses existing machinery. Prices
 indicative. All follow the CLAUDE.md new-endpoint checklist (incl. `BAZAAR_INPUT_EXAMPLES`).
 
+**Organized across the two regimes the guide defines** (updated 2026-07-02): a shared **spine** + a
+**new-pairs** leg (T1–T5, the trenches proper) + a **community/established** leg (T6–T9, "the long game —
+the right game," which pump.fun's own poll says 81.5% prefer) + a shared **macro gate** + an
+**exit/management** track. Selection was ~90% of the original scope; the guide is emphatic that
+management/exits matter *more* than entries, so they're now a first-class part of the map.
+
+### Regime A — new pairs (the trenches proper) + shared spine
+
 **T1. `dev-reputation` ($0.02–0.03) — the compounding data moat.** "Has this deployer rugged before?"
 Tracks a deployer wallet's launch history: # launches, rug rate, median outcome, biggest win, time-to-dump
 pattern. **Improves with every launch we observe** — incumbents can't replicate without the history
@@ -109,8 +117,56 @@ Build the rails now; every Eris lookup feeds it. *Data moat #2.*
 reasoning per token* + the "would I buy this now" verdict. The trenches `trending-signals`. Reuses all of
 T1–T4 + `new-tokens`. Ship after T1–T4 validate individually.
 
+### Regime B — community / established pairs (the long game, the right game)
+
+The guide's "Community memecoins" section: the winning signal is **maturation, not launch** — "bundlers
+flushed out, wallets that were in at 10k rotated out," healthy distribution, a community active *at all
+hours not just during pumps*, holders who'd stay through −50%. Slower game, higher control, "you're not
+racing bots — you're building." This leg was under-served by the original scope.
+
+**T6. `distribution-health` ($0.03) — "good mileage" quantified.** Distribution *trajectory over time*:
+top-holder % trend, HHI trend, holder-count growth, bundler flush-out, holder retention/churn, smart-money
+accumulation (not just entry). Reuses `token-analyzer` + `snapshot-store`/`trend-analyzer` (the same
+temporal spine as `token-trend`). The on-chain reflection of "is this community healthy" — no social scrape.
+
+**T7. `market-structure` ($0.02–0.03) — the entry-timing read (guide Ch. 7).** HH/HL uptrend detection +
+golden-zone (0.5/0.618/0.786 fib) entry read from OHLCV. "Is it in a *confirmed* uptrend, and where's the
+entry?" Body-to-body (not wick-to-wick) per the guide's low-liquidity rule. Genuinely new *logic* but reuses
+Birdeye candles we already fetch. Serves both regimes; shines on coins with ≥ a few days of price history
+(the guide: drawing a line on a 30-min coin is guessing). **Also the exit-invalidation signal** (break of
+structure to the downside) — see the exit track.
+
+**T8. `trenches-heat` ($0.01–0.02) — the macro gate (guide Ch. 8 "Reading the Market").** BTC/ETH/SOL trend +
+trenches heat (are fresh launches topping at 5–10M or dying at 500K?) + aggregate on-chain volume → a
+risk-dial verdict (HIGH-RISK / NEUTRAL / LOW-RISK conditions). Cheap; **powers Eris's self-gating** (fewer,
+quieter calls when the trenches are cold). Reuses perps market data + DexScreener aggregate.
+
+**T9. `community-scan` ($0.05–0.10) — the community orchestration headliner.** Survived-the-churn filter
+(age/sustained volume) → `distribution-health` → `market-structure` confirmed uptrend → smart-money
+*accumulation* overlay → ranked "worth entering/holding" list with per-token reasoning. The `community-scan`
+counterpart to `trenches-scan`. Reuses T3/T6/T7. Ship after the parts validate.
+
+### Exit & management track (the half that keeps the money — guide Ch. 9)
+
+The guide: *"trade management is indefinitely more important than your entry."* The selection suite tells you
+what to buy; this tells you when to *sell / cut / trim*. Two pieces already exist and just need framing +
+one net-new bot layer:
+
+- **`check-alerts` (already built) = the exit-trigger system.** Spot alerts on price spikes, risk-score
+  changes, whale flows, holder-concentration shifts. Frame it as Eris's "has my thesis broken" watcher on
+  every open call. (Extend spot criteria as needed; the perps event types are already there.)
+- **`market-structure` (T7) = the invalidation signal.** Break of structure to the downside = the guide's
+  "setup died, exit" trigger. Same endpoint, dual-use (entry + exit).
+- **Eris-side management logic (bot, not an endpoint — needs portfolio state):** take-profit laddering
+  (scale out gradually on the way up), position sizing (% of portfolio, "if this zeroes can I trade
+  tomorrow?"), and the recurring anchor *"would I buy this at the current price? → if no, sell the
+  difference."* This is pure guide gospel and lives in the bot because it needs position/P&L context.
+
 *(Deliberately NOT building: social/sentiment scraping — no edge, different game per strategy. Narrative
-"word-frequency" plays stay out of scope; we do the on-chain reflection — buy velocity — not the tweets.)*
+"word-frequency" plays stay out of scope; we do the on-chain reflection — buy velocity — not the tweets.
+The narrative half of the guide's "information deficiency" edge is out of scope by design; smart-money +
+attention are our on-chain *money-proxies* for whether a narrative is working, which makes us deliberately
+a research-filter for apes, not a block-0 alpha-originator.)*
 
 ---
 
@@ -156,6 +212,35 @@ the *synthesis verdict* (rug/bundle/smart-money/attention), not just raw stats.
 
 **It's a separate consumer agent (swarm pattern), NOT in `src/`.** Its own repo, like Ananke.
 
+### 5b. How Eris sources calls "early" — the ingestion design (researched 2026-07-02)
+
+Call-sourcing bots are 4 layers; **"early" is won entirely in Layer 1 (ingestion)** — the rest is filter +
+deliver + track. There are three ingestion speed tiers and *which tier you're on IS how early you are*:
+
+- **Tier A — Geyser/gRPC (sub-second, sniper tier):** Yellowstone gRPC off a validator (Helius/Triton/
+  QuickNode/Shyft) → parse the mint out of the launch tx the instant it lands. **We do NOT play here**
+  (block-0 game, needs multiwallet ops, razor-thin edge — the guide's excluded lane).
+- **Tier B — Launchpad websocket (1–3s, research-ape tier — OUR lane):** **PumpPortal** (`pumpportal.fun`,
+  free WS) — `subscribeNewToken` pushes every new pump.fun launch as JSON; `subscribeTokenTrade` (per-token
+  trades); **`subscribeAccountTrade` (watch specific wallets).** Fast enough to research-and-ape, not a race.
+- **Tier C — Polled DEX APIs (seconds–minutes, enrichment tier):** DexScreener/Birdeye "new/trending." Too
+  slow to be first, but **perfect for Regime B (community/established), where you're not racing** + enrichment.
+
+**Two sourcing strategies (pick both, but the 2nd is our strongest first move):**
+1. **Scan-all-launches** — drink the pump.fun firehose (100s/min) → filter hard. Edge = *filter quality*,
+   which is exactly where our spine (x-ray/dev-rep/smart-money/attention) beats a plain rugcheck bot.
+2. **Watch-smart-wallets** — subscribe to a curated set of proven-winner wallets (`subscribeAccountTrade`
+   or **Helius webhooks**) and call whatever *they* ape. Higher signal-to-noise than scanning launches;
+   the "early" comes from the wallet being early + mirroring instantly. **This IS `smart-money-trenches`
+   as a live stream** — highest-ROI first move.
+
+**Stack:** persistent process (not serverless — WS must stay alive) · PumpPortal WS and/or Helius webhooks
+(ingest) · Helius RPC (enrich) · Redis (dedup/cooldowns/last-seen) · small DB (call tracking) · **Bun +
+grammY** (Telegram) · Railway (host). Post-on-change, not on a timer.
+
+**"Early" we can credibly claim:** *seconds-to-minutes, better-filtered than anyone* — NOT "first block."
+Exactly the lane the guide told us to pick.
+
 ---
 
 ## 6. Data sources
@@ -185,15 +270,26 @@ metrics, not per-token real-time). Optionally **Bitquery** (real-time DEX/token-
 
 ---
 
-## 8. Sequencing
+## 8. Sequencing (updated 2026-07-02 — consumer-led, both regimes + exits)
 
-1. **Confirm the launch feed** (pump.fun/pumpportal) + Eris naming (Eris vs Eris).
-2. **Build `smart-money-trenches`** (highest ROI, zero new-traffic dependency) as the first endpoint AND
-   Eris's first signal.
-3. **Stand up Eris** pointed at it → public calls with reasoning + honest hit-rate tracking (the lab).
-4. Add `dev-reputation` + `token-x-ray` (the safety moat) as Eris proves what matters.
-5. `trenches-scan` orchestration once T1–T4 validate.
-6. Productize each proven synthesis into a paid endpoint (checklist-complete). The bot's winning logic IS
+Discipline: **the spine is the v1 advisory *brain* (~65% of a fully autonomous system — picking is there,
+managing is half there via check-alerts + market-structure, executing isn't started). Advisory-first is
+how we validate profitability with real P&L before betting autonomy on it.**
+
+1. **Confirm the launch feed** (pump.fun/pumpportal, Tier B) + the watch-smart-wallets ingest strategy.
+2. **Build `smart-money-trenches`** (highest ROI, zero new-traffic dependency) — the first endpoint AND
+   Eris's first signal (also the live watch-smart-wallets stream).
+3. **Stand up Eris** pointed at it → public calls with reasoning + honest hit-rate tracking (the lab; the
+   feedback meter turns on).
+4. **Safety half (new pairs):** `dev-reputation` + `token-x-ray` — makes Eris's new-pair calls trustworthy
+   (99% of losses live here).
+5. **Community/established leg:** `distribution-health` + `market-structure` — opens Regime B (the guide's
+   "better game"). `market-structure` doubles as the exit-invalidation signal.
+6. **Exit/management track:** frame `check-alerts` as the thesis-broken watcher + add Eris-side take-profit
+   laddering / position sizing (bot logic, needs portfolio state).
+7. **Macro gate:** `trenches-heat` — cheap, makes Eris self-gate to conditions.
+8. **Orchestrators:** `trenches-scan` + `community-scan` once the parts validate individually.
+9. Productize each proven synthesis into a paid endpoint (checklist-complete). The bot's winning logic IS
    the downstream endpoint.
 
 Attribution: the guide is @spyzer's (x.com/@spyzer) original work — we're using its framework as private
