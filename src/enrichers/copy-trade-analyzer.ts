@@ -56,6 +56,20 @@ export interface CopyTradeEnrichment {
 
 const SWAP_TYPES = new Set(['SWAP', 'TOKEN_SWAP', 'EXCHANGE']);
 
+// Quote assets — the leg a wallet *pays with* in a swap, never the token it "bought".
+const WSOL_MINT = 'So11111111111111111111111111111111111111112';
+const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+const USDT_MINT = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
+const QUOTE_MINTS = new Set([WSOL_MINT, USDC_MINT, USDT_MINT]);
+
+/** A token a wallet acquired recently. Light — no PnL, for the trenches live overlay. */
+export interface RecentBuy {
+  mint: string;
+  timestamp: number;        // unix seconds (block time)
+  token_units: number;      // amount of the token received
+  spent_usd: number | null; // USD value of the quote leg spent; null if unpriceable
+}
+
 export class CopyTradeAnalyzer {
   constructor(
     private helius: HeliusClient,
@@ -63,6 +77,59 @@ export class CopyTradeAnalyzer {
     private cache: Cache,
     private priceAggregator?: PriceAggregator,
   ) {}
+
+  /**
+   * Light "what did this wallet buy recently" path for the trenches live overlay.
+   * Unlike enrich() (backward-looking PnL over scored pairs), this returns the
+   * raw recent acquisitions — the token received on the non-quote leg of each
+   * recent SWAP — so callers can overlay against fresh-launch feeds. No pricing
+   * of the bought token is needed; size is taken from the quote leg spent.
+   */
+  async getRecentBuys(address: string, hoursBack: number): Promise<RecentBuy[]> {
+    const cacheKey = `recentbuys:${address}:${hoursBack}`;
+    const cached = await this.cache.get<RecentBuy[]>(cacheKey);
+    if (cached) return cached;
+
+    const sigs = await this.helius.getSignaturesForAddress(address, 100);
+    const cutoff = Date.now() / 1000 - hoursBack * 3600;
+    const recentSigs = sigs.filter((s) => (s.blockTime ?? 0) >= cutoff).map((s) => s.signature);
+    if (recentSigs.length === 0) return [];
+
+    let txs: EnhancedTransaction[] = [];
+    try {
+      txs = await this.helius.getEnhancedTransactions(recentSigs);
+    } catch {
+      return [];
+    }
+
+    // Price SOL once to convert SOL-denominated spend to USD.
+    const solPrice = await this.dexscreener.getTokenPrice(WSOL_MINT).catch(() => 0);
+
+    const buys: RecentBuy[] = [];
+    for (const tx of txs) {
+      if (!SWAP_TYPES.has(tx.type.toUpperCase())) continue;
+      const transfers = tx.tokenTransfers ?? [];
+      // The token the wallet received that is NOT a quote asset = what it bought.
+      const received = transfers.find((t) => t.toUserAccount === address && !QUOTE_MINTS.has(t.mint));
+      if (!received) continue;
+      // The quote asset the wallet sent = its spend.
+      const spent = transfers.find((t) => t.fromUserAccount === address && QUOTE_MINTS.has(t.mint));
+      let spentUsd: number | null = null;
+      if (spent) {
+        if (spent.mint === WSOL_MINT && solPrice > 0) spentUsd = spent.tokenAmount * solPrice;
+        else if (spent.mint === USDC_MINT || spent.mint === USDT_MINT) spentUsd = spent.tokenAmount;
+      }
+      buys.push({
+        mint: received.mint,
+        timestamp: tx.timestamp,
+        token_units: received.tokenAmount,
+        spent_usd: spentUsd,
+      });
+    }
+
+    await this.cache.set(cacheKey, buys, CACHE_TTL.copyTrade);
+    return buys;
+  }
 
   async enrich(address: string, lookbackDays: number): Promise<CopyTradeEnrichment> {
     const cacheKey = `copytrade:${address}:${lookbackDays}`;

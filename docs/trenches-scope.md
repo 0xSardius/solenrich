@@ -276,6 +276,24 @@ Discipline: **the spine is the v1 advisory *brain* (~65% of a fully autonomous s
 managing is half there via check-alerts + market-structure, executing isn't started). Advisory-first is
 how we validate profitability with real P&L before betting autonomy on it.**
 
+### DECISION LOCKED 2026-07-02 — `smart-money-trenches` bootstrap = manual-seed-now / auto-derive-later
+
+Pressure-test finding: the endpoint is NOT "reuse `smart-money-flow` with a tweak." Three real gaps:
+1. **No token-age/freshness** anywhere (`pairCreatedAt` unparsed in `dexscreener.ts`) — can't filter "<6h".
+2. **`copy-trade-analyzer` is tuned for established tokens** — 100-sig cap under-samples active memecoin
+   wallets; `hold_time_days` rounds memecoin holds (minutes-hours) to ~0; fresh memecoins often lack a
+   price feed so PnL can't compute. It's also backward-looking (historical top pairs, not live recent buys).
+3. **Smart-money universe isn't trenches-tuned** — derived seeds = trending-token whales; fallback = generic
+   DeFi/perps/NFT. Neither is "wallets that profitably ape fresh memecoins early."
+
+**Architecture (locked): decouple "who is smart" (slow, offline, cached, the moat) from "what are they
+buying now" (fast, live, per-call).** The vetted wallet set IS the addresses Eris subscribes to via
+PumpPortal `subscribeAccountTrade` → shared infra between endpoint + bot.
+
+**Build path (locked): bootstrap the wallet set MANUALLY → ship the live overlay → automate the
+runner→early-buyer→recurring derivation later.** Manual seed = a config list (like `smart-money-seeds.ts`),
+initially hand-curated / one-time-derived from recent runners; the endpoint just reads it.
+
 1. **Confirm the launch feed** (pump.fun/pumpportal, Tier B) + the watch-smart-wallets ingest strategy.
 2. **Build `smart-money-trenches`** (highest ROI, zero new-traffic dependency) — the first endpoint AND
    Eris's first signal (also the live watch-smart-wallets stream).

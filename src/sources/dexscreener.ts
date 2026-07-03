@@ -15,6 +15,8 @@ export interface DexPair {
   liquidity: { usd: number; base: number; quote: number };
   fdv: number;
   marketCap: number;
+  /** Unix ms when the pair was created on-chain (DexScreener field). Absent on some pairs. */
+  pairCreatedAt?: number;
 }
 
 export interface DexTokenData {
@@ -28,6 +30,8 @@ export interface DexTokenData {
   symbol: string;
   name: string;
   pairs: DexPair[];
+  /** Earliest pair-creation time (Unix ms) across all pairs = launch-time proxy. Null if unknown. */
+  pairCreatedAt: number | null;
 }
 
 // --- Client ---
@@ -66,6 +70,10 @@ export class DexScreenerClient {
     const totalLiquidity = pairs.reduce((sum, p) => sum + (p.liquidity?.usd ?? 0), 0);
     const totalVolume24h = pairs.reduce((sum, p) => sum + (p.volume?.h24 ?? 0), 0);
 
+    // Earliest pair creation across all pairs = launch-time proxy (original LP is oldest).
+    const createdTimes = pairs.map((p) => p.pairCreatedAt).filter((t): t is number => typeof t === 'number' && t > 0);
+    const pairCreatedAt = createdTimes.length > 0 ? Math.min(...createdTimes) : null;
+
     const data: DexTokenData = {
       price: parseFloat(primary.priceUsd) || 0,
       priceChange1h: primary.priceChange?.h1 ?? 0,
@@ -77,6 +85,7 @@ export class DexScreenerClient {
       symbol: primary.baseToken.symbol,
       name: primary.baseToken.name,
       pairs: sorted.slice(0, 5),
+      pairCreatedAt,
     };
 
     await this.cache.set(cacheKey, data, CACHE_TTL.tokenPrice);
@@ -87,6 +96,16 @@ export class DexScreenerClient {
   async getTokenPrice(mint: string): Promise<number> {
     const data = await this.getTokenData(mint);
     return data?.price ?? 0;
+  }
+
+  /**
+   * Token age in hours since its earliest pair was created (launch-time proxy).
+   * Returns null when DexScreener exposes no `pairCreatedAt` for any pair.
+   */
+  async getTokenAgeHours(mint: string): Promise<number | null> {
+    const data = await this.getTokenData(mint);
+    if (!data || data.pairCreatedAt == null) return null;
+    return (Date.now() - data.pairCreatedAt) / 3_600_000;
   }
 
   /** Get latest token profiles from DexScreener (recently created/boosted) */
