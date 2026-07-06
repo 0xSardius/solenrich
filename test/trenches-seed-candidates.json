@@ -1,0 +1,40 @@
+{
+  "_comment": "Frozen output of the smart-money-trenches manual seed bootstrap (2026-07-06). The Birdeye gainers-losers leaderboard is a rolling 1W window, so re-running trenches-build-seeds.ts later yields DIFFERENT candidates — this file preserves the vetted set as of this date. Source: leaderboard realized-PnL winners + known-runner miners (ANSEM/JOTCHUA/TRIPLET/NEET/BUTTCOIN), vetted through our own Helius cadence + bot-detection + copy-trade (test/trenches-vet-seeds.ts).",
+  "derived_at": "2026-07-06",
+  "known_runners": {
+    "ANSEM": "9cRCn9rGT8V2imeM2BaKs13yhMEais3ruM3rPvTGpump",
+    "TRIPLET": "J8PSdNP3QewKq2Z1JJJFDMaqF7KcaiJhR7gbr5KZpump",
+    "NEET": "Ce2gx9KGXJ6C9Mp5b5x1sn9Mg87JwEbrQby4Zqo3pump",
+    "BUTTCOIN": "Cm6fNnMk7NfzStP9CZpsQA2v3jjzbcYGAxdJySmHpump",
+    "JOTCHUA": "BcHEaaTCvycPwwsJ9yQTXdHP9X2gCLkznDbZ8VySpump"
+  },
+  "keep_active_traders": [
+    { "addr": "C8HH76sDWvTPHeVnndSxAgj2VrMSpxEpwgc5rFUwD55Y", "realized_1w_usd": 246000, "our_win": 0.43, "our_trades": 159, "tx_per_h": 2.2 },
+    { "addr": "GkdYWRjFzZW3oxbRaPJ43C5385E4GtfgW3vwfK2ZAtac", "realized_1w_usd": 214000, "our_win": 0.20, "our_trades": 15, "tx_per_h": 1.3, "runner": "ANSEM" },
+    { "addr": "6PeU2nLzwWv9V5BKqJBsoq88tAfULjQq9VcUYWK2KW5w", "realized_1w_usd": 162000, "our_win": 0.33, "our_trades": 24, "tx_per_h": 1.0 },
+    { "addr": "FdhpxuCPYWM98q5q1rHLAYRfXFsHUCzaos5ogz4prR7r", "realized_1w_usd": 159000, "our_win": 0.47, "our_trades": 148, "tx_per_h": 1.0 },
+    { "addr": "9Z6B2crrMeMPU4EM4fpSRWgFbSMmjzamekeumMwzkXEh", "realized_1w_usd": 33000, "our_win": 0.27, "our_trades": 159, "tx_per_h": 1.0 },
+    { "addr": "HeGgXZexkC2qKmgjfsyB6cbLU7QR8cjcq6bChJGUKjWr", "realized_1w_usd": 55000, "our_win": null, "our_trades": 0, "tx_per_h": 0.3, "note": "ultra-selective, 70 tx / 235h" },
+    { "addr": "2S8E25nAcqvvMYEWZHBQk22GzevwvmsVNAs6Gw5tRX7d", "realized_1w_usd": 63000, "our_win": null, "our_trades": 0, "tx_per_h": 1.0 },
+    { "addr": "3SdVtYPdnQw2b8WSE2T1VeexAqkDjbTyeSZ8Pzs6bgou", "realized_1w_usd": 14000, "our_win": null, "our_trades": 0, "tx_per_h": 2.4, "runner": "ANSEM" },
+    { "addr": "8MHU3NwzuwpkcrF8S2nzNXbkCWn3TdE9UVtB3bQWJP7b", "realized_1w_usd": 4000, "our_win": null, "our_trades": 0, "tx_per_h": 1.0, "runner": "ANSEM" }
+  ],
+  "keep_conviction_holders": [
+    { "addr": "5fkAwNVpT8A1UHEnY62VEFpqgagdoP8FYrv5ideiQp5c", "runners": ["TRIPLET", "NEET"] },
+    { "addr": "22by6osx7q9XX6na4SxuKozd4KMQeJhaoVLeUnBqRXoz", "runners": ["TRIPLET", "NEET"] },
+    { "addr": "9SBvvPiuXHekiJ8XyPxhWVSa23YHhonD2ATBZTveUbcE", "runners": ["NEET", "BUTTCOIN"] }
+  ],
+  "flag_review": [
+    { "addr": "vsTw91AUb4N91zdACyhuz31ctkQZCfY89iTF5pvCWDr", "realized_1w_usd": 292000, "our_win": 0.62, "our_trades": 156, "note": "62% win — strong, promote candidate" },
+    { "addr": "H8MQegokeJxeWfNiD3MNk8Bykso99s7qWGdtTKu3hmZY", "realized_1w_usd": 269000, "our_win": 0.41, "our_trades": 260, "note": "promote candidate" },
+    { "addr": "HCoUkq7iHecWTVCAVPfH9fBSGbZrgrE2jbHrE1rnCpUV", "realized_1w_usd": 298000, "our_win": 0.18, "our_trades": 138 },
+    { "addr": "3J9Sq1nrVJQjFpWWAEFYrNnLwyGuWDr7Y3DwNjX4Fdxb", "realized_1w_usd": 392000, "our_win": 0.35, "our_trades": 49 },
+    { "addr": "5SNQJZ9kRrpDWUEksmqYg3hDs5psJPfDSvBrbaCtRMKy", "realized_1w_usd": 50000, "our_win": null, "our_trades": 0, "note": "15.7 tx/h borderline" }
+  ],
+  "filtered_bots_count": 15,
+  "pending_decision": "Promote vsTw91 + H8MQeg into active seeds (->14)? Keep 3 holders tagged separately? Rec: yes + keep-tagged.",
+  "findings": [
+    "Labeler bot-detection has a blind spot: detectHighFrequency/detect247Active min-window guards (>=1h / >=48h) miss ultra-fast bots whose 100-sig sample spans <1h. tx_per_h caught them. The smart-money-trenches enricher MUST add an explicit tx_per_h guard; consider fixing the labeler too.",
+    "copy-trade-analyzer returned 0 trades for several memecoin wallets (pricing gaps) — the leaderboard realized-PnL + cadence did the real vetting, not copy-trade. Endpoint should lean on those."
+  ]
+}

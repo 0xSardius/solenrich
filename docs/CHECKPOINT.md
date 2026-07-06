@@ -1,6 +1,60 @@
 # Session Checkpoint
 
 ## Last session date
+2026-07-06
+
+## ▶️ RESUME HERE (2026-07-06) — trenches vertical KICKED OFF; smart-money-trenches seed set vetted
+
+Building `smart-money-trenches` (first trenches endpoint + Eris's first signal). This session: expanded the
+scope, built the data prerequisites, and hand-bootstrapped + vetted the smart-money seed wallet set.
+
+**DECISIONS LOCKED this session:**
+- Trenches vertical is the next build (demand engine); Eris (calls bot) is the feedback meter; Sardius is
+  its first user (solves cold-start). Re-check confirmed supply solved / demand still ~0.
+- Full endpoint suite scoped across BOTH regimes (new-pairs + community/established) + exit/management
+  track + Eris PumpPortal ingestion design. See `docs/trenches-scope.md` (updated, committed `797f56a`).
+- `smart-money-trenches` bootstrap = **manual-seed-now / auto-derive-later**; architecture = decouple
+  "who is smart" (offline, cached) from "what they buy now" (live). Committed in `f3cdab3`.
+- Seed source (better than per-token mining): **Birdeye gainers-losers leaderboard filtered to realized_pnl
+  winners**, intersected with known-runner miners, vetted through OUR stack. This is also the auto-derive
+  source later (simplifies automation — no historical early-buyer mining needed).
+
+**SHIPPED (committed + pushed):**
+- `f3cdab3` — data prerequisites: `dexscreener.pairCreatedAt`/`getTokenAgeHours` (token freshness) +
+  `copy-trade-analyzer.getRecentBuys` (memecoin-timescale live-buys path). Both typecheck clean.
+- Probe/bootstrap tooling: `test/trenches-{comb-runners,find-runners,mine-wallets,build-seeds,vet-seeds}.ts`.
+- **`test/trenches-seed-candidates.json` — the FROZEN vetted seed set** (leaderboard is a rolling 1W window,
+  so re-running yields different candidates — this preserves 2026-07-06's derivation).
+
+**VETTED SEED SET (in the JSON):** 12 KEEP (9 human-cadence realized winners + 3 conviction holders) + 5 FLAG
+(incl. `vsTw91` 62% win) + 15 bots correctly FILTERED. Known runners: ANSEM/JOTCHUA/TRIPLET/NEET/BUTTCOIN.
+
+**TWO FINDINGS (actionable for the enricher build):**
+1. Our labeler's bot-detection has a blind spot — `detectHighFrequency`/`detect247Active` min-window guards
+   (>=1h / >=48h) miss ultra-fast bots whose 100-sig sample spans <1h. `tx_per_h` caught them. **The
+   `smart-money-trenches` enricher MUST add an explicit `tx_per_h` guard**; consider fixing the labeler too.
+2. `copy-trade-analyzer` returns 0 trades on many memecoin wallets (pricing gaps) — lean on leaderboard
+   realized-PnL + cadence instead.
+
+**▶️ NEXT ACTIONABLE (in order):**
+1. **DECIDE (pending):** promote `vsTw91` + `H8MQeg` into active seeds (→14)? keep 3 holders tagged
+   separately? (Rec: yes + keep-tagged.) See `pending_decision` in the JSON.
+2. Write the seed set into `src/enrichers/trenches-smart-money-seeds.ts` (config list, like
+   `smart-money-seeds.ts`; separate `CONVICTION_HOLDERS`).
+3. Build the `smart-money-trenches` enricher: decoupled design — read seed config → `getRecentBuys` per seed
+   → filter to fresh (`getTokenAgeHours` <6h) → aggregate by token → rank by proven-wallet count + recency.
+   **Add the `tx_per_h` bot-guard.**
+4. Wire the endpoint — full CLAUDE.md 9-step checklist (PRICING $0.05, schema, entrypoint+formatter, MCP,
+   OpenAPI, /docs, stress config, test entry, `BAZAAR_INPUT_EXAMPLES`).
+5. Then Eris (separate repo) points at it. Later trenches endpoints: `dev-reputation` (ask Sardius for known
+   RUGS = the scarce negative labels) + `token-x-ray`, then community leg + orchestrators.
+
+**Note (untracked, intentionally NOT committed):** `docs/A complete (meme)coin guide.pdf` (12MB, copyrighted
+@spyzer R&D input — do not commit to a public repo) + `memory/` (local agent state).
+
+---
+
+## (prev) Last session date
 2026-07-01
 
 ## ▶️ RESUME HERE (2026-07-01) — Trenches vertical scoped + named; two decisions LOCKED
