@@ -33,6 +33,7 @@ import { PerpsAnalyzer } from "../enrichers/perps-analyzer";
 import { JupiterPerpsClient } from "../sources/jupiter-perps";
 import { TrendingSignalsAnalyzer } from "../enrichers/trending-signals";
 import { SmartMoneyAnalyzer } from "../enrichers/smart-money-flow";
+import { TrenchesSmartMoneyAnalyzer } from "../enrichers/trenches-smart-money";
 
 // Entrypoint registration
 import { registerWalletEntrypoints } from "../entrypoints/wallet";
@@ -62,6 +63,7 @@ import { PerpsCrossVenueAnalyzer } from "../enrichers/perps-cross-venue";
 import { PerpsVenueComparator } from "../enrichers/perps-venue-comparison";
 import { PerpsBasisAnalyzer } from "../enrichers/perps-basis-signal";
 import { registerOrchestrationEntrypoints } from "../entrypoints/orchestration";
+import { registerTrenchesEntrypoints } from "../entrypoints/trenches";
 import { registerFeedEntrypoint } from "../entrypoints/feed";
 import { FeedStore } from "../enrichers/feed-store";
 import { registerSignalEntrypoint } from "../entrypoints/signals";
@@ -265,6 +267,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'batch-enrich': ['solana', 'batch', 'enrichment', 'onchain', 'ai-agents'],
     'whale-watch': ['solana', 'whale-tracking', 'smart-money', 'onchain', 'ai-agents'],
     'smart-money-flow': ['solana', 'smart-money', 'netflow', 'whale-tracking', 'trending'],
+    'smart-money-trenches': ['solana', 'memecoin', 'smart-money', 'new-tokens', 'trenches'],
     'trending-signals': ['solana', 'trending', 'smart-money', 'new-tokens', 'signals'],
     'consensus-signal': ['solana', 'agent-attention', 'consensus', 'signals', 'smart-money'],
     'query': ['solana', 'onchain-data', 'natural-language', 'ai-agents', 'defi'],
@@ -560,6 +563,12 @@ registerPerpsBasisSignalEntrypoint(addEntrypoint, perpsBasisAnalyzer);
 const trendingSignalsAnalyzer = new TrendingSignalsAnalyzer(tokenDiscovery, whaleWatcher, cache);
 const smartMoneyAnalyzer = new SmartMoneyAnalyzer(copyTradeAnalyzer, whaleWatcher, graphMapper, cache, tokenDiscovery);
 registerOrchestrationEntrypoints(addEntrypoint, trendingSignalsAnalyzer, smartMoneyAnalyzer);
+
+// Trenches — memecoin intelligence vertical. smart-money-trenches overlays a
+// vetted proven-winner seed set's live buys against fresh launches (T3 in
+// docs/trenches-scope.md — first trenches endpoint, Eris's first signal).
+const trenchesSmartMoney = new TrenchesSmartMoneyAnalyzer(helius, dexscreener, copyTradeAnalyzer, cache);
+registerTrenchesEntrypoints(addEntrypoint, trenchesSmartMoney);
 
 // NL query — routes to the right enricher(s). Single-intent questions hit one
 // enricher; compound questions ("should I buy X?", "wallet deep dive", "what's
@@ -942,6 +951,11 @@ app.get('/docs', (c) => {
         price: '0.100',
         input: { wallets: 'string[] (optional — uses curated default if omitted)', lookback_days: 'number (default 14)', min_win_rate: 'number 0-1 (default 0.55)', top_n_tokens: 'number (default 10)', include_graph: 'boolean (default true)', format: 'json | llm | both' },
         description: 'Orchestrated smart-money intelligence. Scores seed wallets via copy-trade metrics, filters to qualifying winners, surfaces tokens they are accumulating + wallet clusters. Pass your own wallet list or use our default.',
+      },
+      'smart-money-trenches': {
+        price: '0.05',
+        input: { hours_back: 'number 1-48 (default 12) — how far back to scan seed buys', max_token_age_hours: 'number 1-72 (default 6) — max token age to count as fresh', min_buyers: 'number 1-14 (default 1) — min distinct smart buyers per token', limit: 'number 1-25 (default 10)', format: 'json | llm | both' },
+        description: 'Which proven-winner wallets are aping fresh memecoin launches right now, and what are they buying? Vetted seed set of realized-PnL winners + conviction holders (bot-filtered, live cadence re-checked every scan), recent buys overlaid against token launch times, ranked by distinct smart buyers + recency. Attention signal for pre-ape research — pair with due-diligence.',
       },
       'feed-latest': {
         price: '0.005',

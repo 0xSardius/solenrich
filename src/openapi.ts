@@ -372,6 +372,20 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'smart-money-trenches': {
+    summary: 'Proven-winner wallets buying fresh memecoin launches',
+    description: 'Which proven-winner wallets are aping fresh (<6h) memecoin launches right now, and what are they buying? Vetted seed set of realized-PnL winners + conviction holders (bot-filtered, live cadence re-checked every scan). Recent buys overlaid against token launch times, ranked by distinct smart buyers + recency. Pre-ape attention signal — pair with due-diligence.',
+    schema: {
+      type: 'object',
+      properties: {
+        hours_back: { type: 'integer', minimum: 1, maximum: 48, default: 12, description: 'How far back to scan seed-wallet buys (hours)' },
+        max_token_age_hours: { type: 'number', minimum: 1, maximum: 72, default: 6, description: 'Max token age (hours since first pair) to count as fresh' },
+        min_buyers: { type: 'integer', minimum: 1, maximum: 14, default: 1, description: 'Min distinct smart buyers per token to surface it' },
+        limit: { type: 'integer', minimum: 1, maximum: 25, default: 10, description: 'Max tokens to return' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'feed-latest': {
     summary: 'Daily SolEnrich intelligence brief',
     description: 'Pre-computed ranking of trending Solana tokens with composite-signal scoring. Cached 24h, lazy-populated on cache miss. Designed for recurring polling at lower per-call cost than direct orchestration. Pass `since` (ISO 8601) to short-circuit on no-change polls.',

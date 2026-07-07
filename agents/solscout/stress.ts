@@ -321,6 +321,21 @@ export const ENDPOINTS: Array<{
     ],
   },
   {
+    key: 'smart-money-trenches',
+    // Signals depend on live market conditions (fresh launches + seed activity),
+    // so checks are structural. Wide window improves the odds of a non-empty run.
+    input: { hours_back: 24, max_token_age_hours: 48, format: 'both' },
+    timeout: 90000,
+    checks: [
+      { name: 'has signals array', test: (d) => Array.isArray(d.signals) },
+      { name: 'has seeds_scanned', test: (d) => typeof d.seeds_scanned === 'number' && d.seeds_scanned > 0, detail: (d) => `seeds_scanned=${d.seeds_scanned}` },
+      { name: 'has seed_set provenance', test: (d) => d.seed_set != null && typeof d.seed_set.derived_at === 'string' },
+      { name: 'has total_recent_buys', test: (d) => typeof d.total_recent_buys === 'number', detail: (d) => `buys=${d.total_recent_buys}, signals=${d.signals?.length}` },
+      { name: 'bot-guard fields present', test: (d) => Array.isArray(d.seeds_skipped_bot_cadence) && Array.isArray(d.seeds_flagged_elevated_cadence) },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Trenches') },
+    ],
+  },
+  {
     key: 'feed-latest',
     // Daily brief endpoint. Lazy-cached, so first run after deploy hits
     // cache-miss (~10-15s); subsequent runs hit cache (<1s).

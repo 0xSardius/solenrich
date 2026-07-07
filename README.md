@@ -15,7 +15,7 @@ curl https://api.solenrich.com/health
 # Agent card (A2A discovery)
 curl https://api.solenrich.com/.well-known/agent.json
 
-# List all 29 endpoints
+# List all 32 endpoints
 curl https://api.solenrich.com/entrypoints
 
 # Full API documentation (agent-readable JSON)
@@ -73,7 +73,7 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 | `new-tokens` | $0.012 | `min_liquidity_usd`, `max_risk_score`, `limit`, `format` | Recently launched tokens, enriched + risk-scored, safest first |
 | `protocol-profile` | $0.008 | `protocol`, `include_yields`, `format` | Protocol TVL, yields, on-chain activity, health signals, automated-activity % |
 
-### Perps Intelligence (6 endpoints)
+### Perps Intelligence (8 endpoints)
 
 | Endpoint | Price | Input | Description |
 |----------|-------|-------|-------------|
@@ -83,6 +83,8 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 | `perps-venue-comparison` | $0.020 | `market`, `side`, `size_usd`, `format` | Where to trade at this size: slippage, fees, OI headroom, total entry cost, recommendation |
 | `perps-basis-signal` | $0.015 | `asset`, `min_yield_apr_pct`, `format` | Net-yield-after-borrow basis trade scanner — actually-earnable yield per venue |
 | `perps-market-trend` | $0.008 | `lookback`, `format` | Per-market deltas (price, OI, skew, utilization, borrow APR) over 7/14/30d — regime detection |
+| `hyperliquid-trader-profile` | $0.012 | `address` (0x), `format` | Hyperliquid live positions, leverage, liquidation distance, risk flags, week/month/all-time PnL |
+| `hyperliquid-smart-money` | $0.05 | `market`, `top_traders`, `format` | Leaderboard funnel → consistency-gated traders → per-coin positioning consensus + top-trader drill-down |
 
 ### Orchestration (2 endpoints)
 
@@ -90,6 +92,12 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 |----------|-------|-------|-------------|
 | `trending-signals` | $0.050 | `min_liquidity_usd`, `max_risk_score`, `limit`, `format` | Composite ranking of trending tokens: discovery + whale-watch + risk scoring, with reasoning |
 | `smart-money-flow` | $0.100 | `wallets[]`, `min_win_rate`, `lookback_days`, `format` | Scores seed wallets, filters to winners, surfaces tokens they're accumulating + clusters |
+
+### Trenches — Memecoin Intelligence (1 endpoint)
+
+| Endpoint | Price | Input | Description |
+|----------|-------|-------|-------------|
+| `smart-money-trenches` | $0.05 | `hours_back`, `max_token_age_hours`, `min_buyers`, `limit`, `format` | Which proven-winner wallets are aping fresh (<6h) launches right now — vetted realized-PnL seed set, bot-guarded, ranked by distinct smart buyers + recency |
 
 ### Intelligence Feed & Signals (3 endpoints)
 

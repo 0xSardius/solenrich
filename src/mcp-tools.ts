@@ -578,6 +578,30 @@ export function createSolEnrichMcpServer(): McpServer {
   );
 
   server.registerTool(
+    'smart_money_trenches',
+    {
+      title: 'Smart Money in the Trenches',
+      description: 'Which proven-winner wallets are aping fresh (<6h) memecoin launches right now, and what are they buying? Vetted realized-PnL winner seed set (bot-filtered), recent buys overlaid against token launch times, ranked by distinct smart buyers + recency. Pre-ape attention signal.',
+      inputSchema: {
+        hours_back: z.number().int().min(1).max(48).default(12).describe('How far back to scan seed-wallet buys (hours)'),
+        max_token_age_hours: z.number().min(1).max(72).default(6).describe('Max token age in hours to count as fresh'),
+        min_buyers: z.number().int().min(1).max(14).default(1).describe('Min distinct smart buyers per token'),
+        limit: z.number().int().min(1).max(25).default(10).describe('Max tokens to return'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('smart-money-trenches', {
+        hours_back: args.hours_back ?? 12,
+        max_token_age_hours: args.max_token_age_hours ?? 6,
+        min_buyers: args.min_buyers ?? 1,
+        limit: args.limit ?? 10,
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
     'feed_latest',
     {
       title: 'SolEnrich Daily Brief',

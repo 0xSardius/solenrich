@@ -62,6 +62,7 @@ export const PRICING = {
   'perps-market-trend': '0.008',
   'trending-signals': '0.050',
   'smart-money-flow': '0.100',
+  'smart-money-trenches': '0.05',
   'feed-latest': '0.005',
   'consensus-signal': '0.005',
   'portfolio-history': '0.006',
@@ -89,5 +90,6 @@ export const CACHE_TTL = {
   hlSmartMoney: 300,     // 5 minutes — leaderboard + aggregate positioning (orchestration)
   trendingSignals: 300,  // 5 minutes — trending shifts fast
   smartMoney: 600,       // 10 minutes — smart money shifts over days
+  trenches: 120,         // 2 minutes — fresh-launch buys are a live signal
   feedLatest: 86_400,    // 24 hours — daily intelligence brief, lazy-populated
 } as const;

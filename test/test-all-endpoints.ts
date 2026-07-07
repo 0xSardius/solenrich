@@ -240,6 +240,19 @@ check('has llm_summary', typeof pms.body?.output?.llm_summary === 'string' && pm
 console.log(`  ⏱ ${pms.ms}ms\n`);
 
 // ============================================================
+// 13. smart-money-trenches
+// ============================================================
+console.log('━━━ 13. smart-money-trenches ━━━');
+const smt = await invoke('smart-money-trenches', { hours_back: 24, max_token_age_hours: 48, format: 'both' }, 90000);
+check('returns 200', smt.status === 200, `got ${smt.status}`);
+check('has signals (array)', Array.isArray(smt.body?.output?.signals));
+check('scanned seeds', typeof smt.body?.output?.seeds_scanned === 'number' && smt.body.output.seeds_scanned > 0);
+check('has seed_set provenance', typeof smt.body?.output?.seed_set?.derived_at === 'string');
+check('has bot-guard fields', Array.isArray(smt.body?.output?.seeds_skipped_bot_cadence));
+check('has llm_summary', typeof smt.body?.output?.llm_summary === 'string' && smt.body.output.llm_summary.includes('Trenches'));
+console.log(`  ⏱ ${smt.ms}ms\n`);
+
+// ============================================================
 // Summary
 // ============================================================
 console.log('═══════════════════════════════════════════════════');
