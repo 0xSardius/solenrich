@@ -215,9 +215,15 @@ export class PerpsCrossVenueAnalyzer {
       });
     }
 
-    // --- Flash Trade (pool perp, Jupiter-lineage; borrow rate read on-chain) ---
+    // --- Flash Trade (pool perp, Jupiter-lineage; borrow rate + OI read on-chain) ---
     const flashMarket = results.flash;
     if (flashMarket && flashMarket.borrow_apr_pct !== null) {
+      const flashOiTotal =
+        flashMarket.oi_long_usd !== null && flashMarket.oi_short_usd !== null
+          ? flashMarket.oi_long_usd + flashMarket.oi_short_usd
+          : null;
+      const flashLongPct =
+        flashOiTotal && flashOiTotal > 0 ? (flashMarket.oi_long_usd! / flashOiTotal) * 100 : null;
       venues.push({
         venue: 'flash',
         available: true,
@@ -225,11 +231,16 @@ export class PerpsCrossVenueAnalyzer {
         // Pool perp — both sides pay the same utilization-based borrow rate.
         borrow_apr_long: flashMarket.borrow_apr_pct,
         borrow_apr_short: flashMarket.borrow_apr_pct,
-        open_interest_usd: null,
+        open_interest_usd: flashOiTotal !== null ? Math.round(flashOiTotal) : null,
         utilization_pct: flashMarket.utilization_pct,
-        skew: 'unknown',
+        skew: flashLongPct !== null ? classifySkew(flashLongPct) : 'unknown',
         mark_price_usd: flashMarket.mark_price_usd,
-        notes: ['Flash OI/skew live in separate Market accounts — borrow rate + utilization wired; OI pending.'],
+        notes:
+          flashOiTotal !== null
+            ? [
+                `OI long $${Math.round(flashMarket.oi_long_usd!).toLocaleString()} (${flashMarket.open_positions_long ?? '?'} pos) / short $${Math.round(flashMarket.oi_short_usd!).toLocaleString()} (${flashMarket.open_positions_short ?? '?'} pos), aggregated across Flash pools.`,
+              ]
+            : ['Flash OI read unavailable this cycle — borrow rate + utilization only.'],
       });
     } else {
       venues.push({
