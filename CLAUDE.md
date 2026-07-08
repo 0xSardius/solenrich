@@ -486,6 +486,48 @@ Memecoins are the most agent-driven segment on Solana (>70% of DEX volume on pea
 **Caveats:** (a) **Latency boundary** — block-0 sniping needs sub-second tx data (Geyser/streams), a different game we don't chase; the *intelligence* plays (dev rep, insider %, smart-money) are seconds-to-minutes "pre-ape research" that fits our request/response model. (b) ROI story is *stronger* than perps — meme outcomes are binary (rug −100% / runner +1000%), so avoiding one rug or catching one 10x pays for thousands of calls. (c) Fast rug-check alone is commoditized (rugcheck.xyz) — only valuable folded into the synthesis above. (d) Dogfoolable by a future "trenches" swarm agent (trickster/chaos deity name — availability-checked later).
 
 **Sequencing:** adjacent vertical, doesn't block perps. Finish Flash on-chain (close out perps venue coverage) first, then open the trenches leading with dev-reputation + insider-detection.
+**Status 2026-07-07:** Flash on-chain COMPLETE; trenches opened — `smart-money-trenches` SHIPPED (`ae8ebae`, 32 endpoints, bazaar-cataloged same day). Next trenches builds: Eris bot → `dev-reputation` + `token-x-ray` → `trenches-scan`.
+
+### Distribution strategy: dual-network accepts + discovery sprint (LOCKED 2026-07-07)
+
+**The finding that set this (full audit in `docs/CHECKPOINT.md` 2026-07-07):** the x402 economy is
+**dual-network by default, and SolEnrich is nearly the only single-network service in it.** Full CDP bazaar
+scan (24,860 resources): 10,403 accept Base, 4,908 accept Solana — but 4,842 of the Solana-accepting
+resources ALSO accept Base. Solana-ONLY resources across the whole economy: ~66, of which **32 are ours**.
+Solana x402 is real (solana.com official pages; 35M+ txns/$10M+ volume since summer 2026; PayAI ~90% of
+Solana volume) — but Solana-native services universally quote both chains. Adding Base isn't leaving
+Solana; it's matching how Solana-native x402 services ship. Consequences of being Solana-only: invisible
+to agentic.market (its importer is Base-anchored — verified: all 1,590 cataloged services accept Base),
+skipped by Base-wallet agents even inside the CDP bazaar, outside most x402 tooling defaults.
+
+**Facilitator decision: STAY ON CDP.** CDP is multi-network with Base as home turf — Base accepts = a
+second scheme (`ExactEvmScheme`) on the SAME resource server; zero migration. PayAI (Solana-first, burned
+us with schema drift in May) would be an *addition* someday, never a migration. Being CDP-facilitated on
+both networks also strengthens the Coinbase showcase pitch. (Competitive note: `api.nansen.ai` is in the
+bazaar now, dual-network — 31 resources.)
+
+**Execution order (next steps, committed):**
+1. **Base accepts via CDP (1 session — the unlock).** Base USDC as second `accepts` entry on all 32
+   routes, flag-gated behind `EVM_PAY_TO` env var (build needs no secrets; activates only when Sardius
+   sets the receiving address on Railway). Then redeploy + full paid re-seed → dual-network bazaar rows.
+   **Success signal:** agentic.market's importer picks us up on its next pass (verify via
+   `api.agentic.market/v1/services?limit=100&offset=N`). Also needs ~$1 Base USDC on a test wallet for
+   the paid E2E.
+2. **MCP directory sprint (parallel, free).** Verified dark 2026-07-07: Glama = NOT indexed, Smithery =
+   stale `SE01` stub only, PulseMCP API sunset. Claude does Glama + mcp.so submissions; **Sardius**
+   logs into Smithery to claim the namespace + dedupe SE01.
+3. **Outreach (Sardius) + one PR (Claude).** (a) solana.com/x402 ecosystem showcase (curated, no formal
+   process — email pitch; we're arguably the most complete Solana-native x402 data service). (b) CDP
+   showcase note — stronger once dual-network. (c) Claude drafts a Solana Agent Kit (SendAI) integration
+   /example PR — puts SolEnrich where Solana agents get *built*.
+4. **Then Eris (the demand engine).** Directories make us findable; a public bot posting receipted
+   `smart-money-trenches` calls makes us *found*. Suite launch tweet drafted 2026-07-07 (in session log)
+   — leads with the vetting-funnel story (32 candidates → 15 bots filtered → 14 vetted seeds, live
+   re-checked every scan).
+
+**Verification loop:** `/metrics` `unique_callers` weekly (baseline: 0 organic, all dogfood as of
+2026-07-07) + agentic.market presence after step 1 + XGATE re-check (xgate.run had no DNS A record
+2026-07-07 — Daydreams' index is offline; revisit when it returns).
 
 ### What to deprioritize
 
