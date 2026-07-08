@@ -542,6 +542,29 @@ bazaar now, dual-network — 31 resources.)
 2026-07-07) + agentic.market presence after step 1 + XGATE re-check (xgate.run had no DNS A record
 2026-07-07 — Daydreams' index is offline; revisit when it returns).
 
+**June-recap follow-ups (added 2026-07-08, from the Solana x402 June round-up):**
+- **pay.sh listing — NEW TOP DISCOVERABILITY ACTION.** pay.sh = the **Solana Foundation's own**
+  agent-payments CLI + curated catalog (`github.com/solana-foundation/pay`), surfaced to agents via a
+  Pay MCP (`search_catalog`). **Nansen (60 endpoints) and Birdeye (46) are already in its finance
+  category; we are not.** Listing is self-serve: a `pay server` gateway YAML + a provider markdown PR to
+  `github.com/solana-foundation/pay-skills` (mechanics in the repo's `references/monetize-api.md`).
+  Solana-native — no Base dependency, can ship before/parallel to Base accepts. Claude preps the PR.
+- **Metaplex 014 Agent Registry** — register SolEnrich as an onchain agent (`@metaplex-foundation/
+  mpl-agent-registry`, one-tx `mintAndSubmitAgent`). June's identity rail on Solana (OpenCovenant ships
+  verifiable action history on it); complements 8004-solana + planned ERC-8004-on-Base.
+- **BlockRun gateway** (unified discover/route/pay endpoint, 55+ models/APIs, 10M+ txns) + **OKX AI
+  marketplace** (agents hire agents) — investigate inclusion; both are aggregator shelves.
+- **Context (the tide):** x402 resource registrations hit ~4,000/day in June vs a May peak of 93;
+  AWS pays publishers in stablecoins over x402-on-Solana; 0x, Exa, QuickNode all shipped x402-on-Solana
+  products. Supply-side land grab is ON — speed matters.
+- **Endpoint candidates surfaced by the recap (scoped, not committed):** (1) **know-your-agent
+  intelligence** — "should my agent trust/hire/copy this agent?" — enrich an agent wallet with 014/8004
+  registry identity + our behavioral/bot flags + tx history + copy-trade win rate (reuses
+  wallet-profiler/labeler/copy-trade; rides the OKX-AI/Hyre/T54 agent-hiring wave). (2) **ClawPump
+  trenches leg** — $100M vol / 5,500 agents / 1B tokens launched = agent-native launchpad; extend
+  dev-reputation/token-x-ray/smart-money-trenches to ClawPump launches + Eris feed source.
+  (3) SIWS holder-gated pricing (mpp32 pattern) — radar, monetization knob not discovery.
+
 ### What to deprioritize
 
 - **Raw data breadth.** Don't add endpoints just to have them. Can't out-breadth Helius/Nansen. Out-synthesize them.
