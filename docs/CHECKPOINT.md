@@ -1,9 +1,72 @@
 # Session Checkpoint
 
 ## Last session date
+2026-07-07
+
+## ▶️ RESUME HERE (2026-07-07) — smart-money-trenches SHIPPED (32 endpoints) + Flash venue COMPLETE + discoverability audit
+
+Three workstreams completed this session, all committed + pushed (`ae8ebae`, `e7e24f9`):
+
+### 1. `smart-money-trenches` SHIPPED (`ae8ebae`) — first trenches endpoint, 32 paid total
+- **Pending decision RESOLVED:** `vsTw91` + `H8MQeg` promoted from FLAG (live tx_per_h re-measured
+  2026-07-07: 4.2 and 1.5 — human cadence, promotion independently confirmed). Seed config =
+  `src/enrichers/trenches-smart-money-seeds.ts`: 11 active traders + 3 `CONVICTION_HOLDERS` (tagged).
+- Enricher `src/enrichers/trenches-smart-money.ts`: decoupled (offline seed config × live scan);
+  per-seed live `tx_per_h` bot guard (skip ≥60 / flag ≥15) closing the labeler blind spot;
+  `getRecentBuys` → DexScreener launch-time freshness (<6h default) → aggregate by mint → rank by
+  distinct smart buyers + recency. $0.05, ALL inputs optional (→ auto-catalogs in CDP bazaar,
+  no BAZAAR_INPUT_EXAMPLES needed).
+- Full 9-step wiring done (PRICING, schema, entrypoint+formatter, MCP `smart_money_trenches`,
+  OpenAPI, /docs, BAZAAR_TAGS, stress config, test entry). README backfilled the 2 missing HL rows
+  (was stale at 29); landing 29→32.
+- **Verified E2E:** local live signal (4.5h-old token bought by the 62%-win seed), paid prod run
+  1/1 (6/6 checks, USDC settled via CDP), **cataloged in the CDP bazaar ~15min after seeding**
+  (ranks #11 for "memecoin fresh launches smart money").
+- **NEXT (trenches):** stand up Eris (separate repo) pointed at it; then T1 `dev-reputation` (ask
+  Sardius for known RUGS = scarce negative labels) + T2 `token-x-ray`, then T5 `trenches-scan`.
+
+### 2. Flash venue coverage COMPLETE (`e7e24f9`) — OI/skew on-chain shipped
+- `FlashPerpsClient.getMarketOI()`: one gPA (~225 Market accounts, 30s cache) → decode
+  `collective_position` (side @104, open_positions @126, size_usd @162) → per-symbol long/short OI
+  across all pools → `open_interest_usd` + `skew` + per-side notes on the Flash VenueQuote
+  (auto-flows to venue-comparison + basis-signal). Verified live: SOL $278K L (168 pos) / $504K S
+  (69 pos) = short-heavy; internal consistency exact (size_amount × avg entry == size_usd).
+- **⚠ CRITICAL DISCOVERY: Flash delegated its accounts to MagicBlock ephemeral rollups.** Account
+  owner is now `DELeGG...` (delegation program) — gPA on `FLASH6...` returns ZERO; must gPA the
+  delegation program. Layouts unchanged; single-account reads fine; mainnet = rollup's periodic
+  commit (fine at 30s cache). **Flash v2 REST dev API (live 2026-06-25) now 404s** — v2 client
+  still gated on a stable prod API (Sardius ↔ Flash contact re: timeline still open).
+- **Perps venue queue now:** Drift (relaunch ~July, TIME-SENSITIVE, be day-one) → Pacifica → Phoenix.
+
+### 3. Discoverability audit — bazaar backtest RESOLVED; agentic.market theory REVISED; XGATE down
+- **CDP bazaar: 32/32 cataloged** (scanned all 24,166 catalog resources). The 2026-07-02 backtest
+  is closed: input-example rollout took us 8 → 31 → 32. Capability rankings live: #1+#2 for
+  "cross-venue perps funding", ranked for "solana wallet risk score" (was 0 on 06-28), #2 for
+  "memecoin smart money". Search API notes: `?limit` max 20, response key = `resources`.
+- **agentic.market — June-29 "editorial curation" theory now WRONG.** Catalog grew ~50 → **1,590
+  services with pagination incl. tiny providers → it's auto-indexed now.** SolEnrich absent. Root
+  cause found: **every one of the 1,590 services accepts Base; zero are Solana-only** — their
+  importer is Base-anchored; we're structurally excluded as Solana-USDC-only x402. (Their
+  `/v1/validate/run` also probes with GET; our POST-only invokes 404 on GET — secondary issue.)
+  **Path in = add Base as an additional x402 `accepts` entry** (EVM payTo + ExactEvmScheme; CDP
+  facilitator is Base-native). DECISION FOR SARDIUS — would also unlock the Base-first x402
+  tooling ecosystem + EVM-agent payers. API: `api.agentic.market/v1/services?limit=100&offset=N`.
+- **XGATE (user asked): currently OFFLINE.** `xgate.run` has NO DNS A record (verified via Google
+  DoH — global, not local). Only `ai.xgate.run` (inference router, Railway) responds; no discovery
+  API paths on it. Daydreams' own site still links xgate.run as canonical. Nothing to register
+  against today — re-check later; as a Lucid agent we should surface there when it returns.
+- **/metrics: organic demand still 0.** Today = 3 calls (all our own smart-money-trenches dogfood,
+  1 unique caller); previous 6 days = 0 across all endpoints. Demand, not supply, remains the frontier.
+
+**Untracked-by-design:** memecoin guide PDF (copyrighted), `memory/`, stale `test/test-production-full.md`
+(April-era report — delete or gitignore whenever).
+
+---
+
+## (prev) Last session date
 2026-07-06
 
-## ▶️ RESUME HERE (2026-07-06) — trenches vertical KICKED OFF; smart-money-trenches seed set vetted
+## ▶️ (prev 2026-07-06) — trenches vertical KICKED OFF; smart-money-trenches seed set vetted
 
 Building `smart-money-trenches` (first trenches endpoint + Eris's first signal). This session: expanded the
 scope, built the data prerequisites, and hand-bootstrapped + vetted the smart-money seed wallet set.
