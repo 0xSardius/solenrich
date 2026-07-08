@@ -516,10 +516,23 @@ bazaar now, dual-network — 31 resources.)
 2. **MCP directory sprint (parallel, free).** Verified dark 2026-07-07: Glama = NOT indexed, Smithery =
    stale `SE01` stub only, PulseMCP API sunset. Claude does Glama + mcp.so submissions; **Sardius**
    logs into Smithery to claim the namespace + dedupe SE01.
-3. **Outreach (Sardius) + one PR (Claude).** (a) solana.com/x402 ecosystem showcase (curated, no formal
-   process — email pitch; we're arguably the most complete Solana-native x402 data service). (b) CDP
-   showcase note — stronger once dual-network. (c) Claude drafts a Solana Agent Kit (SendAI) integration
-   /example PR — puts SolEnrich where Solana agents get *built*.
+3. **Outreach (Sardius) + integration PRs (Claude).** (a) solana.com/x402 ecosystem showcase (curated, no
+   formal process — email pitch; we're arguably the most complete Solana-native x402 data service). (b) CDP
+   showcase note — stronger once dual-network. (c) Claude drafts integration/example PRs for the surfaces
+   where Solana agents get *built*: **Solana Agent Kit (SendAI)**, **Faremeter** (OSS agentic-payments
+   framework), and the official **Solana x402 Templates** repo.
+3b. **Identity/trust layer (from the solana.com/x402 ecosystem, assessed 2026-07-07).**
+   - **T54** (identity/verification/risk for agentic finance — Solana's showcased trust layer):
+     investigate their registry; register SolEnrich as a verified service if one exists. Complementary,
+     not competitive (they do know-your-agent; we do on-chain intelligence).
+   - **ERC-8004 on Base**: once Base accepts ship, register the EVM-side identity (we hold 8004-solana
+     already; `@lucid-agents/identity` supports ERC-8004). Discovery layers (incl. XGATE when it returns)
+     index ERC-8004-registered agents — completes dual-network citizenship: pay on either chain, verify
+     on either chain.
+   - **Skipped deliberately:** Corbits (competitor rail to Lucid — check once for a marketplace, don't
+     pursue), Privy/CDP Wallet/x402Secure (buyer-side infra, wrong side of the market).
+   - **Radar (not now):** "MCP with x402" — payment-gating our `/mcp` surface could turn the MCP channel
+     from marketing into revenue.
 4. **Then Eris (the demand engine).** Directories make us findable; a public bot posting receipted
    `smart-money-trenches` calls makes us *found*. Suite launch tweet drafted 2026-07-07 (in session log)
    — leads with the vetting-funnel story (32 candidates → 15 bots filtered → 14 vetted seeds, live
