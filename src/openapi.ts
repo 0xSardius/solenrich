@@ -16,7 +16,7 @@ export const ENDPOINT_META: Record<string, {
   schema: Record<string, unknown>;
 }> = {
   'enrich-wallet-light': {
-    summary: 'Light wallet profile',
+    summary: 'Profile a Solana wallet: holdings, labels, and risk score',
     description: 'SOL balance, token holdings, labels (including behavioral flags: regular_intervals, high_frequency, 24_7_active, repetitive_actions — algorithmic signals from tx timing that indicate automated activity), risk score. Fast and cheap.',
     schema: {
       type: 'object',
@@ -28,7 +28,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'enrich-wallet-full': {
-    summary: 'Full wallet profile',
+    summary: 'Profile a Solana wallet in depth: DeFi positions, connections, risk',
     description: 'Adds DeFi positions, connected wallets, enhanced transaction history, and automated-activity behavioral signals to light profile.',
     schema: {
       type: 'object',
@@ -41,7 +41,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'enrich-token-light': {
-    summary: 'Light token analysis',
+    summary: 'Analyze a Solana token: price, liquidity, and risk flags',
     description: 'Price (median of 3 sources), market cap, volume, liquidity, slippage estimates at 4 position sizes, risk flags, verification status.',
     schema: {
       type: 'object',
@@ -53,7 +53,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'enrich-token-full': {
-    summary: 'Full token analysis',
+    summary: 'Analyze a Solana token in depth: holders, concentration, risk',
     description: 'Adds top 20 holders, HHI concentration index, volatility metrics, slippage estimates to light token analysis.',
     schema: {
       type: 'object',
@@ -66,7 +66,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'parse-transaction': {
-    summary: 'Parse a Solana transaction',
+    summary: 'Parse a Solana transaction into a readable action summary',
     description: 'Type detection, protocol identification, transfer breakdown, account roles.',
     schema: {
       type: 'object',
@@ -78,7 +78,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'whale-watch': {
-    summary: 'Whale activity tracker',
+    summary: 'Track whale holders and their recent flows for a Solana token',
     description: 'Top holders with accumulation/distribution tracking, balance context, supply percentage.',
     schema: {
       type: 'object',
@@ -92,7 +92,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'batch-enrich': {
-    summary: 'Batch enrichment',
+    summary: 'Enrich multiple Solana wallets or tokens in one batched call',
     description: 'Parallel enrichment of 1-25 wallets or tokens in a single call.',
     schema: {
       type: 'object',
@@ -106,7 +106,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'wallet-graph': {
-    summary: 'Wallet connection graph',
+    summary: 'Map a Solana wallet connection graph and detect clusters',
     description: 'Transaction connection mapping, suspicious cluster detection, depth-1 or depth-2 hops.',
     schema: {
       type: 'object',
@@ -120,7 +120,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'copy-trade-signals': {
-    summary: 'Copy-trade analysis',
+    summary: 'Score a Solana wallet trading PnL, win rate, and consistency',
     description: 'Trading PnL, win rate, Sharpe/Sortino ratios, max drawdown, profit factor.',
     schema: {
       type: 'object',
@@ -133,7 +133,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'due-diligence': {
-    summary: 'Token due diligence report',
+    summary: 'Run full due diligence on a Solana token with a risk verdict',
     description: 'Composite risk: token analysis + whale activity + holder concentration. Returns SAFE/CAUTION/RISKY verdict.',
     schema: {
       type: 'object',
@@ -145,7 +145,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'query': {
-    summary: 'Natural language query',
+    summary: 'Answer a natural-language question about Solana onchain data',
     description: 'Plain English questions routed to the right enricher(s). Single-intent ("is X safe?") hits one enricher; compound intents chain 2-3 in parallel: "should I buy X?" → DD + trend + whales; "wallet deep dive" → profile + history + perps; "what\'s trending?" → trending-signals; "SOL-PERP funding rate" → perps-market.',
     schema: {
       type: 'object',
@@ -157,7 +157,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'compare-tokens': {
-    summary: 'Side-by-side token comparison',
+    summary: 'Compare Solana tokens side by side with per-metric rankings',
     description: 'Compare 2-3 tokens: price, liquidity, volatility, HHI, risk. Rankings + summary picks.',
     schema: {
       type: 'object',
@@ -169,7 +169,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'compare-wallets': {
-    summary: 'Side-by-side wallet comparison',
+    summary: 'Compare Solana wallets side by side with per-metric rankings',
     description: 'Compare 2-3 wallets: portfolio, activity, risk, labels. Rankings + summary picks.',
     schema: {
       type: 'object',
@@ -182,7 +182,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'token-trend': {
-    summary: 'Token trend over time',
+    summary: 'Track how a Solana token metrics changed over 7-30 days',
     description: 'Daily snapshots with direction indicators (improving/declining/stable) per metric.',
     schema: {
       type: 'object',
@@ -195,7 +195,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'wallet-history': {
-    summary: 'Wallet history over time',
+    summary: 'Track how a Solana wallet changed over 7-30 days',
     description: 'Portfolio snapshots with position changes (added/removed holdings), direction indicators.',
     schema: {
       type: 'object',
@@ -208,7 +208,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'portfolio-history': {
-    summary: 'Full portfolio time-series',
+    summary: 'Chart a Solana wallet portfolio value as a daily time series',
     description: 'Daily portfolio snapshots (value, SOL balance, token count, risk score) for a wallet over 7/14/30 days, plus summary stats: peak, trough, max drawdown, average value, change vs period start. Designed for charting and PnL tracking; complements wallet-history which returns two-point deltas. Today\'s live point is appended automatically.',
     schema: {
       type: 'object',
@@ -221,7 +221,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'new-tokens': {
-    summary: 'Discover new Solana tokens',
+    summary: 'Discover newly launched Solana tokens ranked by safety',
     description: 'Recently launched tokens from DexScreener, filtered by liquidity and risk, ranked safest first.',
     schema: {
       type: 'object',
@@ -234,7 +234,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'protocol-profile': {
-    summary: 'DeFi protocol analytics',
+    summary: 'Profile a Solana DeFi protocol: TVL, yields, onchain activity',
     description: 'Protocol TVL, yield pools, on-chain activity metrics, health signals, and automated_activity_pct (% of top signers with regular-interval or high-frequency tx patterns — surfaces agent-driven protocol usage). Supports Raydium, Orca, marginfi, Drift, Jupiter, Kamino, Marinade, Jito, and more.',
     schema: {
       type: 'object',
@@ -247,7 +247,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'perps-market-structure': {
-    summary: 'Jupiter Perps market structure',
+    summary: 'Read Jupiter Perps market structure: OI, borrow APR, health',
     description: 'Per-market open interest, utilization, borrow APR, skew, OI caps, and health flags across Jupiter Perps SOL/BTC/ETH markets. Reads on-chain Anchor accounts directly.',
     schema: {
       type: 'object',
@@ -257,7 +257,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'perps-trader-profile': {
-    summary: 'Multi-venue perps trader profile (Jupiter Perps + Adrena)',
+    summary: 'Profile a perps trader across Jupiter Perps and Adrena venues',
     description: 'Open positions across BOTH Jupiter Perps and Adrena for a wallet. Per-position size, leverage, entry, unrealized PnL, position age. Per-venue breakdown via `by_venue`, combined totals at top level, every position tagged with `venue`. Trader classification (scalper/swing/position), directional bias, and risk flags including `multi_venue` for cross-venue exposure. Adrena PnL uses jitoSOL/WBTC/BONK mark prices from Jupiter price API; null when unavailable.',
     schema: {
       type: 'object',
@@ -269,7 +269,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'hyperliquid-trader-profile': {
-    summary: 'Hyperliquid trader profile (live positions + PnL)',
+    summary: 'Profile a Hyperliquid trader: live positions, leverage, PnL',
     description: "Live perp positions for a Hyperliquid EVM (0x) address, read from Hyperliquid's public on-chain state. Per-position coin, side, leverage, notional, entry, unrealized PnL, distance-to-liquidation, and risk flags (high/extreme leverage, approaching liquidation, losing). Plus account value, directional bias, profile, weighted leverage, and realized+unrealized PnL over week/month/all-time. The building block for smart-money tracking.",
     schema: {
       type: 'object',
@@ -281,7 +281,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'hyperliquid-smart-money': {
-    summary: 'Hyperliquid smart-money positioning consensus',
+    summary: 'Read Hyperliquid smart-money positioning consensus per coin',
     description: "Where Hyperliquid smart money is positioned. Scans the HL leaderboard, excludes market-makers/HFT and dust/mega accounts, keeps consistent directional traders (week+month PnL > 0), then aggregates their live positions into a per-coin consensus (long/short counts, net notional, bias, conviction) plus a top-trader drill-down ranked by month PnL. A positioning signal, not a trade: consensus is often crowded and regime-dependent.",
     schema: {
       type: 'object',
@@ -293,7 +293,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'perps-basis-signal': {
-    summary: 'Net-yield-after-borrow basis trade scanner',
+    summary: 'Scan perp-vs-spot basis trades for net yield after borrow',
     description: 'Computes perp mark vs spot price across venues and surfaces actually-earnable yield (funding APR on Hyperliquid + dYdX, not viable on pool perps Jupiter + Adrena). Returns per-venue trade economics, opportunities above threshold, and best trade. Threshold defaults to 5% APR.',
     schema: {
       type: 'object',
@@ -306,7 +306,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'perps-market-trend': {
-    summary: 'Jupiter Perps market trend (SOL/BTC/ETH)',
+    summary: 'Track Jupiter Perps market trends for SOL, BTC, and ETH',
     description: 'Per-symbol deltas for mark price, total OI, long/short skew, utilization, and borrow APR over 7/14/30 days. Direction indicators per metric and per market. Overall direction excludes mark price (price moves are not health signals). Required for regime-detection strategies and any bot that adjusts behavior based on whether markets are growing, stressed, or rebalancing. Mirror of token-trend for perps.',
     schema: {
       type: 'object',
@@ -317,7 +317,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'perps-venue-comparison': {
-    summary: 'Cross-venue perps comparison at a given size',
+    summary: 'Compare perps venues by total entry cost at a trade size',
     description: 'Builds on cross-venue funding with size-aware fields: Jupiter Quote spot slippage at requested size, per-venue fee, OI cap headroom, first-hour borrow cost, and total entry cost. Returns rankings by entry cost / borrow APR / headroom plus a recommendation venue with warnings. Use when sizing a real position; use perps-cross-venue-funding for rates-only context.',
     schema: {
       type: 'object',
@@ -331,7 +331,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'perps-cross-venue-funding': {
-    summary: 'Cross-venue perps funding aggregator',
+    summary: 'Compare perps funding and open interest across five venues',
     description: 'Aggregates borrow/funding APR + open interest across Solana on-chain venues (Jupiter Perps, Adrena) and cross-chain reference venues (Hyperliquid, dYdX v4). Returns per-venue quotes, best entry per side, basis vs Hyperliquid, and arbitrage opportunities. Adrena uses wrapped collateral (SOL via jitoSOL, BTC via WBTC); ETH unsupported there, BONK not on Jupiter Perps. New venues fold in additively as they launch.',
     schema: {
       type: 'object',
@@ -344,7 +344,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'trending-signals': {
-    summary: 'Orchestrated trending-token intelligence',
+    summary: 'Rank trending Solana tokens with composite buy-side signals',
     description: 'Composes token-discovery + whale-watch + risk scoring across DexScreener trending. Returns a composite-signal ranked list (liquidity, risk, concentration, whale flow) with per-token reasoning and overall sentiment (accumulation/distribution/mixed). "What\'s worth paying attention to right now?"',
     schema: {
       type: 'object',
@@ -358,7 +358,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'smart-money-flow': {
-    summary: 'Orchestrated smart-money intelligence',
+    summary: 'Reveal what proven-winner Solana wallets are accumulating',
     description: 'Scores seed wallets via copy-trade metrics (win rate, Sharpe, consistency), filters to qualifying winners, then surfaces tokens they\'re accumulating and wallet clusters. Pass your own `wallets` array or use the curated default seed list.',
     schema: {
       type: 'object',
@@ -373,7 +373,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'smart-money-trenches': {
-    summary: 'Proven-winner wallets buying fresh memecoin launches',
+    summary: 'Reveal proven-winner wallets buying fresh memecoin launches',
     description: 'Which proven-winner wallets are aping fresh (<6h) memecoin launches right now, and what are they buying? Vetted seed set of realized-PnL winners + conviction holders (bot-filtered, live cadence re-checked every scan). Recent buys overlaid against token launch times, ranked by distinct smart buyers + recency. Pre-ape attention signal — pair with due-diligence.',
     schema: {
       type: 'object',
@@ -387,7 +387,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'feed-latest': {
-    summary: 'Daily SolEnrich intelligence brief',
+    summary: 'Fetch the daily SolEnrich Solana intelligence brief',
     description: 'Pre-computed ranking of trending Solana tokens with composite-signal scoring. Cached 24h, lazy-populated on cache miss. Designed for recurring polling at lower per-call cost than direct orchestration. Pass `since` (ISO 8601) to short-circuit on no-change polls.',
     schema: {
       type: 'object',
@@ -398,7 +398,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'consensus-signal': {
-    summary: 'Agent attention signal (proprietary)',
+    summary: 'Reveal which tokens or wallets agents are querying right now',
     description: 'What tokens or wallets are being queried by other agents right now. Derived from SolEnrich\'s own query stream — not market volume. Two modes: pass `address` for that entity\'s rank/percentile/trend; omit it for the top-N most-queried entities in the window. Windows: 1h, 6h, 24h. Unique data — only available because we serve agents directly.',
     schema: {
       type: 'object',
@@ -412,7 +412,7 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'check-alerts': {
-    summary: 'Poll-based event detection (spot + Jupiter Perps)',
+    summary: 'Check spot and perps event alerts for tokens and wallets',
     description: 'Poll-based event detection for spot + Jupiter Perps. Pass a watchlist (<=10 tokens, <=10 wallets) and a `since` ISO 8601 timestamp; get alerts fired since then. Token alerts: price spikes/drops, whale inflow/outflow, concentration shifts. Wallet alerts: risk changes, portfolio value moves, position add/remove. Perps alerts per wallet: position add/close, at-risk, liquidation-approaching, pnl-swing. Stateless; the agent owns the `since` cursor.',
     schema: {
       type: 'object',
