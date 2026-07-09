@@ -546,9 +546,12 @@ bazaar now, dual-network — 31 resources.)
 - **pay.sh listing — NEW TOP DISCOVERABILITY ACTION.** pay.sh = the **Solana Foundation's own**
   agent-payments CLI + curated catalog (`github.com/solana-foundation/pay`), surfaced to agents via a
   Pay MCP (`search_catalog`). **Nansen (60 endpoints) and Birdeye (46) are already in its finance
-  category; we are not.** Listing is self-serve: a `pay server` gateway YAML + a provider markdown PR to
-  `github.com/solana-foundation/pay-skills` (mechanics in the repo's `references/monetize-api.md`).
-  Solana-native — no Base dependency, can ship before/parallel to Base accepts. Claude preps the PR.
+  category; we are not.** Listing is metadata-only for x402-native APIs (no gateway needed): a
+  `PAY.md` + committed `openapi.json` snapshot PR'd to `github.com/solana-foundation/pay-skills`.
+  **PR SUBMITTED 2026-07-08: `solana-foundation/pay-skills#176`** (`providers/solenrich/data`,
+  category finance, awaiting Foundation review). Note: `pay catalog check` v0.20.0 is broken on
+  Windows (path-prefix leak into FQN validation — fails on merged providers too); PR CI on Linux is
+  the authoritative validator.
 - **Metaplex 014 Agent Registry** — register SolEnrich as an onchain agent (`@metaplex-foundation/
   mpl-agent-registry`, one-tx `mintAndSubmitAgent`). June's identity rail on Solana (OpenCovenant ships
   verifiable action history on it); complements 8004-solana + planned ERC-8004-on-Base.
