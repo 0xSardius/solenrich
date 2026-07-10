@@ -511,9 +511,16 @@ bazaar now, dual-network — 31 resources.)
    set on Railway. Verified live: 402 header advertises both networks (Base USDC `0x8335…2913`, EIP-3009
    extra auto-filled by CDP), all discovery surfaces dual-network, full paid re-seed 34/35 (1 = the known
    env-dependent smart-money-flow seed_source check; all 32 endpoints settled + returned 200s), and the
-   **CDP bazaar re-indexed dual-network rows within minutes**. Remaining: agentic.market importer watch
-   (days-scale) + optional Base-side paid E2E (needs test EVM keypair + ~$1 Base USDC; SolScout is
-   Solana-only today — a `--paid-base` mode is the pending piece). Base USDC as second
+   **CDP bazaar re-indexed dual-network rows within minutes**.
+   **✅ SUCCESS SIGNAL MET 2026-07-10 (next day!):** agentic.market's importer picked us up —
+   `agentic.market/services/api-solenrich-com`, all 32 endpoints, networks Base+Solana. Confirms the
+   Base-anchored-importer diagnosis end-to-end.
+   **Follow-up (outreach, Sardius):** our entry is `enriched: false` → domain-as-name, empty category,
+   description auto-scraped from one endpoint (perps-trader-profile). Entries with clean name/category/
+   copy (e.g. Exa) are `enriched: true` = agentic.market's own curation pass. Ask them to enrich us
+   (light-touch now that we're cataloged); suggested copy = our /.well-known/x402 service.description.
+   Remaining: optional Base-side paid E2E (test EVM keypair + ~$1 Base USDC; SolScout is Solana-only —
+   `--paid-base` mode pending). Base USDC as second
    `accepts` entry on all 32 routes + `ExactEvmScheme` registered on the same CDP resource server;
    all discovery surfaces (402 accepts, /openapi.json x-payment-info, /docs, /.well-known/x402,
    llms.txt) flip together on the `EVM_PAY_TO` env var. Verified flag-off (= prod today, unchanged)
