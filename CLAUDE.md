@@ -541,9 +541,19 @@ bazaar now, dual-network — 31 resources.)
    where Solana agents get *built*: **Solana Agent Kit (SendAI)**, **Faremeter** (OSS agentic-payments
    framework), and the official **Solana x402 Templates** repo.
 3b. **Identity/trust layer (from the solana.com/x402 ecosystem, assessed 2026-07-07).**
-   - **T54** (identity/verification/risk for agentic finance — Solana's showcased trust layer):
-     investigate their registry; register SolEnrich as a verified service if one exists. Complementary,
-     not competitive (they do know-your-agent; we do on-chain intelligence).
+   - **T54 — investigation RESOLVED 2026-07-10, two actions queued (both outreach, no engineering):**
+     (1) **Merchant verification (Sardius):** register SolEnrich at portal.t54.ai (KYB flow). Their
+     x402-secure buyer-side proxy risk-scores merchants before agents pay (API health, site legitimacy,
+     social sentiment, onchain trust) — unverified merchants risk friction-flags at the trust layer
+     Solana's own x402 page showcases. Cheap insurance + trust badge.
+     (2) **Data-partnership pitch (email, Sardius w/ Claude draft):** their Trustline risk engine scores
+     "agent behavior, transaction patterns, network-wide security signals" — our exact product on
+     Solana (behavioral bot-detection, wallet risk scoring, tx-pattern analysis, agent-attention).
+     Pitch SolEnrich as upstream onchain-signal provider for their "Onchain Trust" dimension. B2B
+     recurring shape; positions our future know-your-agent endpoint as complementary, not competitive.
+     Contact: support@t54.ai / portal.t54.ai. Ripple-backed ($5M).
+     **Explicitly NOT doing:** swapping to their drop-in facilitator (CDP stays — their buyer-side
+     proxy works against any standard x402 merchant); Claw Credit needs nothing from us.
    - **ERC-8004 on Base**: once Base accepts ship, register the EVM-side identity (we hold 8004-solana
      already; `@lucid-agents/identity` supports ERC-8004). Discovery layers (incl. XGATE when it returns)
      index ERC-8004-registered agents — completes dual-network citizenship: pay on either chain, verify
