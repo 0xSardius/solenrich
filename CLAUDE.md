@@ -507,12 +507,18 @@ both networks also strengthens the Coinbase showcase pitch. (Competitive note: `
 bazaar now, dual-network — 31 resources.)
 
 **Execution order (next steps, committed):**
-1. **Base accepts via CDP (1 session — the unlock).** Base USDC as second `accepts` entry on all 32
-   routes, flag-gated behind `EVM_PAY_TO` env var (build needs no secrets; activates only when Sardius
-   sets the receiving address on Railway). Then redeploy + full paid re-seed → dual-network bazaar rows.
-   **Success signal:** agentic.market's importer picks us up on its next pass (verify via
-   `api.agentic.market/v1/services?limit=100&offset=N`). Also needs ~$1 Base USDC on a test wallet for
-   the paid E2E.
+1. **Base accepts via CDP — BUILT 2026-07-09, flag-gated; awaiting activation.** Base USDC as second
+   `accepts` entry on all 32 routes + `ExactEvmScheme` registered on the same CDP resource server;
+   all discovery surfaces (402 accepts, /openapi.json x-payment-info, /docs, /.well-known/x402,
+   llms.txt) flip together on the `EVM_PAY_TO` env var. Verified flag-off (= prod today, unchanged)
+   and flag-on doc surfaces locally; the live 402 accepts array can only be verified with real CDP
+   creds → **verify at activation**. `@x402/evm@2.4.0` pinned. Docs standardized to flat request
+   bodies (envelope still accepted) in the same change.
+   **TO ACTIVATE (Sardius):** set `EVM_PAY_TO=<Base address you control>` on Railway → watch boot log
+   for "(Solana + Base accepts)" → confirm live 402 shows both networks → full paid re-seed →
+   dual-network bazaar rows. **Success signal:** agentic.market importer picks us up
+   (`api.agentic.market/v1/services?limit=100&offset=N`). Base-side paid E2E needs ~$1 Base USDC on
+   a test wallet.
 2. **MCP directory sprint (parallel, free).** Verified dark 2026-07-07: Glama = NOT indexed, Smithery =
    stale `SE01` stub only, PulseMCP API sunset. Claude does Glama + mcp.so submissions; **Sardius**
    logs into Smithery to claim the namespace + dedupe SE01.

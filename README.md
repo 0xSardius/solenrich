@@ -118,8 +118,10 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 ```bash
 curl -X POST https://api.solenrich.com/entrypoints/compare-tokens/invoke \
   -H "Content-Type: application/json" \
-  -d '{"input":{"mints":["JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN","DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"],"format":"both"}}'
+  -d '{"mints":["JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN","DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"],"format":"both"}'
 ```
+
+Request bodies are flat JSON matching each endpoint's schema in [`/openapi.json`](https://api.solenrich.com/openapi.json). A `{"input": {...}}` envelope is also accepted.
 
 ## Output Formats
 

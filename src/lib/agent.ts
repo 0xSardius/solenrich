@@ -8,6 +8,7 @@ import { http } from "@lucid-agents/http";
 import { paymentMiddleware } from "@x402/hono";
 import { x402ResourceServer } from "@x402/hono";
 import { ExactSvmScheme } from "@x402/svm/exact/server";
+import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
 import type { RoutesConfig } from "@x402/core/server";
 
@@ -203,7 +204,7 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
 
 console.log('[metrics] Request counter middleware enabled');
 
-// --- x402 Payment Middleware (Solana USDC) ---
+// --- x402 Payment Middleware (Solana USDC + optional Base USDC) ---
 
 const PAYMENT_NETWORK = (
   process.env.PAYMENT_NETWORK === "devnet"
@@ -212,6 +213,15 @@ const PAYMENT_NETWORK = (
 ) as `${string}:${string}`;
 const PAY_TO = process.env.AGENT_WALLET_ADDRESS ?? CONFIG.solana.walletAddress;
 const PAYMENTS_ENABLED = process.env.PAYMENTS_ENABLED?.toLowerCase() === "true" && PAY_TO !== "";
+
+// Base USDC as a second accepts entry (dual-network is the x402 ecosystem norm —
+// 98.7% of Solana-accepting bazaar services also quote Base; see CLAUDE.md
+// "Distribution strategy" 2026-07-07). Flag-gated: activates only when
+// EVM_PAY_TO (a Base address we control) is set. CDP is Base's home
+// facilitator, so the same facilitator client settles both networks.
+const BASE_NETWORK = "eip155:8453" as `${string}:${string}`;
+const EVM_PAY_TO = process.env.EVM_PAY_TO ?? "";
+const BASE_ACCEPTS_ENABLED = PAYMENTS_ENABLED && EVM_PAY_TO !== "";
 
 // Build x402 resource server eagerly so we can catch auth/network failures before
 // the process enters its restart loop. If init fails we log and fall back to
@@ -225,9 +235,12 @@ if (PAYMENTS_ENABLED) {
   try {
     const rs = new x402ResourceServer(facilitatorClient)
       .register(PAYMENT_NETWORK, new ExactSvmScheme());
+    if (BASE_ACCEPTS_ENABLED) {
+      rs.register(BASE_NETWORK, new ExactEvmScheme());
+    }
     await rs.initialize();
     resourceServer = rs;
-    console.log('[x402] Facilitator reachable, auth verified');
+    console.log(`[x402] Facilitator reachable, auth verified${BASE_ACCEPTS_ENABLED ? ' (Solana + Base accepts)' : ' (Solana only — set EVM_PAY_TO to add Base)'}`);
   } catch (err) {
     console.error('[x402] Facilitator init failed — x402 payments DISABLED for this process. Fix CDP_API_KEY_ID/CDP_API_KEY_SECRET or FACILITATOR_URL and redeploy. Error:', err);
   }
@@ -327,12 +340,24 @@ if (PAYMENTS_ENABLED && resourceServer) {
     const meta = ENDPOINT_META[key];
     const inputSchema = meta?.schema ?? { type: 'object', properties: {} };
     return {
-      accepts: [{
-        scheme: "exact" as const,
-        price,
-        network: PAYMENT_NETWORK,
-        payTo: PAY_TO,
-      }],
+      // Solana USDC first (native chain for the data), Base USDC second when
+      // enabled. The payer picks whichever network their wallet signs.
+      accepts: [
+        {
+          scheme: "exact" as const,
+          price,
+          network: PAYMENT_NETWORK,
+          payTo: PAY_TO,
+        },
+        ...(BASE_ACCEPTS_ENABLED
+          ? [{
+              scheme: "exact" as const,
+              price,
+              network: BASE_NETWORK,
+              payTo: EVM_PAY_TO,
+            }]
+          : []),
+      ],
       // Pin the canonical HTTPS resource URL. Without this, @x402/core derives the
       // URL from the inbound request — which is `http://` behind Railway's
       // TLS-terminating proxy (it doesn't honor X-Forwarded-Proto). CDP's bazaar
@@ -800,7 +825,10 @@ app.get('/docs', (c) => {
     payment: {
       protocol: 'x402',
       currency: 'USDC',
-      network: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+      networks: [
+        'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+        ...(EVM_PAY_TO ? ['eip155:8453'] : []),
+      ],
       facilitator: 'https://api.cdp.coinbase.com/platform/v2/x402',
       alternate: 'MPP/Stripe — send Authorization: Payment header for fiat card payments',
     },
@@ -1211,6 +1239,7 @@ app.get('/.well-known/x402', (c) => {
         amount: price,
         currency: 'USDC',
         network: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+        ...(EVM_PAY_TO ? { alt_networks: ['eip155:8453'] } : {}),
       },
     };
   });
@@ -1222,7 +1251,10 @@ app.get('/.well-known/x402', (c) => {
       provider: '@0xSardius',
       providerUrl: 'https://twitter.com/0xSardius',
       categories: ['onchain-data', 'solana', 'defi', 'risk-intelligence', 'perps'],
-      networks: ['solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp'],
+      networks: [
+        'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp',
+        ...(EVM_PAY_TO ? ['eip155:8453'] : []),
+      ],
       openApiUrl: 'https://api.solenrich.com/openapi.json',
     },
     resources,
@@ -1255,7 +1287,9 @@ ${Object.entries(PRICING).map(([key, price]) => {
 ## Networks
 
 - Solana Mainnet (CAIP-2: solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp)
-- USDC: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+- USDC: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v${EVM_PAY_TO ? `
+- Base Mainnet (CAIP-2: eip155:8453) — same USDC price per call, payer picks the network
+- USDC (Base): 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` : ''}
 
 ## Integration
 

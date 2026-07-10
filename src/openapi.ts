@@ -461,6 +461,11 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
     const protocols: Record<string, unknown>[] = [
       { x402: { network: 'solana', recipient: RECIPIENT } },
     ];
+    // Base USDC accepts (flag-gated, same flag as the 402 accepts entry in agent.ts)
+    const evmPayTo = process.env.EVM_PAY_TO ?? '';
+    if (evmPayTo) {
+      protocols.push({ x402: { network: 'base', recipient: evmPayTo } });
+    }
     if (mppEnabled) {
       protocols.push({ mpp: { method: 'stripe', intent: 'charge', currency: 'usd', recipient: RECIPIENT } });
     }
