@@ -507,7 +507,13 @@ both networks also strengthens the Coinbase showcase pitch. (Competitive note: `
 bazaar now, dual-network — 31 resources.)
 
 **Execution order (next steps, committed):**
-1. **Base accepts via CDP — BUILT 2026-07-09, flag-gated; awaiting activation.** Base USDC as second
+1. **Base accepts via CDP — ✅ ACTIVATED 2026-07-09.** `EVM_PAY_TO=0x8EdE9eD2E6ACdd9B2BaFa42ff4078d3F3263607c`
+   set on Railway. Verified live: 402 header advertises both networks (Base USDC `0x8335…2913`, EIP-3009
+   extra auto-filled by CDP), all discovery surfaces dual-network, full paid re-seed 34/35 (1 = the known
+   env-dependent smart-money-flow seed_source check; all 32 endpoints settled + returned 200s), and the
+   **CDP bazaar re-indexed dual-network rows within minutes**. Remaining: agentic.market importer watch
+   (days-scale) + optional Base-side paid E2E (needs test EVM keypair + ~$1 Base USDC; SolScout is
+   Solana-only today — a `--paid-base` mode is the pending piece). Base USDC as second
    `accepts` entry on all 32 routes + `ExactEvmScheme` registered on the same CDP resource server;
    all discovery surfaces (402 accepts, /openapi.json x-payment-info, /docs, /.well-known/x402,
    llms.txt) flip together on the `EVM_PAY_TO` env var. Verified flag-off (= prod today, unchanged)
