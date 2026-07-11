@@ -1,9 +1,58 @@
 # Session Checkpoint
 
 ## Last session date
+2026-07-11
+
+## ▶️ RESUME HERE (2026-07-11) — DISTRIBUTION WEEK: Base accepts LIVE + agentic.market WIN + pay.sh PR + identity rails
+
+The discoverability arc went from diagnosis to confirmed wins in four days. All committed + pushed
+(through `4671cc0`). Strategy + full detail live in CLAUDE.md "Distribution strategy" section.
+
+**✅ SHIPPED & CONFIRMED:**
+1. **Base accepts ACTIVATED (2026-07-09).** All 32 routes quote Solana USDC + Base USDC
+   (`EVM_PAY_TO=0x8EdE9eD2E6ACdd9B2BaFa42ff4078d3F3263607c` on Railway, ExactEvmScheme on the same CDP
+   facilitator). Every discovery surface dual-network. Full paid re-seed 34/35 → CDP bazaar re-indexed
+   dual-network rows within minutes.
+2. **agentic.market SUCCESS SIGNAL MET (2026-07-10, next-day):** cataloged at
+   `agentic.market/services/api-solenrich-com`, 32 endpoints, Base+Solana — confirms the Base-anchored
+   importer diagnosis end-to-end. Entry is `enriched:false` (domain-as-name, scraped description) →
+   enrichment ask queued (Sardius outreach; suggested copy in CLAUDE.md/session log).
+3. **pay.sh PR #176** (`solana-foundation/pay-skills`) — Foundation catalog, same shelf as Nansen/Birdeye.
+   Maintainer (lgalabru) engaged day 1; CI probe failures FIXED AT SOURCE: all 32 OpenAPI operation
+   summaries rewritten verb-first ≥24 chars (they render as the biometric payment prompt!) — deployed
+   (`12affd0`), snapshot refreshed, branch rebased. **Waiting: maintainer to approve the CI workflow run**
+   (fork-PR security). Queue context: 10 open provider PRs, several older than ours; repo merges
+   provider PRs in days-to-weeks. DON'T nudge before ~Mon 07-14. Competitive: Vybe merged last week,
+   SolSigs (#171) queued — the Solana-data category is filling NOW.
+4. **Metaplex 014 Agent Registry — REGISTERED (2026-07-10).** Asset
+   `BjJGP6gptvGFmhtNX5rkjq8KwU5n48QB2thpW7ugmoaf`, metadata at www.solenrich.com/agent-metadata.json,
+   script `identity/register-metaplex.ts` (one-shot, don't re-run). Third identity rail (8004-solana +
+   014; ERC-8004-on-Base still queued).
+5. **MCP dirs:** mcp.so submitted (`chatmcp/mcpso#3100`); `glama.json` manifest committed. Suite tweet
+   FIRED (per Sardius 2026-07-10).
+6. Earlier in the week (see prev block + CLAUDE.md): smart-money-trenches shipped (32 endpoints),
+   Flash venue complete (MagicBlock delegation discovery), payment-prompt UX fix, T54 assessed
+   (2 outreach actions queued, facilitator swap explicitly rejected).
+
+**📊 DEMAND BASELINE (watch this):** /metrics = 0 organic callers as of 2026-07-11 (all dogfood);
+Base wallet 0 incoming. Every funnel is now connected but young — any nonzero unique caller from here
+is attributable. Check weekly: /metrics unique_callers + Base wallet transfers
+(base.blockscout.com/api/v2/addresses/0x8EdE.../token-transfers) + agentic.market entry + pay.sh merge.
+
+**▶️ NEXT ACTIONABLE:**
+- **Claude:** T54 Trustline data-partnership pitch draft → builder-surface PRs (SendAI / Faremeter /
+  Solana Templates) → awesome-x402 + MPPScan → optional SolScout `--paid-base` mode → then BUILD:
+  Eris (trenches bot, separate repo) + Drift day-one prep (relaunch imminent, time-sensitive).
+- **Sardius (light-touch):** Glama "Add Server" login submit (github.com/0xSardius/solenrich — manifest
+  ready) · Smithery dedupe · agentic.market enrichment ask · T54 portal KYB · solana.com/x402 +
+  CDP showcase emails · pay.sh nudge if quiet past 07-14.
+
+---
+
+## (prev) Last session date
 2026-07-07
 
-## ▶️ RESUME HERE (2026-07-07) — smart-money-trenches SHIPPED (32 endpoints) + Flash venue COMPLETE + discoverability audit
+## ▶️ (prev 2026-07-07) — smart-money-trenches SHIPPED (32 endpoints) + Flash venue COMPLETE + discoverability audit
 
 Three workstreams completed this session, all committed + pushed (`ae8ebae`, `e7e24f9`):
 
