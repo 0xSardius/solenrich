@@ -554,8 +554,13 @@ bazaar now, dual-network — 31 resources.)
      Contact: support@t54.ai / portal.t54.ai. Ripple-backed ($5M).
      **Explicitly NOT doing:** swapping to their drop-in facilitator (CDP stays — their buyer-side
      proxy works against any standard x402 merchant); Claw Credit needs nothing from us.
-   - **ERC-8004 on Base**: once Base accepts ship, register the EVM-side identity (we hold 8004-solana
-     already; `@lucid-agents/identity` supports ERC-8004). Discovery layers (incl. XGATE when it returns)
+   - **✅ Metaplex 014 Agent Registry — REGISTERED 2026-07-10.** Asset:
+     `BjJGP6gptvGFmhtNX5rkjq8KwU5n48QB2thpW7ugmoaf` (MPL Core, owner = agent wallet `66Qvhr…`), tx
+     `449x4Xx6AzDnBr9CVkVjiMyVH7YDcSkDCpksFoQ2JNGBhL8Rp8ux3yNX6v2qaHFeUMa3iJPbBikVGesjDfwkAH2t`.
+     Metadata: `https://www.solenrich.com/agent-metadata.json` (served from `landing/`, www is
+     canonical). Script: `identity/register-metaplex.ts` (one-shot, do not re-run).
+   - **ERC-8004 on Base**: register the EVM-side identity (we hold 8004-solana + Metaplex 014 already;
+     `@lucid-agents/identity` supports ERC-8004). Discovery layers (incl. XGATE when it returns)
      index ERC-8004-registered agents — completes dual-network citizenship: pay on either chain, verify
      on either chain.
    - **Skipped deliberately:** Corbits (competitor rail to Lucid — check once for a marketplace, don't

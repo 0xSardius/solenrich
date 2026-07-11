@@ -27,7 +27,9 @@ const RPC = process.env.HELIUS_API_KEY
   ? `https://mainnet.helius-rpc.com/?api-key=${process.env.HELIUS_API_KEY}`
   : 'https://api.mainnet-beta.solana.com';
 
-const METADATA_URI = 'https://solenrich.com/agent-metadata.json';
+// www is canonical (apex 307-redirects); use it directly so indexers that
+// don't follow redirects still resolve the metadata.
+const METADATA_URI = 'https://www.solenrich.com/agent-metadata.json';
 
 // Sanity: metadata must be publicly reachable before minting an asset that points at it.
 const probe = await fetch(METADATA_URI);
