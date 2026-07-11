@@ -1,0 +1,19 @@
+{
+  "name": "SolEnrich",
+  "symbol": "SOLENRICH",
+  "description": "Agent-native onchain intelligence for Solana: wallet risk scoring, token due-diligence and rug detection, smart-money tracking across spot, perps, and fresh launches, cross-venue perps funding (Jupiter, Adrena, Flash, Hyperliquid, dYdX), and LLM-ready briefings. 32 paid endpoints, per-call USDC via x402 on Solana or Base. Operated by Parallax Labs.",
+  "image": "https://solenrich.com/logo.png",
+  "external_url": "https://solenrich.com",
+  "attributes": [
+    { "trait_type": "category", "value": "onchain-intelligence" },
+    { "trait_type": "chain", "value": "solana" },
+    { "trait_type": "payment", "value": "x402-usdc" },
+    { "trait_type": "endpoints", "value": "32" }
+  ],
+  "properties": {
+    "api": "https://api.solenrich.com",
+    "docs": "https://api.solenrich.com/docs",
+    "openapi": "https://api.solenrich.com/openapi.json",
+    "mcp": "https://api.solenrich.com/mcp"
+  }
+}
