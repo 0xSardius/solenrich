@@ -3,10 +3,15 @@
 ## Last session date
 2026-07-16
 
-## ▶️ RESUME HERE (2026-07-16) — Railway OOM diagnosed + hardening package SCOPED (approved, NOT yet built)
+## ▶️ RESUME HERE (2026-07-16) — Railway OOM diagnosed + hardening package SHIPPED (`43bd6cf`)
 
-**Session was diagnostic + scoping only. No src/ changes yet. Sardius approved the scope below —
-BUILD IT next session (he confirmed the plan, then had to shut down; kick off on his go).**
+**✅ BUILT + DEPLOYED + VERIFIED LIVE 2026-07-16** (`43bd6cf`): all 4 scoped items + a bonus **/mcp
+transport leak fix** found during implementation — the stateless MCP route created a connected
+server+transport pair per request and NEVER closed either; a client holding its stream open pinned
+them in memory (crawlers began probing /mcp right after the Jul 8–10 directory submissions — prime
+suspect). Now closed on client-disconnect/idle-reap. Verified in prod: 2MB body → 413, health 200,
+paywall 402 intact. **Tier decision reconfirmed with Sardius: stay on Hobby.** Watch Railway logs
+for `[memwatch]` warnings — next spike will name its culprit. Scope details below (as-built).
 
 ### The incident (what prompted this)
 Railway memory spiked to **8GB (= the Hobby per-service cap) twice: ~Jul 5 and Jul 15 ~10:00 UTC**,
