@@ -1,6 +1,74 @@
 # Session Checkpoint
 
 ## Last session date
+2026-07-16
+
+## ▶️ RESUME HERE (2026-07-16) — Railway OOM diagnosed + hardening package SCOPED (approved, NOT yet built)
+
+**Session was diagnostic + scoping only. No src/ changes yet. Sardius approved the scope below —
+BUILD IT next session (he confirmed the plan, then had to shut down; kick off on his go).**
+
+### The incident (what prompted this)
+Railway memory spiked to **8GB (= the Hobby per-service cap) twice: ~Jul 5 and Jul 15 ~10:00 UTC**,
+OOM-killed both times. Railway auto-restarted cleanly (~1s downtime); live surface verified fully
+intact after (dual-network accepts, 32 endpoints, current code). **Decision: do NOT upgrade tiers** —
+8GB from a ~200MB baseline is a runaway allocation; a bigger box just delays the kill and raises the
+GB-hours bill.
+
+### Diagnosis (from Railway logs + code audit)
+- **Ruled out:** paid enrichment paths (all sig fetches capped: 100 sigs, 2-page protocol-profile,
+  hop-2 graph 5×50, DAS single-page, batch concurrency 5); Flash gPA on MagicBlock delegation program
+  (server-side memcmp, ~225 accounts); demo endpoints (IP-rate-limited, bounded fetchers). Also:
+  **zero invoke logs between the 01:03 UTC hung-request timeout and the ~10:00 death** → spike did
+  NOT come through a paid call.
+- **Suspect pool (unproven):** (1) `/mcp` free surface — per-request transport objects + held-open
+  streams; MCP directory crawlers started probing after the Jul 8–10 submissions; (2) connection/body
+  buffering — Bun.serve default `maxRequestBodySize` is **128MB** and metrics middleware clones the
+  request stream (doubles inbound); the `[Bun.serve] request timed out after 10 seconds` at 01:03 is
+  Bun's **default idleTimeout=10s** reaping a hung request; (3) unbounded in-process maps
+  (`demoRateLimits` by IP) — too slow for a spike, hygiene only.
+
+### THE SCOPED FIX PACKAGE (approved 2026-07-15, ~half session)
+1. **`Bun.serve` options in `src/index.ts`:** `maxRequestBodySize: 1MB` (largest legit body ~5KB;
+   blocks scanner garbage; responses unaffected) + **explicit `idleTimeout: ~60s`** — NOTE this
+   *raises* the current effective 10s default, so slow cold-cache queries (due-diligence, batch,
+   trenches) stop getting reaped; hung connections still bounded.
+2. **Memory watchdog:** every 60s, if RSS > ~1GB, log RSS + currently-active route(s) — next spike
+   identifies itself instead of us guessing.
+3. **Free-surface logging:** log `/demo` + `/mcp` hits with IP — they're invisible today, which is
+   why the culprit left no trace.
+4. **Hygiene:** LRU-cap `demoRateLimits` map.
+Verified with Sardius: none of this caps legitimate query capability (item 1 is inbound-only;
+item 1's idleTimeout is a loosening).
+
+### Other findings this session (2026-07-15)
+- **🎉 Possible FIRST ORGANIC PAID CALLS:** /metrics shows **2 successful (200) calls on 2026-07-14**
+  — a day we ran nothing. Log shows two completed `protocol-profile` invocations (03:33 + 11:00 UTC).
+  Metrics only count 200s on paid routes → payment settled. **Attribution blocked:** local .env
+  Upstash ≠ Railway prod DB, and /metrics only exposes callers for *today*. To attribute: `railway
+  login` → read prod env → `SMEMBERS metrics:callers:protocol-profile:2026-07-14`, OR ship a
+  `/metrics?date=` param (small, worth doing — this question recurs as organic traffic starts).
+- **Full 32-endpoint unpaid sweep 2026-07-15 18:10–18:24 UTC** — some indexer/agent walked the whole
+  catalog (all 402s, 0 paid). NOT the pay.sh CI (still hadn't run). Discovery surfaces are being
+  crawled — good sign.
+- **pay.sh PR #176: still OPEN, quiet since 07-09.** Greptile 5/5 "safe to merge"; the catalog-check
+  CI has never run — it's **waiting on maintainer approval of the fork-PR workflow** (that's the
+  stall, not our content). Repo-wide merge lull since 07-10; SolSigs (#171) also still queued (not
+  leapfrogged). Nudge window open (past 07-14): ask lgalabru to approve the CI run. Draft nudge is in
+  session log; gh CLI is authed as 0xSardius, Claude can post it on go-ahead.
+- **Jupiter Gacha** (launched 07-13: tokenized graded Pokémon/One Piece cards, Collector Crypt, $2M
+  day-one volume): discussed, NOT scoped. Possible angles if ever revisited: RWA-basis reuse
+  (tokenized card vs graded-comp price), pack-EV/secondary-market intel, smart-money on card tokens.
+  Parked — competes with Eris/Drift for build slot; different buyer than our agent base.
+
+**▶️ NEXT (in order):** (1) BUILD the hardening package above on Sardius's go → deploy → watch for
+the next instrumented spike. (2) pay.sh nudge (needs go-ahead). (3) `railway login` → attribute the
+07-14 organic callers. (4) Then resume the prior queue: T54 Trustline pitch → builder-surface PRs →
+Eris + Drift day-one prep.
+
+---
+
+## (prev) Last session date
 2026-07-11
 
 ## ▶️ RESUME HERE (2026-07-11) — DISTRIBUTION WEEK: Base accepts LIVE + agentic.market WIN + pay.sh PR + identity rails
