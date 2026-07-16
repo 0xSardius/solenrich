@@ -38,6 +38,12 @@ function build402Body(url: URL) {
 export default {
   port,
   hostname: '0.0.0.0',
+  // Largest legitimate request body is a batch-enrich list (~5KB); default 128MB
+  // let scanners buffer gigabytes (2x with the metrics clone). OOM hardening 2026-07-16.
+  maxRequestBodySize: 1_048_576,
+  // Bun default is 10s, which reaped slow cold-cache queries (due-diligence, batch).
+  // 60s gives them room while still bounding hung/held-open connections.
+  idleTimeout: 60,
   async fetch(request: Request, server: any): Promise<Response> {
     const res = await app.fetch(request, { IP: server?.requestIP?.(request) });
     if (res.status !== 402) return res;

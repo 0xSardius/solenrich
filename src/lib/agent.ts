@@ -136,6 +136,44 @@ function extractCaller(
   return ip ? `ip:${ip}` : null;
 }
 
+// --- OOM hardening (2026-07-16): in-flight tracker + memory watchdog ---
+// The Jul 5 + Jul 15 8GB OOM kills left no trace in logs (no invoke lines at
+// spike time). Track what's running so the next spike identifies itself.
+const inflight = new Map<string, number>();
+app.use('*', async (c, next) => {
+  const route = `${c.req.method} ${c.req.path}`;
+  inflight.set(route, (inflight.get(route) ?? 0) + 1);
+  try {
+    await next();
+  } finally {
+    const n = (inflight.get(route) ?? 1) - 1;
+    if (n <= 0) inflight.delete(route);
+    else inflight.set(route, n);
+  }
+});
+
+const RSS_WARN_BYTES = 1_073_741_824; // 1GB — ~5x normal baseline, far below the 8GB cap
+setInterval(() => {
+  const rss = process.memoryUsage().rss;
+  if (rss > RSS_WARN_BYTES) {
+    const active = [...inflight.entries()].map(([r, n]) => `${r} x${n}`).join(', ') || 'none';
+    console.warn(`[memwatch] RSS ${(rss / 1e6).toFixed(0)}MB — in-flight: ${active}`);
+  }
+}, 60_000);
+
+// Free surfaces were invisible in logs — log hits with IP so unpaid traffic
+// (crawlers, scanners) leaves a trace.
+const clientIp = (c: { req: { header: (name: string) => string | undefined } }) =>
+  c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ?? 'unknown';
+app.use('/demo/*', async (c, next) => {
+  console.log(`[demo] ${c.req.method} ${c.req.path} from ${clientIp(c)}`);
+  await next();
+});
+app.use('/mcp', async (c, next) => {
+  console.log(`[mcp] ${c.req.method} from ${clientIp(c)}`);
+  await next();
+});
+
 app.use('/entrypoints/*/invoke', async (c, next) => {
   // Clone before next() — payment middleware + handler consume the body stream.
   let reqClone: Request | null = null;
@@ -655,10 +693,18 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000);
 
+// X-Forwarded-For is client-influenced, so unique keys are unbounded within a
+// window — cap the map and evict oldest (insertion order) on overflow.
+const DEMO_RATE_LIMIT_MAX_IPS = 10_000;
+
 function getDemoRateLimit(ip: string): { allowed: boolean; remaining: number; resetAt: number } {
   const now = Date.now();
   let entry = demoRateLimits.get(ip);
   if (!entry || now > entry.resetAt) {
+    if (!demoRateLimits.has(ip) && demoRateLimits.size >= DEMO_RATE_LIMIT_MAX_IPS) {
+      const oldest = demoRateLimits.keys().next().value;
+      if (oldest !== undefined) demoRateLimits.delete(oldest);
+    }
     entry = { count: 0, resetAt: now + DEMO_WINDOW_MS };
     demoRateLimits.set(ip, entry);
   }
@@ -1365,6 +1411,14 @@ app.all('/mcp', async (c) => {
   const transport = new WebStandardStreamableHTTPServerTransport();
   const mcpServer = createSolEnrichMcpServer();
   await mcpServer.connect(transport);
+  // Close both when the client disconnects (or Bun's idleTimeout reaps the
+  // connection). Previously nothing was ever closed, so a client holding its
+  // stream open pinned a connected server+transport pair in memory — prime
+  // suspect for the Jul 5 / Jul 15 OOM spikes.
+  c.req.raw.signal.addEventListener('abort', () => {
+    transport.close().catch(() => {});
+    mcpServer.close().catch(() => {});
+  });
   return transport.handleRequest(c.req.raw);
 });
 
