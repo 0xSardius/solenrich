@@ -1,9 +1,48 @@
 # Session Checkpoint
 
 ## Last session date
+2026-07-21
+
+## ▶️ RESUME HERE (2026-07-21) — OOM ROOT CAUSE FOUND: `/mcp` leaks a full MCP server graph per request
+
+The `43bd6cf` hardening did NOT fix the OOM (another kill happened overnight 07-20). **Root cause now
+confirmed** via code audit + local reproduction + upstream-issue corroboration. Full writeup:
+**`docs/oom-rootcause-2026-07-21.md`**.
+
+**The leak:** `app.all('/mcp')` (stateless fresh-server-per-request) leaks the whole graph
+(`WebStandardStreamableHTTPServerTransport` + `createSolEnrichMcpServer` = 30 tools + Zod + Ajv) two ways:
+1. **GET /mcp opens an immortal SSE ReadableStream** (SDK `handleGetRequest`) that's never written/pinged/
+   closed and holds transport→server via `_streamMapping`. In our stateless mode (no session, no
+   eventStore) it can never carry a push — pure dead weight. **Primary leak.** Crawlers began probing
+   /mcp after the Jul 8–10 directory submissions → explains why OOMs started with distribution.
+2. **Happy-path POST never cleans up** — our only teardown is the `'abort'` listener, and `Request.signal`
+   fires abort ONLY on premature disconnect, never on completion. So completed POSTs leak too.
+
+**Why memwatch (from 43bd6cf) couldn't name it:** `handleRequest` returns the streaming Response
+immediately → Hono `await next()` resolves → in-flight decrements to 0 while the graph stays retained at
+the Bun layer. Watchdog logs `in-flight: none` — exactly the "8GB, no trace" signature of Jul 5/15.
+**`idleTimeout: 60` made it worse** (silent reap doesn't free the graph; longer window = held longer).
+
+**Reproduced locally (Bun 1.2.21, current main):** 700 raw GET /mcp sockets drove RSS 138MB → **1,827MB**
+(flat, retained), server died. **~2.4MB per GET probe** → ~3,300 probes = 8GB Hobby cap = hours of crawler
+traffic. 300 well-behaved fully-read POSTs left RSS flat (~23MB) → leak is unclosed-streams-specific, not
+MCP volume. Corroborated: typescript-sdk #2090 (stateless per-request OOM), web-standard example does zero
+cleanup, Bun ≤1.3.14 predates leak-fix PR #30875.
+
+**▶️ THE FIX (not yet applied — awaiting go-ahead):** in priority order — (1) **GET /mcp → 405** (stateless
+has no server-push; kills the primary leak); (2) **clean up transport+server after `handleRequest`
+completes**, not just on abort, and remove the abort listener on completion; (3) later, drop full
+McpServer-per-request for a cached tool-registry + JSON-RPC dispatch (#2090); (4) keep the 1MB body cap,
+lower `idleTimeout` back once GET is 405'd; (5) upgrade Bun past a PR-#30875 release. Validation: re-run
+the 700-GET flood (RSS must stay near baseline) + a completed-POST loop (RSS returns to baseline) + CI
+guard GET /mcp→405. Repro harnesses: scratchpad `raw-flood.ts` + `mcp-leak-repro.ts`.
+
+---
+
+## (prev) Last session date
 2026-07-16
 
-## ▶️ RESUME HERE (2026-07-16) — Railway OOM diagnosed + hardening package SHIPPED (`43bd6cf`)
+## ▶️ (prev 2026-07-16) — Railway OOM diagnosed + hardening package SHIPPED (`43bd6cf`)
 
 **✅ BUILT + DEPLOYED + VERIFIED LIVE 2026-07-16** (`43bd6cf`): all 4 scoped items + a bonus **/mcp
 transport leak fix** found during implementation — the stateless MCP route created a connected

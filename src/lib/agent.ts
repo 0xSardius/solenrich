@@ -1398,29 +1398,49 @@ import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/
 import { createSolEnrichMcpServer } from '../mcp-tools';
 import { cors } from 'hono/cors';
 
-// CORS for MCP clients
+// CORS for MCP clients. Stateless mode only accepts POST (+ OPTIONS preflight);
+// GET/DELETE are advertised as unsupported so clients don't attempt them.
 app.use('/mcp', cors({
   origin: '*',
-  allowMethods: ['GET', 'POST', 'DELETE', 'OPTIONS'],
+  allowMethods: ['POST', 'OPTIONS'],
   allowHeaders: ['Content-Type', 'mcp-session-id', 'Last-Event-ID', 'mcp-protocol-version'],
   exposeHeaders: ['mcp-session-id', 'mcp-protocol-version'],
 }));
 
-// Stateless MCP endpoint — fresh server per request
-app.all('/mcp', async (c) => {
-  const transport = new WebStandardStreamableHTTPServerTransport();
-  const mcpServer = createSolEnrichMcpServer();
-  await mcpServer.connect(transport);
-  // Close both when the client disconnects (or Bun's idleTimeout reaps the
-  // connection). Previously nothing was ever closed, so a client holding its
-  // stream open pinned a connected server+transport pair in memory — prime
-  // suspect for the Jul 5 / Jul 15 OOM spikes.
-  c.req.raw.signal.addEventListener('abort', () => {
-    transport.close().catch(() => {});
-    mcpServer.close().catch(() => {});
+// Stateless MCP endpoint — fresh server per request.
+//
+// OOM root cause (confirmed + reproduced 2026-07-21, see docs/oom-rootcause-2026-07-21.md):
+// the previous `app.all` leaked a full server graph (transport + 30-tool McpServer + Ajv)
+// on every /mcp hit, two ways —
+//  1. GET opened a standalone SSE ReadableStream the SDK never closes (dead weight in
+//     stateless mode: no session, no eventStore, nothing to push), pinning the graph until
+//     GC that never came. Crawlers probing /mcp after the Jul directory submissions drove
+//     RSS to the 8GB Railway cap.
+//  2. The only teardown was an 'abort' listener, which fires solely on premature disconnect —
+//     never on normal completion — so finished POSTs leaked too.
+// Fix: reject non-POST (kills 1), buffer responses via enableJsonResponse so nothing streams
+// open, and close transport+server in a finally so cleanup always runs (kills 2).
+app.post('/mcp', async (c) => {
+  const transport = new WebStandardStreamableHTTPServerTransport({
+    // Buffer the full JSON-RPC response instead of holding an SSE stream open.
+    // Stateless request/response needs no server-push channel, and a buffered
+    // response is safe to tear down the instant handleRequest resolves.
+    enableJsonResponse: true,
   });
-  return transport.handleRequest(c.req.raw);
+  const mcpServer = createSolEnrichMcpServer();
+  try {
+    await mcpServer.connect(transport);
+    return await transport.handleRequest(c.req.raw);
+  } finally {
+    // Response is fully materialized by now (JSON mode) — closing does not truncate it.
+    await transport.close().catch(() => {});
+    await mcpServer.close().catch(() => {});
+  }
 });
+
+// Any other method (GET SSE probe, DELETE session-teardown) is meaningless in stateless
+// mode — 405 immediately, before allocating a transport/server. This is the primary leak fix.
+app.all('/mcp', (c) => c.json({ error: 'Method Not Allowed', message: 'The MCP endpoint is stateless; use POST.' }, 405));
 
 console.log('[mcp] HTTP transport available at /mcp');
 
