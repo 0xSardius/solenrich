@@ -4,13 +4,13 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SolEnrich — Solana Onchain Data Enrichment for Agents & LLMs</title>
-  <meta name="description" content="Solana onchain data enrichment agent. 32 endpoints including memecoin smart-money (proven winners buying fresh launches), Hyperliquid smart-money + trader profiles, and the perps suite: cross-venue funding, venue-comparison-by-size, basis-signal, market trend across Jupiter + Adrena + Hyperliquid + dYdX, plus perp position alerts. Consensus attention signal, portfolio time-series, compound NL queries, daily intelligence feed. Pay USDC via x402 or cards via Stripe.">
+  <meta name="description" content="Solana onchain data enrichment agent. 33 endpoints including memecoin smart-money (proven winners buying fresh launches), Hyperliquid smart-money + trader profiles, and the perps suite: cross-venue funding, venue-comparison-by-size, basis-signal, market trend across Jupiter + Adrena + Hyperliquid + dYdX, plus perp position alerts. Consensus attention signal, portfolio time-series, compound NL queries, daily intelligence feed, plus Jupiter Gacha pack EV analysis. Pay USDC via x402 or cards via Stripe.">
 
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://solenrich.com">
   <meta property="og:title" content="SolEnrich — Onchain Intelligence for Agents & LLMs">
-  <meta property="og:description" content="32 enrichment endpoints on Solana, including memecoin smart-money, Hyperliquid intelligence &amp; the full perps suite: cross-venue funding, venue-comparison, basis-signal, market structure, trader profiles & live position alerts across Jupiter Perps + Adrena + Hyperliquid + dYdX. Plus event-driven alerts, consensus signal, portfolio time-series, smart-money orchestration, daily intelligence feed. Pay USDC via x402 or cards via Stripe.">
+  <meta property="og:description" content="33 enrichment endpoints on Solana, including memecoin smart-money, Hyperliquid intelligence &amp; the full perps suite: cross-venue funding, venue-comparison, basis-signal, market structure, trader profiles & live position alerts across Jupiter Perps + Adrena + Hyperliquid + dYdX. Plus event-driven alerts, consensus signal, portfolio time-series, smart-money orchestration, daily intelligence feed, plus Jupiter Gacha pack EV analysis. Pay USDC via x402 or cards via Stripe.">
   <meta property="og:image" content="https://solenrich.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -18,7 +18,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SolEnrich — Onchain Intelligence for Agents & LLMs">
-  <meta name="twitter:description" content="32 enrichment endpoints on Solana, including memecoin smart-money, Hyperliquid intelligence &amp; the full perps suite: cross-venue funding, venue-comparison, basis-signal, market structure, trader profiles & live position alerts across Jupiter Perps + Adrena + Hyperliquid + dYdX. Plus event-driven alerts, consensus signal, portfolio time-series, smart-money orchestration, daily intelligence feed. Pay USDC via x402 or cards via Stripe.">
+  <meta name="twitter:description" content="33 enrichment endpoints on Solana, including memecoin smart-money, Hyperliquid intelligence &amp; the full perps suite: cross-venue funding, venue-comparison, basis-signal, market structure, trader profiles & live position alerts across Jupiter Perps + Adrena + Hyperliquid + dYdX. Plus event-driven alerts, consensus signal, portfolio time-series, smart-money orchestration, daily intelligence feed, plus Jupiter Gacha pack EV analysis. Pay USDC via x402 or cards via Stripe.">
   <meta name="twitter:image" content="https://solenrich.com/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1443,7 +1443,7 @@
           <span class="gradient-text">for agents & LLMs</span>
         </h1>
         <p class="hero-sub">
-          32 endpoints enriching any Solana wallet, token, protocol, or perps market with a single API call.
+          33 endpoints enriching any Solana wallet, token, protocol, or perps market with a single API call.
           Structured JSON for agents. Natural language briefings for LLMs.
           Pay with USDC (x402) or credit card (Stripe).
         </p>
@@ -1640,7 +1640,7 @@
     <div class="container">
       <div class="reveal">
         <div class="section-label">Endpoints</div>
-        <h2 class="section-title">32 enrichment endpoints</h2>
+        <h2 class="section-title">33 enrichment endpoints</h2>
         <p class="section-desc">
           From quick wallet lookups to full due diligence reports.
           Every endpoint returns data in your choice of format.
@@ -1907,6 +1907,15 @@
           </div>
           <p class="endpoint-desc">Poll-based event detection. Pass a watchlist (up to 10 tokens + 10 wallets) and a <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">since</code> timestamp; get graded alerts (price spike/drop, risk change, whale flow, concentration shift, portfolio swing, position add/remove) since that moment. Stateless — caller owns the cursor.</p>
           <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">alerts</span><span class="tag">poll</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">gacha-ev-scan</span>
+            <span class="endpoint-price">$0.02</span>
+          </div>
+          <p class="endpoint-desc">Jupiter Gacha (Collector Crypt) pack EV scan. Per machine: gross insured EV vs the guaranteed instant-buyback floor (85&ndash;93%, &le;72h) vs a marketplace sale (&minus;2% fee, fill-risk). Returns a POSITIVE_EV / HOUSE_EDGE / NEGATIVE_EV verdict &mdash; the realizable EV the platform hides behind its gross-EV headline.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">gacha</span><span class="tag">RWA</span></div>
         </div>
       </div>
     </div>
