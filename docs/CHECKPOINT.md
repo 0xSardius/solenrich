@@ -3,6 +3,22 @@
 ## Last session date
 2026-07-21
 
+## ▶️ ALSO SHIPPED THIS SESSION (2026-07-21) — `gacha-ev-scan` (33 endpoints), pushed `4261232`
+
+New endpoint riding the Jupiter Gacha / Collector Crypt tokenized-card wave ($200M+/mo category,
+$3.3M day-one). **The synthesis:** platform advertises gross EV ~10% above pack price, but realizable
+EV is lower — only guaranteed exit is instant-buyback at 85-93% of insured value (~−5% house edge);
+marketplace sale recovers ~insured minus 2% fee but isn't guaranteed to fill. Endpoint returns
+POSITIVE_EV / HOUSE_EDGE / NEGATIVE_EV verdict per machine, ranked by exit path ($0.02, all-optional
+inputs → auto-catalogs). Data = Collector Crypt public API (`gacha.collectorcrypt.com/api/machines`,
+no auth, one call, 60s cache — trivial integration). Full 9-step checklist done; tsc clean, 172/172
+unit, live-verified (Mythic $2500 pack = NEGATIVE_EV; sports packs richest EV). **Strategic caveat
+(agreed at build time):** low-moat, off-axis (new proprietary source, different buyer than our agent
+base) — shipped as an opportunistic wave-rider, explicitly NOT ahead of Eris/Drift in priority.
+**NEXT for it:** paid seed run (`SolScout --paid --only gacha-ev-scan`) to catalog in CDP bazaar +
+confirm live 402. **Franchise enum is pokemon/onepiece/all**; sports/anime packs surface only via `all`
+or the `machine` param (v1 limitation, fine).
+
 ## ▶️ RESUME HERE (2026-07-21) — OOM ROOT CAUSE FOUND: `/mcp` leaks a full MCP server graph per request
 
 The `43bd6cf` hardening did NOT fix the OOM (another kill happened overnight 07-20). **Root cause now
@@ -29,13 +45,23 @@ traffic. 300 well-behaved fully-read POSTs left RSS flat (~23MB) → leak is unc
 MCP volume. Corroborated: typescript-sdk #2090 (stateless per-request OOM), web-standard example does zero
 cleanup, Bun ≤1.3.14 predates leak-fix PR #30875.
 
-**▶️ THE FIX (not yet applied — awaiting go-ahead):** in priority order — (1) **GET /mcp → 405** (stateless
-has no server-push; kills the primary leak); (2) **clean up transport+server after `handleRequest`
-completes**, not just on abort, and remove the abort listener on completion; (3) later, drop full
-McpServer-per-request for a cached tool-registry + JSON-RPC dispatch (#2090); (4) keep the 1MB body cap,
-lower `idleTimeout` back once GET is 405'd; (5) upgrade Bun past a PR-#30875 release. Validation: re-run
-the 700-GET flood (RSS must stay near baseline) + a completed-POST loop (RSS returns to baseline) + CI
-guard GET /mcp→405. Repro harnesses: scratchpad `raw-flood.ts` + `mcp-leak-repro.ts`.
+**✅ THE FIX — SHIPPED + VERIFIED LOCALLY (`c48acde`, pushed 2026-07-21 → Railway auto-deploy).**
+`app.post('/mcp')` + `enableJsonResponse: true` + `finally { transport.close(); mcpServer.close(); }`;
+a catch-all `app.all('/mcp')` returns 405 for GET/DELETE/other before allocating anything. Dropped the
+abort-listener closure. **Verified locally (Bun 1.2.21):** pre-fix 700 GET probes = RSS 138→1827MB +
+process death; **post-fix same flood holds RSS flat 378→362MB**; 1500 completed POSTs plateau ~450MB
+(heap high-water, NOT linear leak). tsc clean, 171/171 unit + new `test/mcp-methods.test.ts` (GET→405)
+wired into CI. Full writeup: `docs/oom-rootcause-2026-07-21.md`. Repro harnesses: scratchpad
+`raw-flood.ts` + `mcp-leak-repro.ts`.
+
+**▶️ REMAINING (watch + optional follow-ups):**
+- **WATCH:** confirm Railway deployed `c48acde`, then watch memory — expect flat RSS, no more OOM kills,
+  and `[memwatch]` silent. Live-check `GET https://api.solenrich.com/mcp` returns 405 and a POST
+  initialize still returns 200. Re-check the MCP directory listings still work (they POST, so fine).
+- **Deferred (not needed unless it recurs):** (3) drop McpServer-per-request for a cached tool-registry +
+  JSON-RPC dispatch (typescript-sdk #2090); (4) lower `idleTimeout` back down now GET is 405'd (the 60s
+  was for slow paid invokes — reassess); (5) upgrade Bun past a PR-#30875 release (stable ≤1.3.14 all
+  predate the native stream-leak fix).
 
 ---
 
