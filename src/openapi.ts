@@ -439,6 +439,20 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'gacha-ev-scan': {
+    summary: 'Scan Jupiter Gacha packs for net-of-exit expected value',
+    description: 'Jupiter Gacha (Collector Crypt) tokenized-card pack EV scan. For each pack machine, computes net-of-exit-mechanics EV: gross insured EV vs the guaranteed instant-buyback floor (85-93%% of insured, <=72h) vs a marketplace sale (insured value minus 2%% fee, fill-risk). Returns a POSITIVE_EV / HOUSE_EDGE / NEGATIVE_EV verdict per machine plus rare+epic stock share, ranked by the chosen exit path. All inputs optional.',
+    schema: {
+      type: 'object',
+      properties: {
+        machine: { type: 'string', minLength: 1, maxLength: 64, description: 'Restrict to one machine code (e.g. pokemon_50). Omit to scan all.' },
+        franchise: { type: 'string', enum: ['pokemon', 'onepiece', 'all'], default: 'all', description: 'Franchise filter' },
+        exit_strategy: { type: 'string', enum: ['buyback', 'marketplace', 'both'], default: 'both', description: 'Which exit path to rank/verdict against' },
+        min_edge_pct: { type: 'number', minimum: -100, maximum: 100, description: 'Only surface machines whose net edge (per exit_strategy) >= this percentage' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
 };
 
 const BASE_URL = 'https://api.solenrich.com';

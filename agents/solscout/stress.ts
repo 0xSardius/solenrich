@@ -533,6 +533,22 @@ export const ENDPOINTS: Array<{
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Hyperliquid Smart Money') },
     ],
   },
+  {
+    // Jupiter Gacha pack EV scan. Live external data (Collector Crypt), so
+    // checks are structural — machine count/verdicts vary as packs are opened.
+    key: 'gacha-ev-scan',
+    input: { franchise: 'pokemon', exit_strategy: 'both', format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'has machines array', test: (d) => Array.isArray(d.machines), detail: (d) => `machines=${d.machines?.length}` },
+      { name: 'has machine_count', test: (d) => typeof d.machine_count === 'number' && d.machine_count > 0 },
+      { name: 'each machine has a verdict', test: (d) => d.machines.every((m: any) => ['POSITIVE_EV', 'HOUSE_EDGE', 'NEGATIVE_EV'].includes(m.verdict)) },
+      { name: 'each machine has buyback + marketplace legs', test: (d) => d.machines.every((m: any) => typeof m.buyback?.edge_pct === 'number' && typeof m.marketplace?.edge_pct === 'number') },
+      { name: 'has summary counts', test: (d) => d.summary != null && typeof d.summary.house_edge_count === 'number' },
+      { name: 'ranked best-first by marketplace edge', test: (d) => d.machines.length < 2 || d.machines[0].marketplace.edge_pct >= d.machines[d.machines.length - 1].marketplace.edge_pct },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Gacha') },
+    ],
+  },
 ];
 
 // --- Coverage guard ---------------------------------------------------------

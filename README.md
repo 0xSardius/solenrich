@@ -15,7 +15,7 @@ curl https://api.solenrich.com/health
 # Agent card (A2A discovery)
 curl https://api.solenrich.com/.well-known/agent.json
 
-# List all 32 endpoints
+# List all 33 endpoints
 curl https://api.solenrich.com/entrypoints
 
 # Full API documentation (agent-readable JSON)
@@ -98,6 +98,12 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 | Endpoint | Price | Input | Description |
 |----------|-------|-------|-------------|
 | `smart-money-trenches` | $0.05 | `hours_back`, `max_token_age_hours`, `min_buyers`, `limit`, `format` | Which proven-winner wallets are aping fresh (<6h) launches right now — vetted realized-PnL seed set, bot-guarded, ranked by distinct smart buyers + recency |
+
+### Collectibles / RWA (1 endpoint)
+
+| Endpoint | Price | Input | Description |
+|----------|-------|-------|-------------|
+| `gacha-ev-scan` | $0.02 | `machine`, `franchise`, `exit_strategy`, `min_edge_pct`, `format` | Jupiter Gacha (Collector Crypt) pack EV scan — gross insured EV vs the guaranteed instant-buyback floor (85–93%, ≤72h) vs a marketplace sale (−2% fee, fill-risk). POSITIVE_EV / HOUSE_EDGE / NEGATIVE_EV verdict per machine — the realizable EV the platform hides behind its gross-EV headline |
 
 ### Intelligence Feed & Signals (3 endpoints)
 

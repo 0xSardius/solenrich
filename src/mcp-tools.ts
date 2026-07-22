@@ -665,5 +665,29 @@ export function createSolEnrichMcpServer(): McpServer {
     },
   );
 
+  server.registerTool(
+    'gacha_ev_scan',
+    {
+      title: 'Jupiter Gacha EV Scan',
+      description: 'Scan Jupiter Gacha (Collector Crypt) tokenized-card packs for net-of-exit expected value. Per machine: gross insured EV vs the guaranteed instant-buyback floor (85-93% of insured value, ≤72h) vs a marketplace sale (insured value minus 2% fee, fill-risk). Returns a POSITIVE_EV / HOUSE_EDGE / NEGATIVE_EV verdict — the realizable EV the platform hides behind its gross-EV headline. NFA.',
+      inputSchema: {
+        machine: z.string().optional().describe('Restrict to one machine code (e.g. pokemon_50); omit to scan all'),
+        franchise: z.enum(['pokemon', 'onepiece', 'all']).default('all').describe('Franchise filter'),
+        exit_strategy: z.enum(['buyback', 'marketplace', 'both']).default('both').describe('Which exit path to rank/verdict against'),
+        min_edge_pct: z.number().min(-100).max(100).optional().describe('Only surface machines with net edge ≥ this %'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('gacha-ev-scan', {
+        ...(args.machine ? { machine: args.machine } : {}),
+        franchise: args.franchise ?? 'all',
+        exit_strategy: args.exit_strategy ?? 'both',
+        ...(args.min_edge_pct !== undefined ? { min_edge_pct: args.min_edge_pct } : {}),
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
   return server;
 }

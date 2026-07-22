@@ -253,6 +253,19 @@ check('has llm_summary', typeof smt.body?.output?.llm_summary === 'string' && sm
 console.log(`  ⏱ ${smt.ms}ms\n`);
 
 // ============================================================
+// 14. gacha-ev-scan
+// ============================================================
+console.log('━━━ 14. gacha-ev-scan ━━━');
+const gacha = await invoke('gacha-ev-scan', { franchise: 'pokemon', exit_strategy: 'both', format: 'both' }, 30000);
+check('returns 200', gacha.status === 200, `got ${gacha.status}`);
+check('has machines (array)', Array.isArray(gacha.body?.output?.machines));
+check('machine_count > 0', typeof gacha.body?.output?.machine_count === 'number' && gacha.body.output.machine_count > 0);
+check('each machine has a verdict', (gacha.body?.output?.machines ?? []).every((m: any) => ['POSITIVE_EV', 'HOUSE_EDGE', 'NEGATIVE_EV'].includes(m.verdict)));
+check('has summary counts', typeof gacha.body?.output?.summary?.house_edge_count === 'number');
+check('has llm_summary', typeof gacha.body?.output?.llm_summary === 'string' && gacha.body.output.llm_summary.includes('Gacha'));
+console.log(`  ⏱ ${gacha.ms}ms\n`);
+
+// ============================================================
 // Summary
 // ============================================================
 console.log('═══════════════════════════════════════════════════');

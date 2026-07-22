@@ -67,6 +67,7 @@ export const PRICING = {
   'consensus-signal': '0.005',
   'portfolio-history': '0.006',
   'check-alerts': '0.008',
+  'gacha-ev-scan': '0.02',
 } as const;
 
 /** Cache TTL in seconds per data type */
@@ -92,4 +93,5 @@ export const CACHE_TTL = {
   smartMoney: 600,       // 10 minutes — smart money shifts over days
   trenches: 120,         // 2 minutes — fresh-launch buys are a live signal
   feedLatest: 86_400,    // 24 hours — daily intelligence brief, lazy-populated
+  gacha: 60,             // 1 minute — pack EV/stock drift as packs are opened
 } as const;
