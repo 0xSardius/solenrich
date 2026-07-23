@@ -1,9 +1,34 @@
 # Session Checkpoint
 
 ## Last session date
-2026-07-21
+2026-07-23
 
-## ▶️ ALSO SHIPPED THIS SESSION (2026-07-21) — `gacha-ev-scan` (33 endpoints), pushed `4261232`
+## ▶️ SCOPED (2026-07-23) — runner detection: `runner-scan` + `trenches-scan` → `docs/runner-detection-scope.md`
+
+Answered "how do we detect big Solana runners (Ansem/Jimothy kind) as they occur." Full scope committed;
+NOT built yet. Key framing: detection = TWO signals — **WHO is buying** (proven-winner wallets;
+`smart-money-trenches`, already built) + **WHAT the token is doing** (on-chain velocity; the gap) — plus a
+third proprietary confirmation, **agent-attention acceleration** (`attention-momentum`, already scoped T4).
+
+**Two endpoints scoped:**
+1. **`runner-scan`** ($0.04, BUILD FIRST) — on-chain velocity/runner detector. Metrics: buy-rate
+   acceleration (2nd derivative), buy pressure (buys/(buys+sells)), volume + price velocity, holder growth,
+   liquidity trend. Stages IGNITING/RUNNING/PARABOLIC-LATE/FADING. **One small dep:** extend
+   `DexScreenerClient` to parse the `txns{m5,h1,h6,h24}.{buys,sells}` field the API already returns (client
+   currently parses only volume/priceChange/pairCreatedAt). New `runner-detector.ts` + pure `runner-score.ts`.
+2. **`trenches-scan`** ($0.08, BUILD LAST) — three-signal orchestrator (T5 fleshed out): candidate union of
+   smart-money + velocity + attention → safety gate (token-analyzer risk; +dev-reputation/token-x-ray later,
+   99% of losses are rugs) → signal-overlap scoring → STRONG/EMERGING/WATCH verdict + reasoning naming which
+   signals fired. The un-clonable overlap (attention leg needs an agent-data business).
+
+**Naming clarification (was ambiguous):** `attention-momentum` = accelerating AGENT queries (moat leg);
+`runner-scan` = on-chain MARKET velocity. Separate endpoints, both feed `trenches-scan`. Lane = seconds-to-
+minutes pre-ape, NOT block-0. Sequence: runner-scan → attention-momentum (thin, extends signal-tracker) →
+trenches-scan. All sharpen Eris; Eris's outcome tracking becomes the label set that tunes the weights.
+
+---
+
+## ▶️ (prev 2026-07-21) — `gacha-ev-scan` shipped (33 endpoints), pushed `4261232`
 
 New endpoint riding the Jupiter Gacha / Collector Crypt tokenized-card wave ($200M+/mo category,
 $3.3M day-one). **The synthesis:** platform advertises gross EV ~10% above pack price, but realizable
