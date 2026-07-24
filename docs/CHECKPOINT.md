@@ -1,9 +1,54 @@
 # Session Checkpoint
 
 ## Last session date
-2026-07-23
+2026-07-24
 
-## ▶️ SCOPED (2026-07-23) — runner detection: `runner-scan` + `trenches-scan` → `docs/runner-detection-scope.md`
+## ▶️ RESUME HERE (2026-07-24) — multi-thread session: OOM fixed, gacha shipped, runner detection scoped, SEO solid
+
+Five workstreams this session, all committed + pushed + verified live (through `65db725` + a Vercel
+dashboard change). **33 paid endpoints. Nothing left uncommitted.** Detail blocks for each are below;
+this is the quick map.
+
+**1. Railway OOM — ROOT CAUSE FOUND + FIXED (`c48acde`, live).** The recurring 8GB kills were the `/mcp`
+endpoint leaking a full MCP server graph per request (GET opened an immortal SSE stream; completed POSTs
+never cleaned up — the `43bd6cf` abort-listener fired on the wrong event). Fix: GET/non-POST → 405,
+`enableJsonResponse: true` (buffered, no held stream), `finally` cleanup. Reproduced locally (700 GET
+probes: 138→1827MB→death pre-fix; flat 378→362MB post-fix). Live-verified in prod (GET /mcp = 405, POST =
+200). CI guard `test/mcp-methods.test.ts`. Writeup: `docs/oom-rootcause-2026-07-21.md`. **WATCH:** confirm
+no more kills + `[memwatch]` stays quiet over the next few days. (Optional: `railway login` to watch the
+prod RSS graph + attribute the 2 possible-organic `protocol-profile` calls from 07-14.)
+
+**2. `gacha-ev-scan` SHIPPED (`4261232`, live, 33 endpoints).** Jupiter Gacha / Collector Crypt tokenized-
+card pack net-EV verdict ($0.02). Opportunistic wave-rider, **low-moat/off-axis by design — explicitly NOT
+ahead of Eris/Drift in priority.** Full 9-step checklist done. **Open follow-up:** paid seed run
+(`SolScout --paid --only gacha-ev-scan`) to catalog it in the CDP bazaar. Detail block below.
+
+**3. Eris PRD WRITTEN — own repo, ready to build.** `C:\Users\justi\Desktop\projects\2026\agents\eris\`
+(git-initialized, `eris-prd.md`, private-by-design, NO remote yet). 8-phase plan (~2.5 sessions). **Needs
+from Sardius before build:** BotFather token, calls channel, fresh Solana keypair funded ~$20 USDC. Eris is
+the trenches DEMAND engine (calls bot dogfooding `smart-money-trenches`). See [[project_trenches_eris]].
+
+**4. Runner detection SCOPED (`e88076e`, not built) → `docs/runner-detection-scope.md`.** From "how do we
+detect Ansem/Jimothy-style runners as they occur." Two endpoints: **`runner-scan`** ($0.04, build first) =
+on-chain velocity detector (needs a small `DexScreenerClient` extension to parse `txns.buys/sells`);
+**`trenches-scan`** ($0.08) = three-signal orchestrator (WHO + WHAT + ATTENTION + safety gate). Naming
+locked: `attention-momentum`=agent-query acceleration; `runner-scan`=on-chain market velocity. Detail below.
+
+**5. SEO — audited + hardened, now SOLID (`de41cc6`, `65db725` + Vercel 308 toggle).** Content was current;
+structure had gaps. Fixed: canonical tags → www, all og/twitter URLs → www, JSON-LD (@graph: Organization
+Parallax Labs + WebSite + SoftwareApplication+Offer), robots.txt + sitemap.xml, favicon declared, apex→www
+redirect promoted 307→**308 permanent** (Vercel dashboard, done by Sardius). All verified live. **Optional:**
+submit `https://www.solenrich.com/sitemap.xml` in Google Search Console.
+
+**▶️ NEXT (recommended order, all optional / Sardius's call):**
+- **Build Eris** (needs the 3 credentials above) — the demand engine; supply is solved, demand is the frontier.
+- **Build `runner-scan`** — standalone value + upgrades Eris's call quality + first leg of `trenches-scan`.
+- **Drift day-one** (relaunch ~July, time-sensitive) — be the day-one agent intelligence layer.
+- Loose ends: gacha bazaar seed run; pay.sh PR #176 nudge (maintainer CI approval); GSC sitemap submit.
+
+---
+
+## ▶️ (prev 2026-07-23) — runner detection: `runner-scan` + `trenches-scan` → `docs/runner-detection-scope.md`
 
 Answered "how do we detect big Solana runners (Ansem/Jimothy kind) as they occur." Full scope committed;
 NOT built yet. Key framing: detection = TWO signals — **WHO is buying** (proven-winner wallets;
