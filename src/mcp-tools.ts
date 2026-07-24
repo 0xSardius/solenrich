@@ -602,6 +602,30 @@ export function createSolEnrichMcpServer(): McpServer {
   );
 
   server.registerTool(
+    'runner_scan',
+    {
+      title: 'Runner Scan (on-chain velocity)',
+      description: 'Which fresh Solana memecoins are ACCELERATING right now? Measures buy-rate acceleration (5m vs 1h, 1h vs 6h), buy pressure, volume/price velocity, holder growth and liquidity trend, then classifies each token RUNNING / IGNITING / PARABOLIC_LATE / FADING with a 0-1 score and reasoning. Flags already-ran tokens as entry risk and liquidity pulls as rugs.',
+      inputSchema: {
+        max_token_age_hours: z.number().min(0.1).max(168).default(24).describe('Max token age in hours since first pair'),
+        min_liquidity_usd: z.number().min(0).max(10_000_000).default(10_000).describe('Minimum pool liquidity in USD'),
+        min_volume_h1_usd: z.number().min(0).max(10_000_000).default(5_000).describe('Minimum 1h volume in USD'),
+        limit: z.number().int().min(1).max(25).default(15).describe('Max tokens to return'),
+      },
+    },
+    async (args) => {
+      const briefing = await invoke('runner-scan', {
+        max_token_age_hours: args.max_token_age_hours ?? 24,
+        min_liquidity_usd: args.min_liquidity_usd ?? 10_000,
+        min_volume_h1_usd: args.min_volume_h1_usd ?? 5_000,
+        limit: args.limit ?? 15,
+        format: 'llm',
+      });
+      return { content: [{ type: 'text' as const, text: briefing }] };
+    },
+  );
+
+  server.registerTool(
     'feed_latest',
     {
       title: 'SolEnrich Daily Brief',

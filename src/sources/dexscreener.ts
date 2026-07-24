@@ -3,6 +3,23 @@ import { CACHE_TTL } from '../config';
 
 // --- Types ---
 
+/** Buy/sell transaction counts for one time window. */
+export interface TxnCounts {
+  buys: number;
+  sells: number;
+}
+
+/**
+ * Per-window transaction counts. DexScreener returns this on every pair; it is
+ * the raw input to buy-rate acceleration and buy-pressure (see runner-score.ts).
+ */
+export interface DexTxns {
+  m5: TxnCounts;
+  h1: TxnCounts;
+  h6: TxnCounts;
+  h24: TxnCounts;
+}
+
 export interface DexPair {
   chainId: string;
   dexId: string;
@@ -10,13 +27,15 @@ export interface DexPair {
   baseToken: { address: string; name: string; symbol: string };
   quoteToken: { address: string; name: string; symbol: string };
   priceUsd: string;
-  volume: { h24: number; h6: number; h1: number };
-  priceChange: { h1: number; h6: number; h24: number };
+  volume: { h24: number; h6: number; h1: number; m5?: number };
+  priceChange: { h1: number; h6: number; h24: number; m5?: number };
   liquidity: { usd: number; base: number; quote: number };
   fdv: number;
   marketCap: number;
   /** Unix ms when the pair was created on-chain (DexScreener field). Absent on some pairs. */
   pairCreatedAt?: number;
+  /** Per-window buy/sell counts. Absent on some pairs (treated as zeroes downstream). */
+  txns?: DexTxns;
 }
 
 export interface DexTokenData {
@@ -133,6 +152,72 @@ export class DexScreenerClient {
 
     await this.cache.set(cacheKey, solana, 300); // 5 min cache
     return solana;
+  }
+
+  /**
+   * Candidate universe for velocity scanning: the union of DexScreener's three
+   * public discovery surfaces (latest profiles + latest boosts + top boosts),
+   * Solana only, deduped.
+   *
+   * HONEST LIMITATION: all three surfaces are pay-to-appear (a dev buys a profile
+   * or a boost), so this is a promoted-token universe, not every fresh launch.
+   * DexScreener exposes no public "all new pairs" feed. It is nonetheless the
+   * right v1 pool — promoted tokens are where retail flow actually lands — and
+   * `runner-scan` reports the bias in its output so consumers can weight it.
+   */
+  async getTrendingCandidates(): Promise<string[]> {
+    const cacheKey = 'dexscreener:trending-candidates';
+    const cached = await this.cache.get<string[]>(cacheKey);
+    if (cached) return cached;
+
+    const paths = ['token-profiles/latest/v1', 'token-boosts/latest/v1', 'token-boosts/top/v1'];
+    const settled = await Promise.allSettled(
+      paths.map((p) => fetch(`${this.baseUrl}/${p}`, { headers: { Accept: 'application/json' } })),
+    );
+
+    const mints = new Set<string>();
+    for (const r of settled) {
+      if (r.status !== 'fulfilled' || !r.value.ok) continue;
+      let raw: any;
+      try {
+        raw = await r.value.json();
+      } catch {
+        continue;
+      }
+      if (!Array.isArray(raw)) continue;
+      for (const item of raw) {
+        if (item?.chainId === 'solana' && typeof item?.tokenAddress === 'string') {
+          mints.add(item.tokenAddress);
+        }
+      }
+    }
+
+    const list = [...mints];
+    await this.cache.set(cacheKey, list, 120); // 2 min — candidate churn is fast
+    return list;
+  }
+
+  /**
+   * Batch pair lookup — `tokens/v1/solana/{mint1,mint2,...}` accepts up to 30
+   * comma-separated addresses per call, so a 45-token scan costs 2 requests
+   * instead of 45. Returns the raw pairs; callers group by `baseToken.address`.
+   */
+  async getPairsBatch(mints: string[]): Promise<DexPair[]> {
+    const out: DexPair[] = [];
+    for (let i = 0; i < mints.length; i += 30) {
+      const chunk = mints.slice(i, i + 30);
+      try {
+        const res = await fetch(`${this.baseUrl}/tokens/v1/solana/${chunk.join(',')}`, {
+          headers: { Accept: 'application/json' },
+        });
+        if (!res.ok) continue;
+        const pairs: unknown = await res.json();
+        if (Array.isArray(pairs)) out.push(...(pairs as DexPair[]));
+      } catch (err) {
+        console.warn(`[dexscreener] batch chunk failed: ${err}`);
+      }
+    }
+    return out;
   }
 
   /** Search DexScreener for tokens matching a query */

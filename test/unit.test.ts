@@ -17,6 +17,7 @@ import { lookupEntity, tagAddress, tagAddresses } from '../src/utils/entities';
 import { median, spreadPct } from '../src/utils/price-aggregator';
 import { formatResponse } from '../src/formatters/index';
 import { parseIntent } from '../src/entrypoints/query';
+import { assessRunner, computeRunnerMetrics, type RunnerScoreInput } from '../src/enrichers/runner-score';
 import { STRESS_COVERAGE } from '../agents/solscout/stress';
 import { ENDPOINT_META } from '../src/openapi';
 import { PRICING } from '../src/config';
@@ -663,5 +664,246 @@ describe('parseIntent', () => {
   // Priority: whale-watch wins over wallet
   test('whale-watch priority over wallet', () => {
     expect(parseIntent(`whale wallet ${TEST_ADDR}`).intent).toBe('whale-watch');
+  });
+});
+
+// =====================================================
+// 8. RUNNER SCORE (runner-scan velocity math)
+// =====================================================
+
+function mkRunner(over: Partial<RunnerScoreInput> = {}): RunnerScoreInput {
+  return {
+    txns: {
+      m5: { buys: 0, sells: 0 },
+      h1: { buys: 0, sells: 0 },
+      h6: { buys: 0, sells: 0 },
+      h24: { buys: 0, sells: 0 },
+    },
+    volume: { m5: 0, h1: 0, h6: 0, h24: 0 },
+    price_change: { m5: 0, h1: 0, h6: 0, h24: 0 },
+    liquidity_usd: 50_000,
+    age_hours: 4,
+    liquidity_change_pct: null,
+    holder_growth_pct: null,
+    ...over,
+  };
+}
+
+// A token ticking along at a constant rate: every ratio should land on ~1.0.
+const STEADY = mkRunner({
+  txns: {
+    m5: { buys: 10, sells: 8 },
+    h1: { buys: 120, sells: 100 },
+    h6: { buys: 720, sells: 600 },
+    h24: { buys: 2880, sells: 2400 },
+  },
+  volume: { m5: 83, h1: 1000, h6: 6000, h24: 24000 },
+  price_change: { m5: 0, h1: 1, h6: 6, h24: 20 },
+});
+
+// Buying speeding up on all three windows with demand-dominated flow.
+const ACCELERATING = mkRunner({
+  txns: {
+    m5: { buys: 40, sells: 10 },
+    h1: { buys: 200, sells: 60 },
+    h6: { buys: 600, sells: 300 },
+    h24: { buys: 1200, sells: 800 },
+  },
+  volume: { m5: 4000, h1: 30_000, h6: 90_000, h24: 150_000 },
+  price_change: { m5: 8, h1: 40, h6: 60, h24: 80 },
+});
+
+describe('computeRunnerMetrics', () => {
+  test('steady state produces ~1.0 ratios', () => {
+    const m = computeRunnerMetrics(STEADY);
+    expect(m.buy_rate_accel_m5_h1).toBeCloseTo(1.0, 1);
+    expect(m.buy_rate_accel_h1_h6).toBeCloseTo(1.0, 1);
+    expect(m.volume_accel).toBeCloseTo(1.0, 1);
+    expect(m.windows_accelerating).toBe(0);
+  });
+
+  test('acceleration is detected on every window', () => {
+    const m = computeRunnerMetrics(ACCELERATING);
+    expect(m.buy_rate_accel_m5_h1).toBeCloseTo(2.4, 1);
+    expect(m.buy_rate_accel_h1_h6).toBeCloseTo(2.0, 1);
+    expect(m.volume_accel).toBeCloseTo(2.0, 1);
+    expect(m.windows_accelerating).toBe(3);
+  });
+
+  test('buy pressure is buys over total', () => {
+    const m = computeRunnerMetrics(ACCELERATING);
+    expect(m.buy_pressure_h1).toBeCloseTo(200 / 260, 2);
+  });
+
+  test('thin samples return null rather than a noisy ratio', () => {
+    const m = computeRunnerMetrics(
+      mkRunner({ txns: { m5: { buys: 1, sells: 0 }, h1: { buys: 3, sells: 1 }, h6: { buys: 4, sells: 2 }, h24: { buys: 8, sells: 4 } } }),
+    );
+    expect(m.buy_rate_accel_m5_h1).toBeNull();
+    expect(m.buy_rate_accel_h1_h6).toBeNull();
+    expect(m.buy_pressure_h1).toBeNull();
+  });
+
+  test('price velocity is zero when price is falling', () => {
+    const m = computeRunnerMetrics(mkRunner({ price_change: { m5: -1, h1: -5, h6: 30, h24: 50 } }));
+    expect(m.price_velocity).toBe(0);
+  });
+
+  test('price velocity credits a reversal off a flat 6h', () => {
+    const m = computeRunnerMetrics(mkRunner({ price_change: { m5: 2, h1: 10, h6: 0, h24: 5 } }));
+    expect(m.price_velocity).toBe(2);
+  });
+
+  test('average trade size is volume over transaction count', () => {
+    const m = computeRunnerMetrics(
+      mkRunner({ txns: { m5: { buys: 0, sells: 0 }, h1: { buys: 60, sells: 40 }, h6: { buys: 0, sells: 0 }, h24: { buys: 0, sells: 0 } }, volume: { m5: 0, h1: 5000, h6: 0, h24: 0 } }),
+    );
+    expect(m.avg_trade_usd).toBe(50);
+  });
+});
+
+describe('assessRunner stages', () => {
+  test('steady state is QUIET', () => {
+    expect(assessRunner(STEADY).stage).toBe('QUIET');
+  });
+
+  test('multi-window acceleration is RUNNING', () => {
+    const a = assessRunner(ACCELERATING);
+    expect(a.stage).toBe('RUNNING');
+    expect(a.flags).toContain('accelerating_5m');
+    expect(a.flags).toContain('strong_buy_pressure');
+    expect(a.runner_score).toBeGreaterThan(0.6);
+  });
+
+  test('single-window acceleration is IGNITING, not RUNNING', () => {
+    const a = assessRunner(
+      mkRunner({
+        txns: { m5: { buys: 40, sells: 10 }, h1: { buys: 200, sells: 60 }, h6: { buys: 1500, sells: 500 }, h24: { buys: 3000, sells: 1500 } },
+        volume: { m5: 1000, h1: 10_000, h6: 90_000, h24: 200_000 },
+        price_change: { m5: 3, h1: 10, h6: 15, h24: 20 },
+      }),
+    );
+    expect(a.metrics.windows_accelerating).toBe(1);
+    expect(a.stage).toBe('IGNITING');
+  });
+
+  test('big 24h gain with decelerating buys is PARABOLIC_LATE', () => {
+    const a = assessRunner(
+      mkRunner({
+        txns: { m5: { buys: 5, sells: 5 }, h1: { buys: 200, sells: 100 }, h6: { buys: 900, sells: 400 }, h24: { buys: 2000, sells: 900 } },
+        volume: { m5: 500, h1: 10_000, h6: 90_000, h24: 300_000 },
+        price_change: { m5: 0, h1: 5, h6: 40, h24: 300 },
+      }),
+    );
+    expect(a.stage).toBe('PARABOLIC_LATE');
+    expect(a.flags).toContain('already_ran');
+  });
+
+  test('liquidity pull is FADING regardless of buy activity', () => {
+    const a = assessRunner({ ...ACCELERATING, liquidity_change_pct: -40 });
+    expect(a.stage).toBe('FADING');
+    expect(a.flags).toContain('liquidity_pulled');
+    // The guard must dominate: an LP pull cannot score like a runner.
+    expect(a.runner_score).toBeLessThan(assessRunner(ACCELERATING).runner_score);
+    expect(a.reasoning).toContain('rug');
+  });
+
+  test('sells dominating with a falling price is FADING', () => {
+    const a = assessRunner(
+      mkRunner({
+        txns: { m5: { buys: 2, sells: 20 }, h1: { buys: 40, sells: 160 }, h6: { buys: 400, sells: 500 }, h24: { buys: 900, sells: 1000 } },
+        volume: { m5: 500, h1: 8000, h6: 60_000, h24: 200_000 },
+        price_change: { m5: -5, h1: -30, h6: -40, h24: 10 },
+      }),
+    );
+    expect(a.stage).toBe('FADING');
+    expect(a.flags).toContain('dumping');
+    expect(a.flags).toContain('sells_dominating');
+  });
+});
+
+describe('assessRunner guards', () => {
+  test('tiny average trade size on high counts flags wash-trade risk', () => {
+    const a = assessRunner(
+      mkRunner({
+        txns: { m5: { buys: 40, sells: 40 }, h1: { buys: 400, sells: 400 }, h6: { buys: 2400, sells: 2400 }, h24: { buys: 9600, sells: 9600 } },
+        volume: { m5: 800, h1: 8000, h6: 48_000, h24: 190_000 },
+      }),
+    );
+    expect(a.flags).toContain('wash_trade_risk');
+    expect(a.reasoning).toContain('wash-traded');
+  });
+
+  test('sub-hour tokens are flagged as thin history', () => {
+    expect(assessRunner(mkRunner({ age_hours: 0.4 })).flags).toContain('thin_history');
+  });
+
+  test('thin liquidity is flagged', () => {
+    expect(assessRunner(mkRunner({ liquidity_usd: 3000 })).flags).toContain('low_liquidity');
+  });
+
+  test('holder growth lifts the score, shrinkage flags it', () => {
+    const withGrowth = assessRunner({ ...ACCELERATING, holder_growth_pct: 25 });
+    const withShrink = assessRunner({ ...ACCELERATING, holder_growth_pct: -5 });
+    expect(withGrowth.runner_score).toBeGreaterThan(withShrink.runner_score);
+    expect(withGrowth.flags).toContain('holder_growth_strong');
+    expect(withShrink.flags).toContain('holders_shrinking');
+  });
+
+  test('score always lands within 0..1', () => {
+    const cases = [STEADY, ACCELERATING, mkRunner(), { ...ACCELERATING, liquidity_change_pct: -90, holder_growth_pct: -50 }];
+    for (const c of cases) {
+      const s = assessRunner(c).runner_score;
+      expect(s).toBeGreaterThanOrEqual(0);
+      expect(s).toBeLessThanOrEqual(1);
+    }
+  });
+
+  test('a token with no activity at all scores zero and stays QUIET', () => {
+    const a = assessRunner(mkRunner());
+    expect(a.runner_score).toBe(0);
+    expect(a.stage).toBe('QUIET');
+  });
+});
+
+describe('assessRunner buy-pressure gating', () => {
+  // Regression: the first live run ranked a token churning at 43% buys ABOVE one
+  // accumulating at 85%, because raw acceleration outweighed pressure. Volume
+  // accelerating into selling is distribution, and must not score like a runner.
+  const churning = mkRunner({
+    txns: { m5: { buys: 120, sells: 160 }, h1: { buys: 900, sells: 1200 }, h6: { buys: 1200, sells: 1500 }, h24: { buys: 2000, sells: 2400 } },
+    volume: { m5: 6000, h1: 68_000, h6: 68_000, h24: 90_000 },
+    price_change: { m5: 2, h1: 20, h6: 10, h24: 30 },
+  });
+
+  test('acceleration under selling pressure stays QUIET', () => {
+    const a = assessRunner(churning);
+    expect(a.metrics.windows_accelerating).toBeGreaterThanOrEqual(2);
+    expect(a.flags).toContain('sells_dominating');
+    expect(a.stage).toBe('QUIET');
+  });
+
+  test('acceleration under selling pressure scores below accumulation', () => {
+    expect(assessRunner(churning).runner_score).toBeLessThan(assessRunner(ACCELERATING).runner_score);
+  });
+
+  test('two accelerating windows with only balanced flow is IGNITING, not RUNNING', () => {
+    const a = assessRunner(
+      mkRunner({
+        txns: { m5: { buys: 30, sells: 26 }, h1: { buys: 3020, sells: 2594 }, h6: { buys: 3020, sells: 2594 }, h24: { buys: 4000, sells: 3500 } },
+        volume: { m5: 20_000, h1: 186_000, h6: 186_000, h24: 250_000 },
+        price_change: { m5: 1, h1: 12, h6: 12, h24: 40 },
+      }),
+    );
+    expect(a.metrics.buy_pressure_h1).toBeLessThan(0.55);
+    expect(a.metrics.buy_pressure_h1).toBeGreaterThanOrEqual(0.5);
+    expect(a.stage).toBe('IGNITING');
+  });
+
+  test('a big 24h run is flagged even when buying is still accelerating', () => {
+    const a = assessRunner({ ...ACCELERATING, price_change: { m5: 8, h1: 40, h6: 60, h24: 965 } });
+    expect(a.stage).not.toBe('PARABOLIC_LATE');
+    expect(a.flags).toContain('up_big_24h');
+    expect(a.reasoning).toContain('965%');
   });
 });

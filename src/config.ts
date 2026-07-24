@@ -63,6 +63,7 @@ export const PRICING = {
   'trending-signals': '0.050',
   'smart-money-flow': '0.100',
   'smart-money-trenches': '0.05',
+  'runner-scan': '0.04',
   'feed-latest': '0.005',
   'consensus-signal': '0.005',
   'portfolio-history': '0.006',
@@ -92,6 +93,7 @@ export const CACHE_TTL = {
   trendingSignals: 300,  // 5 minutes — trending shifts fast
   smartMoney: 600,       // 10 minutes — smart money shifts over days
   trenches: 120,         // 2 minutes — fresh-launch buys are a live signal
+  runnerScan: 60,        // 1 minute — velocity is the whole point; stale = wrong
   feedLatest: 86_400,    // 24 hours — daily intelligence brief, lazy-populated
   gacha: 60,             // 1 minute — pack EV/stock drift as packs are opened
 } as const;

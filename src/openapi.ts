@@ -386,6 +386,20 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'runner-scan': {
+    summary: 'Detect Solana memecoins running on-chain right now',
+    description: 'Finds fresh Solana memecoins whose on-chain buying is accelerating — the signature of a run in progress, not the lagging fact that price already moved. Measures buy-rate acceleration (5m vs 1h, 1h vs 6h), buy pressure, volume acceleration, price velocity, holder growth and liquidity trend. Classifies RUNNING / IGNITING / PARABOLIC_LATE / FADING with a 0-1 score plus reasoning. Flags wash-trade smell and liquidity pulls rather than dressing them up as momentum.',
+    schema: {
+      type: 'object',
+      properties: {
+        max_token_age_hours: { type: 'number', minimum: 0.1, maximum: 168, default: 24, description: 'Max token age in hours since first pair (fresh but past block-0)' },
+        min_liquidity_usd: { type: 'number', minimum: 0, maximum: 10000000, default: 10000, description: 'Minimum aggregate pool liquidity in USD — filters dust' },
+        min_volume_h1_usd: { type: 'number', minimum: 0, maximum: 10000000, default: 5000, description: 'Minimum 1h volume in USD to count as active' },
+        limit: { type: 'integer', minimum: 1, maximum: 25, default: 15, description: 'Max tokens to return' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'feed-latest': {
     summary: 'Fetch the daily SolEnrich Solana intelligence brief',
     description: 'Pre-computed ranking of trending Solana tokens with composite-signal scoring. Cached 24h, lazy-populated on cache miss. Designed for recurring polling at lower per-call cost than direct orchestration. Pass `since` (ISO 8601) to short-circuit on no-change polls.',

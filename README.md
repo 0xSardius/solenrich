@@ -15,7 +15,7 @@ curl https://api.solenrich.com/health
 # Agent card (A2A discovery)
 curl https://api.solenrich.com/.well-known/agent.json
 
-# List all 33 endpoints
+# List all 34 endpoints
 curl https://api.solenrich.com/entrypoints
 
 # Full API documentation (agent-readable JSON)
@@ -93,11 +93,12 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 | `trending-signals` | $0.050 | `min_liquidity_usd`, `max_risk_score`, `limit`, `format` | Composite ranking of trending tokens: discovery + whale-watch + risk scoring, with reasoning |
 | `smart-money-flow` | $0.100 | `wallets[]`, `min_win_rate`, `lookback_days`, `format` | Scores seed wallets, filters to winners, surfaces tokens they're accumulating + clusters |
 
-### Trenches — Memecoin Intelligence (1 endpoint)
+### Trenches — Memecoin Intelligence (2 endpoints)
 
 | Endpoint | Price | Input | Description |
 |----------|-------|-------|-------------|
 | `smart-money-trenches` | $0.05 | `hours_back`, `max_token_age_hours`, `min_buyers`, `limit`, `format` | Which proven-winner wallets are aping fresh (<6h) launches right now — vetted realized-PnL seed set, bot-guarded, ranked by distinct smart buyers + recency |
+| `runner-scan` | $0.04 | `max_token_age_hours`, `min_liquidity_usd`, `min_volume_h1_usd`, `limit`, `format` | Which fresh tokens are *accelerating* right now — buy-rate acceleration (5m vs 1h, 1h vs 6h), buy pressure, volume/price velocity, holder growth, liquidity trend. Stages RUNNING / IGNITING / PARABOLIC_LATE / FADING with a 0–1 score. Flags already-ran tokens as entry risk and LP pulls as rugs |
 
 ### Collectibles / RWA (1 endpoint)
 
@@ -213,7 +214,7 @@ SolEnrich exposes an MCP endpoint for Claude Desktop, Claude Code, and Cursor. *
 }
 ```
 
-27 tools — every endpoint is exposed as an MCP tool (wallet/token light+full variants fold into `depth`/`include_holders` toggles). Highlights: `enrich_wallet`, `enrich_token`, `due_diligence`, `whale_watch`, `perps_cross_venue_funding`, `trending_signals`, `smart_money_flow`, `check_alerts`.
+32 tools — every endpoint is exposed as an MCP tool (wallet/token light+full variants fold into `depth`/`include_holders` toggles). Highlights: `enrich_wallet`, `enrich_token`, `due_diligence`, `whale_watch`, `perps_cross_venue_funding`, `trending_signals`, `smart_money_flow`, `check_alerts`.
 
 ## Free Demo
 

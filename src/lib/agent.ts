@@ -35,6 +35,7 @@ import { JupiterPerpsClient } from "../sources/jupiter-perps";
 import { TrendingSignalsAnalyzer } from "../enrichers/trending-signals";
 import { SmartMoneyAnalyzer } from "../enrichers/smart-money-flow";
 import { TrenchesSmartMoneyAnalyzer } from "../enrichers/trenches-smart-money";
+import { RunnerDetector } from "../enrichers/runner-detector";
 
 // Entrypoint registration
 import { registerWalletEntrypoints } from "../entrypoints/wallet";
@@ -68,6 +69,7 @@ import { GachaAnalyzer } from "../enrichers/gacha-analyzer";
 import { registerGachaEntrypoint } from "../entrypoints/gacha";
 import { registerOrchestrationEntrypoints } from "../entrypoints/orchestration";
 import { registerTrenchesEntrypoints } from "../entrypoints/trenches";
+import { registerRunnerEntrypoint } from "../entrypoints/runner";
 import { registerFeedEntrypoint } from "../entrypoints/feed";
 import { FeedStore } from "../enrichers/feed-store";
 import { registerSignalEntrypoint } from "../entrypoints/signals";
@@ -322,6 +324,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'whale-watch': ['solana', 'whale-tracking', 'smart-money', 'onchain', 'ai-agents'],
     'smart-money-flow': ['solana', 'smart-money', 'netflow', 'whale-tracking', 'trending'],
     'smart-money-trenches': ['solana', 'memecoin', 'smart-money', 'new-tokens', 'trenches'],
+    'runner-scan': ['solana', 'memecoin', 'momentum', 'token-discovery', 'trenches'],
     'trending-signals': ['solana', 'trending', 'smart-money', 'new-tokens', 'signals'],
     'consensus-signal': ['solana', 'agent-attention', 'consensus', 'signals', 'smart-money'],
     'query': ['solana', 'onchain-data', 'natural-language', 'ai-agents', 'defi'],
@@ -640,6 +643,13 @@ registerOrchestrationEntrypoints(addEntrypoint, trendingSignalsAnalyzer, smartMo
 // docs/trenches-scope.md — first trenches endpoint, Eris's first signal).
 const trenchesSmartMoney = new TrenchesSmartMoneyAnalyzer(helius, dexscreener, copyTradeAnalyzer, cache);
 registerTrenchesEntrypoints(addEntrypoint, trenchesSmartMoney);
+
+// runner-scan — the "WHAT is the token doing" half of runner detection
+// (docs/runner-detection-scope.md). On-chain velocity: accelerating buy rate,
+// buy pressure, volume/price velocity, holder growth, liquidity trend. Pairs
+// with smart-money-trenches (the "WHO is buying" half); both feed trenches-scan.
+const runnerDetector = new RunnerDetector(dexscreener, cache, birdeye);
+registerRunnerEntrypoint(addEntrypoint, runnerDetector);
 
 // NL query — routes to the right enricher(s). Single-intent questions hit one
 // enricher; compound questions ("should I buy X?", "wallet deep dive", "what's
@@ -1038,6 +1048,11 @@ app.get('/docs', (c) => {
         price: '0.05',
         input: { hours_back: 'number 1-48 (default 12) — how far back to scan seed buys', max_token_age_hours: 'number 1-72 (default 6) — max token age to count as fresh', min_buyers: 'number 1-14 (default 1) — min distinct smart buyers per token', limit: 'number 1-25 (default 10)', format: 'json | llm | both' },
         description: 'Which proven-winner wallets are aping fresh memecoin launches right now, and what are they buying? Vetted seed set of realized-PnL winners + conviction holders (bot-filtered, live cadence re-checked every scan), recent buys overlaid against token launch times, ranked by distinct smart buyers + recency. Attention signal for pre-ape research — pair with due-diligence.',
+      },
+      'runner-scan': {
+        price: '0.04',
+        input: { max_token_age_hours: 'number 0.1-168 (default 24)', min_liquidity_usd: 'number (default 10000)', min_volume_h1_usd: 'number (default 5000)', limit: 'number 1-25 (default 15)', format: 'json | llm | both' },
+        description: 'Detects fresh Solana memecoins whose on-chain buying is ACCELERATING — the signature of a run in progress, not the lagging fact that price is already up. Metrics: buy-rate acceleration (5m vs 1h, 1h vs 6h — the second derivative), buy pressure (buys/(buys+sells)), volume acceleration, price velocity, holder growth, liquidity trend. Stages: RUNNING (accelerating across 2+ windows), IGNITING (1 window, unconfirmed), PARABOLIC_LATE (already ran, buying decelerating — entry risk), FADING (sellers in control or LP pulled), QUIET. Wash-trade heuristic via average trade size. The velocity half of runner detection; pair with smart-money-trenches for the wallet half.',
       },
       'feed-latest': {
         price: '0.005',

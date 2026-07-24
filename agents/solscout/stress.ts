@@ -336,6 +336,22 @@ export const ENDPOINTS: Array<{
     ],
   },
   {
+    key: 'runner-scan',
+    // Velocity depends entirely on live market conditions — a genuinely quiet
+    // trenches returns zero runners and that is a correct result, so checks are
+    // structural. Wide age window improves the odds of a populated run.
+    input: { max_token_age_hours: 48, min_liquidity_usd: 5000, min_volume_h1_usd: 2000, limit: 10, format: 'both' },
+    timeout: 60000,
+    checks: [
+      { name: 'has runners array', test: (d) => Array.isArray(d.runners) },
+      { name: 'has candidates_scanned', test: (d) => typeof d.candidates_scanned === 'number' && d.candidates_scanned > 0, detail: (d) => `scanned=${d.candidates_scanned}, passed=${d.passed_filters}, runners=${d.runners?.length}` },
+      { name: 'has stage_counts', test: (d) => d.stage_counts != null && typeof d.stage_counts.RUNNING === 'number' },
+      { name: 'runners well-formed', test: (d) => d.runners.every((r: any) => typeof r.runner_score === 'number' && r.runner_score >= 0 && r.runner_score <= 1 && typeof r.stage === 'string' && r.metrics != null && typeof r.reasoning === 'string') },
+      { name: 'has caveats', test: (d) => Array.isArray(d.caveats) && d.caveats.length > 0 },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Runner Scan') },
+    ],
+  },
+  {
     key: 'feed-latest',
     // Daily brief endpoint. Lazy-cached, so first run after deploy hits
     // cache-miss (~10-15s); subsequent runs hit cache (<1s).

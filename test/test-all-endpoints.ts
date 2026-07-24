@@ -266,6 +266,21 @@ check('has llm_summary', typeof gacha.body?.output?.llm_summary === 'string' && 
 console.log(`  ⏱ ${gacha.ms}ms\n`);
 
 // ============================================================
+// 15. runner-scan
+// ============================================================
+console.log('━━━ 15. runner-scan ━━━');
+const runner = await invoke('runner-scan', { max_token_age_hours: 48, min_liquidity_usd: 5000, min_volume_h1_usd: 2000, limit: 10, format: 'both' }, 60000);
+check('returns 200', runner.status === 200, `got ${runner.status}`);
+check('has runners (array)', Array.isArray(runner.body?.output?.runners));
+check('scanned candidates', typeof runner.body?.output?.candidates_scanned === 'number' && runner.body.output.candidates_scanned > 0);
+check('has stage_counts', typeof runner.body?.output?.stage_counts?.RUNNING === 'number');
+check('runner_score in range', (runner.body?.output?.runners ?? []).every((r: any) => r.runner_score >= 0 && r.runner_score <= 1));
+check('each runner has a stage', (runner.body?.output?.runners ?? []).every((r: any) => ['IGNITING', 'RUNNING', 'PARABOLIC_LATE', 'FADING', 'QUIET'].includes(r.stage)));
+check('has caveats', Array.isArray(runner.body?.output?.caveats) && runner.body.output.caveats.length > 0);
+check('has llm_summary', typeof runner.body?.output?.llm_summary === 'string' && runner.body.output.llm_summary.includes('Runner Scan'));
+console.log(`  ⏱ ${runner.ms}ms\n`);
+
+// ============================================================
 // Summary
 // ============================================================
 console.log('═══════════════════════════════════════════════════');
