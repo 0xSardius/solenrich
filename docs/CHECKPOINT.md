@@ -3,6 +3,46 @@
 ## Last session date
 2026-07-24
 
+## ▶️ RESUME HERE (2026-07-24, later session) — `runner-scan` SHIPPED (34 endpoints)
+
+Built the first leg of runner detection. **`runner-scan` ($0.04) is live in the repo, committed +
+pushed (`4f9a70b`). 34 paid endpoints.** Full as-built notes appended to the top of
+`docs/runner-detection-scope.md`.
+
+**What it does:** answers "which fresh tokens are *accelerating* right now" — the second derivative of
+buying, not the lagging fact that price already moved. Buy-rate acceleration (5m vs 1h, 1h vs 6h), buy
+pressure, volume acceleration, price velocity, holder growth, liquidity trend → weighted 0–1 score +
+stage (RUNNING / IGNITING / PARABOLIC_LATE / FADING / QUIET) + flags + reasoning.
+
+**Three things worth remembering:**
+1. **Candidate pool is pay-to-appear.** DexScreener has no public "all new pairs" feed, so the pool is
+   latest-profiles + latest-boosts + top-boosts (~45 mints). The response states this bias in
+   `candidate_source` instead of implying full coverage. If we ever want unbiased coverage, that needs
+   a different feed (pump.fun/PumpPortal — already the planned Eris ingestion source).
+2. **The buy-pressure gate was found by live testing, not design.** First run ranked a token churning
+   at 43% buys ABOVE one accumulating at 85%, because raw acceleration outweighed pressure in the
+   composite. Acceleration under selling pressure is distribution — now a 0.4× penalty, and it can't
+   reach RUNNING/IGNITING. Worth keeping as a lesson: the scoring looked right on paper and was wrong
+   on real data within one scan.
+3. **Holder growth + liquidity trend are null on first sight** of any mint and fill in on repeat scans
+   ≥5 min apart (`runner:snap:{mint}`, 2h TTL). Like `consensus-signal`, the rails compound with
+   traffic. Birdeye lookups capped at top-6 by volume (free tier ~1 rps).
+
+**Verified:** tsc clean · 196/196 unit (26 new for the scoring math) · live E2E through the server
+(45 candidates → 10 passing, 3.0s, defaults applied, all discovery surfaces carry it: /entrypoints,
+/docs, /openapi.json, /.well-known/x402, /llms.txt).
+
+**▶️ IMMEDIATE FOLLOW-UP:** paid seed run to catalog `runner-scan` (and still-pending `gacha-ev-scan`)
+in the CDP bazaar — `bun run agents/solscout/index.ts --target production --paid --mode stress`.
+All-optional inputs, so it auto-catalogs once a payment settles. Do this after Railway deploys.
+
+**▶️ NEXT:** Eris (the demand engine — needs BotFather token, calls channel, funded keypair from
+Sardius) · then `attention-momentum` (thin extension of signal-tracker) · then `trenches-scan` (the
+three-signal orchestrator that composes smart-money-trenches + runner-scan + attention-momentum) ·
+Drift day-one prep (time-sensitive).
+
+---
+
 ## ▶️ RESUME HERE (2026-07-24) — multi-thread session: OOM fixed, gacha shipped, runner detection scoped, SEO solid
 
 Five workstreams this session, all committed + pushed + verified live (through `65db725` + a Vercel

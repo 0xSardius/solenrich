@@ -29,7 +29,34 @@ different game we don't play). "As it occurs" = early in the move, not first blo
 
 ---
 
-## Endpoint 1 — `runner-scan` (on-chain velocity/runner detector) — BUILD FIRST
+## Endpoint 1 — `runner-scan` (on-chain velocity/runner detector) — ✅ SHIPPED 2026-07-24 (`4f9a70b`)
+
+**As-built deltas from the scope below (all deliberate, all verified live):**
+- **Candidate pool** = union of DexScreener latest-profiles + latest-boosts + top-boosts (~45 unique
+  Solana mints). DexScreener has no public "all new pairs" feed, so this is a **pay-to-appear pool**;
+  the response says so in `candidate_source` rather than implying full coverage. Batch lookup
+  (`tokens/v1/solana/{≤30 comma-separated mints}`) makes a 45-token scan cost 2 requests.
+- **Fifth stage `QUIET`** added to the scoped four. Forcing every token into IGNITING/RUNNING/LATE/
+  FADING would have been dishonest — most tokens are simply not doing anything.
+- **Buy-pressure gate (not in the original scope, added after live testing).** First live run ranked a
+  token churning at 43% buys ABOVE one accumulating at 85%, because raw acceleration outweighed
+  pressure. Acceleration while sellers dominate is *distribution*, so it now takes a 0.4× penalty and
+  cannot reach RUNNING/IGNITING. RUNNING needs ≥2 accelerating windows AND ≥0.55 pressure; IGNITING
+  needs ≥1 window AND ≥0.50.
+- **`up_big_24h` flag** fires on any ≥150% 24h gain even when buying is still accelerating (so the
+  stage is not LATE) — a buyer arriving at +965% is taking a different trade and should be told.
+- **Holder growth + liquidity trend need a prior snapshot**, so they are null on first sight of a mint
+  and fill in on repeat scans ≥5 min apart (`runner:snap:{mint}`, 2h TTL). Birdeye holder lookups are
+  capped at the top 6 candidates by 1h volume (free tier is ~1 rps); no stale carry-forward.
+- Live: 45 candidates → 10–11 passing at default filters, ~3.0s cold. Defaults from the scope
+  (24h / $10K liq / $5K 1h vol) were validated empirically — they give a healthy funnel, not zero.
+
+**Still open:** paid seed run to catalog it in the CDP bazaar (all-optional inputs, so it should
+auto-catalog once a payment settles).
+
+---
+
+## Endpoint 1 — original scope
 
 **What:** scans fresh/trending tokens and flags the ones whose on-chain activity is *accelerating* — the
 signature of a runner in progress — while still early enough to matter. Standalone value AND the "WHAT"

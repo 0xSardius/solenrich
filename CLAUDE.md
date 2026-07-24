@@ -487,6 +487,7 @@ Memecoins are the most agent-driven segment on Solana (>70% of DEX volume on pea
 
 **Sequencing:** adjacent vertical, doesn't block perps. Finish Flash on-chain (close out perps venue coverage) first, then open the trenches leading with dev-reputation + insider-detection.
 **Status 2026-07-07:** Flash on-chain COMPLETE; trenches opened — `smart-money-trenches` SHIPPED (`ae8ebae`, 32 endpoints, bazaar-cataloged same day). Next trenches builds: Eris bot → `dev-reputation` + `token-x-ray` → `trenches-scan`.
+**Status 2026-07-24:** `runner-scan` SHIPPED (`4f9a70b`, $0.04, **34 endpoints**) — the on-chain velocity/"WHAT is the token doing" leg, pairing with `smart-money-trenches` ("WHO is buying"). As-built notes at the top of `docs/runner-detection-scope.md`. Remaining trenches sequence: Eris bot → `attention-momentum` (thin signal-tracker extension) → `trenches-scan` (three-signal orchestrator) → `dev-reputation` + `token-x-ray`.
 
 ### Distribution strategy: dual-network accepts + discovery sprint (LOCKED 2026-07-07)
 
