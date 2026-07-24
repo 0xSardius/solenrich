@@ -36,10 +36,71 @@ stage (RUNNING / IGNITING / PARABOLIC_LATE / FADING / QUIET) + flags + reasoning
 in the CDP bazaar — `bun run agents/solscout/index.ts --target production --paid --mode stress`.
 All-optional inputs, so it auto-catalogs once a payment settles. Do this after Railway deploys.
 
-**▶️ NEXT:** Eris (the demand engine — needs BotFather token, calls channel, funded keypair from
-Sardius) · then `attention-momentum` (thin extension of signal-tracker) · then `trenches-scan` (the
-three-signal orchestrator that composes smart-money-trenches + runner-scan + attention-momentum) ·
-Drift day-one prep (time-sensitive).
+---
+
+## ⚠️ ERIS VIABILITY — MEASURED 2026-07-24. **DO NOT BUILD ERIS AS SCOPED.**
+
+Sardius asked whether Eris could earn income. Before modelling revenue I measured the input that caps
+everything downstream — Eris's call engine triggers on "a vetted seed buys a fresh token," so that rate
+is the ceiling. **Measured against live chain data, it is far too low to support the product.**
+
+**The measurement (72h window, all 14 seeds, `TrenchesSmartMoneyAnalyzer` run directly):**
+
+| Metric | Result |
+|---|---|
+| Total buys | 26 (0.62/wallet/day) |
+| Buys on tokens <48h old | 10 |
+| **Distinct fresh tokens (= raw trigger rate)** | **2 over 72h** |
+| Tokens with ≥2 smart buyers (consensus) | **0** |
+| Seeds with ZERO transactions in 72h | **5 of 14** |
+| Longest-dormant seed (`HeGgXZ`) | **22 days** |
+
+**Not a measurement artifact — verified.** `getRecentBuys` caps at 100 signatures/wallet; I checked the
+span of every seed's 100-sig sample: minimum 79.7h, so **0 of 14 wallets are truncated** at a 72h window.
+The 24h run agreed independently (13 buys, 2 distinct fresh tokens, 0 consensus).
+
+**So Eris would post ~1–3 calls/WEEK after the safety gate and ACT threshold.** A calls channel at that
+frequency cannot build an audience, and every monetization path is gated on audience.
+
+**Self-monetization forecast (referral path is the most quantifiable; best rates BullX 35% / Photon 30%
+of a 0.5% fee ≈ 0.15% of referred volume):**
+`revenue = calls/mo × subs × click-through × avg position × 2 (round trip) × 0.0015`
+- Measured trajectory (8 calls/mo, 100 subs, 10%, $100) → **~$24/mo**
+- Optimistic (12, 300 subs, 15%, $150) → **~$243/mo**
+- Bull, needs real marketing (20, 2,000 subs, 15%, $200) → ~$3,600/mo
+Subscriptions need a 3–6mo track record first and are ruled out by PRD §2 moderation posture;
+Telegram ad share needs 1,000+ subs and pays trivially at that size.
+**Realistic 6-month self-monetization: $0–150/mo, most likely under $50** — against ~2.5 build sessions,
+~$15/mo infra, and an ongoing posting/moderation commitment. **Does not pencil as an income play.**
+
+**PRD corrections required** (`agents/eris/eris-prd.md`):
+- §4.1 says "14 active + 3 conviction holders (17 addresses)". **Actual config is 11 + 3 = 14.**
+- §10 lists seed decay and trigger volume as *unknown risks*. Both are now **measured and confirmed bad**.
+
+**THE CONSTRAINT IS FIXABLE — and the fix is cheap. Do this BEFORE any Eris code:**
+1. **Widen the seed set ~10× (14 → 100–200 wallets).** Bootstrap tooling already exists
+   (`test/trenches-{build,vet}-seeds.ts` + Birdeye leaderboard). Triggers scale ~linearly → ~5–7
+   candidates/day, which IS channel-viable. Mostly data gathering, not new code. **This independently
+   improves the `smart-money-trenches` endpoint we already sell.**
+2. **Add `runner-scan` (shipped today) as a second, independent trigger** — fires on market velocity
+   regardless of seed dormancy, decoupling the channel from wallet activity entirely.
+3. **Automate seed refresh** — decay is now measured at 5/14 dormant in 18 days. The PRD's manual-sync
+   rule will not hold.
+
+**Meta-lesson worth keeping:** this took ~10 minutes of querying our own data and changed the answer
+more than building the thing would have. The PRD's "shadow mode" was Phase 8 (last); the falsifiable
+question belongs FIRST. Recommended restructuring if Eris proceeds: build ingest + pipeline + verdict +
+outcome tracking ONLY (no Telegram, no channel), run headless ~2 weeks logging what it *would* have
+called and how those did → then decide.
+
+**▶️ NEXT (revised):**
+- **Seed-set expansion + re-measure the trigger rate** — the gate on Eris. Offered to Sardius, awaiting go.
+- Then, only if the rate clears: Eris headless-first (needs BotFather token, calls channel, funded keypair).
+- Independent of Eris: `attention-momentum` (thin signal-tracker extension) → `trenches-scan` (composes
+  smart-money-trenches + runner-scan + attention-momentum) · Drift day-one prep (time-sensitive).
+- **Demand-side alternatives raised but not chosen:** the collaborator already building on `due-diligence`
+  (a real external lead — status unknown, worth chasing) and the T54 Trustline data-partnership pitch
+  (B2B recurring, would dwarf pay-per-call). Both are shorter paths to first revenue than Eris.
 
 ---
 
