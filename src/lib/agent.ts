@@ -154,7 +154,10 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
   // Clone before next() — payment middleware + handler consume the body stream.
   let reqClone: Request | null = null;
   try { reqClone = c.req.raw.clone(); } catch { reqClone = null; }
-  const xPaymentHeader = c.req.header('x-payment');
+  // x402 v2 sends the payment in `payment-signature`; v1 used `x-payment`.
+  // Reading only the v1 name silently IP-attributed every v2 payer until
+  // 2026-08-02 (found via the paid-200-attributed-to-IP diagnostic).
+  const xPaymentHeader = c.req.header('payment-signature') ?? c.req.header('x-payment');
   const authHeader = c.req.header('authorization');
   const forwardedFor = c.req.header('x-forwarded-for');
 

@@ -28,6 +28,7 @@ function describeShape(decoded: any): string {
 }
 
 export function extractCaller(
+  /** Payment header value — x402 v2 `payment-signature` or v1 `x-payment`; both carry the same base64 JSON envelope. */
   xPayment: string | undefined,
   auth: string | undefined,
   forwardedFor: string | undefined,
