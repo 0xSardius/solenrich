@@ -47,6 +47,29 @@ usage-billed RAM means fixing leaks (not upgrading) is what shrinks the bill. Ex
   The runner-scan repeat user (`38.75.42.130`) should resolve to a wallet on their next call.
 - Requests panel: 108.8K requests/7d total — overwhelmingly crawlers/probes, not paid traffic.
 
+### 3. Housekeeping closed out same session
+
+- **CDP bazaar now 34/34:** seeded `gacha-ev-scan` with one paid SolScout call (`--only` flag,
+  ~$0.02); cataloged within ~12 min. All 34 endpoints discoverable, dual-network.
+- Site/docs/README verified current (landing docs.html renders live /docs — can't go stale).
+- 3 runner-scan tweet drafts delivered to Sardius (mechanism / lesson-learned / traction angles).
+- Session commits: `5e6d24b` (dispatcher) → `788f974` (docs) → `5ae8e3d` (payer extraction) →
+  `71281ea` (v2 header) → `9b480a0` (docs). Total verification spend ~$0.045 USDC.
+
+### ▶️ NEXT SESSION QUEUE (in order)
+
+1. **Watch items first:** Railway memory graph should be FLAT (~300-500MB) — if it climbs, new leak,
+   diagnose fresh. `/metrics` callers should start showing `x402:<wallet>` identities — check who
+   the runner-scan repeat user is, then consider enriching that wallet with our own endpoints.
+2. **`attention-momentum`** (~1 session) — thin signal-tracker extension, third trenches signal.
+   Traffic-gated caveat now lifted (real users exist).
+3. **`trenches-scan`** (~1 session) — orchestrator composing runner-scan + smart-money-trenches +
+   attention-momentum. Premium price ($0.05-0.10). Direct upsell to the demonstrated runner-scan demand.
+4. **Drift relaunch status check** — was "before July 2026", now overdue; day-one integration window
+   was flagged time-sensitive.
+5. Parked: Eris (blocked on seed-set expansion + trigger-rate re-measure), Base-side paid E2E,
+   `dev-reputation` + `token-x-ray`.
+
 ---
 
 ## Prior session (2026-07-24) — `runner-scan` SHIPPED (34 endpoints)
