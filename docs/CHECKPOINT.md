@@ -1,9 +1,47 @@
 # Session Checkpoint
 
 ## Last session date
-2026-07-24
+2026-08-02
 
-## ▶️ RESUME HERE (2026-07-24, later session) — `runner-scan` SHIPPED (34 endpoints)
+## ▶️ RESUME HERE (2026-08-02) — OOM sawtooth fixed for real (`5e6d24b`) + FIRST ORGANIC USERS
+
+**Two headlines this session:**
+
+### 1. The Railway OOM recurred post-c48acde — now fixed at the root
+
+The 2026-07-21 fix killed the GET-SSE leak but the memory graph still showed a clean **0→8GB
+sawtooth every ~3 days** (+67MB/h with `in-flight: none`). $19.62 of the $20.18 monthly bill was
+leaked RAM. Residual cause: building a 32-tool McpServer + transport **per POST** retained
+~1.5-2MB/request under Bun, and MCP directory crawlers now send ~1K POSTs/day (one IP: 331 in 10h).
+
+**Fix (`5e6d24b`):** `src/mcp-tools.ts` → plain-data `MCP_TOOLS` registry built once at boot
+(stdio server iterates it, unchanged); new `src/lib/mcp-http.ts` = stateless JSON-RPC dispatcher
+(initialize/ping/tools/list/tools/call/notifications, schemas precomputed via zod v4
+`z.toJSONSchema`); POST /mcp no longer touches the MCP SDK. Dockerfile pinned `oven/bun:1.3.14`
+(Bun's native leak fix PR #30875 not yet in stable — bump when released).
+**Verified:** 3,000 crawler-style POSTs = RSS 316→384MB FLAT (old code: ~4.5-6GB retained);
+206/206 tests; tsc clean; real client flow (initialize → tools/list 32 tools → tools/call) live.
+
+**▶️ VERIFY POST-DEPLOY:** Railway memory graph must go flat (~300-500MB). If it still climbs,
+the leak is NOT /mcp — diagnose fresh, don't assume. **Plan-tier decision:** stay on Hobby;
+usage-billed RAM means fixing leaks (not upgrading) is what shrinks the bill. Expect ~$1-2/mo.
+
+### 2. First organic users (from Redis per-day metrics, last 12 days)
+
+5-6 distinct external callers, ~55 calls/week, baseline was 0 organic on 2026-07-07:
+- **`38.75.42.130` — repeat `runner-scan` user, active 4 of the last 6 days.** runner-scan
+  (shipped Jul 24) is already the top endpoint (23 calls).
+- **`34.77.238.249` — systematically exploring the API** (whale-watch, batch-enrich, copy-trade,
+  smart-money-flow, wallet-history, hyperliquid-smart-money, DD, token enrichment) — looks like
+  an agent integration in progress.
+- Others: 91.196.220.253/.251 (Jul 25-26), 45.132.159.214, 18.217.112.104 (gacha-ev-scan).
+- **Data gap:** several paid-endpoint 200s tracked as `ip:` fallback or `x402:unknown` — payer
+  extraction isn't catching everyone; worth a look to identify who these agents are.
+- Requests panel: 108.8K requests/7d total — overwhelmingly crawlers/probes, not paid traffic.
+
+---
+
+## Prior session (2026-07-24) — `runner-scan` SHIPPED (34 endpoints)
 
 Built the first leg of runner detection. **`runner-scan` ($0.04) is live in the repo, committed +
 pushed (`4f9a70b`). 34 paid endpoints.** Full as-built notes appended to the top of
