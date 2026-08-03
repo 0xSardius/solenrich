@@ -1420,10 +1420,9 @@ app.get("/agent-card-extended", (c) => {
   });
 });
 
-// --- MCP over HTTP (Streamable HTTP transport) ---
+// --- MCP over HTTP (stateless JSON-RPC dispatcher) ---
 
-import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
-import { createSolEnrichMcpServer } from '../mcp-tools';
+import { dispatchMcpRequest, MCP_PARSE_ERROR } from './mcp-http';
 import { cors } from 'hono/cors';
 
 // CORS for MCP clients. Stateless mode only accepts POST (+ OPTIONS preflight);
@@ -1435,35 +1434,25 @@ app.use('/mcp', cors({
   exposeHeaders: ['mcp-session-id', 'mcp-protocol-version'],
 }));
 
-// Stateless MCP endpoint — fresh server per request.
+// Stateless MCP endpoint — shared boot-time tool registry, zero per-request allocation.
 //
-// OOM root cause (confirmed + reproduced 2026-07-21, see docs/oom-rootcause-2026-07-21.md):
-// the previous `app.all` leaked a full server graph (transport + 30-tool McpServer + Ajv)
-// on every /mcp hit, two ways —
-//  1. GET opened a standalone SSE ReadableStream the SDK never closes (dead weight in
-//     stateless mode: no session, no eventStore, nothing to push), pinning the graph until
-//     GC that never came. Crawlers probing /mcp after the Jul directory submissions drove
-//     RSS to the 8GB Railway cap.
-//  2. The only teardown was an 'abort' listener, which fires solely on premature disconnect —
-//     never on normal completion — so finished POSTs leaked too.
-// Fix: reject non-POST (kills 1), buffer responses via enableJsonResponse so nothing streams
-// open, and close transport+server in a finally so cleanup always runs (kills 2).
+// History (docs/oom-rootcause-2026-07-21.md): the original `app.all` handler leaked a
+// full server graph per /mcp hit (GET SSE never closed + no cleanup on completed POSTs)
+// and OOM'd Railway at 8GB. The 2026-07-21 fix (405 non-POST + buffered JSON + teardown
+// in finally) killed the fast leak, but constructing a 32-tool McpServer + transport per
+// POST still retained ~1.5-2MB/request under Bun — directory crawlers (~1K POSTs/day)
+// rebuilt the sawtooth over ~3 days (observed 2026-08-02). The dispatcher allocates
+// nothing per request: tool schemas, JSON Schemas, and handlers are module-level.
 app.post('/mcp', async (c) => {
-  const transport = new WebStandardStreamableHTTPServerTransport({
-    // Buffer the full JSON-RPC response instead of holding an SSE stream open.
-    // Stateless request/response needs no server-push channel, and a buffered
-    // response is safe to tear down the instant handleRequest resolves.
-    enableJsonResponse: true,
-  });
-  const mcpServer = createSolEnrichMcpServer();
+  let body: unknown;
   try {
-    await mcpServer.connect(transport);
-    return await transport.handleRequest(c.req.raw);
-  } finally {
-    // Response is fully materialized by now (JSON mode) — closing does not truncate it.
-    await transport.close().catch(() => {});
-    await mcpServer.close().catch(() => {});
+    body = await c.req.json();
+  } catch {
+    return c.json(MCP_PARSE_ERROR, 400);
   }
+  const response = await dispatchMcpRequest(body);
+  if (response === null) return c.body(null, 202); // notification(s) only
+  return c.json(response);
 });
 
 // Any other method (GET SSE probe, DELETE session-teardown) is meaningless in stateless
