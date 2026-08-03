@@ -77,8 +77,6 @@ import { SignalTracker } from "../enrichers/signal-tracker";
 import { registerAlertEntrypoint } from "../entrypoints/alerts";
 import { AlertChecker } from "../enrichers/alert-checker";
 import { CONFIG, PRICING } from "../config";
-import { VersionedTransaction } from "@solana/web3.js";
-import { createHash } from "node:crypto";
 
 // --- Agent setup ---
 
@@ -109,37 +107,10 @@ const metricsCache = cache;
 const METRICS_TTL = 90 * 86400; // 90 days for daily aggregates
 const HOURLY_TTL = 48 * 3600;   // 48h for hourly buckets — enough for 24h window + prior-window comparison
 
-/**
- * Best-effort caller identity for distinct-caller metrics.
- * x402: the payer wallet co-signs the payment transaction (the CDP facilitator
- * fee-pays at signer index 0, so the payer is the other required signer).
- * MPP: credentials rotate per request, so the hash is an upper-bound proxy.
- * Unpaid (dev / payments disabled): falls back to client IP.
- */
-function extractCaller(
-  xPayment: string | undefined,
-  auth: string | undefined,
-  forwardedFor: string | undefined,
-): string | null {
-  if (xPayment) {
-    try {
-      const decoded = JSON.parse(Buffer.from(xPayment, 'base64').toString('utf8'));
-      const txB64 = decoded?.payload?.transaction;
-      if (typeof txB64 === 'string') {
-        const tx = VersionedTransaction.deserialize(Buffer.from(txB64, 'base64'));
-        const signers = tx.message.staticAccountKeys.slice(0, tx.message.header.numRequiredSignatures);
-        const payer = signers.length > 1 ? signers[1] : signers[0];
-        if (payer) return `x402:${payer.toBase58()}`;
-      }
-    } catch { /* unparseable payment header — still count the rail */ }
-    return 'x402:unknown';
-  }
-  if (auth?.startsWith('Payment ')) {
-    return 'mpp:' + createHash('sha256').update(auth).digest('hex').slice(0, 12);
-  }
-  const ip = forwardedFor?.split(',')[0]?.trim();
-  return ip ? `ip:${ip}` : null;
-}
+// Caller identity extraction lives in ./caller-id (pure, unit-tested —
+// see test/caller-id.test.ts). Handles x402 Solana + Base/EVM payloads,
+// MPP credential hashes, and IP fallback.
+import { extractCaller } from './caller-id';
 
 // --- OOM hardening (2026-07-16): in-flight tracker + memory watchdog ---
 // The Jul 5 + Jul 15 8GB OOM kills left no trace in logs (no invoke lines at
@@ -207,6 +178,13 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
     if (caller) {
       metricsCache.sadd(`metrics:callers:${endpoint}:${date}`, caller, METRICS_TTL).catch(warnWrite);
       metricsCache.sadd(`metrics:callers:total:${date}`, caller, METRICS_TTL).catch(warnWrite);
+      // A paid endpoint returned 200 but attribution fell through to IP — some
+      // payment rail we don't recognize. Log header NAMES (never values) so we
+      // can identify the rail from prod logs. (Observed 2026-08-02: several
+      // paid 200s tracked as ip:* — see CHECKPOINT.)
+      if (caller.startsWith('ip:') && endpoint in PRICING) {
+        console.warn(`[caller-id] paid 200 on ${endpoint} attributed to ${caller} — headers: ${[...c.req.raw.headers.keys()].sort().join(',')}`);
+      }
     }
 
     // Extract the queried address/mint from the pre-handler body clone
