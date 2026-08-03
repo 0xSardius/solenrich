@@ -35,8 +35,16 @@ usage-billed RAM means fixing leaks (not upgrading) is what shrinks the bill. Ex
   smart-money-flow, wallet-history, hyperliquid-smart-money, DD, token enrichment) — looks like
   an agent integration in progress.
 - Others: 91.196.220.253/.251 (Jul 25-26), 45.132.159.214, 18.217.112.104 (gacha-ev-scan).
-- **Data gap:** several paid-endpoint 200s tracked as `ip:` fallback or `x402:unknown` — payer
-  extraction isn't catching everyone; worth a look to identify who these agents are.
+- **Data gap → FIXED same session (`5ae8e3d` + `71281ea`):** paid 200s were IP-attributed because
+  (a) no EVM/Base payload branch existed and, the real killer, (b) **x402 v2 renamed the request
+  header `x-payment` → `payment-signature`** and the middleware only read the v1 name — every v2
+  payer since the protocol upgrade fell to IP fallback. Extraction now lives in pure
+  `src/lib/caller-id.ts` (Solana signers + EIP-3009 `authorization.from`, unit-tested in CI);
+  unrecognized payload shapes and IP-attributed paid 200s log diagnostics (names/keys only).
+  **Closed-loop verified live:** post-fix SolScout call recorded as
+  `x402:H3UyiWm1…` (its wallet) vs `ip:…` pre-fix, same day, same endpoint. Historical caller
+  counts before 2026-08-02 undercount x402 identities — treat IP-based rows as lower bounds.
+  The runner-scan repeat user (`38.75.42.130`) should resolve to a wallet on their next call.
 - Requests panel: 108.8K requests/7d total — overwhelmingly crawlers/probes, not paid traffic.
 
 ---
