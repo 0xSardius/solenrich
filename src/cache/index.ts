@@ -186,6 +186,23 @@ export class Cache {
     }
   }
 
+  /** List members of a set. Returns [] for missing keys. */
+  async smembers(key: string): Promise<string[]> {
+    const prefixed = KEY_PREFIX + key;
+    try {
+      if (this.redis) {
+        return await this.redis.smembers(prefixed);
+      }
+      // In-memory path
+      const entry = this.memory.get(prefixed);
+      if (!entry || Date.now() > entry.expiry) return [];
+      return JSON.parse(entry.value) as string[];
+    } catch (err) {
+      console.warn(`[cache] smembers(${key}) failed:`, err);
+      return [];
+    }
+  }
+
   /** Scan keys matching a pattern (Redis SCAN, in-memory filter) */
   async keys(pattern: string): Promise<string[]> {
     const prefixed = KEY_PREFIX + pattern;

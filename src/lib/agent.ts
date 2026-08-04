@@ -1182,6 +1182,7 @@ app.get('/metrics', async (c) => {
     })
   );
   const uniqueCallersToday = await metricsCache.scard(`metrics:callers:total:${today}`);
+  const callerIdsToday = await metricsCache.smembers(`metrics:callers:total:${today}`);
 
   // Get last 7 days totals
   const dailyTotals: Record<string, number> = {};
@@ -1215,10 +1216,17 @@ app.get('/metrics', async (c) => {
 
   return c.json({
     date: today,
+    process: {
+      // Self-reported so memory health is checkable without the Railway dashboard.
+      rss_mb: Math.round(process.memoryUsage.rss() / 1024 / 1024),
+      uptime_hours: Math.round(process.uptime() / 36) / 100,
+      bun: Bun.version,
+    },
     today: {
       total_calls: todayTotal,
       by_endpoint: callCounts,
       unique_callers: uniqueCallersToday,
+      caller_ids: callerIdsToday,
       callers_by_endpoint: callersByEndpoint,
     },
     last_7_days: dailyTotals,
