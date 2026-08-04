@@ -15,7 +15,7 @@ curl https://api.solenrich.com/health
 # Agent card (A2A discovery)
 curl https://api.solenrich.com/.well-known/agent.json
 
-# List all 34 endpoints
+# List all 35 endpoints
 curl https://api.solenrich.com/entrypoints
 
 # Full API documentation (agent-readable JSON)
@@ -106,12 +106,13 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 |----------|-------|-------|-------------|
 | `gacha-ev-scan` | $0.02 | `machine`, `franchise`, `exit_strategy`, `min_edge_pct`, `format` | Jupiter Gacha (Collector Crypt) pack EV scan — gross insured EV vs the guaranteed instant-buyback floor (85–93%, ≤72h) vs a marketplace sale (−2% fee, fill-risk). POSITIVE_EV / HOUSE_EDGE / NEGATIVE_EV verdict per machine — the realizable EV the platform hides behind its gross-EV headline |
 
-### Intelligence Feed & Signals (3 endpoints)
+### Intelligence Feed & Signals (4 endpoints)
 
 | Endpoint | Price | Input | Description |
 |----------|-------|-------|-------------|
 | `feed-latest` | $0.005 | `since`, `format` | Daily intelligence brief — pre-computed trending ranking, cached 24h, built for recurring polling |
 | `consensus-signal` | $0.005 | `address`/`type` or `limit`, `window`, `format` | What other agents are querying right now — proprietary attention signal from our request stream |
+| `attention-momentum` | $0.02 | `window`, `limit`, `format` | Tokens ranked by *acceleration* of agent attention, with price divergence: early_signal (attention up, price flat) / distribution_risk (attention cooling, price pumping) |
 | `check-alerts` | $0.008 | `tokens[]`, `wallets[]`, `since`, `criteria`, `format` | Poll-based alerts: price spikes, whale flows, risk changes + perps events (position add/close, liquidation approaching, PnL swings) |
 
 ### Natural Language (1 endpoint)

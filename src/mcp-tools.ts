@@ -521,6 +521,20 @@ export const MCP_TOOLS: McpToolDef[] = [
     }),
   },
   {
+    name: 'attention_momentum',
+    title: 'Agent Attention Momentum',
+    description: 'Tokens ranked by ACCELERATION of agent attention (query velocity change across three consecutive windows), overlaid with price change over the same window. Divergence classes: early_signal (attention up, price flat — agents researching before the market moves), confirmed_momentum, distribution_risk (attention cooling while price pumps), fading. Proprietary — derived from SolEnrich\'s own query stream. Windows: 1h, 6h, 24h.',
+    inputSchema: {
+      window: z.enum(['1h', '6h', '24h']).default('6h').describe('Window size — acceleration compares three consecutive windows of this size'),
+      limit: z.number().int().min(1).max(25).default(10).describe('Max ranked entries'),
+    },
+    handler: async (args) => invoke('attention-momentum', {
+      window: args.window ?? '6h',
+      limit: args.limit ?? 10,
+      format: 'llm',
+    }),
+  },
+  {
     name: 'gacha_ev_scan',
     title: 'Jupiter Gacha EV Scan',
     description: 'Scan Jupiter Gacha (Collector Crypt) tokenized-card packs for net-of-exit expected value. Per machine: gross insured EV vs the guaranteed instant-buyback floor (85-93% of insured value, ≤72h) vs a marketplace sale (insured value minus 2% fee, fill-risk). Returns a POSITIVE_EV / HOUSE_EDGE / NEGATIVE_EV verdict — the realizable EV the platform hides behind its gross-EV headline. NFA.',

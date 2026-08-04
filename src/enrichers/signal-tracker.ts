@@ -1,4 +1,5 @@
 import type { Cache } from '../cache';
+import type { DexScreenerClient, DexPair } from '../sources/dexscreener';
 
 export type SignalEntityType = 'token' | 'wallet';
 export type SignalWindow = '1h' | '6h' | '24h';
@@ -33,11 +34,54 @@ export interface ConsensusSignalResult {
   generated_at: string;
 }
 
+export type AttentionDirection = 'accelerating' | 'rising' | 'cooling' | 'flat';
+export type Divergence =
+  | 'early_signal'        // attention up, price hasn't moved yet
+  | 'confirmed_momentum'  // attention up AND price up
+  | 'distribution_risk'   // attention cooling while price pumps
+  | 'fading'              // attention and price both cooling
+  | 'neutral';
+
+export interface MomentumEntry {
+  address: string;
+  symbol: string | null;
+  name: string | null;
+  /** Query counts over three consecutive windows, oldest → newest. */
+  queries: { prior2: number; prior: number; current: number };
+  /** current - prior: is attention growing at all? */
+  velocity: number;
+  /** (current - prior) - (prior - prior2): is attention growth speeding up? */
+  acceleration: number;
+  attention: AttentionDirection;
+  price_usd: number | null;
+  /** DexScreener price change over the SAME window (h1/h6/h24). Null if untradable/unknown. */
+  price_change_pct: number | null;
+  liquidity_usd: number | null;
+  divergence: Divergence | null;
+}
+
+export interface AttentionMomentumResult {
+  window: SignalWindow;
+  window_start: string;
+  window_end: string;
+  entries: MomentumEntry[];
+  aggregate: {
+    total_unique_tokens: number;
+    total_queries_current_window: number;
+    sample_quality: 'low' | 'moderate' | 'ok';
+  };
+  note: string;
+  generated_at: string;
+}
+
 const WINDOW_HOURS: Record<SignalWindow, number> = {
   '1h': 1,
   '6h': 6,
   '24h': 24,
 };
+
+/** Price move (in %) below which we call price "flat" for divergence classification. */
+const PRICE_FLAT_THRESHOLD_PCT = 3;
 
 /** YYYY-MM-DDTHH for a given Date */
 function hourKey(d: Date): string {
@@ -61,7 +105,11 @@ function hourKeysBack(endHour: Date, hours: number): string[] {
  * is already writing on every paid call.
  */
 export class SignalTracker {
-  constructor(private cache: Cache) {}
+  constructor(
+    private cache: Cache,
+    /** Optional — only needed for getMomentum's price overlay. */
+    private dexscreener?: DexScreenerClient,
+  ) {}
 
   async getSignal(
     type: SignalEntityType,
@@ -130,6 +178,126 @@ export class SignalTracker {
         total_unique_entities: totalUnique,
         total_queries: totalQueries,
       },
+      generated_at: now.toISOString(),
+    };
+  }
+
+  /**
+   * Attention momentum — tokens ranked by *acceleration* of agent attention
+   * (change in query velocity across three consecutive windows), overlaid with
+   * price change over the same window. The divergence field is the point:
+   * attention accelerating while price is flat = agents researching before the
+   * market moves; attention cooling while price pumps = distribution risk.
+   *
+   * Tokens only — the price overlay is what makes the signal actionable, and
+   * wallets have no price. Needs 3×window of hourly buckets (HOURLY_TTL must
+   * cover it — 96h retains 3×24h with margin).
+   */
+  async getMomentum(window: SignalWindow, limit = 10): Promise<AttentionMomentumResult> {
+    const now = new Date();
+    const hours = WINDOW_HOURS[window];
+    const windowMs = hours * 3_600_000;
+    const windowStart = new Date(now.getTime() - windowMs);
+
+    // Three consecutive, non-overlapping windows: w0 = current, w1, w2 oldest.
+    const [w0, w1, w2] = await Promise.all([
+      this.aggregateByAddress('token', hourKeysBack(now, hours)),
+      this.aggregateByAddress('token', hourKeysBack(windowStart, hours)),
+      this.aggregateByAddress('token', hourKeysBack(new Date(now.getTime() - 2 * windowMs), hours)),
+    ]);
+
+    // Universe = anything seen in any of the three windows, so cooling tokens
+    // (current=0 but prior>0) still surface for distribution-risk detection.
+    const universe = new Set<string>([...w0.keys(), ...w1.keys(), ...w2.keys()]);
+
+    const scored = Array.from(universe).map((address) => {
+      const current = w0.get(address) ?? 0;
+      const prior = w1.get(address) ?? 0;
+      const prior2 = w2.get(address) ?? 0;
+      const velocity = current - prior;
+      const acceleration = velocity - (prior - prior2);
+      const attention: AttentionDirection =
+        velocity > 0 ? (acceleration > 0 ? 'accelerating' : 'rising')
+        : velocity < 0 ? 'cooling'
+        : 'flat';
+      return { address, queries: { prior2, prior, current }, velocity, acceleration, attention };
+    });
+
+    scored.sort(
+      (a, b) =>
+        b.acceleration - a.acceleration ||
+        b.velocity - a.velocity ||
+        b.queries.current - a.queries.current,
+    );
+    const top = scored.slice(0, limit);
+
+    // Price overlay — one DexScreener batch call for the ranked mints. Some
+    // "token" addresses in the stream aren't tradable mints; those get nulls.
+    const pairsByMint = new Map<string, DexPair>();
+    if (this.dexscreener && top.length > 0) {
+      try {
+        const pairs = await this.dexscreener.getPairsBatch(top.map((t) => t.address));
+        for (const p of pairs) {
+          const mint = p.baseToken?.address;
+          if (!mint) continue;
+          const existing = pairsByMint.get(mint);
+          if (!existing || (p.liquidity?.usd ?? 0) > (existing.liquidity?.usd ?? 0)) {
+            pairsByMint.set(mint, p);
+          }
+        }
+      } catch (err) {
+        console.warn(`[signal-tracker] price overlay failed: ${err}`);
+      }
+    }
+
+    const priceField = window === '1h' ? 'h1' : window === '6h' ? 'h6' : 'h24';
+    const entries: MomentumEntry[] = top.map((t) => {
+      const pair = pairsByMint.get(t.address);
+      const priceChange = pair?.priceChange?.[priceField] ?? null;
+
+      let divergence: Divergence | null = null;
+      if (priceChange !== null) {
+        const priceUp = priceChange > PRICE_FLAT_THRESHOLD_PCT;
+        const attentionUp = t.attention === 'accelerating' || t.attention === 'rising';
+        divergence =
+          attentionUp && !priceUp ? 'early_signal'
+          : attentionUp && priceUp ? 'confirmed_momentum'
+          : t.attention === 'cooling' && priceUp ? 'distribution_risk'
+          : t.attention === 'cooling' ? 'fading'
+          : 'neutral';
+      }
+
+      return {
+        address: t.address,
+        symbol: pair?.baseToken?.symbol ?? null,
+        name: pair?.baseToken?.name ?? null,
+        queries: t.queries,
+        velocity: t.velocity,
+        acceleration: t.acceleration,
+        attention: t.attention,
+        price_usd: pair ? parseFloat(pair.priceUsd) || null : null,
+        price_change_pct: priceChange,
+        liquidity_usd: pair?.liquidity?.usd ?? null,
+        divergence,
+      };
+    });
+
+    const totalQueries = Array.from(w0.values()).reduce((s, n) => s + n, 0);
+    const sampleQuality = totalQueries < 10 ? 'low' : totalQueries < 50 ? 'moderate' : 'ok';
+
+    return {
+      window,
+      window_start: windowStart.toISOString(),
+      window_end: now.toISOString(),
+      entries,
+      aggregate: {
+        total_unique_tokens: universe.size,
+        total_queries_current_window: totalQueries,
+        sample_quality: sampleQuality,
+      },
+      note:
+        'Derived from SolEnrich\'s own agent query stream — attention measured before it shows up in market volume. ' +
+        'Signal density scales with platform traffic; treat low sample_quality as directional, not statistical.',
       generated_at: now.toISOString(),
     };
   }

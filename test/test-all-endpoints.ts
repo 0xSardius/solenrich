@@ -281,6 +281,19 @@ check('has llm_summary', typeof runner.body?.output?.llm_summary === 'string' &&
 console.log(`  ⏱ ${runner.ms}ms\n`);
 
 // ============================================================
+// 16. attention-momentum
+// ============================================================
+console.log('━━━ 16. attention-momentum ━━━');
+const am = await invoke('attention-momentum', { window: '6h', limit: 10, format: 'both' }, 30000);
+check('returns 200', am.status === 200, `got ${am.status}`);
+check('has entries (array)', Array.isArray(am.body?.output?.entries));
+check('entries have acceleration + 3-window queries', (am.body?.output?.entries ?? []).every((e: any) => typeof e.acceleration === 'number' && typeof e.queries?.prior2 === 'number'));
+check('attention direction valid', (am.body?.output?.entries ?? []).every((e: any) => ['accelerating', 'rising', 'cooling', 'flat'].includes(e.attention)));
+check('has sample_quality', ['low', 'moderate', 'ok'].includes(am.body?.output?.aggregate?.sample_quality));
+check('has llm_summary', typeof am.body?.output?.llm_summary === 'string' && am.body.output.llm_summary.includes('Attention Momentum'));
+console.log(`  ⏱ ${am.ms}ms\n`);
+
+// ============================================================
 // Summary
 // ============================================================
 console.log('═══════════════════════════════════════════════════');

@@ -550,6 +550,23 @@ export const ENDPOINTS: Array<{
     ],
   },
   {
+    // Attention momentum — acceleration + price divergence over the query
+    // stream. Empty entries is a valid shape when traffic is quiet; check
+    // structure + honesty fields.
+    key: 'attention-momentum',
+    input: { window: '6h', limit: 10, format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'has window 6h', test: (d) => d.window === '6h' },
+      { name: 'has window_start/end', test: (d) => typeof d.window_start === 'string' && typeof d.window_end === 'string' },
+      { name: 'has entries array', test: (d) => Array.isArray(d.entries), detail: (d) => `entries=${d.entries?.length}` },
+      { name: 'entries have 3-window queries + acceleration', test: (d) => (d.entries ?? []).every((e: any) => typeof e.acceleration === 'number' && typeof e.queries?.current === 'number' && typeof e.queries?.prior === 'number' && typeof e.queries?.prior2 === 'number') },
+      { name: 'attention direction valid', test: (d) => (d.entries ?? []).every((e: any) => ['accelerating', 'rising', 'cooling', 'flat'].includes(e.attention)) },
+      { name: 'has aggregate.sample_quality', test: (d) => ['low', 'moderate', 'ok'].includes(d.aggregate?.sample_quality) },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Attention Momentum') },
+    ],
+  },
+  {
     // Jupiter Gacha pack EV scan. Live external data (Collector Crypt), so
     // checks are structural — machine count/verdicts vary as packs are opened.
     key: 'gacha-ev-scan',

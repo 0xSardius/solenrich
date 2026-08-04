@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SolEnrich — Solana Onchain Data Enrichment for Agents & LLMs</title>
-  <meta name="description" content="Solana onchain data enrichment agent. 34 endpoints including memecoin smart-money (proven winners buying fresh launches), runner detection (which tokens are accelerating right now), Hyperliquid smart-money + trader profiles, and the perps suite: cross-venue funding, venue-comparison-by-size, basis-signal, market trend across Jupiter + Adrena + Hyperliquid + dYdX, plus perp position alerts. Consensus attention signal, portfolio time-series, compound NL queries, daily intelligence feed, plus Jupiter Gacha pack EV analysis. Pay USDC via x402 or cards via Stripe.">
+  <meta name="description" content="Solana onchain data enrichment agent. 35 endpoints including memecoin smart-money (proven winners buying fresh launches), runner detection (which tokens are accelerating right now), Hyperliquid smart-money + trader profiles, and the perps suite: cross-venue funding, venue-comparison-by-size, basis-signal, market trend across Jupiter + Adrena + Hyperliquid + dYdX, plus perp position alerts. Consensus attention signal, portfolio time-series, compound NL queries, daily intelligence feed, plus Jupiter Gacha pack EV analysis. Pay USDC via x402 or cards via Stripe.">
 
   <link rel="canonical" href="https://www.solenrich.com/">
   <link rel="icon" type="image/png" href="/logo.png">
@@ -14,7 +14,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.solenrich.com/">
   <meta property="og:title" content="SolEnrich — Onchain Intelligence for Agents & LLMs">
-  <meta property="og:description" content="34 enrichment endpoints on Solana, including memecoin smart-money and runner detection, Hyperliquid intelligence &amp; the full perps suite: cross-venue funding, venue-comparison, basis-signal, market structure, trader profiles & live position alerts across Jupiter Perps + Adrena + Hyperliquid + dYdX. Plus event-driven alerts, consensus signal, portfolio time-series, smart-money orchestration, daily intelligence feed, plus Jupiter Gacha pack EV analysis. Pay USDC via x402 or cards via Stripe.">
+  <meta property="og:description" content="35 enrichment endpoints on Solana, including memecoin smart-money and runner detection, Hyperliquid intelligence &amp; the full perps suite: cross-venue funding, venue-comparison, basis-signal, market structure, trader profiles & live position alerts across Jupiter Perps + Adrena + Hyperliquid + dYdX. Plus event-driven alerts, consensus signal, portfolio time-series, smart-money orchestration, daily intelligence feed, plus Jupiter Gacha pack EV analysis. Pay USDC via x402 or cards via Stripe.">
   <meta property="og:image" content="https://www.solenrich.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -22,7 +22,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SolEnrich — Onchain Intelligence for Agents & LLMs">
-  <meta name="twitter:description" content="34 enrichment endpoints on Solana, including memecoin smart-money and runner detection, Hyperliquid intelligence &amp; the full perps suite: cross-venue funding, venue-comparison, basis-signal, market structure, trader profiles & live position alerts across Jupiter Perps + Adrena + Hyperliquid + dYdX. Plus event-driven alerts, consensus signal, portfolio time-series, smart-money orchestration, daily intelligence feed, plus Jupiter Gacha pack EV analysis. Pay USDC via x402 or cards via Stripe.">
+  <meta name="twitter:description" content="35 enrichment endpoints on Solana, including memecoin smart-money and runner detection, Hyperliquid intelligence &amp; the full perps suite: cross-venue funding, venue-comparison, basis-signal, market structure, trader profiles & live position alerts across Jupiter Perps + Adrena + Hyperliquid + dYdX. Plus event-driven alerts, consensus signal, portfolio time-series, smart-money orchestration, daily intelligence feed, plus Jupiter Gacha pack EV analysis. Pay USDC via x402 or cards via Stripe.">
   <meta name="twitter:image" content="https://www.solenrich.com/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,7 +53,7 @@
         "url": "https://www.solenrich.com/",
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "Web / API",
-        "description": "Solana onchain data enrichment agent — 34 pay-per-call endpoints for wallet risk scoring, token due-diligence, smart-money and perps intelligence, delivered as JSON for agents or natural-language briefings for LLMs. Pay per call in USDC via x402 or by card via Stripe.",
+        "description": "Solana onchain data enrichment agent — 35 pay-per-call endpoints for wallet risk scoring, token due-diligence, smart-money and perps intelligence, delivered as JSON for agents or natural-language briefings for LLMs. Pay per call in USDC via x402 or by card via Stripe.",
         "provider": { "@id": "https://www.solenrich.com/#org" },
         "offers": {
           "@type": "Offer",
@@ -1485,7 +1485,7 @@
           <span class="gradient-text">for agents & LLMs</span>
         </h1>
         <p class="hero-sub">
-          34 endpoints enriching any Solana wallet, token, protocol, or perps market with a single API call.
+          35 endpoints enriching any Solana wallet, token, protocol, or perps market with a single API call.
           Structured JSON for agents. Natural language briefings for LLMs.
           Pay with USDC (x402) or credit card (Stripe).
         </p>
@@ -1682,7 +1682,7 @@
     <div class="container">
       <div class="reveal">
         <div class="section-label">Endpoints</div>
-        <h2 class="section-title">34 enrichment endpoints</h2>
+        <h2 class="section-title">35 enrichment endpoints</h2>
         <p class="section-desc">
           From quick wallet lookups to full due diligence reports.
           Every endpoint returns data in your choice of format.
@@ -1930,7 +1930,16 @@
             <span class="endpoint-price">$0.005</span>
           </div>
           <p class="endpoint-desc">What tokens and wallets agents are querying right now. Proprietary data derived from SolEnrich's own request stream, not market volume. Pass an address for rank/percentile/trend; omit it for top-N. Windows: 1h, 6h, 24h.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">proprietary</span><span class="tag">signal</span></div>
+          <div class="tag-row"><span class="tag">proprietary</span><span class="tag">signal</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">attention-momentum</span>
+            <span class="endpoint-price">$0.02</span>
+          </div>
+          <p class="endpoint-desc">Tokens ranked by <em>acceleration</em> of agent attention, cross-referenced with price over the same window. early_signal = attention up while price is flat (agents researching before the market moves); distribution_risk = attention cooling while price pumps. Windows: 1h, 6h, 24h.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">proprietary</span><span class="tag">signal</span><span class="tag">divergence</span></div>
         </div>
 
         <div class="endpoint-card reveal">

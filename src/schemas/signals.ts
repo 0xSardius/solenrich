@@ -9,3 +9,10 @@ export const ConsensusSignalInput = z.object({
   format: FormatSchema,
 });
 export type ConsensusSignalInput = z.infer<typeof ConsensusSignalInput>;
+
+export const AttentionMomentumInput = z.object({
+  window: z.enum(['1h', '6h', '24h']).default('6h'),
+  limit: z.number().int().min(1).max(25).default(10),
+  format: FormatSchema,
+});
+export type AttentionMomentumInput = z.infer<typeof AttentionMomentumInput>;

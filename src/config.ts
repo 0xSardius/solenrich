@@ -66,6 +66,7 @@ export const PRICING = {
   'runner-scan': '0.04',
   'feed-latest': '0.005',
   'consensus-signal': '0.005',
+  'attention-momentum': '0.02',
   'portfolio-history': '0.006',
   'check-alerts': '0.008',
   'gacha-ev-scan': '0.02',

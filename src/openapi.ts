@@ -411,6 +411,18 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'attention-momentum': {
+    summary: 'Rank tokens by agent-attention acceleration with price divergence',
+    description: 'Tokens ranked by how fast agent attention is speeding up — query velocity change across three consecutive windows, overlaid with price change over the same window. Divergence classes: early_signal (attention accelerating, price flat), confirmed_momentum, distribution_risk (attention cooling while price pumps), fading. Proprietary: derived from SolEnrich\'s own agent query stream, not market volume. sample_quality reports signal density honestly.',
+    schema: {
+      type: 'object',
+      properties: {
+        window: { type: 'string', enum: ['1h', '6h', '24h'], default: '6h', description: 'Window size — acceleration compares three consecutive windows of this size' },
+        limit: { type: 'integer', minimum: 1, maximum: 25, default: 10, description: 'Max ranked entries returned' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'consensus-signal': {
     summary: 'Reveal which tokens or wallets agents are querying right now',
     description: 'What tokens or wallets are being queried by other agents right now. Derived from SolEnrich\'s own query stream — not market volume. Two modes: pass `address` for that entity\'s rank/percentile/trend; omit it for the top-N most-queried entities in the window. Windows: 1h, 6h, 24h. Unique data — only available because we serve agents directly.',

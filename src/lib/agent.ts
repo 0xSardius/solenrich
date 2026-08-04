@@ -105,7 +105,7 @@ const cache = new Cache();
 
 const metricsCache = cache;
 const METRICS_TTL = 90 * 86400; // 90 days for daily aggregates
-const HOURLY_TTL = 48 * 3600;   // 48h for hourly buckets — enough for 24h window + prior-window comparison
+const HOURLY_TTL = 96 * 3600;   // 96h for hourly buckets — attention-momentum needs 3×24h windows + margin
 
 // Caller identity extraction lives in ./caller-id (pure, unit-tested —
 // see test/caller-id.test.ts). Handles x402 Solana + Base/EVM payloads,
@@ -308,6 +308,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'runner-scan': ['solana', 'memecoin', 'momentum', 'token-discovery', 'trenches'],
     'trending-signals': ['solana', 'trending', 'smart-money', 'new-tokens', 'signals'],
     'consensus-signal': ['solana', 'agent-attention', 'consensus', 'signals', 'smart-money'],
+    'attention-momentum': ['solana', 'agent-attention', 'momentum', 'signals', 'divergence'],
     'query': ['solana', 'onchain-data', 'natural-language', 'ai-agents', 'defi'],
     'feed-latest': ['solana', 'intelligence-feed', 'trending', 'onchain', 'ai-agents'],
     'check-alerts': ['solana', 'alerts', 'perps-alerts', 'whale-tracking', 'ai-agents'],
@@ -660,7 +661,7 @@ registerFeedEntrypoint(addEntrypoint, feedStore);
 // hourly metrics counters the middleware writes on every paid call. Proprietary
 // data: only we have agent query history. Reads metricsCache (same Redis
 // instance), no new state.
-const signalTracker = new SignalTracker(metricsCache);
+const signalTracker = new SignalTracker(metricsCache, dexscreener);
 registerSignalEntrypoint(addEntrypoint, signalTracker);
 
 // Event-Driven Alerts (Priority 13) — poll-based V1. Stateless: agent passes
@@ -1044,6 +1045,11 @@ app.get('/docs', (c) => {
         price: '0.005',
         input: { type: 'token | wallet (default token)', address: 'string (optional) — single-entity report when provided', window: '1h | 6h | 24h (default 1h)', limit: 'number 1-50 (default 10) — top-N size when address absent', format: 'json | llm | both' },
         description: 'Agent attention signal — what tokens/wallets other agents are querying right now. Proprietary data: derived from SolEnrich\'s own request stream, not market volume. Returns rank/percentile/trend for a given entity, or top-N most-queried entities in the window. Signal data builds with usage.',
+      },
+      'attention-momentum': {
+        price: '0.02',
+        input: { window: '1h | 6h | 24h (default 6h)', limit: 'number 1-25 (default 10)', format: 'json | llm | both' },
+        description: 'Agent-attention acceleration with price divergence — tokens ranked by how fast attention is speeding up (query velocity change across 3 consecutive windows) overlaid with price change over the same window. Divergence classes: early_signal (attention up, price flat), confirmed_momentum, distribution_risk (attention cooling, price pumping), fading. Proprietary: derived from SolEnrich\'s own query stream. Includes sample_quality honesty flag — signal density scales with platform traffic.',
       },
       'portfolio-history': {
         price: '0.006',
