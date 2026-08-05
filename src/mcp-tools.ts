@@ -521,6 +521,22 @@ export const MCP_TOOLS: McpToolDef[] = [
     }),
   },
   {
+    name: 'trenches_scan',
+    title: 'Trenches Scan (Three-Signal Confluence)',
+    description: 'The full memecoin pre-ape scan in one call: on-chain velocity (runner detection), proven-winner wallet buys (smart-money), and agent attention, composited into a ranked list with per-token reasoning and HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL verdicts. Confluence across independent signals is the edge. NFA.',
+    inputSchema: {
+      max_token_age_hours: z.number().min(1).max(72).optional().describe('Max token age in hours (default 24)'),
+      min_liquidity_usd: z.number().min(0).optional().describe('Liquidity floor in USD (default 5000)'),
+      limit: z.number().int().min(1).max(20).optional().describe('Max picks returned (default 10)'),
+    },
+    handler: async (args) => invoke('trenches-scan', {
+      ...(args.max_token_age_hours != null ? { max_token_age_hours: args.max_token_age_hours } : {}),
+      ...(args.min_liquidity_usd != null ? { min_liquidity_usd: args.min_liquidity_usd } : {}),
+      ...(args.limit != null ? { limit: args.limit } : {}),
+      format: 'llm',
+    }),
+  },
+  {
     name: 'attention_momentum',
     title: 'Agent Attention Momentum',
     description: 'Tokens ranked by ACCELERATION of agent attention (query velocity change across three consecutive windows), overlaid with price change over the same window. Divergence classes: early_signal (attention up, price flat — agents researching before the market moves), confirmed_momentum, distribution_risk (attention cooling while price pumps), fading. Proprietary — derived from SolEnrich\'s own query stream. Windows: 1h, 6h, 24h.',

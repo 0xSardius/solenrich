@@ -68,7 +68,8 @@ import { CollectorCryptClient } from "../sources/collector-crypt";
 import { GachaAnalyzer } from "../enrichers/gacha-analyzer";
 import { registerGachaEntrypoint } from "../entrypoints/gacha";
 import { registerOrchestrationEntrypoints } from "../entrypoints/orchestration";
-import { registerTrenchesEntrypoints } from "../entrypoints/trenches";
+import { registerTrenchesEntrypoints, registerTrenchesScanEntrypoint } from "../entrypoints/trenches";
+import { TrenchesScanOrchestrator } from "../enrichers/trenches-scan";
 import { registerRunnerEntrypoint } from "../entrypoints/runner";
 import { registerFeedEntrypoint } from "../entrypoints/feed";
 import { FeedStore } from "../enrichers/feed-store";
@@ -306,6 +307,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'smart-money-flow': ['solana', 'smart-money', 'netflow', 'whale-tracking', 'trending'],
     'smart-money-trenches': ['solana', 'memecoin', 'smart-money', 'new-tokens', 'trenches'],
     'runner-scan': ['solana', 'memecoin', 'momentum', 'token-discovery', 'trenches'],
+    'trenches-scan': ['solana', 'memecoin', 'smart-money', 'momentum', 'trenches'],
     'trending-signals': ['solana', 'trending', 'smart-money', 'new-tokens', 'signals'],
     'consensus-signal': ['solana', 'agent-attention', 'consensus', 'signals', 'smart-money'],
     'attention-momentum': ['solana', 'agent-attention', 'momentum', 'signals', 'divergence'],
@@ -663,6 +665,17 @@ registerFeedEntrypoint(addEntrypoint, feedStore);
 // instance), no new state.
 const signalTracker = new SignalTracker(metricsCache, dexscreener);
 registerSignalEntrypoint(addEntrypoint, signalTracker);
+
+// Trenches Scan — the three-signal orchestrator (runner velocity × proven-winner
+// buys × agent attention). Registered here rather than with the other trenches
+// entrypoints because it needs signalTracker, which depends on metricsCache.
+const trenchesScanOrchestrator = new TrenchesScanOrchestrator(
+  runnerDetector,
+  trenchesSmartMoney,
+  signalTracker,
+  cache,
+);
+registerTrenchesScanEntrypoint(addEntrypoint, trenchesScanOrchestrator);
 
 // Event-Driven Alerts (Priority 13) — poll-based V1. Stateless: agent passes
 // watchlist + `since` cursor each call. Detection composes token-analyzer,
@@ -1045,6 +1058,11 @@ app.get('/docs', (c) => {
         price: '0.005',
         input: { type: 'token | wallet (default token)', address: 'string (optional) — single-entity report when provided', window: '1h | 6h | 24h (default 1h)', limit: 'number 1-50 (default 10) — top-N size when address absent', format: 'json | llm | both' },
         description: 'Agent attention signal — what tokens/wallets other agents are querying right now. Proprietary data: derived from SolEnrich\'s own request stream, not market volume. Returns rank/percentile/trend for a given entity, or top-N most-queried entities in the window. Signal data builds with usage.',
+      },
+      'trenches-scan': {
+        price: '0.08',
+        input: { max_token_age_hours: 'number 1-72 (default 24)', min_liquidity_usd: 'number (default 5000)', limit: 'number 1-20 (default 10)', format: 'json | llm | both' },
+        description: 'Three-signal memecoin orchestrator: on-chain velocity (runner-scan) × proven-winner buys (smart-money-trenches) × agent attention (attention-momentum) composited into a ranked list with confluence counts, per-token reasoning, and HIGH_CONFLUENCE/MODERATE/SINGLE_SIGNAL verdicts. Weights: runner 0.45, smart-money 0.45, attention 0.10. Legs degrade independently on upstream failure.',
       },
       'attention-momentum': {
         price: '0.02',

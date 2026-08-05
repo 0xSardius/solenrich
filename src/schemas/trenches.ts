@@ -11,3 +11,11 @@ export const SmartMoneyTrenchesInput = z.object({
   format: FormatSchema,
 });
 export type SmartMoneyTrenchesInput = z.infer<typeof SmartMoneyTrenchesInput>;
+
+export const TrenchesScanInput = z.object({
+  max_token_age_hours: z.number().min(1).max(72).default(24),
+  min_liquidity_usd: z.number().min(0).max(10_000_000).default(5_000),
+  limit: z.number().int().min(1).max(20).default(10),
+  format: FormatSchema,
+});
+export type TrenchesScanInput = z.infer<typeof TrenchesScanInput>;

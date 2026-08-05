@@ -411,6 +411,19 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'trenches-scan': {
+    summary: 'Run the three-signal memecoin confluence scan',
+    description: 'One call composes runner-scan (on-chain velocity), smart-money-trenches (proven-winner wallet buys), and attention-momentum (agent query stream) into a ranked memecoin list. Per token: composite score (runner 0.45 / smart-money 0.45 / attention 0.10), confluence count, reasoning, and a HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL verdict. Legs degrade independently — an upstream failure annotates the result instead of failing the call. NFA.',
+    schema: {
+      type: 'object',
+      properties: {
+        max_token_age_hours: { type: 'number', minimum: 1, maximum: 72, default: 24, description: 'Max token age in hours' },
+        min_liquidity_usd: { type: 'number', minimum: 0, maximum: 10000000, default: 5000, description: 'Liquidity floor in USD (unknown liquidity passes)' },
+        limit: { type: 'integer', minimum: 1, maximum: 20, default: 10, description: 'Max picks returned' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'attention-momentum': {
     summary: 'Rank tokens by agent-attention acceleration with price divergence',
     description: 'Tokens ranked by how fast agent attention is speeding up — query velocity change across three consecutive windows, overlaid with price change over the same window. Divergence classes: early_signal (attention accelerating, price flat), confirmed_momentum, distribution_risk (attention cooling while price pumps), fading. Proprietary: derived from SolEnrich\'s own agent query stream, not market volume. sample_quality reports signal density honestly.',

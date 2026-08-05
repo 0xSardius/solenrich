@@ -294,6 +294,20 @@ check('has llm_summary', typeof am.body?.output?.llm_summary === 'string' && am.
 console.log(`  ⏱ ${am.ms}ms\n`);
 
 // ============================================================
+// 17. trenches-scan
+// ============================================================
+console.log('━━━ 17. trenches-scan ━━━');
+const ts = await invoke('trenches-scan', { max_token_age_hours: 24, min_liquidity_usd: 5000, limit: 10, format: 'both' }, 120000);
+check('returns 200', ts.status === 200, `got ${ts.status}`);
+check('has picks (array)', Array.isArray(ts.body?.output?.picks));
+check('has confluence_counts', typeof ts.body?.output?.confluence_counts?.triple === 'number');
+check('all three legs reported', ts.body?.output?.legs?.runner != null && ts.body?.output?.legs?.smart_money != null && ts.body?.output?.legs?.attention != null);
+check('picks have valid verdict', (ts.body?.output?.picks ?? []).every((p: any) => ['HIGH_CONFLUENCE', 'MODERATE', 'SINGLE_SIGNAL'].includes(p.verdict)));
+check('picks have reasoning', (ts.body?.output?.picks ?? []).every((p: any) => typeof p.reasoning === 'string' && p.reasoning.length > 0));
+check('has llm_summary', typeof ts.body?.output?.llm_summary === 'string' && ts.body.output.llm_summary.includes('Trenches Scan'));
+console.log(`  ⏱ ${ts.ms}ms\n`);
+
+// ============================================================
 // Summary
 // ============================================================
 console.log('═══════════════════════════════════════════════════');

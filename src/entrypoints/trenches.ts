@@ -1,8 +1,10 @@
 import { z } from 'zod';
-import { SmartMoneyTrenchesInput } from '../schemas/trenches';
+import { SmartMoneyTrenchesInput, TrenchesScanInput } from '../schemas/trenches';
 import type { TrenchesSmartMoneyAnalyzer } from '../enrichers/trenches-smart-money';
+import type { TrenchesScanOrchestrator } from '../enrichers/trenches-scan';
 import { formatResponse } from '../formatters';
 import { formatTrenchesBriefing } from '../formatters/llm-trenches';
+import { formatTrenchesScanBriefing } from '../formatters/llm-trenches-scan';
 
 type AddEntrypoint = (def: any) => void;
 
@@ -24,6 +26,27 @@ export function registerTrenchesEntrypoints(
         input.limit,
       );
       return { output: formatResponse(data, input.format, formatTrenchesBriefing) };
+    },
+  });
+}
+
+export function registerTrenchesScanEntrypoint(
+  addEntrypoint: AddEntrypoint,
+  orchestrator: TrenchesScanOrchestrator,
+) {
+  addEntrypoint({
+    key: 'trenches-scan',
+    description:
+      'The three-signal memecoin scan in one call: on-chain velocity (runner-scan), proven-winner buys (smart-money-trenches), and agent attention (attention-momentum), composited into a ranked ape-able list with per-token reasoning and HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL verdicts. Legs degrade independently — one upstream failure annotates the result instead of killing it.',
+    input: TrenchesScanInput,
+    handler: async (ctx: { input: z.infer<typeof TrenchesScanInput> }) => {
+      const input = ctx.input;
+      const data = await orchestrator.scan(
+        input.max_token_age_hours,
+        input.min_liquidity_usd,
+        input.limit,
+      );
+      return { output: formatResponse(data, input.format, formatTrenchesScanBriefing) };
     },
   });
 }

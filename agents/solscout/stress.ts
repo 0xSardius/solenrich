@@ -550,6 +550,23 @@ export const ENDPOINTS: Array<{
     ],
   },
   {
+    // Trenches scan — three-leg orchestrator (runner + smart-money + attention).
+    // Slow on cold cache (smart-money leg scans ~14 seed wallets). Empty picks
+    // is a valid shape (quiet trenches); check structure + leg health.
+    key: 'trenches-scan',
+    input: { max_token_age_hours: 24, min_liquidity_usd: 5000, limit: 10, format: 'both' },
+    timeout: 120000,
+    checks: [
+      { name: 'has picks array', test: (d) => Array.isArray(d.picks), detail: (d) => `picks=${d.picks?.length}` },
+      { name: 'has confluence_counts', test: (d) => typeof d.confluence_counts?.triple === 'number' && typeof d.confluence_counts?.single === 'number' },
+      { name: 'all three legs reported', test: (d) => d.legs?.runner != null && d.legs?.smart_money != null && d.legs?.attention != null, detail: (d) => `runner=${d.legs?.runner?.ok} smart=${d.legs?.smart_money?.ok} attention=${d.legs?.attention?.ok}` },
+      { name: 'picks have composite_score 0-1 + verdict', test: (d) => (d.picks ?? []).every((p: any) => p.composite_score >= 0 && p.composite_score <= 1 && ['HIGH_CONFLUENCE', 'MODERATE', 'SINGLE_SIGNAL'].includes(p.verdict)) },
+      { name: 'picks have reasoning', test: (d) => (d.picks ?? []).every((p: any) => typeof p.reasoning === 'string' && p.reasoning.length > 0) },
+      { name: 'has caveats', test: (d) => Array.isArray(d.caveats) && d.caveats.length > 0 },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Trenches Scan') },
+    ],
+  },
+  {
     // Attention momentum — acceleration + price divergence over the query
     // stream. Empty entries is a valid shape when traffic is quiet; check
     // structure + honesty fields.

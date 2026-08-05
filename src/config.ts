@@ -67,6 +67,7 @@ export const PRICING = {
   'feed-latest': '0.005',
   'consensus-signal': '0.005',
   'attention-momentum': '0.02',
+  'trenches-scan': '0.08',
   'portfolio-history': '0.006',
   'check-alerts': '0.008',
   'gacha-ev-scan': '0.02',
@@ -95,6 +96,7 @@ export const CACHE_TTL = {
   smartMoney: 600,       // 10 minutes — smart money shifts over days
   trenches: 120,         // 2 minutes — fresh-launch buys are a live signal
   runnerScan: 60,        // 1 minute — velocity is the whole point; stale = wrong
+  trenchesScan: 90,      // orchestrator blend — legs have their own caches underneath
   feedLatest: 86_400,    // 24 hours — daily intelligence brief, lazy-populated
   gacha: 60,             // 1 minute — pack EV/stock drift as packs are opened
 } as const;
