@@ -411,6 +411,18 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'trenches-check': {
+    summary: 'Vet one token with the three trenches signals',
+    description: 'The trenches suite pointed at ONE token: pass a mint, get a HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL / NO_SIGNAL verdict with reasoning. Runs on-chain velocity (runner stage + 0-1 score), proven-winner wallet buys (vetted realized-PnL seed set), and agent attention (proprietary query stream) against your candidate. The follow-up call to a new-tokens discovery or any shilled token. Repeat checks 5+ min apart unlock liquidity/holder deltas. NFA.',
+    schema: {
+      type: 'object',
+      required: ['mint'],
+      properties: {
+        mint: { type: 'string', description: 'Token mint address to check', minLength: 32, maxLength: 44 },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'trenches-scan': {
     summary: 'Run the three-signal memecoin confluence scan',
     description: 'One call composes runner-scan (on-chain velocity), smart-money-trenches (proven-winner wallet buys), and attention-momentum (agent query stream) into a ranked memecoin list. Per token: composite score (runner 0.45 / smart-money 0.45 / attention 0.10), confluence count, reasoning, and a HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL verdict. Legs degrade independently — an upstream failure annotates the result instead of failing the call. NFA.',

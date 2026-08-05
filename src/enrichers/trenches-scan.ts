@@ -60,18 +60,18 @@ export interface TrenchesScanResult {
   last_updated: string;
 }
 
-// --- Scoring weights ---
+// --- Scoring weights (shared with trenches-check) ---
 
-const W_RUNNER = 0.45;
-const W_SMART = 0.45;
-const W_ATTENTION = 0.10;
+export const W_RUNNER = 0.45;
+export const W_SMART = 0.45;
+export const W_ATTENTION = 0.10;
 
 /** smart_buyers → 0-1: one proven winner is a lead, three is consensus. */
-function smartComponent(buyers: number): number {
+export function smartComponent(buyers: number): number {
   return Math.min(buyers / 3, 1);
 }
 
-function attentionComponent(dir: AttentionDirection): number {
+export function attentionComponent(dir: AttentionDirection): number {
   return dir === 'accelerating' ? 1 : dir === 'rising' ? 0.6 : 0.2;
 }
 

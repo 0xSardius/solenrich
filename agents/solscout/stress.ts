@@ -550,6 +550,23 @@ export const ENDPOINTS: Array<{
     ],
   },
   {
+    // Trenches check — per-token three-signal verdict. BONK is old/quiet, so
+    // expect SINGLE_SIGNAL or NO_SIGNAL with a valid runner leg — checks are
+    // structural. Same fixture as the BAZAAR_INPUT_EXAMPLES entry.
+    key: 'trenches-check',
+    input: { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', format: 'both' },
+    timeout: 60000,
+    checks: [
+      { name: 'echoes mint', test: (d) => d.mint === 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
+      { name: 'has valid verdict', test: (d) => ['HIGH_CONFLUENCE', 'MODERATE', 'SINGLE_SIGNAL', 'NO_SIGNAL'].includes(d.verdict), detail: (d) => `verdict=${d.verdict}` },
+      { name: 'composite_score 0-1', test: (d) => d.composite_score >= 0 && d.composite_score <= 1 },
+      { name: 'confluence 0-3', test: (d) => Number.isInteger(d.confluence) && d.confluence >= 0 && d.confluence <= 3 },
+      { name: 'has reasoning', test: (d) => typeof d.reasoning === 'string' && d.reasoning.length > 0 },
+      { name: 'has caveats', test: (d) => Array.isArray(d.caveats) && d.caveats.length > 0 },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Trenches Check') },
+    ],
+  },
+  {
     // Trenches scan — three-leg orchestrator (runner + smart-money + attention).
     // Slow on cold cache (smart-money leg scans ~14 seed wallets). Empty picks
     // is a valid shape (quiet trenches); check structure + leg health.

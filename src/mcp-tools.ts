@@ -521,6 +521,18 @@ export const MCP_TOOLS: McpToolDef[] = [
     }),
   },
   {
+    name: 'trenches_check',
+    title: 'Trenches Check (Vet One Token)',
+    description: 'Before you ape, run the check: pass a token mint and get a HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL / NO_SIGNAL verdict with reasoning. Runs on-chain velocity (runner stage + score), proven-winner wallet buys, and agent attention against that specific token. Pairs with due_diligence (structural safety) for a full pre-entry read. NFA.',
+    inputSchema: {
+      mint: z.string().describe('Token mint address to check'),
+    },
+    handler: async (args) => invoke('trenches-check', {
+      mint: args.mint,
+      format: 'llm',
+    }),
+  },
+  {
     name: 'trenches_scan',
     title: 'Trenches Scan (Three-Signal Confluence)',
     description: 'The full memecoin pre-ape scan in one call: on-chain velocity (runner detection), proven-winner wallet buys (smart-money), and agent attention, composited into a ranked list with per-token reasoning and HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL verdicts. Confluence across independent signals is the edge. NFA.',

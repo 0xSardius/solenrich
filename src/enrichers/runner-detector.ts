@@ -47,14 +47,14 @@ export interface RunnerScanResult {
   last_updated: string;
 }
 
-interface Snapshot {
+export interface Snapshot {
   t: number;
   liquidity_usd: number;
   holder_count: number | null;
 }
 
 /** Aggregated per-mint view of all its DexScreener pairs. */
-interface Aggregated {
+export interface Aggregated {
   mint: string;
   symbol: string | null;
   name: string | null;
@@ -76,9 +76,9 @@ interface Aggregated {
 
 /** Only refresh a mint's snapshot once the prior is this old — otherwise back-to-back
  *  scans would compare across seconds and report meaningless ~0% deltas. */
-const MIN_SNAPSHOT_AGE_MS = 5 * 60_000;
+export const MIN_SNAPSHOT_AGE_MS = 5 * 60_000;
 /** Snapshots are only useful inside the runner window; let them expire. */
-const SNAPSHOT_TTL_S = 7200;
+export const SNAPSHOT_TTL_S = 7200;
 /** Birdeye free tier is ~1 rps — only spend holder lookups on the strongest candidates. */
 const HOLDER_LOOKUP_CAP = 6;
 
@@ -313,7 +313,7 @@ export class RunnerDetector {
 
 // --- Pure aggregation ---
 
-function aggregatePairs(pairs: DexPair[]): Aggregated[] {
+export function aggregatePairs(pairs: DexPair[]): Aggregated[] {
   const byMint = new Map<string, DexPair[]>();
   for (const p of pairs) {
     const mint = p.baseToken?.address;

@@ -68,8 +68,9 @@ import { CollectorCryptClient } from "../sources/collector-crypt";
 import { GachaAnalyzer } from "../enrichers/gacha-analyzer";
 import { registerGachaEntrypoint } from "../entrypoints/gacha";
 import { registerOrchestrationEntrypoints } from "../entrypoints/orchestration";
-import { registerTrenchesEntrypoints, registerTrenchesScanEntrypoint } from "../entrypoints/trenches";
+import { registerTrenchesEntrypoints, registerTrenchesScanEntrypoint, registerTrenchesCheckEntrypoint } from "../entrypoints/trenches";
 import { TrenchesScanOrchestrator } from "../enrichers/trenches-scan";
+import { TrenchesCheckAnalyzer } from "../enrichers/trenches-check";
 import { registerRunnerEntrypoint } from "../entrypoints/runner";
 import { registerFeedEntrypoint } from "../entrypoints/feed";
 import { FeedStore } from "../enrichers/feed-store";
@@ -308,6 +309,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'smart-money-trenches': ['solana', 'memecoin', 'smart-money', 'new-tokens', 'trenches'],
     'runner-scan': ['solana', 'memecoin', 'momentum', 'token-discovery', 'trenches'],
     'trenches-scan': ['solana', 'memecoin', 'smart-money', 'momentum', 'trenches'],
+    'trenches-check': ['solana', 'memecoin', 'token-vetting', 'smart-money', 'trenches'],
     'trending-signals': ['solana', 'trending', 'smart-money', 'new-tokens', 'signals'],
     'consensus-signal': ['solana', 'agent-attention', 'consensus', 'signals', 'smart-money'],
     'attention-momentum': ['solana', 'agent-attention', 'momentum', 'signals', 'divergence'],
@@ -346,6 +348,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'enrich-token-light': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
     'enrich-token-full': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
     'due-diligence': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
+    'trenches-check': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
     'whale-watch': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
     'token-trend': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
     'compare-tokens': { mints: ['DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN'] },
@@ -676,6 +679,17 @@ const trenchesScanOrchestrator = new TrenchesScanOrchestrator(
   cache,
 );
 registerTrenchesScanEntrypoint(addEntrypoint, trenchesScanOrchestrator);
+
+// Trenches Check — the suite pointed at one caller-supplied mint. Shares the
+// runner snapshot history and the cached smart-money seed scan.
+const trenchesCheckAnalyzer = new TrenchesCheckAnalyzer(
+  dexscreener,
+  trenchesSmartMoney,
+  signalTracker,
+  cache,
+  birdeye,
+);
+registerTrenchesCheckEntrypoint(addEntrypoint, trenchesCheckAnalyzer);
 
 // Event-Driven Alerts (Priority 13) — poll-based V1. Stateless: agent passes
 // watchlist + `since` cursor each call. Detection composes token-analyzer,
@@ -1058,6 +1072,11 @@ app.get('/docs', (c) => {
         price: '0.005',
         input: { type: 'token | wallet (default token)', address: 'string (optional) — single-entity report when provided', window: '1h | 6h | 24h (default 1h)', limit: 'number 1-50 (default 10) — top-N size when address absent', format: 'json | llm | both' },
         description: 'Agent attention signal — what tokens/wallets other agents are querying right now. Proprietary data: derived from SolEnrich\'s own request stream, not market volume. Returns rank/percentile/trend for a given entity, or top-N most-queried entities in the window. Signal data builds with usage.',
+      },
+      'trenches-check': {
+        price: '0.03',
+        input: { mint: 'string (required) — token mint to check', format: 'json | llm | both' },
+        description: 'The trenches suite pointed at ONE token — pass a mint, get a HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL / NO_SIGNAL verdict with reasoning. Same three legs as trenches-scan (on-chain velocity via runner stage + score, proven-winner buys, agent attention) but targeted at your candidate instead of discovery-driven. Composable with due-diligence (structural safety) before an entry. Repeat checks 5+ min apart unlock liquidity-trend and holder-growth deltas.',
       },
       'trenches-scan': {
         price: '0.08',

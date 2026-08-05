@@ -1,10 +1,12 @@
 import { z } from 'zod';
-import { SmartMoneyTrenchesInput, TrenchesScanInput } from '../schemas/trenches';
+import { SmartMoneyTrenchesInput, TrenchesScanInput, TrenchesCheckInput } from '../schemas/trenches';
 import type { TrenchesSmartMoneyAnalyzer } from '../enrichers/trenches-smart-money';
 import type { TrenchesScanOrchestrator } from '../enrichers/trenches-scan';
+import type { TrenchesCheckAnalyzer } from '../enrichers/trenches-check';
 import { formatResponse } from '../formatters';
 import { formatTrenchesBriefing } from '../formatters/llm-trenches';
 import { formatTrenchesScanBriefing } from '../formatters/llm-trenches-scan';
+import { formatTrenchesCheckBriefing } from '../formatters/llm-trenches-check';
 
 type AddEntrypoint = (def: any) => void;
 
@@ -47,6 +49,23 @@ export function registerTrenchesScanEntrypoint(
         input.limit,
       );
       return { output: formatResponse(data, input.format, formatTrenchesScanBriefing) };
+    },
+  });
+}
+
+export function registerTrenchesCheckEntrypoint(
+  addEntrypoint: AddEntrypoint,
+  analyzer: TrenchesCheckAnalyzer,
+) {
+  addEntrypoint({
+    key: 'trenches-check',
+    description:
+      'The trenches suite pointed at ONE token: pass a mint, get a HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL / NO_SIGNAL verdict with reasoning. Runs the same three legs as trenches-scan — on-chain velocity (runner stage + score), proven-winner buys, agent attention — but targeted. The follow-up call to a new-tokens discovery or any token someone shilled you: before you ape, run the check.',
+    input: TrenchesCheckInput,
+    handler: async (ctx: { input: z.infer<typeof TrenchesCheckInput> }) => {
+      const input = ctx.input;
+      const data = await analyzer.check(input.mint);
+      return { output: formatResponse(data, input.format, formatTrenchesCheckBriefing) };
     },
   });
 }

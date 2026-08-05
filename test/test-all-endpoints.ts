@@ -308,6 +308,19 @@ check('has llm_summary', typeof ts.body?.output?.llm_summary === 'string' && ts.
 console.log(`  ⏱ ${ts.ms}ms\n`);
 
 // ============================================================
+// 18. trenches-check
+// ============================================================
+console.log('━━━ 18. trenches-check ━━━');
+const tc = await invoke('trenches-check', { mint: TEST_TOKEN, format: 'both' }, 60000);
+check('returns 200', tc.status === 200, `got ${tc.status}`);
+check('echoes mint', tc.body?.output?.mint === TEST_TOKEN);
+check('has valid verdict', ['HIGH_CONFLUENCE', 'MODERATE', 'SINGLE_SIGNAL', 'NO_SIGNAL'].includes(tc.body?.output?.verdict));
+check('composite_score 0-1', tc.body?.output?.composite_score >= 0 && tc.body?.output?.composite_score <= 1);
+check('has reasoning', typeof tc.body?.output?.reasoning === 'string' && tc.body.output.reasoning.length > 0);
+check('has llm_summary', typeof tc.body?.output?.llm_summary === 'string' && tc.body.output.llm_summary.includes('Trenches Check'));
+console.log(`  ⏱ ${tc.ms}ms\n`);
+
+// ============================================================
 // Summary
 // ============================================================
 console.log('═══════════════════════════════════════════════════');
