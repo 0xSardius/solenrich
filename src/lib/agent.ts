@@ -164,6 +164,18 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
   const forwardedFor = c.req.header('x-forwarded-for');
 
   await next();
+
+  // ALWAYS drain the clone, whatever the status. `Request.clone()` tees the body
+  // stream; on Bun 1.3.14 an abandoned tee branch retains ~260KB per request and
+  // is never reclaimed (measured: 15k requests -> +3.8GB, twice, reproducibly).
+  // 402 is our most common response, so this was the whole 1.9GB/day OOM climb.
+  // Cancelling the branch does NOT release it — it has to be read. Do not move
+  // this below the status check. Root-caused 2026-08-09.
+  let cloneText: string | null = null;
+  if (reqClone) {
+    try { cloneText = await reqClone.text(); } catch { cloneText = null; }
+  }
+
   // Only count successful responses
   if (c.res.status !== 200) return;
   try {
@@ -192,10 +204,11 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
       }
     }
 
-    // Extract the queried address/mint from the pre-handler body clone
-    if (reqClone) {
+    // Extract the queried address/mint from the pre-handler body clone (already
+    // drained to `cloneText` above — never re-read the stream).
+    if (cloneText) {
       try {
-        const body = await reqClone.json();
+        const body = JSON.parse(cloneText);
         const input = body?.input ?? body;
         const address = input?.address || input?.mint || input?.protocol;
         if (address && typeof address === 'string') {

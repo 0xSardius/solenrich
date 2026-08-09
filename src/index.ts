@@ -51,9 +51,13 @@ export default {
     const url = new URL(request.url);
     if (!url.pathname.startsWith('/entrypoints/')) return res;
 
+    // Read the body directly instead of cloning. `clone()` tees the stream, and
+    // on Bun 1.3.14 the un-read branch is retained forever (~260KB/request — see
+    // the note in lib/agent.ts). We always return a freshly built Response here,
+    // so the original body is never needed again: consume it once, no tee.
     let originalBody: Record<string, unknown> = {};
     try {
-      originalBody = await res.clone().json();
+      originalBody = JSON.parse(await res.text());
     } catch {}
 
     // Our custom fields first, middleware details override — so verify failures
