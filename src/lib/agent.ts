@@ -1187,6 +1187,55 @@ console.log('[docs] Documentation endpoint available at GET /docs');
 
 // --- Metrics endpoint (internal usage analytics) ---
 
+/**
+ * Where the process's memory actually lives. `bun:jsc` heapStats gives the JS
+ * side (and per-type object counts, which name a leaking type outright);
+ * process.memoryUsage gives the native side (external + arrayBuffers cover
+ * Buffers, streams, and fetch bodies that never show up in the JS heap).
+ * Best-effort — diagnostics must never break /metrics.
+ */
+function memoryBreakdown(): Record<string, unknown> {
+  const mb = (n: number) => Math.round(n / 1024 / 1024);
+  const out: Record<string, unknown> = {};
+  try {
+    const u = process.memoryUsage();
+    out.native = {
+      rss_mb: mb(u.rss),
+      heap_total_mb: mb(u.heapTotal),
+      heap_used_mb: mb(u.heapUsed),
+      external_mb: mb(u.external),
+      array_buffers_mb: mb((u as unknown as { arrayBuffers?: number }).arrayBuffers ?? 0),
+    };
+  } catch (err) {
+    out.native = { error: String(err) };
+  }
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const jsc = require('bun:jsc') as {
+      heapStats: () => {
+        heapSize: number; heapCapacity: number; extraMemorySize: number;
+        objectCount: number; protectedObjectCount: number;
+        objectTypeCounts: Record<string, number>;
+      };
+    };
+    const s = jsc.heapStats();
+    const top = Object.entries(s.objectTypeCounts)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 15);
+    out.js_heap = {
+      heap_mb: mb(s.heapSize),
+      heap_capacity_mb: mb(s.heapCapacity),
+      extra_memory_mb: mb(s.extraMemorySize),
+      object_count: s.objectCount,
+      protected_object_count: s.protectedObjectCount,
+      top_object_types: Object.fromEntries(top),
+    };
+  } catch (err) {
+    out.js_heap = { error: String(err) };
+  }
+  return out;
+}
+
 app.get('/metrics', async (c) => {
   // Proprietary signal (per-endpoint traffic, top queried entities) — gated.
   // METRICS_TOKEN set → require Bearer token. Not set → only serve when
@@ -1264,6 +1313,12 @@ app.get('/metrics', async (c) => {
       rss_mb: Math.round(process.memoryUsage.rss() / 1024 / 1024),
       uptime_hours: Math.round(process.uptime() / 36) / 100,
       bun: Bun.version,
+      // Leak diagnostics (added 2026-08-09). Prod climbs ~1.9GB/day to an 8GB
+      // OOM kill; every request path reproduced locally stayed flat, so we need
+      // prod to say what it is holding. The split below is the decisive one:
+      // JS heap ~= RSS means an object leak (top_object_types names it);
+      // JS heap << RSS means native memory (buffers/streams/allocator).
+      memory: memoryBreakdown(),
     },
     today: {
       total_calls: todayTotal,
