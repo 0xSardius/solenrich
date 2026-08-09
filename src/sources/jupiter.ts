@@ -1,5 +1,6 @@
 import { CONFIG, CACHE_TTL } from '../config';
 import type { Cache } from '../cache';
+import { drain } from '../utils/drain';
 
 // --- Types ---
 
@@ -143,7 +144,7 @@ export class JupiterClient {
         try {
           const url = `${this.baseUrl}/swap/v1/quote?inputMint=${USDC_MINT}&outputMint=${mint}&amount=${size.amount}&slippageBps=50`;
           const res = await this.fetchWithKey(url, controller.signal);
-          if (!res.ok) return null;
+          if (!res.ok) { await drain(res); return null; }
           const quote: any = await res.json();
           const priceImpact = parseFloat(quote.priceImpactPct ?? '0');
           const outAmount = Number(quote.outAmount ?? 0);

@@ -1,5 +1,6 @@
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
+import { drain } from '../utils/drain';
 
 // --- Types ---
 
@@ -74,7 +75,8 @@ export class DexScreenerClient {
     });
 
     if (!res.ok) {
-      if (res.status === 404) return null;
+      // 404 is the common case for unknown/too-fresh mints — drain before bailing.
+      if (res.status === 404) { await drain(res); return null; }
       throw new Error(`DexScreener HTTP ${res.status}: ${await res.text()}`);
     }
 
@@ -137,7 +139,7 @@ export class DexScreenerClient {
       headers: { Accept: 'application/json' },
     });
 
-    if (!res.ok) return [];
+    if (!res.ok) { await drain(res); return []; }
 
     const raw: any[] = await res.json();
     // Filter to Solana only
@@ -210,7 +212,7 @@ export class DexScreenerClient {
         const res = await fetch(`${this.baseUrl}/tokens/v1/solana/${chunk.join(',')}`, {
           headers: { Accept: 'application/json' },
         });
-        if (!res.ok) continue;
+        if (!res.ok) { await drain(res); continue; }
         const pairs: unknown = await res.json();
         if (Array.isArray(pairs)) out.push(...(pairs as DexPair[]));
       } catch (err) {
@@ -226,7 +228,7 @@ export class DexScreenerClient {
       headers: { Accept: 'application/json' },
     });
 
-    if (!res.ok) return [];
+    if (!res.ok) { await drain(res); return []; }
     const raw: any = await res.json();
     return (raw.pairs ?? []).filter((p: any) => p.chainId === 'solana');
   }
@@ -247,7 +249,7 @@ export class DexScreenerClient {
       { headers: { Accept: 'application/json' } },
     );
 
-    if (!res.ok) return null;
+    if (!res.ok) { await drain(res); return null; }
 
     const raw: any = await res.json();
     // DexScreener returns candles in the pair response when ?include=candles is set

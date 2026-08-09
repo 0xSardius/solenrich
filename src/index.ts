@@ -45,6 +45,32 @@ export default {
   // 60s gives them room while still bounding hung/held-open connections.
   idleTimeout: 60,
   async fetch(request: Request, server: any): Promise<Response> {
+    // --- A2A /tasks guard (2026-08-09) ---
+    // Lucid's built-in /tasks route dispatches ANY registered skill by `skillId`
+    // with no payment challenge — verified in prod: it returned a full
+    // enrich-token-light payload for free, i.e. every paid endpoint was
+    // reachable unpaid by anyone who found the route. It also files each task
+    // into an in-memory Map that is written in five places and never deleted
+    // from, so it doubles as an unbounded memory vector.
+    // We never advertise A2A tasks (not in the agent card, README, or /docs);
+    // all documented access is /entrypoints/{key}/invoke or /mcp. Answer with a
+    // 402 that points at the paid route rather than a bare 404, so a genuine
+    // A2A caller learns where to go. Intercepted here because Lucid registers
+    // /tasks inside createAgentApp, ahead of any middleware we could add.
+    const path = new URL(request.url).pathname;
+    if (path === '/tasks' || path.startsWith('/tasks/')) {
+      return new Response(
+        JSON.stringify({
+          error: 'Payment Required',
+          message:
+            'A2A task execution is not available on SolEnrich. Every skill is a paid endpoint — call it directly and pay per request via x402.',
+          how_to_call: 'POST /entrypoints/{key}/invoke with {"input": {...}}',
+          discovery: { endpoints: '/entrypoints', docs: '/docs', mcp: '/mcp' },
+        }),
+        { status: 402, headers: { 'Content-Type': 'application/json' } },
+      );
+    }
+
     const res = await app.fetch(request, { IP: server?.requestIP?.(request) });
     if (res.status !== 402) return res;
 

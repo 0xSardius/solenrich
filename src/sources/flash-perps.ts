@@ -25,6 +25,7 @@ import bs58 from 'bs58';
 import { createHash } from 'node:crypto';
 import { CONFIG, CACHE_TTL } from '../config';
 import type { Cache } from '../cache';
+import { drain } from '../utils/drain';
 
 export const FLASH_PROGRAM_ID = new PublicKey('FLASH6Lo6h3iasJKWDs2F8TkW2UKf3s15C8PMGuVfgBn');
 // MagicBlock delegation program — the current owner of Flash's accounts.
@@ -93,7 +94,7 @@ export class FlashPerpsClient {
       const t = setTimeout(() => controller.abort(), 6000);
       const res = await fetch('https://flashapi.trade/pool-data', { signal: controller.signal });
       clearTimeout(t);
-      if (!res.ok) return null;
+      if (!res.ok) { await drain(res); return null; }
       const data = (await res.json()) as any;
       const out: PoolDataCustody[] = [];
       for (const pool of data?.pools ?? []) {

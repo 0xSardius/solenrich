@@ -7,12 +7,15 @@ export interface ParallelTask<T> {
 const DEFAULT_TIMEOUT = 10_000;
 
 function withTimeout<T>(fn: () => Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
   return Promise.race([
     fn(),
-    new Promise<never>((_, reject) =>
-      setTimeout(() => reject(new Error(`Timed out after ${ms}ms`)), ms),
-    ),
-  ]);
+    new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`Timed out after ${ms}ms`)), ms);
+    }),
+    // Clear the loser: without this the pending timer's closure stays alive for
+    // the full timeout after the task already resolved.
+  ]).finally(() => clearTimeout(timer));
 }
 
 /**

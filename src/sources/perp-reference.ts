@@ -5,6 +5,7 @@
 
 import { CACHE_TTL } from '../config';
 import type { Cache } from '../cache';
+import { drain } from '../utils/drain';
 
 export type ReferenceVenue = 'hyperliquid' | 'dydx-v4';
 export type ReferenceMarket = 'SOL' | 'BTC' | 'ETH' | 'BONK';
@@ -112,7 +113,7 @@ export class PerpReferenceClient {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'metaAndAssetCtxs' }),
       });
-      if (!res.ok) return null;
+      if (!res.ok) { await drain(res); return null; }
       const data = await res.json() as [
         { universe: Array<{ name: string }> },
         Array<{
@@ -193,7 +194,7 @@ export class PerpReferenceClient {
 
     try {
       const res = await fetchWithTimeout('https://indexer.dydx.trade/v4/perpetualMarkets');
-      if (!res.ok) return null;
+      if (!res.ok) { await drain(res); return null; }
       const data = await res.json() as {
         markets: Record<string, {
           ticker: string;
@@ -271,7 +272,7 @@ export class PerpReferenceClient {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'clearinghouseState', user: address }),
       });
-      if (!res.ok) return null;
+      if (!res.ok) { await drain(res); return null; }
       const data = (await res.json()) as any;
       const ms = data?.marginSummary ?? {};
       const positions: HlPositionRaw[] = [];
@@ -328,7 +329,7 @@ export class PerpReferenceClient {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'portfolio', user: address }),
       });
-      if (!res.ok) return null;
+      if (!res.ok) { await drain(res); return null; }
       const data = (await res.json()) as Array<[string, { pnlHistory?: Array<[number, string]> }]>;
       const lastPnl = (window: string): number | null => {
         const row = data?.find?.((d) => d[0] === window);
@@ -378,7 +379,7 @@ export class PerpReferenceClient {
       const res = await fetch('https://stats-data.hyperliquid.xyz/Mainnet/leaderboard', {
         signal: controller.signal,
       });
-      if (!res.ok) return null;
+      if (!res.ok) { await drain(res); return null; }
       const data = (await res.json()) as any;
       const rows: any[] = data?.leaderboardRows ?? [];
       const out: HlLeaderboardCandidate[] = [];

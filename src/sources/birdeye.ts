@@ -1,5 +1,6 @@
 import { CONFIG, CACHE_TTL } from '../config';
 import type { Cache } from '../cache';
+import { drain } from '../utils/drain';
 
 // --- Types ---
 
@@ -193,6 +194,7 @@ export class BirdeyeClient {
 
       if (res.status === 429 && attempt === 0) {
         console.warn('[birdeye] Rate limited, retrying in 1s...');
+        await drain(res);
         await new Promise((r) => setTimeout(r, 1000));
         continue;
       }

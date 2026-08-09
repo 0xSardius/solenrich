@@ -1,5 +1,6 @@
 import { CACHE_TTL } from '../config';
 import type { Cache } from '../cache';
+import { drain } from '../utils/drain';
 
 // Collector Crypt Gacha Machine API — the backend behind Jupiter Gacha
 // (tokenized graded trading-card packs). Public, no auth for read endpoints.
@@ -64,7 +65,10 @@ export class CollectorCryptClient {
         headers: { Accept: 'application/json' },
         signal: controller.signal,
       });
-      if (!res.ok) throw new Error(`collector-crypt machines HTTP ${res.status}`);
+      if (!res.ok) {
+        await drain(res);
+        throw new Error(`collector-crypt machines HTTP ${res.status}`);
+      }
       const raw = (await res.json()) as { machines?: GachaMachine[] };
       const machines = Array.isArray(raw.machines) ? raw.machines : [];
       await this.cache.set(cacheKey, machines, CACHE_TTL.gacha);

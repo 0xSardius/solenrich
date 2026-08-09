@@ -13,6 +13,7 @@
 
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { drain } from './utils/drain';
 
 const AGENT_URL = process.env.SOLENRICH_URL ?? 'https://api.solenrich.com';
 
@@ -37,6 +38,7 @@ async function invoke(entrypointKey: string, input: Record<string, unknown>): Pr
         }
       } catch { /* ignore decode errors */ }
     }
+    await drain(res);
     throw new Error(`SolEnrich ${entrypointKey} requires x402 payment. This endpoint is pay-per-request via USDC on Solana.${paymentInfo}`);
   }
 
