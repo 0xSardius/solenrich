@@ -2,6 +2,45 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Writing Rules
+
+These apply to everything you write: chat replies, commit messages, comments, docs, and endpoint
+descriptions. They exist because clever writing hides meaning. Say the thing.
+
+**Write in ASD-STE100 (Simplified Technical English).** The practical rules:
+
+- One idea per sentence. Keep sentences under 20 words for instructions, under 25 for explanations.
+- Use active voice. Write "the middleware drops the clone", not "the clone is dropped".
+- Use one word for one meaning, and the same word every time. If it is a "clone", it stays a "clone"
+  — do not switch to "copy", "duplicate", or "tee" halfway through.
+- Use the simplest verb that is accurate. "Use", not "utilize". "Fix", not "remediate".
+- Use present tense for how things work. Use past tense only for what happened.
+- Write out what a term means the first time, or do not use it.
+- No more than three nouns in a row. "Request body clone" is fine. "Request body clone retention
+  behaviour" is not.
+- Start a sentence with the main point. Put conditions after it, not before.
+
+**Follow Zinsser's four principles:**
+
+1. **Simplicity** — Cut every word that does no work. Prefer the short word, the plain word, the
+   concrete word. If a sentence can lose half its words and keep its meaning, it should.
+2. **Brevity** — Short is a result of selection, not compression. Leave out what the reader does not
+   need. Do not shrink what is left into fragments, arrows, or abbreviations.
+3. **Clarity** — The reader must never have to reread. State the outcome first, then the reasoning.
+   Give numbers, file paths, and names instead of gestures at them.
+4. **Humanity** — Write to a person. Admit what you do not know, say when you were wrong, and say
+   what you would do. Warmth is fine. Performance is not.
+
+**Banned, because they obscure meaning:**
+
+- Witticisms, literary flourishes, and clever turns of phrase. Example of what NOT to write: "that
+  mitigation doesn't survive contact with the actual text." Write instead: "their terms name derived
+  data specifically, so that workaround does not apply."
+- Metaphor used as argument ("the tell", "load-bearing", "the trap", "smoking gun").
+- Filler openers: "Here's the thing", "The reality is", "It's worth noting".
+- Hedging that carries no information: "arguably", "essentially", "fundamentally".
+- Claims of certainty that measurement has not earned. Say what was measured and what was assumed.
+
 ## Workflow Rules
 
 - **Commit and push after each feature or modular change.** Don't let work accumulate uncommitted — each phase, feature, or logical unit of work should be committed and pushed before moving on.
