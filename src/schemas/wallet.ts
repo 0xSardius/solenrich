@@ -19,6 +19,20 @@ export const WalletEnrichmentSchema = z.object({
     usd_value: z.number(),
   })),
   nft_count: z.number(),
+  nft_summary: z.object({
+    total: z.number(),
+    collected: z.number(),
+    airdropped: z.number(),
+    suspected_spam: z.number(),
+    distinct_collections: z.number(),
+  }),
+  nft_collections: z.array(z.object({
+    name: z.string(),
+    collection_mint: z.string().nullable(),
+    count: z.number(),
+    compressed: z.boolean(),
+    suspected_spam: z.boolean(),
+  })),
   defi_positions: z.array(z.object({
     protocol: z.string(),
     type: z.string(),

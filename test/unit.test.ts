@@ -18,6 +18,7 @@ import { median, spreadPct } from '../src/utils/price-aggregator';
 import { formatResponse } from '../src/formatters/index';
 import { parseIntent } from '../src/entrypoints/query';
 import { assessRunner, computeRunnerMetrics, type RunnerScoreInput } from '../src/enrichers/runner-score';
+import { classifyNfts, isSuspectedSpam, type NftAssetInput } from '../src/enrichers/nft-classifier';
 import { STRESS_COVERAGE } from '../agents/solscout/stress';
 import { ENDPOINT_META } from '../src/openapi';
 import { PRICING } from '../src/config';
@@ -905,5 +906,146 @@ describe('assessRunner buy-pressure gating', () => {
     expect(a.stage).not.toBe('PARABOLIC_LATE');
     expect(a.flags).toContain('up_big_24h');
     expect(a.reasoning).toContain('965%');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// classifyNfts / isSuspectedSpam
+// ---------------------------------------------------------------------------
+
+function nft(over: Partial<NftAssetInput> = {}): NftAssetInput {
+  return {
+    compressed: false,
+    name: 'Mad Lads #1234',
+    description: 'A Mad Lad.',
+    collection_mint: 'J1S9H3QjnRtBbbuD4HjPV6RpRhwuk4zKbxsnCHuTgh9w',
+    collection_name: 'Mad Lads',
+    ...over,
+  };
+}
+
+describe('isSuspectedSpam', () => {
+  test('never flags uncompressed assets', () => {
+    // Uncompressed mints cost rent per asset, so bulk spam is rare there and a
+    // false positive would hide a real holding.
+    expect(isSuspectedSpam(nft({ compressed: false, name: 'Claim your 5000WIF' }))).toBe(false);
+  });
+
+  test('flags invisible characters used to evade filters', () => {
+    // Observed live: zero-width spaces inside "USDC".
+    expect(isSuspectedSpam(nft({ compressed: true, name: '" U\u200bSD\u200bC VO\u200bUC\u200bHER "' }))).toBe(true);
+  });
+
+  test('flags a domain in the name', () => {
+    expect(isSuspectedSpam(nft({ compressed: true, name: 'Visit claimsol.xyz now' }))).toBe(true);
+    expect(isSuspectedSpam(nft({ compressed: true, name: 'https://drain.example/gift' }))).toBe(true);
+  });
+
+  test('flags claim bait wording', () => {
+    for (const name of ['Claim You BOME', '$ME BOUNTY', 'USDC Voucher', 'Airdrop #12', 'You won 5 SOL']) {
+      expect(isSuspectedSpam(nft({ compressed: true, name, collection_name: null }))).toBe(true);
+    }
+  });
+
+  test('does not flag legitimate compressed drops', () => {
+    for (const name of ['Muffin Pass', 'J.U.P Planetary Call', 'dVIN Labs', 'Active Staking']) {
+      expect(isSuspectedSpam(nft({ compressed: true, name, collection_name: name }))).toBe(false);
+    }
+  });
+
+  test('does not match bait words inside longer words', () => {
+    expect(isSuspectedSpam(nft({ compressed: true, name: 'Reclaimed Land #4' }))).toBe(false);
+    expect(isSuspectedSpam(nft({ compressed: true, name: 'Freedom Pass' }))).toBe(false);
+  });
+
+  test('flags a link in the description only when there is no collection', () => {
+    const desc = 'Go to freesol.vip to redeem';
+    expect(isSuspectedSpam(nft({ compressed: true, name: 'Pass', collection_mint: null, description: desc }))).toBe(true);
+    expect(isSuspectedSpam(nft({ compressed: true, name: 'Pass', description: desc }))).toBe(false);
+  });
+});
+
+describe('classifyNfts', () => {
+  test('buckets always sum to total', () => {
+    const assets = [
+      nft(),
+      nft({ compressed: true, name: 'Muffin Pass', collection_name: 'Muffin Pass' }),
+      nft({ compressed: true, name: 'Claim your 5000WIF', collection_name: null, collection_mint: null }),
+    ];
+    const { summary } = classifyNfts(assets);
+    expect(summary.total).toBe(3);
+    expect(summary.collected + summary.airdropped + summary.suspected_spam).toBe(3);
+    expect(summary).toMatchObject({ collected: 1, airdropped: 1, suspected_spam: 1 });
+  });
+
+  test('handles an empty wallet', () => {
+    const { summary, collections } = classifyNfts([]);
+    expect(summary).toMatchObject({ total: 0, collected: 0, airdropped: 0, suspected_spam: 0, distinct_collections: 0 });
+    expect(collections).toEqual([]);
+  });
+
+  test('distinct_collections counts only real holdings', () => {
+    // 40 spam drops across 40 fake collections is not a 40-collection collector.
+    const spam = Array.from({ length: 40 }, (_, i) =>
+      nft({ compressed: true, name: `Claim reward #${i}`, collection_mint: `fake${i}`, collection_name: `Claim ${i}` }),
+    );
+    const { summary } = classifyNfts([...spam, nft()]);
+    expect(summary.suspected_spam).toBe(40);
+    expect(summary.distinct_collections).toBe(1);
+  });
+
+  test('groups by collection mint and sorts real holdings first', () => {
+    const assets = [
+      ...Array.from({ length: 30 }, () => nft({ compressed: true, name: 'Drop', collection_mint: 'cheap', collection_name: 'Cheap Drop' })),
+      nft(),
+      nft({ name: 'Mad Lads #2' }),
+    ];
+    const { collections } = classifyNfts(assets);
+    // Mad Lads has 2 assets vs 30 drops, but real holdings sort ahead of drops.
+    expect(collections[0].name).toBe('Mad Lads');
+    expect(collections[0].count).toBe(2);
+    expect(collections[1].count).toBe(30);
+  });
+
+  test('keeps unaffiliated mints separate instead of collapsing them', () => {
+    const assets = [
+      nft({ collection_mint: null, collection_name: null, name: 'One-off A' }),
+      nft({ collection_mint: null, collection_name: null, name: 'One-off B' }),
+    ];
+    const { collections } = classifyNfts(assets);
+    expect(collections).toHaveLength(2);
+  });
+
+  test('marks a collection as spam if any asset in it is spam', () => {
+    const assets = [
+      nft({ compressed: true, name: 'Pass #1', collection_mint: 'c1', collection_name: 'Passes' }),
+      nft({ compressed: true, name: 'Claim now', collection_mint: 'c1', collection_name: 'Passes' }),
+    ];
+    const { collections } = classifyNfts(assets);
+    expect(collections).toHaveLength(1);
+    expect(collections[0].suspected_spam).toBe(true);
+  });
+
+  test('respects the topCollections cap without distorting the summary', () => {
+    const assets = Array.from({ length: 12 }, (_, i) => nft({ collection_mint: `c${i}`, collection_name: `Coll ${i}` }));
+    const { summary, collections } = classifyNfts(assets, 5);
+    expect(collections).toHaveLength(5);
+    expect(summary.total).toBe(12);
+    expect(summary.distinct_collections).toBe(12);
+  });
+});
+
+describe('labelWallet nft_collector', () => {
+  test('uses collected count when present, not the raw count', () => {
+    // The wallet that motivated the change: 118 non-fungibles, 15 real.
+    const spammed = makeWalletData({ nft_count: 118, nft_collected_count: 3 });
+    expect(labelWallet(spammed)).not.toContain('nft_collector');
+
+    const collector = makeWalletData({ nft_count: 118, nft_collected_count: 15 });
+    expect(labelWallet(collector)).toContain('nft_collector');
+  });
+
+  test('falls back to nft_count when collected count is absent', () => {
+    expect(labelWallet(makeWalletData({ nft_count: 10 }))).toContain('nft_collector');
   });
 });

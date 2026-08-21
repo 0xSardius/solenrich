@@ -934,7 +934,7 @@ app.get('/docs', (c) => {
       'enrich-wallet-light': {
         price: '0.002',
         input: { address: 'string (Solana base58)', format: 'json | llm | both' },
-        description: 'Light wallet profile: SOL balance, token holdings, labels (including behavioral flags regular_intervals/high_frequency/24_7_active/repetitive_actions), risk score',
+        description: 'Light wallet profile: SOL balance, token holdings, NFT breakdown (collected vs airdropped vs suspected spam), labels (including behavioral flags regular_intervals/high_frequency/24_7_active/repetitive_actions), risk score',
       },
       'enrich-wallet-full': {
         price: '0.005',
@@ -1185,6 +1185,26 @@ app.get('/docs', (c) => {
     entity_labeling: {
       description: '20+ known Solana addresses auto-tagged in all enrichment results.',
       types: ['CEX (Binance, Coinbase, etc.)', 'Protocol (Raydium, Orca, etc.)', 'Bridge', 'Foundation'],
+    },
+    nft_classification: {
+      description:
+        'Wallet enrichment splits non-fungible assets into three buckets that sum to nft_count. ' +
+        'Most non-fungibles on Solana are unsolicited compressed drops, so a raw count overstates ' +
+        'collecting activity. Read nft_summary, not nft_count.',
+      buckets: {
+        collected:
+          'Uncompressed and not spam-flagged. Minting these costs rent per asset, so they are usually bought or minted deliberately.',
+        airdropped:
+          'Compressed and not spam-flagged. Cheap to mint in bulk, so usually sent unsolicited.',
+        suspected_spam:
+          'Name or description matches claim bait, an embedded domain, or invisible filter-evasion characters.',
+      },
+      spam_heuristic:
+        'Pattern matching on names and descriptions. Applied to compressed assets only. It is a signal, not a verdict — a legitimate compressed drop with promotional wording can be flagged.',
+      distinct_collections:
+        'Counts only collected holdings in a named collection. A wallet spammed across 40 fake collections does not count as 40.',
+      label_effect:
+        'The nft_collector label requires 10+ collected NFTs. It no longer fires on airdrop volume.',
     },
   };
 

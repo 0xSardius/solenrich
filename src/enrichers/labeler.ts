@@ -5,6 +5,12 @@ export interface WalletData {
   portfolio_value_usd: number;
   token_count: number;
   nft_count: number;
+  /**
+   * Non-fungibles the wallet likely bought or minted, excluding compressed drops
+   * and suspected spam. Optional so older callers keep working; when absent the
+   * `nft_collector` rule falls back to `nft_count`.
+   */
+  nft_collected_count?: number;
   tx_count_30d: number;
   first_tx_date: string | null;
   defi_positions: { protocol: string; type: string; value_usd: number }[];
@@ -43,8 +49,11 @@ export function labelWallet(data: WalletData): string[] {
     labels.push('defi_user');
   }
 
-  // nft_collector: 10+ NFTs
-  if (data.nft_count >= 10) {
+  // nft_collector: 10+ NFTs the wallet actually collected.
+  // Counting every non-fungible mislabels wallets that only received airdrops —
+  // one measured wallet held 118 non-fungibles of which 103 were compressed drops.
+  const collectedNfts = data.nft_collected_count ?? data.nft_count;
+  if (collectedNfts >= 10) {
     labels.push('nft_collector');
   }
 

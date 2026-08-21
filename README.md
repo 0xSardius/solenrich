@@ -35,7 +35,7 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 
 | Endpoint | Price | Input | Description |
 |----------|-------|-------|-------------|
-| `enrich-wallet-light` | $0.002 | `address`, `format` | SOL balance, token holdings, labels, risk score |
+| `enrich-wallet-light` | $0.002 | `address`, `format` | SOL balance, token holdings, NFT breakdown, labels, risk score |
 | `enrich-wallet-full` | $0.005 | `address`, `format` | + DeFi positions, connected wallets, enhanced tx history |
 | `enrich-token-light` | $0.002 | `mint`, `format` | Price (median of 3 sources), market cap, volume, liquidity, risk flags |
 | `enrich-token-full` | $0.004 | `mint`, `format` | + Top 20 holders, HHI concentration, volatility metrics |
@@ -201,6 +201,22 @@ Client → x402 Paywall → Entrypoint Router → Enrichment Engine → Format R
 ### Entity Labeling
 
 20+ known Solana addresses auto-tagged across all enrichment results: CEX wallets (Binance, Coinbase), protocol addresses (Raydium, Orca, Jupiter), bridges, and foundations.
+
+### NFT Classification
+
+Most non-fungible assets on a Solana wallet are unsolicited compressed drops, so a raw NFT count overstates collecting activity. One measured wallet held 118 non-fungibles: 15 were real holdings and 103 were airdrops, several of them drainer bait.
+
+Wallet enrichment returns `nft_summary` with three buckets that sum to `nft_count`:
+
+| Bucket | Meaning |
+|--------|---------|
+| `collected` | Uncompressed and not spam-flagged. Minting these costs rent per asset, so they are usually bought or minted deliberately. |
+| `airdropped` | Compressed and not spam-flagged. Cheap to mint in bulk, so usually sent unsolicited. |
+| `suspected_spam` | Name or description matches claim bait, an embedded domain, or invisible filter-evasion characters. |
+
+`nft_collections` lists the largest collections, real holdings first. `distinct_collections` counts only collected holdings in a named collection.
+
+Spam detection is pattern matching on names and descriptions, applied to compressed assets only. Treat it as a signal, not a verdict — a legitimate compressed drop with promotional wording can be flagged. The `nft_collector` label requires 10 or more `collected` NFTs, so it no longer fires on airdrop volume.
 
 ## MCP Server
 

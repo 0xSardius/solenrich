@@ -66,7 +66,14 @@ export function formatWalletComparisonBriefing(data: WalletComparison): string {
   out += `| SOL Balance | ${wallets.map((w) => `${w.sol_balance.toFixed(2)} SOL`).join(' | ')} |\n`;
   out += `| Portfolio Value | ${wallets.map((w) => formatUsd(w.portfolio_value_usd)).join(' | ')} |\n`;
   out += `| Token Count | ${wallets.map((w) => `${w.token_count}`).join(' | ')} |\n`;
-  out += `| NFTs | ${wallets.map((w) => `${w.nft_count}`).join(' | ')} |\n`;
+  // Show collected NFTs, not the raw count — the raw count is mostly airdrops
+  // and would rank a spammed wallet above a real collector.
+  out += `| NFTs (collected) | ${wallets.map((w) => `${w.nft_summary?.collected ?? w.nft_count}`).join(' | ')} |\n`;
+  if (wallets.some((w) => (w.nft_summary?.airdropped ?? 0) + (w.nft_summary?.suspected_spam ?? 0) > 0)) {
+    out += `| NFTs (airdropped/spam) | ${wallets
+      .map((w) => `${w.nft_summary?.airdropped ?? 0} / ${w.nft_summary?.suspected_spam ?? 0}`)
+      .join(' | ')} |\n`;
+  }
   out += `| Txs (30d) | ${wallets.map((w) => `${w.tx_count_30d}`).join(' | ')} |\n`;
   out += `| Risk | ${wallets.map((w) => `${w.risk_score.toFixed(2)} (${w.risk_level})`).join(' | ')} |\n`;
   out += `| Labels | ${wallets.map((w) => w.labels.length === 0 ? 'None' : w.labels.join(', ')).join(' | ')} |\n`;

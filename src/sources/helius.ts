@@ -28,7 +28,18 @@ export interface HeliusAsset {
   };
   ownership: { owner: string; frozen: boolean; delegated: boolean };
   compression?: { compressed: boolean };
-  grouping?: Array<{ group_key: string; group_value: string }>;
+  grouping?: Array<{
+    group_key: string;
+    group_value: string;
+    /** Present only when the request sets `displayOptions.showCollectionMetadata`. */
+    collection_metadata?: {
+      name?: string;
+      symbol?: string;
+      image?: string;
+      description?: string;
+      external_url?: string;
+    };
+  }>;
   creators?: Array<{ address: string; share: number; verified: boolean }>;
   burnt: boolean;
   mutable: boolean;
@@ -100,16 +111,29 @@ export class HeliusClient {
     this.cache = cache;
   }
 
-  /** DAS API: get all assets owned by a wallet */
+  /**
+   * DAS API: get all assets owned by a wallet.
+   *
+   * `showCollectionMetadata` adds the collection name to each `grouping` entry in
+   * the same response — no second call and no extra cost. Without it we only get
+   * the collection mint, which an agent cannot read.
+   *
+   * Cache key carries `v2` because the v1 shape has no collection metadata; a
+   * stale v1 entry would silently produce an empty collection breakdown.
+   */
   async getAssetsByOwner(address: string): Promise<HeliusAssetList> {
-    const cacheKey = `helius:assets:${address}`;
+    const cacheKey = `helius:assets:v2:${address}`;
     const cached = await this.cache.get<HeliusAssetList>(cacheKey);
     if (cached) return cached;
 
     const result = await this.dasRpc<HeliusAssetList>('getAssetsByOwner', {
       ownerAddress: address,
       page: 1,
-      displayOptions: { showFungible: true, showNativeBalance: true },
+      displayOptions: {
+        showFungible: true,
+        showNativeBalance: true,
+        showCollectionMetadata: true,
+      },
     });
 
     await this.cache.set(cacheKey, result, CACHE_TTL.walletProfile);

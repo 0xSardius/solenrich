@@ -10,6 +10,12 @@ import { formatTimestamp } from '../utils/normalize';
 import { labelWallet, type WalletData } from './labeler';
 import { scoreWalletRisk } from './risk-scorer';
 import { tagAddresses } from '../utils/entities';
+import {
+  classifyNfts,
+  type NftAssetInput,
+  type NftSummary,
+  type NftCollectionEntry,
+} from './nft-classifier';
 
 // --- Constants ---
 
@@ -47,7 +53,12 @@ export interface WalletEnrichment {
     balance: number;
     usd_value: number;
   }>;
+  /** Every non-fungible held, unburnt. Kept for API stability — read `nft_summary` for the split. */
   nft_count: number;
+  /** Real holdings vs unsolicited drops vs suspected spam. See `nft-classifier.ts`. */
+  nft_summary: NftSummary;
+  /** Largest collections, real holdings first. Capped at 10 (full depth) or 5 (light). */
+  nft_collections: NftCollectionEntry[];
   defi_positions: Array<{
     protocol: string;
     type: string;
@@ -175,12 +186,32 @@ export class WalletProfiler {
     const topLimit = depth === 'full' ? 10 : 5;
     const topHoldings = holdingsRaw.slice(0, topLimit);
 
-    // Count tokens and NFTs
+    // Count tokens
     const tokenCount = fungibleAssets.length;
-    const nftCount = assetItems.filter(
-      (a) => a.interface === 'V1_NFT' || a.interface === 'ProgrammableNFT' ||
-             (a.interface !== 'FungibleToken' && a.interface !== 'FungibleAsset' && !a.burnt),
-    ).length;
+
+    // Classify non-fungibles. The `!a.burnt` guard applies to every interface —
+    // the earlier version skipped it for V1_NFT and ProgrammableNFT, so burnt
+    // assets inflated the count.
+    const nonFungibles = assetItems.filter(
+      (a) => a.interface !== 'FungibleToken' && a.interface !== 'FungibleAsset' && !a.burnt,
+    );
+
+    const nftInputs: NftAssetInput[] = nonFungibles.map((a) => {
+      const group = (a.grouping ?? []).find((g) => g.group_key === 'collection');
+      return {
+        compressed: a.compression?.compressed === true,
+        name: a.content?.metadata?.name ?? '',
+        description: a.content?.metadata?.description ?? '',
+        collection_mint: group?.group_value ?? null,
+        collection_name: group?.collection_metadata?.name ?? null,
+      };
+    });
+
+    const { summary: nftSummary, collections: nftCollections } = classifyNfts(
+      nftInputs,
+      depth === 'full' ? 10 : 5,
+    );
+    const nftCount = nftSummary.total;
 
     // Stablecoin percentage
     const stablecoinValue = holdingsRaw
@@ -286,6 +317,9 @@ export class WalletProfiler {
       portfolio_value_usd: portfolioValueUsd,
       token_count: tokenCount,
       nft_count: nftCount,
+      // Label off real holdings, not the raw count. A wallet spammed with 103
+      // drainer airdrops is not a collector.
+      nft_collected_count: nftSummary.collected,
       tx_count_30d: txCount30d,
       first_tx_date: firstTxDate,
       defi_positions: defiPositions,
@@ -346,6 +380,8 @@ export class WalletProfiler {
       token_count: tokenCount,
       top_holdings: topHoldings,
       nft_count: nftCount,
+      nft_summary: nftSummary,
+      nft_collections: nftCollections,
       defi_positions: defiPositions,
       tx_count_30d: txCount30d,
       first_tx_date: firstTxDate,

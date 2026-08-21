@@ -41,10 +41,41 @@ export function formatWalletBriefing(data: WalletEnrichment): string {
   const holdingStrs = data.top_holdings
     .slice(0, 5)
     .map((h) => `${h.symbol} (${formatUsd(h.usd_value)})`);
-  let holdingsLine = `Top holdings: ${holdingStrs.join(', ')}.`;
-  if (data.nft_count > 0) holdingsLine += ` Holds ${data.nft_count} NFTs.`;
-  lines.push(holdingsLine);
+  lines.push(`Top holdings: ${holdingStrs.join(', ')}.`);
   lines.push('');
+
+  // NFTs — report the split, not the raw count. Most non-fungibles on Solana are
+  // unsolicited compressed drops, so a bare count reads as collecting activity
+  // that is not there.
+  const nft = data.nft_summary;
+  if (nft && nft.total > 0) {
+    const parts: string[] = [];
+    if (nft.collected > 0) {
+      parts.push(
+        `${nft.collected} collected across ${nft.distinct_collections} collection${nft.distinct_collections === 1 ? '' : 's'}`,
+      );
+    }
+    if (nft.airdropped > 0) parts.push(`${nft.airdropped} compressed airdrop${nft.airdropped === 1 ? '' : 's'}`);
+    if (nft.suspected_spam > 0) parts.push(`${nft.suspected_spam} suspected spam`);
+
+    lines.push(`NFTs: ${nft.total} total — ${parts.join(', ')}.`);
+
+    const real = (data.nft_collections ?? []).filter((c) => !c.compressed && !c.suspected_spam);
+    if (real.length > 0) {
+      const named = real.slice(0, 4).map((c) => `${c.name} (${c.count})`).join(', ');
+      lines.push(`Holds: ${named}.`);
+    }
+    if (nft.suspected_spam > 0) {
+      lines.push(
+        'Suspected spam is flagged from name patterns (claim bait, embedded links, invisible characters). Treat it as a signal, not a verdict.',
+      );
+    }
+    lines.push('');
+  } else if (data.nft_count > 0) {
+    // Older cached payloads predate nft_summary.
+    lines.push(`Holds ${data.nft_count} NFTs.`);
+    lines.push('');
+  }
 
   // DeFi positions
   if (data.defi_positions.length > 0) {

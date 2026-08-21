@@ -17,7 +17,7 @@ export const ENDPOINT_META: Record<string, {
 }> = {
   'enrich-wallet-light': {
     summary: 'Profile a Solana wallet: holdings, labels, and risk score',
-    description: 'SOL balance, token holdings, labels (including behavioral flags: regular_intervals, high_frequency, 24_7_active, repetitive_actions — algorithmic signals from tx timing that indicate automated activity), risk score. Fast and cheap.',
+    description: 'SOL balance, token holdings, NFT breakdown (collected vs compressed airdrops vs suspected spam, with a per-collection list), labels (including behavioral flags: regular_intervals, high_frequency, 24_7_active, repetitive_actions — algorithmic signals from tx timing that indicate automated activity), risk score. Fast and cheap.',
     schema: {
       type: 'object',
       required: ['address'],
@@ -29,7 +29,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'enrich-wallet-full': {
     summary: 'Profile a Solana wallet in depth: DeFi positions, connections, risk',
-    description: 'Adds DeFi positions, connected wallets, enhanced transaction history, and automated-activity behavioral signals to light profile.',
+    description: 'Adds DeFi positions, connected wallets, enhanced transaction history, automated-activity behavioral signals, and a wider NFT collection breakdown to the light profile.',
     schema: {
       type: 'object',
       required: ['address'],
