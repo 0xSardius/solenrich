@@ -1,9 +1,58 @@
 # Session Checkpoint
 
 ## Last session date
-2026-08-02
+2026-08-23
 
-## ▶️ RESUME HERE (2026-08-02) — OOM sawtooth fixed for real (`5e6d24b`) + FIRST ORGANIC USERS
+## ▶️ RESUME HERE (2026-08-23) — NFT enrichment shipped, digest spike works, strategy beat taken
+
+**Next action: build the website digest (Task #1, scoped down — website surface only).**
+Sardius posts the PNGs to X manually for now; Telegram/X automation deferred. Pieces:
+move/keep the renderer (`eris/digest-spike/render.ts`, working), point it at production with
+paid x402 calls (port SolScout client), GitHub Actions daily cron, publish PNG where the
+landing page can load it (Vercel Blob or committed asset — decide at build), landing section
+with date caption + **48h staleness guard that hides the section** (stale card reads as dead
+project — build it in from day one).
+
+### Shipped this session
+
+- **Wallet NFT enrichment (`e8db7de`)** — `nft_summary` splits every wallet's non-fungibles
+  into collected / airdropped / suspected_spam (buckets sum to `nft_count`), plus
+  `nft_collections` breakdown. New pure enricher `src/enrichers/nft-classifier.ts`. Fixes:
+  `nft_collector` label now requires 10+ *collected* (was firing on airdrop volume — measured
+  wallet: 118 total, 15 real, 17 drainer bait); burnt-asset guard applied to all interfaces;
+  DAS call gains `showCollectionMetadata` (free, same response); helius assets cache key → v2.
+  Spam heuristic: compressed-only, claim-bait words / embedded domains / zero-width chars.
+  Verified: 215 unit, 99/99 local, 71/71 402-prod, **paid E2E 39/40** (1 fail = known
+  data-dependent perps-alert assertion, pre-existing). Landing copy updated (`ebe7153`).
+- **Digest infographic spike (eris repo `f4f4485`)** — satori + resvg render of live
+  runner-scan + trending-signals + feed-latest + consensus-signal data → 1600×900 PNG in ~1s,
+  no browser, no LLM. `eris/digest-spike/render.ts`. Satori quirk: latin fonts only, no emoji.
+
+### Strategy beat (2026-08-23, `bf4a900`)
+
+Ran superstack `validate-idea` over 5 candidates with measured traction. Full scorecard:
+`docs/next-build-validation-2026-08-23.html` + `.superstack/idea-context.md`.
+- **Traction:** x402scan 30d = 145 txns / $3.44 / **20 buyers**; all-time = 588 / $8.92 / 28
+  → 71% of all-time buyers active in last 30d, discovery accelerating post-dual-network.
+  ~$0.17/buyer = probes, not workflows → constraint is retention/proof, not supply.
+  `/metrics` (token in local .env works): wallet-attributed organic caller
+  `x402:JC9uSJ5rQi6BsKUR3b9sYHDrsnas8ZMSebwahqvujYg1` paid wallet-light + token-light 08-23.
+  (Organic usage itself started ~08-02 per IP metrics below — this is attribution, not first contact.)
+- **Verdicts:** digest GO (build first) · Eris seed-widening GO-as-measurement · card-market-scan
+  BLOCKED on Collector Crypt terms email · Ananke HOLD (measure trigger economics first) ·
+  image-card endpoint NO (tripwire: a bot builder asks).
+- **Eris reframed (user call):** trading lab, not audience bot — own wallet, auto-invest in its
+  calls, outcome learning loop (log feature vector at verdict, outcomes +15m/+1h/+6h/+24h,
+  retro-tune thresholds, feed back into runner-score weights = outcome-correlation moat).
+  Kills the audience-blocker, NOT the sample-volume blocker → still gated on seed-widening.
+- **Task list (harness tasks #1-7):** 1 digest-website build · 2 seed-widening+re-probe ·
+  3 CC terms email (Sardius) · 4 Ananke trigger measurement · 5 image-card PARKED ·
+  6 watch JC9uSJ5r + pay.sh PR#176 · 7 Eris trading loop (blocked by #2).
+- **NFT vertical scoped** (memory: `project_nft_vertical_scoped.md`): PFP market skip;
+  Collector Crypt marketplace API measured open (127k cards, 10.3k listings, price/grade/cert
+  per record, mispricing dispersion p25 0.99x–p95 5.36x); pre-order insuredValue trap noted.
+
+## ▶️ PREVIOUS (2026-08-02) — OOM sawtooth fixed for real (`5e6d24b`) + FIRST ORGANIC USERS
 
 **Two headlines this session:**
 
