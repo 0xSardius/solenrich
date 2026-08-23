@@ -1695,7 +1695,7 @@
             <span class="endpoint-name">enrich-wallet-light</span>
             <span class="endpoint-price">$0.002</span>
           </div>
-          <p class="endpoint-desc">SOL balance, token holdings, behavioral labels (automated activity detection), risk score with risk level.</p>
+          <p class="endpoint-desc">SOL balance, token holdings, NFT breakdown (collected vs airdropped vs spam), behavioral labels (automated activity detection), risk score with risk level.</p>
           <div class="tag-row"><span class="tag">core</span><span class="tag">wallet</span></div>
         </div>
 
@@ -1704,7 +1704,7 @@
             <span class="endpoint-name">enrich-wallet-full</span>
             <span class="endpoint-price">$0.005</span>
           </div>
-          <p class="endpoint-desc">Full profile with DeFi positions, connected wallets, transaction history, and risk level.</p>
+          <p class="endpoint-desc">Full profile with DeFi positions, connected wallets, transaction history, per-collection NFT breakdown, and risk level.</p>
           <div class="tag-row"><span class="tag">core</span><span class="tag">wallet</span></div>
         </div>
 
@@ -2187,7 +2187,16 @@ Well-distributed supply.</span>
         <div class="value-card reveal" style="grid-column: 1 / -1;">
           <div class="value-icon" style="color: var(--accent-warm); background: rgba(255, 107, 53, 0.06); border-color: rgba(255, 107, 53, 0.12);">&gt;_ depth</div>
           <h3 class="value-title">Deeper than raw APIs</h3>
-          <p class="value-desc">Herfindahl concentration index, multi-source median pricing, 7-day volatility classification, Sharpe ratios, entity-labeled whale tracking, and risk levels from LOW to CRITICAL. Analysis you can't get from any single API call.</p>
+          <p class="value-desc">Herfindahl concentration index, multi-source median pricing, 7-day volatility classification, Sharpe ratios, entity-labeled whale tracking, NFT holdings separated from airdrop spam, and risk levels from LOW to CRITICAL. Analysis you can't get from any single API call.</p>
+          <p class="value-desc" style="margin-top: 20px;">
+            Raw counts mislead. Most non-fungibles on a Solana wallet are unsolicited compressed drops, so an NFT count measures spam volume, not collecting. We split every wallet three ways:
+          </p>
+          <div class="step-code" style="margin-top: 14px;">
+            <span style="color: var(--text-muted);">nft_count:</span> <span style="color: var(--accent-warm);">118</span><br>
+            <span style="color: var(--sol-green);">collected:</span> 15 &nbsp;<span style="color: var(--text-muted);">across 8 collections</span><br>
+            <span style="color: var(--text-muted);">airdropped: 86</span><br>
+            <span style="color: var(--text-muted);">suspected_spam: 17</span>
+          </div>
         </div>
       </div>
     </div>
