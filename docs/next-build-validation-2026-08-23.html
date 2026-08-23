@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>SolEnrich — Next-Build Validation (2026-08-23)</title>
+<style>
+  body { font-family: -apple-system, Segoe UI, sans-serif; background: #0b0d12; color: #e8eaf0; max-width: 960px; margin: 40px auto; padding: 0 20px; line-height: 1.6; }
+  h1 { color: #14F195; font-size: 26px; } h2 { color: #9945FF; font-size: 20px; margin-top: 36px; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; font-size: 14px; }
+  th, td { border: 1px solid #1e2330; padding: 8px 12px; text-align: left; vertical-align: top; }
+  th { background: #12151d; color: #8a91a5; }
+  .go { color: #14F195; font-weight: 700; } .hold { color: #ffd166; font-weight: 700; } .no { color: #ff5c5c; font-weight: 700; }
+  .stat { font-family: monospace; background: #12151d; padding: 2px 6px; border-radius: 4px; }
+  .note { color: #8a91a5; font-size: 13px; }
+</style>
+</head>
+<body>
+<h1>Next-Build Validation — 2026-08-23</h1>
+<p>Question: which of five candidates provides the most value next. Method: superstack
+<em>validate-idea</em> framework (demand rubric + go/no-go criteria) applied to measured data.</p>
+
+<h2>Measured traction (the inputs)</h2>
+<table>
+<tr><th>Source</th><th>Finding</th></tr>
+<tr><td>/metrics (prod)</td><td><b>First organic paid caller</b>: <span class="stat">x402:JC9uSJ5r…ujYg1</span> paid for enrich-wallet-light + enrich-token-light today. Organic baseline on 2026-07-11 was zero.</td></tr>
+<tr><td>x402scan, past 30d</td><td><span class="stat">145 txns · $3.44 · 20 buyers</span></td></tr>
+<tr><td>x402scan, all-time</td><td><span class="stat">588 txns · $8.92 · 28 buyers</span> — 71% of all-time buyers active in the last 30 days: discovery is accelerating.</td></tr>
+<tr><td>Interpretation</td><td>Distribution works (strangers find and probe us). Probes are not converting to repeat callers. Constraint = demand/proof, not supply. 37 endpoints is enough supply.</td></tr>
+</table>
+
+<h2>Scorecard</h2>
+<table>
+<tr><th>Candidate</th><th>Demand (0–3)</th><th>Feasibility</th><th>Time to MVP</th><th>Unfair advantage</th><th>Verdict</th></tr>
+<tr>
+  <td><b>1. Daily digest infographic</b><br><span class="note">standalone script, paid x402 calls, post + website embed</span></td>
+  <td>2 — not a product; attacks the <em>measured</em> conversion gap (probes without proof)</td>
+  <td>Straightforward — spike already renders</td>
+  <td>1–2 sessions</td>
+  <td>Only we have this data; receipts are un-fakeable</td>
+  <td class="go">GO — build first</td>
+</tr>
+<tr>
+  <td><b>2. Eris seed-widening</b><br><span class="note">14 → 100–200 wallets, re-run trigger probe</span></td>
+  <td>2 — smart-money-trenches is live and sold; bot demand unproven</td>
+  <td>Straightforward — tooling exists (trenches-build/vet-seeds)</td>
+  <td>1 session</td>
+  <td>Improves a paid endpoint even if Eris stays dead</td>
+  <td class="go">GO — as measurement, not bot build</td>
+</tr>
+<tr>
+  <td><b>3. card-market-scan</b><br><span class="note">Collector Crypt mispricing scanner</span></td>
+  <td>2 — $1.6B venue measured; buyer-for-endpoint unproven</td>
+  <td>Straightforward — API probed, open</td>
+  <td>1–2 sessions <em>after</em> terms clear</td>
+  <td>First mover; grade-normalization synthesis</td>
+  <td class="hold">BLOCKED — terms email first (Polymarket §4.2 lesson)</td>
+</tr>
+<tr>
+  <td><b>4. Ananke perps bot</b></td>
+  <td>1 — perps endpoint external demand unmeasured</td>
+  <td>Hard — multi-surface bot</td>
+  <td>Multi-week (fails ≤2-week criterion)</td>
+  <td>Perps stack exists, but 3 prior bots stalled (proof-of-one rule)</td>
+  <td class="hold">HOLD — measure trigger economics first (the Eris lesson)</td>
+</tr>
+<tr>
+  <td><b>5. Paid image-card endpoint</b><br><span class="note">PNG verdict cards for TG bots</span></td>
+  <td>0 — zero asks</td>
+  <td>Hard-ish — fights JSON-shaped entrypoint machinery, native deps in prod</td>
+  <td>1–2 sessions</td>
+  <td>Would be unique, but speculative</td>
+  <td class="no">NO — park with tripwire (a bot builder asks)</td>
+</tr>
+</table>
+
+<h2>Decision</h2>
+<p><b>Go</b>, confidence 0.75, on the demand-side sequence: <b>digest → seed-widening
+measurement → terms email → Ananke measurement</b>. No new paid endpoints until either the
+Collector Crypt terms clear or a measured demand signal appears. Rationale: every no-go
+criterion the framework lists is triggered only by the build-more-supply options; every go
+criterion is satisfied by the demand-side options.</p>
+
+<p class="note">Non-engineering follow-ups (Sardius): pay.sh PR #176 status · agentic.market
+enrichment ask · T54 merchant verification · Collector Crypt terms email. Watch item:
+identify organic caller JC9uSJ5r… (repeat visits would be the first retention signal).</p>
+</body>
+</html>
