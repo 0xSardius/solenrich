@@ -1,7 +1,38 @@
 # Session Checkpoint
 
 ## Last session date
-2026-08-23
+2026-08-25
+
+## 📋 QUEUED 2026-08-25 — Virtuals ACP provider integration (PLANNED, DO NOT BUILD YET)
+
+Virtuals launched Solana support 2026-08-24 (consumer "agent ownership"; details still thin).
+ACP v2 already supports Solana at the SDK level (`@virtuals-protocol/acp-node-v2`,
+`SolanaProviderAdapter`, since April 2026; 2,000+ agents onboarded). ACP supports API-only
+providers — our exact shape. Full research + plan in memory `project_virtuals_acp.md`.
+
+**The plan (2 parts, ~1 session + Sardius registration):**
+1. **Registration (Sardius, ~30 min):** app.virtuals.io → Join ACP → Register New Agent →
+   Service Registry; get `walletId` + signer key from the Signers tab. Unknowns to capture in
+   the flow: VIRTUAL-holding requirement, fees, sandbox/graduation gate, Solana payment rails
+   (documented settlement is USDC on EVM/Base — we hold `0x8EdE…607c`).
+2. **Bridge worker (Claude, ~1 session):** `agents/acp-bridge/` — always-on listener that maps
+   ACP jobs → SolEnrich HTTP calls → `session.submit()` deliverable. Job lifecycle: request →
+   negotiate (`setBudget`) → transact (fund/submit) → evaluate. Offer 3-5 job-shaped services
+   (due-diligence report, wallet profile, runner-scan, smart-money-trenches), priced
+   $0.05–0.25/job — NOT all 37 endpoints. Butler (Virtuals' router agent) is the distribution
+   prize: registered = hireable for any token-safety/wallet question.
+
+**Brick-proofing walls (agreed 2026-08-25, all four required):**
+- Own `package.json` + lockfile (or own repo) — acp-node-v2's `@solana/*` transitive deps must
+  NEVER enter the root lockfile (@solana/kit 5.5.1 pin, Bun runtime crash history).
+- Separate Railway service — a bridge leak must not OOM the API (July lesson).
+- Fresh keypair for ACP signer — never the agent or operational wallet.
+- Bridge's self-traffic to our own paid endpoints must be wallet-attributable so it never
+  pollutes organic-caller metrics.
+
+**Adjacent (no build, watch):** Virtuals Solana launchpad tokens are SPL → runner-scan/
+trenches/DD work on them day one; a public launch feed would fix runner-scan's pay-to-appear
+candidate bias + feed Eris. Strengthens the know-your-agent endpoint case.
 
 ## ▶️ RESUME HERE (2026-08-23) — NFT enrichment shipped, digest spike works, strategy beat taken
 
