@@ -11,11 +11,15 @@ attention-momentum (`8aa0dcb`), trenches-scan (`0370776`), trenches-check (`545f
 endpoints. This plan is the next wave, in build order. It runs on the endpoint track,
 parallel to the demand-side tasks (digest-website stays task #1 on that track).
 
-1. **`exit-signal`** (~1 session, ~$0.04) — BUILD FIRST. The sell-side verdict: "I'm in —
-   when do I get out?" Distribution detection (smart money selling into strength),
-   buy-pressure collapse, holder churn, LP changes, FADING stage → actionable exit verdict.
-   Same proven buyer as runner-scan, same data; `runner:snap:{mint}` snapshots already
-   accumulate the needed time-series. Completes the trade lifecycle (we only sell pre-ape today).
+1. **`exit-signal` — ✅ SHIPPED 2026-08-26 (`a7a8f45`, $0.04, 38 endpoints).** EXIT / DERISK /
+   HOLD / INSUFFICIENT_DATA with 0-1 exit score. Pure `exit-score.ts` (mirror of runner-score:
+   sell pressure, buy-rate decel, volume fade, distribution-into-strength, whale sell/buy
+   ratio, LP/holder deltas; hard triggers LP pull / dump / whale exodus force EXIT) +
+   `exit-analyzer.ts` (4 legs allSettled: DexScreener tape, shared runner:snap rails,
+   whale-watch 24h flow, Birdeye holders). Works on tokens of ANY age. Optional
+   entry_price_usd → PnL context applied per-caller after the per-mint cache. Full 9-step
+   checklist done. Verified: 245/245 unit, tsc clean, live BONK read (DERISK, 57% sell
+   share, whale sell/buy 3.2×), prod 402 intact, paid seed run 7/7 → bazaar cataloging.
 2. **`trencher-profile`** (~1 session, ~$0.03) — memecoin-specialized wallet report card:
    flip speed, avg hold, win rate on sub-48h tokens, rug-hit rate. Specializes
    copy-trade-analyzer. Dual use: sellable endpoint AND the vetting engine for Eris
