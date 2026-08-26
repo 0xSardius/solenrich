@@ -1,7 +1,44 @@
 # Session Checkpoint
 
 ## Last session date
-2026-08-25
+2026-08-26
+
+## 📋 MEMECOIN EXPANSION BUILD PLAN (committed 2026-08-26)
+
+Context: trenches engagement is real (runner-scan = top endpoint, repeat organic user). The
+trenches foundation is COMPLETE — smart-money-trenches (`ae8ebae`), runner-scan (`4f9a70b`),
+attention-momentum (`8aa0dcb`), trenches-scan (`0370776`), trenches-check (`545f92a`) = 37
+endpoints. This plan is the next wave, in build order. It runs on the endpoint track,
+parallel to the demand-side tasks (digest-website stays task #1 on that track).
+
+1. **`exit-signal`** (~1 session, ~$0.04) — BUILD FIRST. The sell-side verdict: "I'm in —
+   when do I get out?" Distribution detection (smart money selling into strength),
+   buy-pressure collapse, holder churn, LP changes, FADING stage → actionable exit verdict.
+   Same proven buyer as runner-scan, same data; `runner:snap:{mint}` snapshots already
+   accumulate the needed time-series. Completes the trade lifecycle (we only sell pre-ape today).
+2. **`trencher-profile`** (~1 session, ~$0.03) — memecoin-specialized wallet report card:
+   flip speed, avg hold, win rate on sub-48h tokens, rug-hit rate. Specializes
+   copy-trade-analyzer. Dual use: sellable endpoint AND the vetting engine for Eris
+   seed-widening (task #2) — build them the same week.
+3. **`follow-check`** (~0.5 session, ~$0.03) — "wallet X just bought Y — follow?" Composes
+   trencher-profile + safety gate + runner stage into one verdict. The vibe-check pattern
+   for copy-trading bots. Cheap because it composes 1+2.
+4. **Launchpad coverage upgrade** (~1 session, no new endpoint) — pump.fun/PumpPortal +
+   ClawPump + Virtuals Solana launchpad ingestion as candidate-pool sources. Fixes
+   runner-scan's pay-to-appear DexScreener bias, upgrades trenches-scan coverage, feeds Eris.
+5. **`token-x-ray` + `dev-reputation`** (already scoped, ~1 session each) — deepen the
+   safety gate: insider/sniper/bundle %, deployer launch history + rug rate. Slot after the
+   above; dev-reputation is the compounding-history moat.
+6. **`meta-radar`** (later) — on-chain narrative clustering via buyer-wallet overlap +
+   deployer graphs on fresh launches. No social scraping — shared-buyer graphs are on-chain
+   truth. Build once traffic justifies it.
+7. **Survival scoring** (gated) — rug-probability from labeled outcomes. BLOCKED on the Eris
+   trading-lab outcome loop (task #7) producing data. Name it, collect toward it, don't build.
+
+**Validation checkpoint:** after #1-2 ship, check whether the runner-scan repeat user
+(`38.75.42.130`, wallet identity pending from caller-attribution fix) adopts them. One-user
+interview if the wallet resolves. If neither new endpoint gets a paid organic call in ~3
+weeks, pause the track at #3 and re-assess before #4-5.
 
 ## 📋 QUEUED 2026-08-25 — Virtuals ACP provider integration (PLANNED, DO NOT BUILD YET)
 
