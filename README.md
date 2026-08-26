@@ -15,7 +15,7 @@ curl https://api.solenrich.com/health
 # Agent card (A2A discovery)
 curl https://api.solenrich.com/.well-known/agent.json
 
-# List all 37 endpoints
+# List all 38 endpoints
 curl https://api.solenrich.com/entrypoints
 
 # Full API documentation (agent-readable JSON)
@@ -93,7 +93,7 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 | `trending-signals` | $0.050 | `min_liquidity_usd`, `max_risk_score`, `limit`, `format` | Composite ranking of trending tokens: discovery + whale-watch + risk scoring, with reasoning |
 | `smart-money-flow` | $0.100 | `wallets[]`, `min_win_rate`, `lookback_days`, `format` | Scores seed wallets, filters to winners, surfaces tokens they're accumulating + clusters |
 
-### Trenches — Memecoin Intelligence (4 endpoints)
+### Trenches — Memecoin Intelligence (5 endpoints)
 
 | Endpoint | Price | Input | Description |
 |----------|-------|-------|-------------|
@@ -101,6 +101,7 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 | `runner-scan` | $0.04 | `max_token_age_hours`, `min_liquidity_usd`, `min_volume_h1_usd`, `limit`, `format` | Which fresh tokens are *accelerating* right now — buy-rate acceleration (5m vs 1h, 1h vs 6h), buy pressure, volume/price velocity, holder growth, liquidity trend. Stages RUNNING / IGNITING / PARABOLIC_LATE / FADING with a 0–1 score. Flags already-ran tokens as entry risk and LP pulls as rugs |
 | `trenches-scan` | $0.08 | `max_token_age_hours`, `min_liquidity_usd`, `limit`, `format` | All three trenches signals in one call — on-chain velocity × proven-winner buys × agent attention, composited into a ranked list with confluence counts, per-token reasoning, and HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL verdicts |
 | `trenches-check` | $0.03 | `mint`, `format` | The suite pointed at ONE token — before you ape, run the check. Same three legs as trenches-scan but targeted at your candidate: verdict + reasoning + per-leg detail. Pairs with due-diligence for a full pre-entry read |
+| `exit-signal` | $0.04 | `mint`, `entry_price_usd`, `format` | The sell-side verdict for a token you hold — EXIT / DERISK / HOLD with a 0–1 exit score. Sell pressure, buy-rate deceleration, volume fade, distribution-into-strength, top-holder flow (distributing vs accumulating whales), liquidity trend, holder churn. Rug triggers (LP pull, active dump) override everything. Works on tokens of any age |
 
 ### Collectibles / RWA (1 endpoint)
 

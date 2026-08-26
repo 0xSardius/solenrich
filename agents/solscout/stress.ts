@@ -550,6 +550,23 @@ export const ENDPOINTS: Array<{
     ],
   },
   {
+    // Exit signal — sell-side verdict. BONK is old and liquid, so expect HOLD
+    // or DERISK with a full tape read — checks are structural. Same fixture as
+    // the BAZAAR_INPUT_EXAMPLES entry.
+    key: 'exit-signal',
+    input: { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', format: 'both' },
+    timeout: 60000,
+    checks: [
+      { name: 'echoes mint', test: (d) => d.mint === 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
+      { name: 'has valid verdict', test: (d) => ['EXIT', 'DERISK', 'HOLD', 'INSUFFICIENT_DATA'].includes(d.verdict), detail: (d) => `verdict=${d.verdict}` },
+      { name: 'exit_score 0-1', test: (d) => d.exit_score >= 0 && d.exit_score <= 1 },
+      { name: 'has flags array', test: (d) => Array.isArray(d.flags) },
+      { name: 'has reasoning', test: (d) => typeof d.reasoning === 'string' && d.reasoning.length > 0 },
+      { name: 'has caveats', test: (d) => Array.isArray(d.caveats) && d.caveats.length > 0 },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Exit Signal') },
+    ],
+  },
+  {
     // Trenches check — per-token three-signal verdict. BONK is old/quiet, so
     // expect SINGLE_SIGNAL or NO_SIGNAL with a valid runner leg — checks are
     // structural. Same fixture as the BAZAAR_INPUT_EXAMPLES entry.

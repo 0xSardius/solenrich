@@ -71,6 +71,8 @@ import { registerOrchestrationEntrypoints } from "../entrypoints/orchestration";
 import { registerTrenchesEntrypoints, registerTrenchesScanEntrypoint, registerTrenchesCheckEntrypoint } from "../entrypoints/trenches";
 import { TrenchesScanOrchestrator } from "../enrichers/trenches-scan";
 import { TrenchesCheckAnalyzer } from "../enrichers/trenches-check";
+import { registerExitSignalEntrypoint } from "../entrypoints/exit";
+import { ExitSignalAnalyzer } from "../enrichers/exit-analyzer";
 import { registerRunnerEntrypoint } from "../entrypoints/runner";
 import { registerFeedEntrypoint } from "../entrypoints/feed";
 import { FeedStore } from "../enrichers/feed-store";
@@ -323,6 +325,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'runner-scan': ['solana', 'memecoin', 'momentum', 'token-discovery', 'trenches'],
     'trenches-scan': ['solana', 'memecoin', 'smart-money', 'momentum', 'trenches'],
     'trenches-check': ['solana', 'memecoin', 'token-vetting', 'smart-money', 'trenches'],
+    'exit-signal': ['solana', 'memecoin', 'exit', 'sell-signal', 'trenches'],
     'trending-signals': ['solana', 'trending', 'smart-money', 'new-tokens', 'signals'],
     'consensus-signal': ['solana', 'agent-attention', 'consensus', 'signals', 'smart-money'],
     'attention-momentum': ['solana', 'agent-attention', 'momentum', 'signals', 'divergence'],
@@ -362,6 +365,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'enrich-token-full': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
     'due-diligence': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
     'trenches-check': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
+    'exit-signal': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
     'whale-watch': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
     'token-trend': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
     'compare-tokens': { mints: ['DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN'] },
@@ -703,6 +707,12 @@ const trenchesCheckAnalyzer = new TrenchesCheckAnalyzer(
   birdeye,
 );
 registerTrenchesCheckEntrypoint(addEntrypoint, trenchesCheckAnalyzer);
+
+// Exit Signal — the sell-side verdict for a held position. Shares the runner
+// snapshot rails (liquidity/holder deltas) and composes whale-watch for
+// top-holder flow. Works on tokens of any age, not just fresh launches.
+const exitSignalAnalyzer = new ExitSignalAnalyzer(dexscreener, whaleWatcher, cache, birdeye);
+registerExitSignalEntrypoint(addEntrypoint, exitSignalAnalyzer);
 
 // Event-Driven Alerts (Priority 13) — poll-based V1. Stateless: agent passes
 // watchlist + `since` cursor each call. Detection composes token-analyzer,
@@ -1090,6 +1100,11 @@ app.get('/docs', (c) => {
         price: '0.03',
         input: { mint: 'string (required) — token mint to check', format: 'json | llm | both' },
         description: 'The trenches suite pointed at ONE token — pass a mint, get a HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL / NO_SIGNAL verdict with reasoning. Same three legs as trenches-scan (on-chain velocity via runner stage + score, proven-winner buys, agent attention) but targeted at your candidate instead of discovery-driven. Composable with due-diligence (structural safety) before an entry. Repeat checks 5+ min apart unlock liquidity-trend and holder-growth deltas.',
+      },
+      'exit-signal': {
+        price: '0.04',
+        input: { mint: 'string (required) — token mint you hold', entry_price_usd: 'number (optional) — your entry price, adds unrealized-PnL context (does not change the verdict)', format: 'json | llm | both' },
+        description: 'The sell-side verdict — pass a mint you hold, get EXIT / DERISK / HOLD / INSUFFICIENT_DATA with a 0-1 exit score and reasoning. Reads sell pressure, buy-rate deceleration, volume fade, distribution-into-strength divergence, top-holder flow (distributing vs accumulating whales, 24h), liquidity trend, and holder churn. Hard triggers (LP pull ≤ -25%, active dump) force EXIT over everything else. Works on tokens of any age. Repeat calls 5+ min apart unlock liquidity/holder deltas — rug detection needs the second look.',
       },
       'trenches-scan': {
         price: '0.08',

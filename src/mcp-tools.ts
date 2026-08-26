@@ -535,6 +535,20 @@ export const MCP_TOOLS: McpToolDef[] = [
     }),
   },
   {
+    name: 'exit_signal',
+    title: 'Exit Signal (Should I Sell?)',
+    description: 'The sell-side verdict for a token you hold: pass a mint, get EXIT / DERISK / HOLD with a 0-1 exit score and reasoning. Reads sell pressure, buy-rate deceleration, volume fade, distribution into strength, top-holder flow (whales distributing vs accumulating), liquidity trend, and holder churn. Rug triggers (LP pull, active dump) override everything. Works on tokens of any age. NFA.',
+    inputSchema: {
+      mint: z.string().describe('Token mint address you hold'),
+      entry_price_usd: z.number().positive().optional().describe('Optional entry price in USD — adds unrealized-PnL context'),
+    },
+    handler: async (args) => invoke('exit-signal', {
+      mint: args.mint,
+      ...(args.entry_price_usd != null ? { entry_price_usd: args.entry_price_usd } : {}),
+      format: 'llm',
+    }),
+  },
+  {
     name: 'trenches_scan',
     title: 'Trenches Scan (Three-Signal Confluence)',
     description: 'The full memecoin pre-ape scan in one call: on-chain velocity (runner detection), proven-winner wallet buys (smart-money), and agent attention, composited into a ranked list with per-token reasoning and HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL verdicts. Confluence across independent signals is the edge. NFA.',

@@ -18,6 +18,7 @@ import { median, spreadPct } from '../src/utils/price-aggregator';
 import { formatResponse } from '../src/formatters/index';
 import { parseIntent } from '../src/entrypoints/query';
 import { assessRunner, computeRunnerMetrics, type RunnerScoreInput } from '../src/enrichers/runner-score';
+import { assessExit, computeExitMetrics, type ExitScoreInput } from '../src/enrichers/exit-score';
 import { classifyNfts, isSuspectedSpam, type NftAssetInput } from '../src/enrichers/nft-classifier';
 import { STRESS_COVERAGE } from '../agents/solscout/stress';
 import { ENDPOINT_META } from '../src/openapi';
@@ -1047,5 +1048,174 @@ describe('labelWallet nft_collector', () => {
 
   test('falls back to nft_count when collected count is absent', () => {
     expect(labelWallet(makeWalletData({ nft_count: 10 }))).toContain('nft_collector');
+  });
+});
+
+// ============================================================
+// exit-score (exit-signal endpoint)
+// ============================================================
+
+function mkExit(over: Partial<ExitScoreInput> = {}): ExitScoreInput {
+  return {
+    txns: {
+      m5: { buys: 0, sells: 0 },
+      h1: { buys: 0, sells: 0 },
+      h6: { buys: 0, sells: 0 },
+      h24: { buys: 0, sells: 0 },
+    },
+    volume: { m5: 0, h1: 0, h6: 0, h24: 0 },
+    price_change: { m5: 0, h1: 0, h6: 0, h24: 0 },
+    liquidity_usd: 50_000,
+    liquidity_change_pct: null,
+    holder_growth_pct: null,
+    whale: null,
+    ...over,
+  };
+}
+
+// A healthy tape: buyers in control, steady pace, whales accumulating.
+const HEALTHY = mkExit({
+  txns: {
+    m5: { buys: 12, sells: 6 },
+    h1: { buys: 144, sells: 72 },
+    h6: { buys: 864, sells: 432 },
+    h24: { buys: 3456, sells: 1728 },
+  },
+  volume: { m5: 100, h1: 1200, h6: 7200, h24: 28_800 },
+  price_change: { m5: 1, h1: 5, h6: 20, h24: 40 },
+  whale: {
+    net_flow_direction: 'accumulating',
+    distributing_count: 1,
+    accumulating_count: 4,
+    whale_count: 10,
+    total_sell_volume_usd: 5_000,
+    total_buy_volume_usd: 40_000,
+  },
+});
+
+// Sellers in control, buying collapsing, whales heading out.
+const DETERIORATING = mkExit({
+  txns: {
+    m5: { buys: 3, sells: 15 },
+    h1: { buys: 80, sells: 160 },
+    h6: { buys: 900, sells: 700 },
+    h24: { buys: 2500, sells: 1800 },
+  },
+  volume: { m5: 200, h1: 4000, h6: 60_000, h24: 150_000 },
+  price_change: { m5: -2, h1: -8, h6: 10, h24: 60 },
+  holder_growth_pct: -4,
+  whale: {
+    net_flow_direction: 'distributing',
+    distributing_count: 4,
+    accumulating_count: 1,
+    whale_count: 10,
+    total_sell_volume_usd: 60_000,
+    total_buy_volume_usd: 12_000,
+  },
+});
+
+describe('computeExitMetrics', () => {
+  test('healthy tape reads low sell pressure and steady pace', () => {
+    const m = computeExitMetrics(HEALTHY);
+    expect(m.sell_pressure_h1).toBeCloseTo(0.333, 2);
+    expect(m.buy_rate_decel_m5_h1).toBeCloseTo(1.0, 1);
+    expect(m.volume_decel).toBeCloseTo(1.0, 1);
+    expect(m.whale_sell_buy_ratio).toBeCloseTo(0.13, 1);
+  });
+
+  test('deteriorating tape reads seller dominance and deceleration', () => {
+    const m = computeExitMetrics(DETERIORATING);
+    expect(m.sell_pressure_h1).toBeCloseTo(0.667, 2);
+    expect(m.buy_rate_decel_m5_h1!).toBeLessThan(0.8);
+    expect(m.whale_sell_buy_ratio!).toBeGreaterThan(2);
+  });
+
+  test('thin samples produce null pressure, not garbage', () => {
+    const m = computeExitMetrics(mkExit({ txns: { m5: { buys: 1, sells: 1 }, h1: { buys: 2, sells: 1 }, h6: { buys: 3, sells: 2 }, h24: { buys: 4, sells: 3 } } }));
+    expect(m.sell_pressure_m5).toBeNull();
+    expect(m.sell_pressure_h1).toBeNull();
+    expect(m.buy_rate_decel_m5_h1).toBeNull();
+  });
+});
+
+describe('assessExit verdicts', () => {
+  test('healthy tape is HOLD with positive flags', () => {
+    const a = assessExit(HEALTHY);
+    expect(a.verdict).toBe('HOLD');
+    expect(a.exit_score).toBeLessThan(0.4);
+    expect(a.flags).toContain('buyers_in_control');
+    expect(a.flags).toContain('whales_accumulating');
+  });
+
+  test('deteriorating tape with whale exodus is EXIT', () => {
+    const a = assessExit(DETERIORATING);
+    expect(a.verdict).toBe('EXIT');
+    expect(a.flags).toContain('sellers_dominating');
+    expect(a.flags).toContain('whales_distributing');
+    expect(a.flags).toContain('whale_exodus');
+    expect(a.exit_score).toBeGreaterThanOrEqual(0.7);
+  });
+
+  test('LP pull forces EXIT regardless of a healthy tape', () => {
+    const a = assessExit({ ...HEALTHY, liquidity_change_pct: -40 });
+    expect(a.verdict).toBe('EXIT');
+    expect(a.flags).toContain('lp_pull');
+    expect(a.exit_score).toBeGreaterThanOrEqual(0.9);
+    expect(a.reasoning).toContain('rug');
+  });
+
+  test('active dump forces EXIT', () => {
+    const a = assessExit(
+      mkExit({
+        txns: {
+          m5: { buys: 2, sells: 20 },
+          h1: { buys: 50, sells: 150 },
+          h6: { buys: 600, sells: 700 },
+          h24: { buys: 2000, sells: 2200 },
+        },
+        volume: { m5: 500, h1: 8000, h6: 50_000, h24: 150_000 },
+        price_change: { m5: -6, h1: -25, h6: -30, h24: -10 },
+      }),
+    );
+    expect(a.verdict).toBe('EXIT');
+    expect(a.flags).toContain('dumping');
+    expect(a.exit_score).toBeGreaterThanOrEqual(0.85);
+  });
+
+  test('distribution into strength flags and lifts the score', () => {
+    const withDivergence = mkExit({
+      txns: {
+        m5: { buys: 10, sells: 12 },
+        h1: { buys: 100, sells: 110 },
+        h6: { buys: 600, sells: 500 },
+        h24: { buys: 2000, sells: 1600 },
+      },
+      volume: { m5: 400, h1: 5000, h6: 30_000, h24: 100_000 },
+      price_change: { m5: 2, h1: 12, h6: 30, h24: 80 },
+    });
+    const a = assessExit(withDivergence);
+    expect(a.flags).toContain('distribution_into_strength');
+    const without = assessExit({
+      ...withDivergence,
+      price_change: { m5: 0, h1: 2, h6: 30, h24: 80 },
+    });
+    expect(a.exit_score).toBeGreaterThan(without.exit_score);
+  });
+
+  test('no market data and no whale data is INSUFFICIENT_DATA', () => {
+    const a = assessExit(mkExit());
+    expect(a.verdict).toBe('INSUFFICIENT_DATA');
+  });
+
+  test('whale data alone still produces a verdict', () => {
+    const a = assessExit(mkExit({ whale: DETERIORATING.whale }));
+    expect(a.verdict).not.toBe('INSUFFICIENT_DATA');
+    expect(a.flags).toContain('whales_distributing');
+  });
+
+  test('thin exit liquidity is flagged as a caveat', () => {
+    const a = assessExit({ ...DETERIORATING, liquidity_usd: 8_000 });
+    expect(a.flags).toContain('thin_exit_liquidity');
+    expect(a.reasoning).toContain('derisk in steps');
   });
 });

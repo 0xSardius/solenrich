@@ -69,6 +69,7 @@ export const PRICING = {
   'attention-momentum': '0.02',
   'trenches-scan': '0.08',
   'trenches-check': '0.03',
+  'exit-signal': '0.04',
   'portfolio-history': '0.006',
   'check-alerts': '0.008',
   'gacha-ev-scan': '0.02',
@@ -99,6 +100,7 @@ export const CACHE_TTL = {
   runnerScan: 60,        // 1 minute — velocity is the whole point; stale = wrong
   trenchesScan: 90,      // orchestrator blend — legs have their own caches underneath
   trenchesCheck: 60,     // per-token verdict — velocity freshness matters
+  exitSignal: 60,        // sell-side verdict — a stale exit call is a wrong one
   feedLatest: 86_400,    // 24 hours — daily intelligence brief, lazy-populated
   gacha: 60,             // 1 minute — pack EV/stock drift as packs are opened
 } as const;

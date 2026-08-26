@@ -321,6 +321,20 @@ check('has llm_summary', typeof tc.body?.output?.llm_summary === 'string' && tc.
 console.log(`  ⏱ ${tc.ms}ms\n`);
 
 // ============================================================
+// 19. exit-signal
+// ============================================================
+console.log('━━━ 19. exit-signal ━━━');
+const ex = await invoke('exit-signal', { mint: TEST_TOKEN, entry_price_usd: 0.00001, format: 'both' }, 60000);
+check('returns 200', ex.status === 200, `got ${ex.status}`);
+check('echoes mint', ex.body?.output?.mint === TEST_TOKEN);
+check('has valid verdict', ['EXIT', 'DERISK', 'HOLD', 'INSUFFICIENT_DATA'].includes(ex.body?.output?.verdict));
+check('exit_score 0-1', ex.body?.output?.exit_score >= 0 && ex.body?.output?.exit_score <= 1);
+check('has position with pnl context', ex.body?.output?.position?.entry_price_usd === 0.00001);
+check('has reasoning', typeof ex.body?.output?.reasoning === 'string' && ex.body.output.reasoning.length > 0);
+check('has llm_summary', typeof ex.body?.output?.llm_summary === 'string' && ex.body.output.llm_summary.includes('Exit Signal'));
+console.log(`  ⏱ ${ex.ms}ms\n`);
+
+// ============================================================
 // Summary
 // ============================================================
 console.log('═══════════════════════════════════════════════════');

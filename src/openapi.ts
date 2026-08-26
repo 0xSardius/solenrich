@@ -411,6 +411,19 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'exit-signal': {
+    summary: 'Get an exit verdict for a token you hold',
+    description: 'The sell-side verdict: pass a mint you hold, get EXIT / DERISK / HOLD with a 0-1 exit score and reasoning. Reads sell pressure, buy-rate deceleration, volume fade, distribution-into-strength divergence, top-holder flow (distributing vs accumulating whales), liquidity trend, and holder churn. Rug triggers (LP pull, active dump) force EXIT over everything. Works on tokens of any age. Repeat calls 5+ min apart unlock liquidity/holder deltas. NFA.',
+    schema: {
+      type: 'object',
+      required: ['mint'],
+      properties: {
+        mint: { type: 'string', description: 'Token mint address you hold', minLength: 32, maxLength: 44 },
+        entry_price_usd: { type: 'number', description: 'Optional entry price in USD — adds unrealized-PnL context, does not change the verdict' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'trenches-check': {
     summary: 'Vet one token with the three trenches signals',
     description: 'The trenches suite pointed at ONE token: pass a mint, get a HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL / NO_SIGNAL verdict with reasoning. Runs on-chain velocity (runner stage + 0-1 score), proven-winner wallet buys (vetted realized-PnL seed set), and agent attention (proprietary query stream) against your candidate. The follow-up call to a new-tokens discovery or any shilled token. Repeat checks 5+ min apart unlock liquidity/holder deltas. NFA.',
