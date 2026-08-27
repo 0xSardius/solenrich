@@ -1,7 +1,38 @@
 # Session Checkpoint
 
 ## Last session date
-2026-08-26
+2026-08-27
+
+## ▶️ RESUME HERE (2026-08-27) — SEED SET WIDENED 14 → 106, ERIS TRIGGER GATE CLEARED
+
+**Headline: the Eris blocker is gone.** Seed-widening (task #2) done and measured (`9731858`):
+- **Trigger rate: 19 fresh-token buys/day** (July baseline: 0.7/day — 27×). **1 consensus event
+  in 24h** (baseline: 0 in 72h). Viability target was 5-7/day → cleared 3×.
+- **The finding that unlocked it:** Birdeye's gainers board sorts by TOTAL PnL, so realized-PnL
+  winners sit thousands of rows deep ($110K+ realized still at offset 400). The July bootstrap
+  only read the top 100 rows — that was the whole ceiling. Deep sweep to offset 3000 → 844
+  candidates → 302 passed cadence vet → quality gates → 89 new traders + 3 holders.
+- **Live set: 100 active traders + 6 conviction holders** (capped — endpoint scans every seed
+  per call; Helius throttles ~8-parallel; 28.5s uncached scan at 106 seeds, 60s budget OK).
+  Full 315-wallet vetted pool = `test/trenches-widen-result.json` (Eris's extended universe).
+- **Refresh cadence still manual:** re-run `test/trenches-widen-seeds.ts` (accumulates) +
+  `test/trenches-merge-seeds.ts` (quality-gates into live file) weekly-ish. Automate later.
+- **VERIFY POST-DEPLOY:** smart-money-trenches cold latency in prod at 106 seeds (expect
+  ~30s cold / fast cached; watch for timeouts), seed_set.derived_at=2026-08-27 in responses.
+
+**Also this session (2026-08-26/27):** `exit-signal` shipped + seeded (38 endpoints, block
+below) · landing copy refresh live (`e755c85`: trenches persona first, 12 sources, 36 MCP
+tools, dual-network hero) · exit-signal tweet drafts delivered to Sardius.
+
+**▶️ NEXT (order):**
+1. **`trencher-profile`** (build plan #2) — memecoin wallet report card; productizes the
+   seed-vetting engine (flip speed, sub-48h win rate, rug-hit rate). Sells at ~$0.03 AND
+   becomes Eris's ongoing seed-refresh filter.
+2. **Eris trading loop** (task #7 — NOW UNBLOCKED) — headless first: ingest triggers from the
+   106-seed live set + 315 extended pool, gate via trenches-check/DD, paper-or-small-stakes
+   via exit-signal, log feature vectors + outcomes at +15m/+1h/+6h/+24h. Needs from Sardius:
+   fresh keypair + small USDC float when going live-stakes.
+3. Digest-website build (demand-side task #1, unchanged) · Virtuals ACP registration (Sardius).
 
 ## 📋 MEMECOIN EXPANSION BUILD PLAN (committed 2026-08-26)
 
