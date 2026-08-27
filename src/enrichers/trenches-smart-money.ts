@@ -125,13 +125,15 @@ export class TrenchesSmartMoneyAnalyzer {
       })),
     ];
 
-    // Phase 1: live cadence guard + recent buys per surviving seed (batches of 4)
+    // Phase 1: live cadence guard + recent buys per surviving seed. Batches of
+    // 10 — sized for the widened (100+) seed set against Helius Pro's 50 RPS;
+    // was 4 when the set had 14 wallets.
     const skipped: string[] = [];
     const flagged: string[] = [];
     const seedBuys: Array<{ seed: SeedInfo; buys: RecentBuy[]; elevated: boolean }> = [];
 
-    for (let i = 0; i < seeds.length; i += 4) {
-      const batch = seeds.slice(i, i + 4);
+    for (let i = 0; i < seeds.length; i += 10) {
+      const batch = seeds.slice(i, i + 10);
       const settled = await Promise.allSettled(
         batch.map(async (seed) => {
           const sigs = await this.helius.getSignaturesForAddress(seed.address, 100);
