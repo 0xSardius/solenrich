@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SolEnrich — Solana Onchain Data Enrichment for Agents & LLMs</title>
-  <meta name="description" content="Solana onchain data enrichment agent. 38 endpoints including memecoin smart-money (proven winners buying fresh launches), runner detection (which tokens are accelerating right now), Hyperliquid smart-money + trader profiles, and the perps suite: cross-venue funding, venue-comparison-by-size, basis-signal, market trend across Jupiter + Adrena + Hyperliquid + dYdX, plus perp position alerts. Consensus attention signal, portfolio time-series, compound NL queries, daily intelligence feed, plus Jupiter Gacha pack EV analysis. Pay USDC via x402 or cards via Stripe.">
+  <meta name="description" content="Solana onchain data enrichment agent. 38 endpoints covering the full memecoin trade lifecycle (runner detection, smart-money trenches, three-signal pre-ape scans, exit signals), Hyperliquid smart-money + trader profiles, and the perps suite: cross-venue funding, venue-comparison-by-size, basis-signal, market trend across Jupiter + Adrena + Hyperliquid + dYdX, plus perp position alerts. Consensus attention signal, portfolio time-series, compound NL queries, daily intelligence feed. Pay USDC on Solana or Base via x402, or cards via Stripe.">
 
   <link rel="canonical" href="https://www.solenrich.com/">
   <link rel="icon" type="image/png" href="/logo.png">
@@ -629,7 +629,7 @@
 
     .source-grid {
       display: grid;
-      grid-template-columns: repeat(5, 1fr);
+      grid-template-columns: repeat(6, 1fr);
       gap: 16px;
     }
 
@@ -1001,7 +1001,7 @@
     /* ==================== PERSONAS ==================== */
     .personas-grid {
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
+      grid-template-columns: repeat(2, 1fr);
       gap: 24px;
       margin-top: 48px;
     }
@@ -1487,7 +1487,7 @@
         <p class="hero-sub">
           38 endpoints enriching any Solana wallet, token, protocol, or perps market with a single API call.
           Structured JSON for agents. Natural language briefings for LLMs.
-          Pay with USDC (x402) or credit card (Stripe).
+          Pay per call with USDC on Solana or Base (x402), or by card (Stripe).
         </p>
         <div class="hero-actions">
           <a href="/docs" class="btn-primary">
@@ -1536,7 +1536,7 @@
       <div class="proof-items">
         <span class="proof-item">Real USDC settlements via Coinbase CDP</span>
         <span class="proof-divider">·</span>
-        <span class="proof-item">Listed on <a href="https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641" target="_blank" rel="noopener">x402scan</a>, <a href="https://smithery.ai/?q=solenrich" target="_blank" rel="noopener">Smithery</a>, <a href="https://orbisapi.com" target="_blank" rel="noopener">Orbis</a></span>
+        <span class="proof-item">Listed on <a href="https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641" target="_blank" rel="noopener">x402scan</a>, <a href="https://agentic.market/services/api-solenrich-com" target="_blank" rel="noopener">agentic.market</a>, <a href="https://smithery.ai/?q=solenrich" target="_blank" rel="noopener">Smithery</a>, <a href="https://orbisapi.com" target="_blank" rel="noopener">Orbis</a></span>
         <span class="proof-divider">·</span>
         <span class="proof-item">Registered on 8004-solana</span>
         <span class="proof-divider">·</span>
@@ -1550,11 +1550,11 @@
     <div class="container">
       <span class="update-tag">New</span>
       <div class="update-items">
-        <span class="update-item"><span class="check">&#10003;</span> Smart-money trenches — proven-winner wallets buying fresh (&lt;6h) memecoin launches, bot-guarded</span>
-        <span class="update-item"><span class="check">&#10003;</span> Hyperliquid smart-money — positioning consensus from consistency-gated leaderboard winners</span>
-        <span class="update-item"><span class="check">&#10003;</span> Hyperliquid trader-profile — live positions, leverage, liq distance, PnL history</span>
-        <span class="update-item"><span class="check">&#10003;</span> Multi-venue trader-profile — Jupiter + Adrena positions in one call</span>
-        <span class="update-item"><span class="check">&#10003;</span> Perp position alerts — opened, closed, at-risk, liquidation-approaching, PnL-swing</span>
+        <span class="update-item"><span class="check">&#10003;</span> Exit-signal — the sell-side verdict for a token you hold: EXIT / DERISK / HOLD with rug triggers that override everything</span>
+        <span class="update-item"><span class="check">&#10003;</span> Trenches-scan — velocity &times; smart-money &times; agent attention, one ranked pre-ape list</span>
+        <span class="update-item"><span class="check">&#10003;</span> Trenches-check — the same three signals pointed at one mint before you ape</span>
+        <span class="update-item"><span class="check">&#10003;</span> Runner-scan — which fresh tokens are accelerating right now, not already-moved</span>
+        <span class="update-item"><span class="check">&#10003;</span> NFT enrichment — every wallet's non-fungibles split into collected / airdropped / spam</span>
       </div>
     </div>
   </div>
@@ -1564,11 +1564,25 @@
     <div class="container">
       <div class="reveal">
         <div class="section-label">Who it's for</div>
-        <h2 class="section-title">Built for three kinds of agent</h2>
+        <h2 class="section-title">Built for four kinds of agent</h2>
         <p class="section-desc" style="max-width:560px; margin:0 auto; text-align:center;">If you're building one of these, here's where to start.</p>
       </div>
 
       <div class="personas-grid">
+        <div class="persona-card reveal">
+          <div class="persona-tag">&gt;_ trenches bots</div>
+          <h3 class="persona-title">Enter on confluence, exit before the dump</h3>
+          <p class="persona-desc">The full memecoin trade lifecycle: find what's accelerating, vet it against three independent signals, and get the sell-side verdict while you hold. Seconds-to-minutes lane, not block-0 sniping.</p>
+          <ul class="persona-endpoints">
+            <li><code>runner-scan</code>which fresh tokens are accelerating right now</li>
+            <li><code>smart-money-trenches</code>proven-winner wallets aping fresh launches</li>
+            <li><code>trenches-scan</code>velocity &times; smart money &times; attention, ranked</li>
+            <li><code>trenches-check</code>one mint, three signals, verdict before you ape</li>
+            <li><code>exit-signal</code>EXIT / DERISK / HOLD for the token you hold</li>
+            <li><code>due-diligence</code>structural safety: holders, authorities, rug flags</li>
+          </ul>
+        </div>
+
         <div class="persona-card reveal">
           <div class="persona-tag">&gt;_ perps bots</div>
           <h3 class="persona-title">Make every venue decision one call</h3>
@@ -2056,9 +2070,9 @@
     <div class="container">
       <div class="reveal" style="text-align: center;">
         <div class="section-label">Data sources</div>
-        <h2 class="section-title">Cross-referenced from 6 sources</h2>
+        <h2 class="section-title">Cross-referenced from 12 sources</h2>
         <p class="section-desc" style="margin: 16px auto 56px;">
-          Prices use the median of all available sources. Every enrichment cross-references data in parallel for accuracy.
+          Prices use the median of all available sources. Every enrichment cross-references data in parallel for accuracy. Perps venues are read from on-chain accounts, not third-party summaries.
         </p>
       </div>
 
@@ -2092,6 +2106,36 @@
           <span class="source-icon">&#9672;</span>
           <div class="source-name">Solana RPC</div>
           <div class="source-detail">Balances + Accounts</div>
+        </div>
+        <div class="source-card">
+          <span class="source-icon">&#9798;</span>
+          <div class="source-name">Jupiter Perps</div>
+          <div class="source-detail">On-chain OI + Borrow Rates</div>
+        </div>
+        <div class="source-card">
+          <span class="source-icon">&#9737;</span>
+          <div class="source-name">Adrena</div>
+          <div class="source-detail">On-chain Custodies</div>
+        </div>
+        <div class="source-card">
+          <span class="source-icon">&#9889;</span>
+          <div class="source-name">Flash Trade</div>
+          <div class="source-detail">On-chain Markets + OI</div>
+        </div>
+        <div class="source-card">
+          <span class="source-icon">&#9633;</span>
+          <div class="source-name">Hyperliquid</div>
+          <div class="source-detail">Perps Reference + Smart Money</div>
+        </div>
+        <div class="source-card">
+          <span class="source-icon">&#9651;</span>
+          <div class="source-name">dYdX</div>
+          <div class="source-detail">Perps Reference Rates</div>
+        </div>
+        <div class="source-card">
+          <span class="source-icon">&#9670;</span>
+          <div class="source-name">Collector Crypt</div>
+          <div class="source-detail">Gacha Pack Data</div>
         </div>
       </div>
     </div>
@@ -2172,7 +2216,7 @@ Well-distributed supply.</span>
         <div class="value-card reveal">
           <div class="value-icon">&gt;_ agent-native</div>
           <h3 class="value-title">Agent-native API</h3>
-          <p class="value-desc">Listed on x402scan and MPPScan. Discoverable via 8004-solana registry, OpenAPI spec, and MCP. Agents find and pay SolEnrich without human setup.</p>
+          <p class="value-desc">Listed in the CDP x402 bazaar, agentic.market, x402scan, and MPPScan. Discoverable via the 8004-solana and Metaplex agent registries, OpenAPI spec, and MCP. Agents find and pay SolEnrich without human setup.</p>
         </div>
 
         <div class="value-card reveal">
@@ -2184,7 +2228,7 @@ Well-distributed supply.</span>
         <div class="value-card reveal">
           <div class="value-icon">&gt;_ parallel</div>
           <h3 class="value-title">Cross-referenced data</h3>
-          <p class="value-desc">Every enrichment hits 5 data sources in parallel with 10s timeouts. One slow API never blocks your response.</p>
+          <p class="value-desc">Every enrichment hits its data sources in parallel — 12 upstreams across market data and on-chain accounts, 10s timeouts. One slow API never blocks your response.</p>
         </div>
 
         <div class="value-card reveal">
@@ -2274,17 +2318,18 @@ Well-distributed supply.</span>
             No cloning, no dependencies. Just paste the URL.
           </p>
           <p style="color: var(--text-muted); font-size: 13px;">
-            7 tools available: wallet profiling, token analysis, transaction parsing,
-            whale tracking, due diligence, wallet graph, and copy-trade signals.
+            36 tools available — every paid endpoint has a matching MCP tool, from wallet
+            profiling and due diligence to the trenches suite and the full perps stack.
           </p>
           <div class="mcp-tools">
             <span class="mcp-tool-tag">enrich_wallet</span>
-            <span class="mcp-tool-tag">enrich_token</span>
-            <span class="mcp-tool-tag">whale_watch</span>
             <span class="mcp-tool-tag">due_diligence</span>
-            <span class="mcp-tool-tag">wallet_graph</span>
-            <span class="mcp-tool-tag">copy_trade</span>
-            <span class="mcp-tool-tag">parse_tx</span>
+            <span class="mcp-tool-tag">runner_scan</span>
+            <span class="mcp-tool-tag">trenches_check</span>
+            <span class="mcp-tool-tag">exit_signal</span>
+            <span class="mcp-tool-tag">whale_watch</span>
+            <span class="mcp-tool-tag">perps_cross_venue</span>
+            <span class="mcp-tool-tag">+29 more</span>
           </div>
         </div>
 
