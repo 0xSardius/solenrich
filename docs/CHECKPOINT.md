@@ -1,9 +1,73 @@
 # Session Checkpoint
 
 ## Last session date
-2026-08-27
+2026-09-01
 
-## ▶️ RESUME HERE (2026-08-27) — SEED SET WIDENED 14 → 106, ERIS TRIGGER GATE CLEARED
+## ▶️ RESUME HERE (2026-09-01) — 90-DAY STRATEGY LOCKED, HERO REPOSITIONED, PLAYBOOK BUILD NEXT
+
+**Next action: the playbook discovery-surface build (~1 session).** Six surfaces, agreed design
+(2026-08-30, "edges between nodes" — every endpoint stays independently discoverable, the
+playbook is additive metadata on each):
+1. `next_steps` field in API responses — verdict-aware next-call suggestions (exit-signal
+   DERISK → whale-watch, etc.). THE cascading-discovery mechanism; in-band, deterministic.
+   Additive schema change, touches formatters. Bonus: caller following a suggestion =
+   directly measurable playbook adoption in /metrics.
+2. 402 response body — add the three packs (most-hit unpaid surface).
+3. OpenAPI `x-solenrich-playbook` per-operation (pack, position, predecessor/successor).
+4. MCP tool descriptions — companion cross-refs ("typically follows check-alerts").
+5. llms.txt prose section + `/docs` machine-readable `playbooks` object.
+6. Landing packs section (hero half ALREADY DONE — see below).
+Packs stay documentary — NO bundle pricing (à la carte Pack A ≈ $0.13, inside the memo's
+band; tripwire = a paying agent asks for bundles).
+
+### This session (2026-08-29 → 09-01)
+
+- **90-day strategy REVIEWED + LOCKED** — external strategy memo assessed against standing
+  plans; merged doc published as artifact:
+  `https://claude.ai/code/artifact/50cf172d-9633-4105-8518-999c0803060b`
+  Verdicts: ADOPT playbook packaging · Pack D implementation sprints ($5-15K) · dashboard-
+  before-bot (digest + Eris tape MERGED into one artifact) · role-separated swarm
+  (Scout/Vet/Sizer/Watch/Exit, Exit overrides) · paper-first-or-published-cap. ADAPT hero
+  focus (trenches leads, perps stays) · prepaid credits (parked). REJECT any Eris token.
+  90-day targets: 50 paying agents, $1K settled, one $8K wiring job. New-endpoint rule
+  tightened: only when Eris hits a missing verb (trencher-profile qualifies = vet).
+  Identity/A2A section added: ERC-8004-on-Base folded into the health pass; T54 two moves +
+  ACP registration in Sardius outreach lane.
+- **$SE record CORRECTED** (memory `project_se_token.md`) — the token DID launch (Bags,
+  April, CA `677CpPEoKVo9tyCyBHqtiXZivUPdPXEigd3FspWuBAGS`), earned Sardius ~$6K creator
+  fees, now zero liquidity; Sardius holds ~4% unsold. Stance: dormant; pre-registered
+  trigger = ~50 paying agents → revisit holder-gated pricing. TODO Sardius: check Bags
+  creator dashboard for unclaimed fees.
+- **Hero REPOSITIONED + LIVE (`09b48af`)** — "Trenches-to-exit intelligence for Solana
+  agents" + badge "the intelligence layer agents pay before they ape, hold, or exit" +
+  terminal now shows "one trade, three calls" (trenches-check → check-alerts → exit-signal,
+  real BONK verdicts). Title/og aligned. Verified serving on www.solenrich.com.
+  Decision reviewed 08-31: specific-over-generic CONFIRMED (reversible, evidence-backed,
+  measurable at the week-3 gate); generic story remains one scroll down in personas.
+
+### Open decisions (Sardius — from the strategy doc)
+
+1. Pack D offer: price point + first three founders to pitch.
+2. Eris stakes: paper-first 2 weeks (recommended) vs published 2-5 SOL cap.
+3. Virtuals ACP: register now (free, shelf empty), bridge build stays queued.
+4. Bags dashboard fee check ($SE found money if nonzero).
+
+### Execution queue (from the locked strategy doc, post-hero)
+
+1. **Playbook discovery-surface build** (Claude, ~1 session) — the six surfaces above.
+2. **Discovery + identity health pass** (Claude, ~1 session) — all registry surfaces green
+   (A2A card conformance, 8004, Metaplex, Smithery, MCP, OpenAPI, x402scan) + ERC-8004-on-
+   Base registration. Also checks the memo's unverified "conformance dinged" claim.
+3. **trencher-profile** (Claude, 1 session) — last endpoint before the gate; vet verb;
+   Eris's seed-refresh filter.
+4. **Public tape v1** (Claude, 1 session) — digest renderer → paid prod calls → daily cron →
+   landing card w/ 48h staleness guard. Grows into the Eris dashboard.
+5. **Eris headless loop** (Claude, ~2 sessions) — role-separated, vs 106-seed live set +
+   315 extended pool (`test/trenches-widen-result.json`). Gated on decision #2 for stakes.
+6. **Week-3 validation gate** — playbook/lifecycle adoption by wallet-attributed callers
+   decides everything past trencher-profile.
+
+## ▶️ PREVIOUS (2026-08-27) — SEED SET WIDENED 14 → 106, ERIS TRIGGER GATE CLEARED
 
 **Headline: the Eris blocker is gone.** Seed-widening (task #2) done and measured (`9731858`):
 - **Trigger rate: 19 fresh-token buys/day** (July baseline: 0.7/day — 27×). **1 consensus event
