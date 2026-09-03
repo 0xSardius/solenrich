@@ -1,7 +1,33 @@
 # Session Checkpoint
 
 ## Last session date
-2026-09-01
+2026-09-03
+
+## ▶️ 2026-09-03 — HERO REVERSED TO "ONCHAIN INTELLIGENCE"; pay.sh PR bumped; state-of-play report
+
+- **Hero repositioned (`bf0b623`, `da34636`)** — Sardius asked for the site to read as onchain
+  intelligence, not memecoin-centric (portfolio/job-application use). Title/og/twitter now
+  "Onchain Intelligence for Solana Agents"; badge "Ground truth agents pay for before they act";
+  terminal = "ground truth, three calls" (real demo reads: BONK enrich-token-full, its 8%-of-supply
+  top holder = 6-day-old wallet flagged MODERATE, compare-tokens BONK vs WIF). Personas reordered:
+  research agents → AI copilots → perps bots → "trading bots on fresh launches" (softened copy).
+  Update banner leads with NFT enrichment / exit-signal / attention-momentum / Base. Orbis removed
+  from proof strip (domain is dead). docs.html meta 33→38. Verified live on www.solenrich.com.
+  This reverses the 08-31 "specific-over-generic" hero call for a stated personal reason; the
+  trenches lifecycle is still fully present one scroll down.
+- **pay.sh PR #176 refreshed + bumped 2026-09-01** — rebased on main, snapshot 32→38 endpoints,
+  PAY.md gains trenches lifecycle + Base settlement (`31e491e` on `0xSardius/pay-skills`),
+  comment tagging lgalabru + rishinsharma. Awaiting maintainer CI approval.
+- **State-of-play report** (artifact `claude.ai/code/artifact/60a03741-01a6-48fe-8874-e0c4f379342d`):
+  traction DECLINING (30d 86 txns / 15 buyers / $1.88; zero paid calls 08-28→09-03 — August organic
+  users churned). Consolidated 5-track plan agreed for discussion: A hygiene · B demand/proof
+  (talk to the 28 buyers, toolbelt plugins SAK/OpenClaw/ElizaOS, next_steps, public tape) ·
+  C Eris rescoped = ONE outcome harness with pluggable strategies (trenches = proof engine,
+  perps carry = income engine, absorbs Ananke; Mobula = Eris-side trigger source only) ·
+  D Sardius outreach · E mid-October gate. Sniper bot declined. Memory:
+  `reference_state_of_play_2026_09_01.md`.
+- **Track A still open:** 402 JSON body Base mention, GitHub repo description, 301 stale hosts,
+  Dockerfile `bun.lock` line, Smithery refresh (Sardius), agentic.market email (Sardius).
 
 ## ▶️ RESUME HERE (2026-09-01) — 90-DAY STRATEGY LOCKED, HERO REPOSITIONED, PLAYBOOK BUILD NEXT
 
