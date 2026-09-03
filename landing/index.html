@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SolEnrich — Trenches-to-Exit Intelligence for Solana Agents</title>
-  <meta name="description" content="Solana onchain data enrichment agent. 38 endpoints covering the full memecoin trade lifecycle (runner detection, smart-money trenches, three-signal pre-ape scans, exit signals), Hyperliquid smart-money + trader profiles, and the perps suite: cross-venue funding, venue-comparison-by-size, basis-signal, market trend across Jupiter + Adrena + Hyperliquid + dYdX, plus perp position alerts. Consensus attention signal, portfolio time-series, compound NL queries, daily intelligence feed. Pay USDC on Solana or Base via x402, or cards via Stripe.">
+  <title>SolEnrich — Onchain Intelligence for Solana Agents</title>
+  <meta name="description" content="Onchain intelligence API for Solana agents and LLMs. 38 endpoints: wallet profiling and risk scoring, token due diligence with holder concentration and slippage, whale and smart-money tracking, cross-venue perps market structure (Jupiter, Adrena, Flash, Hyperliquid, dYdX), event alerts, portfolio time-series, agent-attention signals, and a fresh-launch trade-lifecycle suite. Deterministic scoring, JSON or LLM-ready briefings. Pay per call with USDC on Solana or Base via x402, or by card via Stripe. No API keys.">
 
   <link rel="canonical" href="https://www.solenrich.com/">
   <link rel="icon" type="image/png" href="/logo.png">
@@ -13,16 +13,16 @@
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.solenrich.com/">
-  <meta property="og:title" content="SolEnrich — Trenches-to-Exit Intelligence for Solana Agents">
-  <meta property="og:description" content="38 enrichment endpoints on Solana, including memecoin smart-money and runner detection, Hyperliquid intelligence &amp; the full perps suite: cross-venue funding, venue-comparison, basis-signal, market structure, trader profiles & live position alerts across Jupiter Perps + Adrena + Hyperliquid + dYdX. Plus event-driven alerts, consensus signal, portfolio time-series, smart-money orchestration, daily intelligence feed, plus Jupiter Gacha pack EV analysis. Pay USDC via x402 or cards via Stripe.">
+  <meta property="og:title" content="SolEnrich — Onchain Intelligence for Solana Agents">
+  <meta property="og:description" content="38 onchain intelligence endpoints for Solana agents: wallet risk scoring, token due diligence, whale and smart-money tracking, cross-venue perps structure across Jupiter, Adrena, Flash, Hyperliquid and dYdX, event alerts, portfolio time-series, and agent-attention signals. Deterministic scoring, JSON or LLM briefings. Pay USDC via x402 on Solana or Base, or cards via Stripe.">
   <meta property="og:image" content="https://www.solenrich.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="SolEnrich — Trenches-to-Exit Intelligence for Solana Agents">
-  <meta name="twitter:description" content="38 enrichment endpoints on Solana, including memecoin smart-money and runner detection, Hyperliquid intelligence &amp; the full perps suite: cross-venue funding, venue-comparison, basis-signal, market structure, trader profiles & live position alerts across Jupiter Perps + Adrena + Hyperliquid + dYdX. Plus event-driven alerts, consensus signal, portfolio time-series, smart-money orchestration, daily intelligence feed, plus Jupiter Gacha pack EV analysis. Pay USDC via x402 or cards via Stripe.">
+  <meta name="twitter:title" content="SolEnrich — Onchain Intelligence for Solana Agents">
+  <meta name="twitter:description" content="38 onchain intelligence endpoints for Solana agents: wallet risk scoring, token due diligence, whale and smart-money tracking, cross-venue perps structure across Jupiter, Adrena, Flash, Hyperliquid and dYdX, event alerts, portfolio time-series, and agent-attention signals. Deterministic scoring, JSON or LLM briefings. Pay USDC via x402 on Solana or Base, or cards via Stripe.">
   <meta name="twitter:image" content="https://www.solenrich.com/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1478,16 +1478,17 @@
       <div class="hero-content">
         <div class="hero-badge">
           <span class="protocol-tag">x402</span>
-          <span>The intelligence layer agents pay before they ape, hold, or exit</span>
+          <span>Ground truth agents pay for before they act</span>
         </div>
         <h1>
-          Trenches-to-exit intelligence<br>
+          Onchain intelligence<br>
           <span class="gradient-text">for Solana agents</span>
         </h1>
         <p class="hero-sub">
-          Find what's accelerating. Vet it against smart money. Watch the position. Get out before the dump.
-          One API covers the whole trade — plus perps, wallets, and due diligence across 38 endpoints.
-          Pay per call with USDC on Solana or Base (x402), or by card (Stripe). No keys, no subscription.
+          Wallet risk, token due diligence, whale and smart-money flows, cross-venue perps structure,
+          and agent-attention signals. 38 endpoints, one API, deterministic scoring, returned as JSON or
+          as briefings sized for an LLM context window. Pay per call with USDC on Solana or Base (x402),
+          or by card (Stripe). No keys, no subscription.
         </p>
         <div class="hero-actions">
           <a href="/docs" class="btn-primary">
@@ -1504,24 +1505,23 @@
           <div class="terminal-dot r"></div>
           <div class="terminal-dot y"></div>
           <div class="terminal-dot g"></div>
-          <span class="terminal-title">one trade, three calls</span>
+          <span class="terminal-title">ground truth, three calls</span>
         </div>
         <div class="terminal-body">
-<span class="dim">$</span> <span class="url">trenches-check</span> <span class="dim">$0.03 — before you ape</span>
-<span class="dim">{</span> <span class="key">"verdict"</span>: <span class="str">"HIGH_CONFLUENCE"</span>, <span class="key">"confluence"</span>: <span class="val">3</span>/<span class="val">3</span> <span class="dim">}</span>
+<span class="dim">$</span> <span class="url">enrich-token-full</span> <span class="dim">BONK · $0.004 — is it structurally sound?</span>
+<span class="dim">{</span> <span class="key">"holder_count"</span>: <span class="val">1010231</span>, <span class="key">"top10_pct"</span>: <span class="val">38.5</span>, <span class="key">"hhi"</span>: <span class="val">207</span>,
+  <span class="key">"volatility"</span>: <span class="str">"MODERATE"</span>, <span class="key">"mint_authority"</span>: <span class="val">null</span> <span class="dim">}</span>
 <br>
-<span class="dim">$</span> <span class="url">check-alerts</span> <span class="dim">$0.008 — while you hold</span>
-<span class="dim">{</span> <span class="key">"alerts"</span>: [<span class="str">"whale_outflow"</span>] <span class="dim">}</span>
-<br>
-<span class="dim">$</span> <span class="url">exit-signal</span> <span class="dim">$0.04 — before the dump</span>
+<span class="dim">$</span> <span class="url">enrich-wallet-full</span> <span class="dim">top holder · $0.005 — who is behind 8% of supply?</span>
 <span class="dim">{</span>
-  <span class="key">"verdict"</span>: <span class="str">"DERISK"</span>,
-  <span class="key">"exit_score"</span>: <span class="val">0.5</span>,
-  <span class="key">"flags"</span>: [<span class="str">"sellers_dominating"</span>,
-            <span class="str">"whales_distributing"</span>],
-  <span class="key">"reasoning"</span>: <span class="str">"57% of 1h trades are
-    sells, whale sell/buy 3.2x…"</span>
+  <span class="key">"labels"</span>: [<span class="str">"whale"</span>, <span class="str">"new_wallet"</span>],
+  <span class="key">"portfolio_value_usd"</span>: <span class="val">1459344956</span>,
+  <span class="key">"risk_level"</span>: <span class="str">"MODERATE"</span>,
+  <span class="key">"risk_factors"</span>: [<span class="str">"Wallet less than 7 days old"</span>, …]
 <span class="dim">}</span>
+<br>
+<span class="dim">$</span> <span class="url">compare-tokens</span> <span class="dim">BONK vs WIF · $0.006 — which one?</span>
+<span class="dim">{</span> <span class="key">"safest"</span>: <span class="str">"BONK"</span>, <span class="key">"most_liquid"</span>: <span class="str">"WIF"</span>, <span class="key">"best_distributed"</span>: <span class="str">"BONK"</span> <span class="dim">}</span>
         </div>
       </div>
     </div>
@@ -1534,7 +1534,7 @@
       <div class="proof-items">
         <span class="proof-item">Real USDC settlements via Coinbase CDP</span>
         <span class="proof-divider">·</span>
-        <span class="proof-item">Listed on <a href="https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641" target="_blank" rel="noopener">x402scan</a>, <a href="https://agentic.market/services/api-solenrich-com" target="_blank" rel="noopener">agentic.market</a>, <a href="https://smithery.ai/?q=solenrich" target="_blank" rel="noopener">Smithery</a>, <a href="https://orbisapi.com" target="_blank" rel="noopener">Orbis</a></span>
+        <span class="proof-item">Listed on <a href="https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641" target="_blank" rel="noopener">x402scan</a>, <a href="https://agentic.market/services/api-solenrich-com" target="_blank" rel="noopener">agentic.market</a>, <a href="https://smithery.ai/?q=solenrich" target="_blank" rel="noopener">Smithery</a></span>
         <span class="proof-divider">·</span>
         <span class="proof-item">Registered on 8004-solana</span>
         <span class="proof-divider">·</span>
@@ -1548,11 +1548,11 @@
     <div class="container">
       <span class="update-tag">New</span>
       <div class="update-items">
-        <span class="update-item"><span class="check">&#10003;</span> Exit-signal — the sell-side verdict for a token you hold: EXIT / DERISK / HOLD with rug triggers that override everything</span>
-        <span class="update-item"><span class="check">&#10003;</span> Trenches-scan — velocity &times; smart-money &times; agent attention, one ranked pre-ape list</span>
-        <span class="update-item"><span class="check">&#10003;</span> Trenches-check — the same three signals pointed at one mint before you ape</span>
-        <span class="update-item"><span class="check">&#10003;</span> Runner-scan — which fresh tokens are accelerating right now, not already-moved</span>
         <span class="update-item"><span class="check">&#10003;</span> NFT enrichment — every wallet's non-fungibles split into collected / airdropped / spam</span>
+        <span class="update-item"><span class="check">&#10003;</span> Exit-signal — sell-side verdict for any token you hold: EXIT / DERISK / HOLD with hard rug triggers</span>
+        <span class="update-item"><span class="check">&#10003;</span> Attention-momentum — where agent attention is accelerating ahead of price, from our own query stream</span>
+        <span class="update-item"><span class="check">&#10003;</span> Trenches suite — runner detection, three-signal vetting, and a ranked pre-entry scan for fresh launches</span>
+        <span class="update-item"><span class="check">&#10003;</span> Base accepted — pay with USDC on Solana or Base, same endpoints, same prices</span>
       </div>
     </div>
   </div>
@@ -1568,23 +1568,32 @@
 
       <div class="personas-grid">
         <div class="persona-card reveal">
-          <div class="persona-tag">&gt;_ trenches bots</div>
-          <h3 class="persona-title">Enter on confluence, exit before the dump</h3>
-          <p class="persona-desc">The full memecoin trade lifecycle: find what's accelerating, vet it against three independent signals, and get the sell-side verdict while you hold. Seconds-to-minutes lane, not block-0 sniping.</p>
+          <div class="persona-tag">&gt;_ research agents</div>
+          <h3 class="persona-title">Bring onchain answers to chat</h3>
+          <p class="persona-desc">Plain-English questions about wallets, tokens, whales, and protocols — for Telegram, Discord, or Farcaster bots. Every answer carries the numbers it was built from.</p>
           <ul class="persona-endpoints">
-            <li><code>runner-scan</code>which fresh tokens are accelerating right now</li>
-            <li><code>smart-money-trenches</code>proven-winner wallets aping fresh launches</li>
-            <li><code>trenches-scan</code>velocity &times; smart money &times; attention, ranked</li>
-            <li><code>trenches-check</code>one mint, three signals, verdict before you ape</li>
-            <li><code>exit-signal</code>EXIT / DERISK / HOLD for the token you hold</li>
-            <li><code>due-diligence</code>structural safety: holders, authorities, rug flags</li>
+            <li><code>query</code>natural language &rarr; multi-enricher answer</li>
+            <li><code>due-diligence</code>one SAFE / CAUTION / RISKY verdict with the factors behind it</li>
+            <li><code>whale-watch</code>who's accumulating, who's dumping</li>
+            <li><code>portfolio-history</code>PnL over 7/14/30 days</li>
+          </ul>
+        </div>
+
+        <div class="persona-card reveal">
+          <div class="persona-tag">&gt;_ AI copilots</div>
+          <h3 class="persona-title">Inject Solana context into LLMs</h3>
+          <p class="persona-desc">Drop pre-formatted briefings straight into Claude or Cursor conversations. Deterministic templates, no inference cost, tuned for context windows.</p>
+          <ul class="persona-endpoints">
+            <li><code>format: "llm"</code>ready-to-paste briefings on any endpoint</li>
+            <li><code>MCP server</code>3-line config for Claude Desktop, 36 tools</li>
+            <li><code>consensus-signal</code>what other agents are watching right now</li>
           </ul>
         </div>
 
         <div class="persona-card reveal">
           <div class="persona-tag">&gt;_ perps bots</div>
           <h3 class="persona-title">Make every venue decision one call</h3>
-          <p class="persona-desc">The full perps stack: rates, sizing, basis-arb, position alerts, market trend. Bot polls once per cycle, gets every decision it needs.</p>
+          <p class="persona-desc">The full perps stack: rates, sizing, basis-arb, position alerts, market trend across Jupiter, Adrena, Flash, Hyperliquid, and dYdX. Bot polls once per cycle, gets every decision it needs.</p>
           <ul class="persona-endpoints">
             <li><code>perps-cross-venue-funding</code>rates across Jupiter, Adrena, HL, dYdX</li>
             <li><code>perps-venue-comparison</code>total entry cost at your size + recommendation</li>
@@ -1596,24 +1605,15 @@
         </div>
 
         <div class="persona-card reveal">
-          <div class="persona-tag">&gt;_ research agents</div>
-          <h3 class="persona-title">Bring onchain answers to chat</h3>
-          <p class="persona-desc">Plain-English questions about wallets, tokens, whales — for Telegram, Discord, or Farcaster bots.</p>
+          <div class="persona-tag">&gt;_ trading bots on fresh launches</div>
+          <h3 class="persona-title">Enter on confluence, exit on evidence</h3>
+          <p class="persona-desc">The trade lifecycle for newly launched tokens: find what's accelerating, vet it against three independent onchain signals, watch the position, and get the sell-side verdict while you hold. Seconds-to-minutes research lane, not block-0 sniping.</p>
           <ul class="persona-endpoints">
-            <li><code>query</code>natural language → multi-enricher answer</li>
-            <li><code>whale-watch</code>who's accumulating, who's dumping</li>
-            <li><code>portfolio-history</code>PnL over 7/14/30 days</li>
-          </ul>
-        </div>
-
-        <div class="persona-card reveal">
-          <div class="persona-tag">&gt;_ AI copilots</div>
-          <h3 class="persona-title">Inject Solana context into LLMs</h3>
-          <p class="persona-desc">Drop pre-formatted briefings straight into Claude or Cursor conversations.</p>
-          <ul class="persona-endpoints">
-            <li><code>format: "llm"</code>ready-to-paste briefings on any endpoint</li>
-            <li><code>MCP server</code>3-line config for Claude Desktop</li>
-            <li><code>consensus-signal</code>what other agents are watching</li>
+            <li><code>runner-scan</code>which fresh tokens are accelerating right now</li>
+            <li><code>smart-money-trenches</code>proven-winner wallets buying fresh launches</li>
+            <li><code>trenches-check</code>one mint, three signals, one verdict before entry</li>
+            <li><code>exit-signal</code>EXIT / DERISK / HOLD for the token you hold</li>
+            <li><code>due-diligence</code>structural safety: holders, authorities, rug flags</li>
           </ul>
         </div>
       </div>
@@ -1986,7 +1986,7 @@
             <span class="endpoint-name">runner-scan</span>
             <span class="endpoint-price">$0.04</span>
           </div>
-          <p class="endpoint-desc">Which fresh memecoins are <em>accelerating</em> right now &mdash; not the lagging fact that price already moved. Buy-rate acceleration (5m vs 1h, 1h vs 6h), buy pressure, volume and price velocity, holder growth, liquidity trend. Stages RUNNING / IGNITING / PARABOLIC_LATE / FADING with a 0&ndash;1 score. Flags already-ran tokens as entry risk and LP pulls as rugs instead of dressing them up as momentum.</p>
+          <p class="endpoint-desc">Which fresh launches are <em>accelerating</em> right now &mdash; not the lagging fact that price already moved. Buy-rate acceleration (5m vs 1h, 1h vs 6h), buy pressure, volume and price velocity, holder growth, liquidity trend. Stages RUNNING / IGNITING / PARABOLIC_LATE / FADING with a 0&ndash;1 score. Flags already-ran tokens as entry risk and LP pulls as rugs instead of dressing them up as momentum.</p>
           <div class="tag-row"><span class="tag">trenches</span><span class="tag">momentum</span></div>
         </div>
 
@@ -1995,7 +1995,7 @@
             <span class="endpoint-name">trenches-scan</span>
             <span class="endpoint-price">$0.08</span>
           </div>
-          <p class="endpoint-desc">The full pre-ape scan in one call. Three independent signals &mdash; on-chain velocity (runner detection), proven-winner wallet buys (smart money), and agent attention (our proprietary query stream) &mdash; composited into a ranked list with confluence counts, per-token reasoning, and HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL verdicts. Confluence across independent signals is the edge.</p>
+          <p class="endpoint-desc">The full pre-entry scan in one call. Three independent signals &mdash; on-chain velocity (runner detection), proven-winner wallet buys (smart money), and agent attention (our proprietary query stream) &mdash; composited into a ranked list with confluence counts, per-token reasoning, and HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL verdicts. Confluence across independent signals is the edge.</p>
           <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">trenches</span><span class="tag">orchestration</span><span class="tag">flagship</span></div>
         </div>
 
@@ -2004,7 +2004,7 @@
             <span class="endpoint-name">trenches-check</span>
             <span class="endpoint-price">$0.03</span>
           </div>
-          <p class="endpoint-desc">Before you ape, run the check. The trenches suite pointed at <em>one token</em>: pass a mint &mdash; from a discovery, a Telegram call, anywhere &mdash; and get a HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL / NO_SIGNAL verdict with reasoning. On-chain velocity, proven-winner buys, and agent attention, targeted at your candidate. Re-check 5+ minutes later and liquidity/holder trends fill in.</p>
+          <p class="endpoint-desc">Before you enter, run the check. The trenches suite pointed at <em>one token</em>: pass a mint &mdash; from a discovery, a Telegram call, anywhere &mdash; and get a HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL / NO_SIGNAL verdict with reasoning. On-chain velocity, proven-winner buys, and agent attention, targeted at your candidate. Re-check 5+ minutes later and liquidity/holder trends fill in.</p>
           <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">trenches</span><span class="tag">vetting</span></div>
         </div>
 
