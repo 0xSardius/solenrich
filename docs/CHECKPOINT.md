@@ -3,31 +3,84 @@
 ## Last session date
 2026-09-03
 
-## ▶️ 2026-09-03 — HERO REVERSED TO "ONCHAIN INTELLIGENCE"; pay.sh PR bumped; state-of-play report
+## ▶️ RESUME HERE (2026-09-03) — SESSION CLOSED: state-of-play review, pay.sh bump, hero → onchain intelligence
 
-- **Hero repositioned (`bf0b623`, `da34636`)** — Sardius asked for the site to read as onchain
-  intelligence, not memecoin-centric (portfolio/job-application use). Title/og/twitter now
-  "Onchain Intelligence for Solana Agents"; badge "Ground truth agents pay for before they act";
-  terminal = "ground truth, three calls" (real demo reads: BONK enrich-token-full, its 8%-of-supply
-  top holder = 6-day-old wallet flagged MODERATE, compare-tokens BONK vs WIF). Personas reordered:
-  research agents → AI copilots → perps bots → "trading bots on fresh launches" (softened copy).
-  Update banner leads with NFT enrichment / exit-signal / attention-momentum / Base. Orbis removed
-  from proof strip (domain is dead). docs.html meta 33→38. Verified live on www.solenrich.com.
-  This reverses the 08-31 "specific-over-generic" hero call for a stated personal reason; the
-  trenches lifecycle is still fully present one scroll down.
-- **pay.sh PR #176 refreshed + bumped 2026-09-01** — rebased on main, snapshot 32→38 endpoints,
-  PAY.md gains trenches lifecycle + Base settlement (`31e491e` on `0xSardius/pay-skills`),
-  comment tagging lgalabru + rishinsharma. Awaiting maintainer CI approval.
-- **State-of-play report** (artifact `claude.ai/code/artifact/60a03741-01a6-48fe-8874-e0c4f379342d`):
-  traction DECLINING (30d 86 txns / 15 buyers / $1.88; zero paid calls 08-28→09-03 — August organic
-  users churned). Consolidated 5-track plan agreed for discussion: A hygiene · B demand/proof
-  (talk to the 28 buyers, toolbelt plugins SAK/OpenClaw/ElizaOS, next_steps, public tape) ·
-  C Eris rescoped = ONE outcome harness with pluggable strategies (trenches = proof engine,
-  perps carry = income engine, absorbs Ananke; Mobula = Eris-side trigger source only) ·
-  D Sardius outreach · E mid-October gate. Sniper bot declined. Memory:
-  `reference_state_of_play_2026_09_01.md`.
-- **Track A still open:** 402 JSON body Base mention, GitHub repo description, 301 stale hosts,
-  Dockerfile `bun.lock` line, Smithery refresh (Sardius), agentic.market email (Sardius).
+### What was completed (2026-09-01 → 09-03)
+
+- **State-of-play review** — full audit (repo, live /metrics, x402scan, CDP bazaar, agentic.market,
+  pay.sh, MCP directories, competitor docs). Report artifact:
+  `https://claude.ai/code/artifact/60a03741-01a6-48fe-8874-e0c4f379342d` (updated with the
+  consolidated plan after discussion). Memory: `reference_state_of_play_2026_09_01.md`.
+- **pay.sh PR #176 refreshed + bumped (09-01)** — rebased on main (was 7 behind), snapshot
+  32→38 endpoints, PAY.md gains trenches lifecycle + Base settlement (`31e491e` on
+  `0xSardius/pay-skills`), comment tagging lgalabru + rishinsharma. Fork clone was in session
+  scratchpad only; re-clone if changes are requested.
+- **Hero reversed to "Onchain Intelligence for Solana Agents" (`bf0b623`, `da34636`)** — Sardius's
+  call: the site is also a portfolio piece for job applications and should not read memecoin-
+  centric. Title/og/twitter/meta rewritten; badge "Ground truth agents pay for before they act";
+  terminal "ground truth, three calls" built from REAL demo reads (BONK enrich-token-full; its
+  8%-of-supply top holder is a 6-day-old wallet flagged MODERATE; compare-tokens BONK vs WIF).
+  Personas reordered research → copilots → perps → "trading bots on fresh launches" (softened).
+  Update banner leads with NFT / exit-signal / attention-momentum / trenches-as-one-line / Base.
+  Verified live on www.solenrich.com. og-image already said "Onchain intelligence" — untouched.
+- **Track A hygiene, partial:** Orbis removed from the landing proof strip (domain dead);
+  docs.html meta 33→38; two catalog descriptions reworded away from "ape".
+- **Memory updated:** Orbis marked dead; state-of-play note added.
+
+### Current state
+
+- Product: 38 endpoints, 5 surfaces, zero drift (CI-enforced). Service healthy, RSS ~240MB.
+- **Traction DECLINING:** x402scan 30d = 86 txns / 15 buyers / $1.88 (08-23 was 145 / 20 / $3.44).
+  **Zero paid calls 08-28 → 09-03.** August organic users churned. Last settlement = our own
+  08-27 seed run.
+- Discovery: CDP bazaar 38/38 dual-net ✓ · official MCP registry ✓ · PulseMCP ✓ ·
+  agentic.market listed but `enriched:false` · pay.sh PR awaiting maintainer · Smithery stale
+  (29 tools) · Glama not indexed · mcp.so dead · 402 JSON body still says Solana-only.
+- Untracked, deliberately not committed: `docs/A complete (meme)coin guide.pdf`, `memory/`,
+  `test/test-production-full.md`, `x402scan.html` (523KB saved page, 09-01 — delete or ignore).
+
+### Next steps (consolidated 5-track plan — full detail in the artifact)
+
+1. **Track A hygiene (Claude, no input needed):** 402 body Base mention · GitHub repo
+   description · 301 `solenrich.vercel.app` + `solenrich-production.up.railway.app` →
+   canonical · Dockerfile `bun.lockb*` → `bun.lock` so `--frozen-lockfile` applies · drop
+   mcp.so, re-check Glama after the description lands. **(Sardius):** Smithery claim +
+   refresh to 38 tools · agentic.market enrichment email (Claude drafts).
+2. **Track B demand/proof:** talk to the 28 buyers (Claude enriches wallets from x402scan,
+   Sardius reaches out) → toolbelt plugins (Solana Agent Kit, OpenClaw/ClawPump skill,
+   ElizaOS; ~2 sessions) → `next_steps` playbook field (six surfaces) → public tape card.
+3. **Track C Eris (own repo, concurrent):** harness scaffold (own lockfile, fresh keypair,
+   wallet-attributed self-calls excluded from organic metrics, 4-function strategy interface,
+   outcome logger +15m/+1h/+6h/+24h, daily JSON tape) → trenches strategy in paper mode, first
+   measurement = detection lag seed-buy→trigger → Mobula free-tier probe (Pulse coverage + WS
+   latency; Eris-side trigger source only) → perps carry strategy week 3 (absorbs Ananke).
+4. **Track D Sardius outreach:** Pack D offer + 3 founders · T54 verification + Trustline pitch ·
+   Virtuals ACP registration · Bags creator-fee check · showcase notes once the tape exists.
+5. **Track E gate — mid-October:** organic paying loop exists? → decides pay-per-call as the
+   business vs the demo for Pack D services + a B2B data partnership.
+
+### Blockers / needs Sardius
+
+- Eris stakes: paper 2 weeks (recommended) vs published 2–5 SOL cap; carry-strategy capital.
+- Pack D: three founders to name (pipeline before offer).
+- pay.sh: maintainer must approve CI on PR #176 (nothing more we can do).
+- Smithery login; agentic.market email send.
+
+### Key decisions made
+
+- **Constraint = retention/proof, not supply or directory presence.** Directories produced 28
+  one-time probes. Growth lever reframed as toolbelt presence (SDK plugins), not more listings.
+- **Eris rescoped = ONE outcome harness with pluggable strategies.** Trenches = proof engine
+  (fast clock, hundreds of labeled verdicts in 2 weeks); perps carry = income engine (deep
+  pools, scales with capital). Ananke merged in as the perps plugin. No sixth agent until
+  Eris has two weeks of public receipts.
+- **Mobula = supplier, not a bot.** Eris-side trigger source + feature column first; promote to
+  a SolEnrich upstream only if the tape shows its tags add predictive value AND ToS allows.
+  Sniper bot DECLINED (infrastructure game, does not call our endpoints).
+- **New-endpoint freeze holds** — `trencher-profile` waits until Eris needs the vet verb.
+- **Hero: generic-over-specific** for a stated personal reason; reverses the 08-31 call.
+  Reversible; trenches lifecycle intact one scroll down.
+- `trencher-profile` dropped from queue position #3; public tape promoted above it.
 
 ## ▶️ RESUME HERE (2026-09-01) — 90-DAY STRATEGY LOCKED, HERO REPOSITIONED, PLAYBOOK BUILD NEXT
 
