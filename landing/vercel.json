@@ -9,7 +9,7 @@
     },
     {
       "source": "/:path*",
-      "has": [{ "type": "host", "value": "(.*)\.vercel\.app" }],
+      "has": [{ "type": "host", "value": "(.*)\\.vercel\\.app" }],
       "destination": "https://www.solenrich.com/:path*",
       "permanent": true
     }
