@@ -3,6 +3,50 @@
 ## Last session date
 2026-09-03
 
+## ▶️ RESUME HERE (2026-09-04) — TRACK A HYGIENE DONE · ERIS HARNESS v0.2 SHIPPED (own repo)
+
+### What was completed (2026-09-03 → 09-04)
+
+- **Track A hygiene — DONE + verified live** (block below the 09-03 section has the detail):
+  402 body dual-network, Orbis gone, 301s for legacy hosts, frozen lockfile, GitHub description/topics,
+  Glama connector found (unclaimed), agentic.market email draft.
+- **Eris remote created:** `github.com/0xSardius/eris` (PRIVATE). Local repo existed with PRD v1.0 +
+  digest spike; pushed as-is, then the harness on top.
+- **Eris harness v0.2 SHIPPED (`2f844da`, `a719563`):** one outcome harness, pluggable strategies.
+  Four-function strategy interface (`scout`/`vet`/`size`/`watch`); harness owns policy (caps, time
+  stop, daily-loss stop, hard-flag **exit override**), paper book (slippage haircut), SolEnrich x402
+  client (ported from SolScout; receipt per call; daily budget guard), outcome sampler
+  (+15m/+1h/+6h/+24h, DexScreener, every verdict incl. SKIPs), daily JSON tape (`tape/*.json`,
+  `self_call: true`), `detection_lag_min` per smart-money candidate. `trenches` strategy =
+  smart-money-trenches (+ runner-scan alternate ticks) → trenches-check → exit-signal.
+  19/19 tests, tsc clean. **Smoke against local SolEnrich:** 1 signal (FOMO, lag 288m), ENTER,
+  paper open $10.56, watch → HOLD, tape written. Live mode refused by the harness.
+- **Eris wallet:** `ANY4ztPwdXTNjLvTjgNCJrJCxpRpnzxyJhVpCqtz5veF` (key in eris/.env, ignored).
+- **SolEnrich `/metrics` organic split (`393907e`):** `today.organic_callers` / `organic_caller_ids` /
+  `dogfood_callers` — SolScout + Eris wallets excluded; `DOGFOOD_WALLETS` env extends. Verified locally.
+
+### Next steps
+
+1. **Sardius:** fund the Eris wallet (~0.02 SOL + $10–20 USDC) → `ERIS_TARGET=production bun run
+   once` from `eris/` → confirm the wallet shows under `dogfood_callers` on prod `/metrics` and NOT
+   under organic. Then `bun run start` somewhere persistent (Railway service + volume for `eris.db`
+   + `tape/`; ~$3–5/day at the default cadences — smart-money-trenches every 15 min is $4.80/day
+   alone; the $5 budget guard will clip it, so either raise `DAILY_BUDGET_USD` or set
+   `SCOUT_INTERVAL_MIN=30`).
+2. **First measurement to read after 48h of paper:** `detection_lag` median/p90 on the tape. The
+   smoke read was 288 min for the one signal — `most_recent_buy_minutes_ago` at first sight. If the
+   median stays in the hours, polling the scan endpoint is too slow for the trenches clock and the
+   Mobula/PumpPortal stream probe moves up. If it is minutes, polling is fine.
+3. **Public tape card** (SolEnrich landing) reads `tape/latest.json` — needs Eris to publish it
+   somewhere fetchable (Railway static route or commit-to-repo cron). Merge with the digest card.
+4. Perps carry strategy (week 3) as the second `Strategy` — the interface is ready.
+5. Track B still queued: buyer-wallet enrichment for outreach, toolbelt plugins, `next_steps` field.
+
+### Blockers / needs Sardius
+
+- Eris wallet funding (above). Railway service for Eris (or run it locally for the paper fortnight).
+- Track A remainder: Glama connector claim, Smithery claim, send the agentic.market ask.
+- Still open from 09-03: Pack D founders, Eris stakes decision (harness is paper-only for now anyway).
 ## ▶️ RESUME HERE (2026-09-03) — SESSION CLOSED: state-of-play review, pay.sh bump, hero → onchain intelligence
 
 ### What was completed (2026-09-01 → 09-03)
