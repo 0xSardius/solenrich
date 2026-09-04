@@ -116,6 +116,17 @@ const HOURLY_TTL = 96 * 3600;   // 96h for hourly buckets — attention-momentum
 // MPP credential hashes, and IP fallback.
 import { extractCaller } from './caller-id';
 
+// Our own wallets. Their paid calls settle for real but are not demand.
+// SolScout = seed/stress runs; Eris = the outcome harness (own repo, 2026-09-04).
+// Extend with DOGFOOD_WALLETS=addr1,addr2 (Solana base58 or 0x EVM).
+const DOGFOOD_CALLER_IDS = new Set(
+  [
+    'H3UyiWm1YTzSKxXTpyssxxEreq6HzWTwNW5BVYewmmfC', // SolScout
+    'ANY4ztPwdXTNjLvTjgNCJrJCxpRpnzxyJhVpCqtz5veF', // Eris
+    ...(process.env.DOGFOOD_WALLETS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
+  ].map((a) => `x402:${a.startsWith('0x') ? a.toLowerCase() : a}`),
+);
+
 // --- OOM hardening (2026-07-16): in-flight tracker + memory watchdog ---
 // The Jul 5 + Jul 15 8GB OOM kills left no trace in logs (no invoke lines at
 // spike time). Track what's running so the next spike identifies itself.
@@ -1316,6 +1327,11 @@ app.get('/metrics', async (c) => {
   );
   const uniqueCallersToday = await metricsCache.scard(`metrics:callers:total:${today}`);
   const callerIdsToday = await metricsCache.smembers(`metrics:callers:total:${today}`);
+  // Organic = everyone except our own dogfood wallets (SolScout seed runs, Eris
+  // harness). Dogfood calls still count in totals — they are real settlements —
+  // but the demand question is "who that isn't us paid today". Baseline 0 organic
+  // as of 2026-07-07; Eris self-calls (added 2026-09-04) must not move it.
+  const organicCallerIds = callerIdsToday.filter((id) => !DOGFOOD_CALLER_IDS.has(id));
 
   // Get last 7 days totals
   const dailyTotals: Record<string, number> = {};
@@ -1366,6 +1382,9 @@ app.get('/metrics', async (c) => {
       by_endpoint: callCounts,
       unique_callers: uniqueCallersToday,
       caller_ids: callerIdsToday,
+      organic_callers: organicCallerIds.length,
+      organic_caller_ids: organicCallerIds,
+      dogfood_callers: callerIdsToday.length - organicCallerIds.length,
       callers_by_endpoint: callersByEndpoint,
     },
     last_7_days: dailyTotals,
