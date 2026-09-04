@@ -933,13 +933,6 @@ app.get('/docs', (c) => {
       llm: 'Natural language briefing (markdown) for LLM context windows',
       both: 'JSON data + llm_summary field',
     },
-    partners: {
-      orbis: {
-        listing: 'https://orbisapi.com (search SolEnrich)',
-        referral_header: 'x-referral-code: 683TDRYV',
-        note: 'Optional. If your x402 call routes through Orbis and includes this header, @0xSardius earns a 25% lifetime referral on that payment. Supports continued SolEnrich infrastructure at no cost to you.',
-      },
-    },
     endpoints: {
       'enrich-wallet-light': {
         price: '0.002',
@@ -1481,7 +1474,7 @@ const LLMS_TXT = `# SolEnrich
 > Solana onchain data enrichment API for AI agents and LLMs. Pay-per-request via x402 (USDC on Solana) or Stripe (fiat). ${Object.keys(PRICING).length} endpoints covering wallet profiling, token analysis, whale tracking, copy-trade signals, due diligence, protocol analytics, Jupiter Perps + cross-venue perps funding, smart-money orchestration, consensus attention signal, portfolio time-series, event-driven alerts, and a daily intelligence feed.
 
 - Base URL: https://api.solenrich.com
-- Payment: x402 (Solana USDC, default) or MPP/Stripe (fiat cards)
+- Payment: x402 (USDC on Solana${EVM_PAY_TO ? ' or Base' : ''}) or MPP/Stripe (fiat cards)
 - Discovery: GET /.well-known/x402 and GET /openapi.json
 - Docs: GET /docs
 - Provider: @0xSardius (https://twitter.com/0xSardius)
@@ -1502,18 +1495,13 @@ ${Object.entries(PRICING).map(([key, price]) => {
 
 ## Integration
 
-Agents can call any endpoint with a Solana USDC x402 payment header. First call returns 402 with payment requirements; second call includes signed payment and receives JSON enrichment data. LLM-optimized natural language briefings available by setting format: "llm" in the request body.
+Agents can call any endpoint with a USDC x402 payment header${EVM_PAY_TO ? ' (Solana or Base — the 402 lists both)' : ''}. First call returns 402 with payment requirements; second call includes signed payment and receives JSON enrichment data. LLM-optimized natural language briefings available by setting format: "llm" in the request body.
 
 MCP server available at https://api.solenrich.com/mcp for direct Claude/Cursor integration.
 
-## Marketplace Partners
+## Settlement History
 
-- Orbis: https://orbisapi.com (search "SolEnrich") — agents can pay per-call through the Orbis billing dashboard, 90% of the payment flows to @0xSardius as weekly Base USDC settlement.
 - x402scan: https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641 — lifetime on-chain settlement history.
-
-## Referral Header (optional)
-
-If your x402 call is routed through Orbis, including the header \`x-referral-code: 683TDRYV\` credits @0xSardius with 25% lifetime of that payment. No cost to you — it comes from Orbis's platform share. Helps fund continued SolEnrich infrastructure and free endpoints.
 `;
 
 app.get('/llms.txt', (c) => {
@@ -1541,12 +1529,14 @@ app.get("/agent-card-extended", (c) => {
       currency: "USDC",
       network: PAYMENT_NETWORK,
       payTo: PAY_TO,
+      ...(BASE_ACCEPTS_ENABLED ? { alt_networks: { base: { caip2: "eip155:8453", payTo: EVM_PAY_TO } } } : {}),
       entrypoints: PRICING,
     },
     x402: {
       enabled: PAYMENTS_ENABLED,
       network: PAYMENT_NETWORK,
-      facilitator: process.env.FACILITATOR_URL ?? "https://facilitator.payai.network",
+      networks: [PAYMENT_NETWORK, ...(BASE_ACCEPTS_ENABLED ? ["base"] : [])],
+      facilitator: process.env.FACILITATOR_URL ?? "https://api.cdp.coinbase.com/platform/v2/x402",
     },
     identity: {
       registry: "8004-solana",

@@ -70,7 +70,7 @@ At smithery.ai → SolEnrich (`solenrich/SE01`):
 ## 4. MCP — Glama / PulseMCP / mcp.so (NEW) **[Sardius — submit]**
 - Glama: glama.ai/mcp/servers → "Add server" (or it auto-indexes a public GitHub repo)
 - PulseMCP: pulsemcp.com/submit
-- mcp.so: mcp.so/submit
+- ~~mcp.so: mcp.so/submit~~ — DEAD as of 2026-09-03 (submission PR `chatmcp/mcpso#3100` never merged, site unmaintained). Dropped.
 For each, paste: name `SolEnrich`, URL `https://api.solenrich.com/mcp`, the **Medium copy**, the tags above.
 
 ---

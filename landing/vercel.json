@@ -6,6 +6,12 @@
       "has": [{ "type": "host", "value": "solenrich.com" }],
       "destination": "https://www.solenrich.com/:path*",
       "permanent": true
+    },
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "(.*)\.vercel\.app" }],
+      "destination": "https://www.solenrich.com/:path*",
+      "permanent": true
     }
   ],
   "rewrites": [

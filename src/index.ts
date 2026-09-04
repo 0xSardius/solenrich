@@ -3,7 +3,12 @@ import { PRICING } from './config';
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const PAY_TO = process.env.AGENT_WALLET_ADDRESS ?? '';
-const FACILITATOR = process.env.FACILITATOR_URL ?? 'https://facilitator.payai.network';
+const FACILITATOR = process.env.FACILITATOR_URL ?? 'https://api.cdp.coinbase.com/platform/v2/x402';
+const EVM_PAY_TO = process.env.EVM_PAY_TO ?? '';
+const CANONICAL_API_HOST = 'api.solenrich.com';
+// Hostnames that still resolve to this service but are not canonical. Redirect
+// them so crawlers and bazaar indexers see one origin (Track A hygiene, 2026-09-03).
+const LEGACY_HOSTS = new Set(['solenrich-production.up.railway.app']);
 
 console.log(`Starting agent server on port ${port}...`);
 
@@ -13,13 +18,23 @@ function build402Body(url: URL) {
 
   return {
     error: 'Payment Required',
-    message: 'This endpoint requires a USDC micropayment via x402 protocol.',
+    message: EVM_PAY_TO
+      ? 'This endpoint requires a USDC micropayment via x402 protocol. Pay on Solana or Base — same price, payer picks the network.'
+      : 'This endpoint requires a USDC micropayment via x402 protocol.',
     endpoint: entrypointKey || undefined,
     pricing: {
       amount: price,
       currency: 'USDC',
       network: 'solana',
       payTo: PAY_TO,
+      // Every network this service settles on. `network`/`payTo` above stay
+      // Solana for clients that read the original single-network shape.
+      networks: [
+        { network: 'solana', caip2: 'solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp', payTo: PAY_TO, asset: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v' },
+        ...(EVM_PAY_TO
+          ? [{ network: 'base', caip2: 'eip155:8453', payTo: EVM_PAY_TO, asset: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913' }]
+          : []),
+      ],
     },
     how_to_pay: {
       protocol: 'x402',
@@ -57,7 +72,16 @@ export default {
     // 402 that points at the paid route rather than a bare 404, so a genuine
     // A2A caller learns where to go. Intercepted here because Lucid registers
     // /tasks inside createAgentApp, ahead of any middleware we could add.
-    const path = new URL(request.url).pathname;
+    const reqUrl = new URL(request.url);
+    const path = reqUrl.pathname;
+
+    // Legacy hostname → canonical (301). Payment headers do not survive a
+    // redirect, so this only ever fires for unpaid discovery traffic.
+    const host = (request.headers.get('host') ?? '').toLowerCase();
+    if (LEGACY_HOSTS.has(host)) {
+      return Response.redirect(`https://${CANONICAL_API_HOST}${path}${reqUrl.search}`, 301);
+    }
+
     if (path === '/tasks' || path.startsWith('/tasks/')) {
       return new Response(
         JSON.stringify({
