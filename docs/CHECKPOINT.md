@@ -39,6 +39,30 @@
 - Untracked, deliberately not committed: `docs/A complete (meme)coin guide.pdf`, `memory/`,
   `test/test-production-full.md`, `x402scan.html` (523KB saved page, 09-01 — delete or ignore).
 
+### ✅ Track A hygiene — DONE 2026-09-03 (`1916590`, `e606c42`, `4c019a7`), all verified live
+
+- 402 JSON body now lists `pricing.networks` = Solana + Base (CAIP-2, payTo, USDC asset each);
+  message says the payer picks the network. Stale payai default → CDP in index.ts and
+  /agent-card-extended (which also gained `x402.networks`).
+- Orbis removed from /docs (`partners`) and llms.txt (Marketplace Partners + Referral Header);
+  x402scan link kept under "Settlement History".
+- 301s live: `solenrich-production.up.railway.app/*` → `api.solenrich.com` (index.ts fetch, before
+  routing); `*.vercel.app` → `www.solenrich.com` (vercel.json host regex, 308). Vercel redeployed.
+- Dockerfile: `COPY bun.lock` + `--frozen-lockfile` enforced (the old `bun.lockb*` glob never
+  matched, so every prod build was a floating install).
+- GitHub repo: description + homepage (www) + 10 topics set via `gh repo edit`.
+- mcp.so dropped (dead). **Glama re-check: we ARE listed** — as a connector via the official
+  registry, `glama.ai/mcp/connectors/io.github.0xSardius/solenrich`, 36 tools, Healthy, 3
+  categories — but **unclaimed** (claim via GitHub / HTTP challenge / DNS record). Server search
+  still returns nothing; the connector page is the real listing.
+- **agentic.market:** entry confirmed blank (`name: api.solenrich.com`, empty description/category/
+  providerUrl, `enriched:false`). Site footer: "operated by Coinbase" → the ask goes to CDP.
+  Email draft + suggested field values: `docs/outreach/agentic-market-enrichment-email.md`.
+  **Bonus data source:** each endpoint carries `quality.l30DaysTotalCalls/l30DaysUniquePayers`
+  (30d: 65 calls, runner-scan top at 8 calls / 3 payers). Includes our own seed runs.
+
+**Sardius (Track A remainder):** claim the Glama connector · Smithery claim + refresh to 38 tools ·
+send the agentic.market ask (CDP Discord x402 channel first).
 ### Next steps (consolidated 5-track plan — full detail in the artifact)
 
 1. **Track A hygiene (Claude, no input needed):** 402 body Base mention · GitHub repo
