@@ -12,6 +12,18 @@
       "has": [{ "type": "host", "value": "(.*)\\.vercel\\.app" }],
       "destination": "https://www.solenrich.com/:path*",
       "permanent": true
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "(.*)\\.vercel\\.app" }],
+      "destination": "https://www.solenrich.com/",
+      "permanent": true
+    },
+    {
+      "source": "/",
+      "has": [{ "type": "host", "value": "solenrich.com" }],
+      "destination": "https://www.solenrich.com/",
+      "permanent": true
     }
   ],
   "rewrites": [
