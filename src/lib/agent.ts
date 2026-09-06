@@ -73,6 +73,14 @@ import { TrenchesScanOrchestrator } from "../enrichers/trenches-scan";
 import { TrenchesCheckAnalyzer } from "../enrichers/trenches-check";
 import { registerExitSignalEntrypoint } from "../entrypoints/exit";
 import { ExitSignalAnalyzer } from "../enrichers/exit-analyzer";
+import { StonkFunClient } from "../sources/stonkfun";
+import { StonkIndex } from "../enrichers/stonk-index";
+import { StonkRewardRiskAnalyzer } from "../enrichers/stonk-reward-risk";
+import { StonkYieldAnalyzer } from "../enrichers/stonk-yield";
+import { StonkPreflightAnalyzer } from "../enrichers/stonk-preflight";
+import { registerStonkEntrypoints } from "../entrypoints/stonk";
+import { formatStonkRewardRiskBriefing } from "../formatters/llm-stonk";
+import { buildExampleLaunchTransaction, EXAMPLE_LAUNCH } from "../sources/launchlab";
 import { registerRunnerEntrypoint } from "../entrypoints/runner";
 import { registerFeedEntrypoint } from "../entrypoints/feed";
 import { FeedStore } from "../enrichers/feed-store";
@@ -80,7 +88,7 @@ import { registerSignalEntrypoint } from "../entrypoints/signals";
 import { SignalTracker } from "../enrichers/signal-tracker";
 import { registerAlertEntrypoint } from "../entrypoints/alerts";
 import { AlertChecker } from "../enrichers/alert-checker";
-import { CONFIG, PRICING } from "../config";
+import { CONFIG, PRICING, FREE_ENDPOINTS } from "../config";
 
 // --- Agent setup ---
 
@@ -352,6 +360,10 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'hyperliquid-trader-profile': ['hyperliquid', 'perps', 'trader-profile', 'trader-pnl', 'smart-money'],
     'hyperliquid-smart-money': ['hyperliquid', 'smart-money', 'perps', 'positioning', 'copy-trade'],
     'gacha-ev-scan': ['solana', 'jupiter-gacha', 'expected-value', 'trading-cards', 'rwa'],
+    'stonk-reward-risk': ['solana', 'stonkfun', 'reward-coin', 'transfer-tax', 'token-risk'],
+    'stonk-yield': ['solana', 'stonkfun', 'holder-yield', 'reward-coin', 'xstocks'],
+    'stonk-screener': ['solana', 'stonkfun', 'screener', 'holder-yield', 'xstocks'],
+    'stonk-launch-preflight': ['solana', 'stonkfun', 'launchlab', 'launch-preflight', 'token-2022'],
   };
 
   // --- Bazaar input examples (ROLLOUT 2026-06-28; canary CONFIRMED) ------------
@@ -394,6 +406,10 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'hyperliquid-trader-profile': { address: '0xd21d931890d27b6e7e2e668f27931e17698e90f1' },
     // alerts
     'check-alerts': { since: '2026-06-01T00:00:00Z' },
+    // stonkfun (ZCAT = live reward coin on ZEC; preflight example is a deterministic correct launch)
+    'stonk-reward-risk': { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR' },
+    'stonk-yield': { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR' },
+    'stonk-launch-preflight': { unsigned_transaction: buildExampleLaunchTransaction(), quote_mint: EXAMPLE_LAUNCH.quoteMint, mode: EXAMPLE_LAUNCH.mode },
   };
 
   const routeConfig = (key: string, price: string) => {
@@ -724,6 +740,27 @@ registerTrenchesCheckEntrypoint(addEntrypoint, trenchesCheckAnalyzer);
 // top-holder flow. Works on tokens of any age, not just fresh launches.
 const exitSignalAnalyzer = new ExitSignalAnalyzer(dexscreener, whaleWatcher, cache, birdeye);
 registerExitSignalEntrypoint(addEntrypoint, exitSignalAnalyzer);
+
+// StonkFun product line — quote-paired + reward-mode (transfer-tax) coins.
+// The index ingests every reward coin + the rewards ledger every 10 minutes
+// and records daily snapshots for trailing-yield windows (persisted to Redis).
+// Ingest is skipped under `bun test` and when STONK_INGEST=off.
+const stonkfun = new StonkFunClient(cache);
+const stonkIndex = new StonkIndex(stonkfun, jupiter, cache);
+const stonkRewardRisk = new StonkRewardRiskAnalyzer(stonkfun, solanaRpc, cache, formatStonkRewardRiskBriefing);
+const stonkYield = new StonkYieldAnalyzer(stonkfun, stonkIndex, jupiter, cache);
+const stonkPreflight = new StonkPreflightAnalyzer(stonkfun, solanaRpc.getConnection());
+registerStonkEntrypoints(addEntrypoint, {
+  client: stonkfun,
+  index: stonkIndex,
+  rewardRisk: stonkRewardRisk,
+  yieldAnalyzer: stonkYield,
+  preflight: stonkPreflight,
+  cache,
+});
+if (process.env.NODE_ENV !== 'test' && process.env.STONK_INGEST !== 'off') {
+  void stonkIndex.start();
+}
 
 // Event-Driven Alerts (Priority 13) — poll-based V1. Stateless: agent passes
 // watchlist + `since` cursor each call. Detection composes token-analyzer,
@@ -1135,6 +1172,31 @@ app.get('/docs', (c) => {
         input: { machine: 'string (optional) — one machine code e.g. pokemon_50; omit to scan all', franchise: 'pokemon | onepiece | all (default all)', exit_strategy: 'buyback | marketplace | both (default both)', min_edge_pct: 'number (optional) — only surface machines with net edge ≥ this %%', format: 'json | llm | both' },
         description: 'Jupiter Gacha (Collector Crypt) tokenized-card pack EV scan. Per machine: gross insured EV vs the guaranteed instant-buyback floor (85-93%% of insured value, ≤72h cash exit) vs a marketplace sale (insured value minus 2%% fee, not guaranteed to fill). Verdict POSITIVE_EV (guaranteed floor wins) / HOUSE_EDGE (marketplace positive but buyback loses ~5%%) / NEGATIVE_EV (even marketplace exit loses), plus rare+epic stock share. Surfaces the realizable EV the platform hides behind its gross-EV headline. NFA.',
       },
+      'stonk-pairs': {
+        price: '0 (free)',
+        input: { category: 'xstock | prestock | currency | leverage | solana | collectible | custom (optional)', launchable_only: 'boolean (default false) — only is_agent_launchable pairs', format: 'json | llm | both' },
+        description: 'FREE. Quote assets a StonkFun (stonkfun.xyz) launch can be paired against — xStocks, pre-stocks, currencies, custom mints — with normalized categories and an is_agent_launchable flag (launchable + LaunchLab-ready + allowed category). Cached 5 minutes. Call first: a launch quoteMint must be one of these.',
+      },
+      'stonk-reward-risk': {
+        price: '0.005',
+        input: { mint: 'string (required) — StonkFun coin mint', format: 'json | llm | both' },
+        description: 'Reward-coin health score 0-100 for a StonkFun reward-mode (transfer-tax) coin, read from the chain not only the API: Token-2022 transfer-fee bps and per-transfer cap, withdraw-withheld authority (must be StonkFun\'s distributor), fee mutability, zero-rate / unadopted detection, rewards distributed to date + last payout recency, flywheel, holder count and top-10 concentration, quote category, age, graduation. Zero-rate or unadopted coins score under 20 with a plain reason. Levels HEALTHY / MIXED / WEAK / BROKEN. Includes llm_brief.',
+      },
+      'stonk-yield': {
+        price: '0.005',
+        input: { mint: 'string (required) — StonkFun reward coin mint', format: 'json | llm | both' },
+        description: 'Trailing 7d, 30d, and lifetime holder yield: rewards distributed in the quote asset (from /rewards), priced in USD via Jupiter, divided by average market cap over the window (daily snapshots from the 10-minute ingest). Annualized figure carries an explicit caution flag when the window is under 7 days or partial. Returns quote_exposure — what a holder is economically long (the coin + the quote asset) and the reward asset symbol.',
+      },
+      'stonk-screener': {
+        price: '0.01',
+        input: { quote_mint: 'string (optional)', category: 'xstock | prestock | currency | leverage | solana | collectible | custom (optional)', min_holders: 'number (optional)', min_age_days: 'number (optional)', sort: 'yield7d | yield30d | rewardsUsd | volume24h (default rewardsUsd)', limit: 'number 1-100 (default 25)', format: 'json | llm | both' },
+        description: 'Ranked list across every StonkFun reward coin, served from memory (10-minute ingest of /tokens?mode=reward and the /rewards ledger). Per row: quote asset + category, transfer-fee bps, flywheel, holders, payouts, rewards USD, trailing 7d/30d yield with actual window length, volume, market cap. "Which coins pay holders in NVDAX?" is one call.',
+      },
+      'stonk-launch-preflight': {
+        price: '0.25',
+        input: { unsigned_transaction: 'string (required) — base64 unsigned legacy or v0 transaction carrying the LaunchLab initialize', quote_mint: 'string (required)', mode: 'standard | reward (required)', launch_params: 'object (optional) — the params you passed to the SDK, linted for misspelled transfer-fee field names', format: 'json | llm | both' },
+        description: 'Decodes the Raydium LaunchLab initialize instruction and diffs every parameter against StonkFun\'s /launchlab/pricing for that quote + mode: program, GlobalConfig, platform id per mode, quote mint + token program, 6-decimal Token-2022 base mint, curve type, supply, totalSellA, raise (±2% warn, ±10% fail), vesting, cpmmCreatorFeeOn, curve-rule account appended last, and for reward mode the transfer-fee option/tier/cap (catches Raydium\'s transferFeeBasePoints / maxinumFee spelling — a misspelled key serializes as no fee). Returns { ok, mismatches: [{ field, expected, actual, fix }], warnings }. A mismatched pool is never adopted: for a taxed mint, the tax goes to nobody.',
+      },
     },
     methodology: {
       risk_score: {
@@ -1503,6 +1565,13 @@ const LLMS_TXT = `# SolEnrich
 ${Object.entries(PRICING).map(([key, price]) => {
   const meta = ENDPOINT_META[key];
   return `- [${key}](https://api.solenrich.com/entrypoints/${key}/invoke) — ${meta?.description ?? meta?.summary ?? key} ($${price} USDC)`;
+}).join('\n')}
+
+## Free Endpoints
+
+${FREE_ENDPOINTS.map((key) => {
+  const meta = ENDPOINT_META[key];
+  return `- [${key}](https://api.solenrich.com/entrypoints/${key}/invoke) — ${meta?.description ?? meta?.summary ?? key} (free)`;
 }).join('\n')}
 
 ## Networks

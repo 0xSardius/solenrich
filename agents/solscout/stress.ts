@@ -7,6 +7,7 @@
  */
 
 import { PRICING } from '../../src/config';
+import { buildExampleLaunchTransaction, EXAMPLE_LAUNCH } from '../../src/sources/launchlab';
 
 const TEST_WALLET = 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg';
 const TEST_TOKEN = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263'; // BONK
@@ -631,6 +632,71 @@ export const ENDPOINTS: Array<{
       { name: 'has summary counts', test: (d) => d.summary != null && typeof d.summary.house_edge_count === 'number' },
       { name: 'ranked best-first by marketplace edge', test: (d) => d.machines.length < 2 || d.machines[0].marketplace.edge_pct >= d.machines[d.machines.length - 1].marketplace.edge_pct },
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Gacha') },
+    ],
+  },
+  // --- StonkFun product line ---
+  {
+    // ZCAT — a live reward coin on ZEC (raydium launchpad, 300 bps). Score
+    // moves with distributions, so checks are structural plus the hard rule:
+    // an adopted coin with a live tax must NOT be BROKEN.
+    key: 'stonk-reward-risk',
+    input: { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR', format: 'both' },
+    timeout: 45000,
+    checks: [
+      { name: 'echoes mint', test: (d) => d.mint === 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR' },
+      { name: 'score 0-100', test: (d) => Number.isInteger(d.score) && d.score >= 0 && d.score <= 100, detail: (d) => `score=${d.score}` },
+      { name: 'has valid level', test: (d) => ['HEALTHY', 'MIXED', 'WEAK', 'BROKEN'].includes(d.level), detail: (d) => `level=${d.level}` },
+      { name: 'listed on stonkfun', test: (d) => d.adoption?.listed_on_stonkfun === true },
+      { name: 'on-chain fee read', test: (d) => typeof d.transfer_fee?.onchain_bps === 'number' && d.transfer_fee.onchain_bps > 0 },
+      { name: 'withdraw authority is stonkfun', test: (d) => d.adoption?.withdraw_authority_is_stonkfun === true },
+      { name: 'not BROKEN', test: (d) => d.level !== 'BROKEN' },
+      { name: 'has reasons', test: (d) => Array.isArray(d.reasons) && d.reasons.length > 0 },
+      { name: 'has llm_brief', test: (d) => typeof d.llm_brief === 'string' && d.llm_brief.includes('Reward Risk') },
+    ],
+  },
+  {
+    key: 'stonk-yield',
+    input: { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR', format: 'both' },
+    timeout: 45000,
+    checks: [
+      { name: 'echoes mint', test: (d) => d.mint === 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR' },
+      { name: 'reward asset resolved', test: (d) => typeof d.reward_asset?.symbol === 'string' && d.reward_asset.symbol.length > 0, detail: (d) => `asset=${d.reward_asset?.symbol}` },
+      { name: 'has three windows', test: (d) => d.lifetime && d.trailing_7d && d.trailing_30d && d.trailing_7d.window_days === 7 && d.trailing_30d.window_days === 30 },
+      { name: 'lifetime yield computed', test: (d) => typeof d.lifetime.yield_pct === 'number', detail: (d) => `lifetime=${d.lifetime.yield_pct}` },
+      { name: 'caution is boolean per window', test: (d) => [d.lifetime, d.trailing_7d, d.trailing_30d].every((w: any) => typeof w.caution === 'boolean') },
+      { name: 'quote exposure lists two legs', test: (d) => Array.isArray(d.quote_exposure?.long) && d.quote_exposure.long.length === 2 },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Holder Yield') },
+    ],
+  },
+  {
+    // Screener is served from the in-memory ingest; right after a boot it can
+    // be warming up (rows=0), so the row check tolerates an empty index but
+    // demands the index status block.
+    key: 'stonk-screener',
+    input: { category: 'xstock', sort: 'rewardsUsd', limit: 10, format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'has rows array', test: (d) => Array.isArray(d.rows), detail: (d) => `rows=${d.rows?.length} index=${d.index?.rows}` },
+      { name: 'has index status', test: (d) => d.index != null && typeof d.index.rows === 'number' },
+      { name: 'rows ≤ limit', test: (d) => d.rows.length <= 10 },
+      { name: 'rows match category filter', test: (d) => d.rows.every((r: any) => r.quote_category === 'xstock') },
+      { name: 'ranked by rewards_usd desc', test: (d) => d.rows.length < 2 || (d.rows[0].rewards_usd ?? -1) >= (d.rows[d.rows.length - 1].rewards_usd ?? -1) },
+      { name: 'echoes filters', test: (d) => d.filters?.sort === 'rewardsUsd' && d.filters?.category === 'xstock' },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Screener') },
+    ],
+  },
+  {
+    // Deterministic correct launch (SPYX, reward, 300 bps, curve rule last).
+    // Only the raise drifts with price → warning, never a mismatch inside 10%.
+    key: 'stonk-launch-preflight',
+    input: { unsigned_transaction: buildExampleLaunchTransaction(), quote_mint: EXAMPLE_LAUNCH.quoteMint, mode: EXAMPLE_LAUNCH.mode, format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'decoded variant', test: (d) => d.decoded?.variant === 'initialize_with_token_2022', detail: (d) => `variant=${d.decoded?.variant}` },
+      { name: 'ok is boolean', test: (d) => typeof d.ok === 'boolean', detail: (d) => `ok=${d.ok} mismatches=${d.mismatches?.map((m: any) => m.field).join(',')}` },
+      { name: 'no mismatches on the reference launch', test: (d) => Array.isArray(d.mismatches) && d.mismatches.length === 0, detail: (d) => JSON.stringify(d.mismatches) },
+      { name: 'expected block has platform + curve rule', test: (d) => d.expected?.platform_id === EXAMPLE_LAUNCH.platformReward && d.expected?.curve_rule === EXAMPLE_LAUNCH.curveRuleReward },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Preflight') },
     ],
   },
 ];

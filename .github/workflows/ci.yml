@@ -26,6 +26,8 @@ jobs:
       # secrets and a running server; they stay manual.
       - run: bun test test/unit.test.ts
       - run: bun test test/caller-id.test.ts
+      # StonkFun product line — recorded fixtures only (live smoke needs STONK_LIVE=1).
+      - run: bun test test/stonk.test.ts
       # /mcp method-gating guard — imports the app in-process, no network needed.
       # Protects the 2026-07-21 OOM fix (GET /mcp must stay 405).
       - run: bun test test/mcp-methods.test.ts

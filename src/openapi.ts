@@ -2,7 +2,7 @@
 // Serves at GET /openapi.json — machine-readable payment terms + input schemas
 // Reference: https://mpp.dev/advanced/discovery
 
-import { PRICING, CONFIG } from './config';
+import { PRICING, CONFIG, FREE_ENDPOINTS } from './config';
 
 // Agent wallet that receives payments
 const RECIPIENT = CONFIG.solana.walletAddress;
@@ -517,6 +517,73 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'stonk-pairs': {
+    summary: 'List StonkFun quote pairs an agent can launch against (free)',
+    description: 'FREE. Quote assets a StonkFun launch can be paired against — xStocks, pre-stocks, currencies, custom mints — with normalized categories and an is_agent_launchable flag (launchable + LaunchLab-ready + allowed category). Cached 5 minutes. Call first: a launch quoteMint must be one of these.',
+    schema: {
+      type: 'object',
+      properties: {
+        category: { type: 'string', enum: ['xstock', 'prestock', 'currency', 'leverage', 'solana', 'collectible', 'custom'] },
+        launchable_only: { type: 'boolean', default: false, description: 'Only pairs with is_agent_launchable=true' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
+  'stonk-reward-risk': {
+    summary: 'Score a StonkFun reward coin: does the holder tax reach holders?',
+    description: 'Reward-coin health score 0-100 for a StonkFun reward-mode coin, read from the chain: Token-2022 transfer-fee bps + cap, withdraw authority (must be StonkFun\'s distributor), fee mutability, zero-rate / unadopted detection, distributions to date + recency, flywheel, holders + top-10 concentration, quote category, age, graduation. Zero-rate or unadopted coins score under 20. Call before buying a reward coin for its yield.',
+    schema: {
+      type: 'object',
+      required: ['mint'],
+      properties: {
+        mint: { type: 'string', description: 'StonkFun coin mint (base58)', minLength: 32, maxLength: 44 },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
+  'stonk-yield': {
+    summary: 'Trailing 7d/30d holder yield for a StonkFun reward coin',
+    description: 'Trailing 7d, 30d, and lifetime holder yield: rewards distributed in the quote asset, priced in USD, divided by average market cap over the window (daily snapshots). Annualized with an explicit caution flag when the window is under 7 days or partial. Returns quote_exposure — what a holder is economically long (the coin + the quote asset) and the reward asset.',
+    schema: {
+      type: 'object',
+      required: ['mint'],
+      properties: {
+        mint: { type: 'string', description: 'StonkFun reward coin mint (base58)', minLength: 32, maxLength: 44 },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
+  'stonk-screener': {
+    summary: 'Rank every StonkFun reward coin by yield, rewards, or volume',
+    description: 'Ranked list across every StonkFun reward coin from a 10-minute ingest, served from memory. Filters: quote_mint, category, min_holders, min_age_days. Sort by yield7d, yield30d, rewardsUsd, or volume24h. Per row: quote asset + category, transfer-fee bps, flywheel, holders, payouts, rewards USD, trailing yields with actual window length, volume, market cap. "Which coins pay holders in NVDAX?" is one call.',
+    schema: {
+      type: 'object',
+      properties: {
+        quote_mint: { type: 'string', minLength: 32, maxLength: 44 },
+        category: { type: 'string', enum: ['xstock', 'prestock', 'currency', 'leverage', 'solana', 'collectible', 'custom'] },
+        min_holders: { type: 'integer', minimum: 0 },
+        min_age_days: { type: 'number', minimum: 0 },
+        sort: { type: 'string', enum: ['yield7d', 'yield30d', 'rewardsUsd', 'volume24h'], default: 'rewardsUsd' },
+        limit: { type: 'integer', minimum: 1, maximum: 100, default: 25 },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
+  'stonk-launch-preflight': {
+    summary: 'Preflight a self-built LaunchLab launch against StonkFun\'s shape',
+    description: 'Decodes the Raydium LaunchLab initialize in your unsigned transaction and diffs it against StonkFun\'s /launchlab/pricing for that quote + mode: GlobalConfig, platform id, curve, supply, totalSellA, raise, 6-decimal Token-2022 base mint, quote token program, curve-rule account last, and the reward-mode transfer fee (catches the transferFeeBasePoints / maxinumFee spelling). Returns ok, mismatches with fixes, warnings. A mismatched pool is never adopted.',
+    schema: {
+      type: 'object',
+      required: ['unsigned_transaction', 'quote_mint', 'mode'],
+      properties: {
+        unsigned_transaction: { type: 'string', description: 'Base64 unsigned transaction (legacy or v0) carrying the LaunchLab initialize', minLength: 64, maxLength: 6000 },
+        quote_mint: { type: 'string', minLength: 32, maxLength: 44 },
+        mode: { type: 'string', enum: ['standard', 'reward'] },
+        launch_params: { type: 'object', description: 'Optional: the params object passed to the SDK — linted for misspelled transfer-fee field names' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
 };
 
 const BASE_URL = 'https://api.solenrich.com';
@@ -527,6 +594,25 @@ const BASE_URL = 'https://api.solenrich.com';
  */
 export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown> {
   const paths: Record<string, unknown> = {};
+
+  // Free entrypoints: no x-payment-info, flagged x-free so MPP/x402 scanners skip them.
+  for (const key of FREE_ENDPOINTS) {
+    const meta = ENDPOINT_META[key];
+    if (!meta) continue;
+    paths[`/entrypoints/${key}/invoke`] = {
+      post: {
+        operationId: key,
+        summary: meta.summary,
+        description: meta.description,
+        'x-free': true,
+        requestBody: {
+          required: false,
+          content: { 'application/json': { schema: { type: 'object', properties: { input: meta.schema } } } },
+        },
+        responses: { '200': { description: 'Success' } },
+      },
+    };
+  }
 
   for (const [key, price] of Object.entries(PRICING)) {
     const meta = ENDPOINT_META[key];
