@@ -11,6 +11,7 @@ import {
   type Snapshot,
 } from './runner-detector';
 import { assessExit, type ExitMetrics, type ExitVerdict } from './exit-score';
+import { netPnlAfterExitTaxPct, type TransferTax, type TransferTaxReader } from '../sources/token-2022';
 
 // --- Types ---
 
@@ -18,6 +19,8 @@ export interface ExitPosition {
   entry_price_usd: number;
   /** Unrealized % move from entry to current price. Null when price unavailable. */
   unrealized_pnl_pct: number | null;
+  /** Unrealized % after paying the sell-side transfer tax. Equals unrealized_pnl_pct when the mint has no tax. */
+  net_pnl_after_exit_tax_pct: number | null;
 }
 
 export interface ExitSignalResult {
@@ -46,6 +49,8 @@ export interface ExitSignalResult {
   } | null;
   /** Present only when the caller supplied entry_price_usd. */
   position: ExitPosition | null;
+  /** Token-2022 transfer tax as an exit cost. Null = no tax or read unavailable. */
+  transfer_tax: TransferTax | null;
   reasoning: string;
   /** Minutes since the prior snapshot the liquidity/holder deltas cover. Null on first look. */
   delta_window_minutes: number | null;
@@ -81,6 +86,7 @@ export class ExitSignalAnalyzer {
     private whaleWatcher: WhaleWatcher,
     private cache: Cache,
     private birdeye?: BirdeyeClient,
+    private taxReader?: TransferTaxReader,
   ) {}
 
   async analyze(mint: string, entryPriceUsd?: number): Promise<ExitSignalResult> {
@@ -90,11 +96,13 @@ export class ExitSignalAnalyzer {
     const cached = await this.cache.get<ExitSignalResult>(cacheKey);
     if (cached) return withPosition(cached, entryPriceUsd);
 
-    const [pairsLeg, whaleLeg, holderLeg] = await Promise.allSettled([
+    const [pairsLeg, whaleLeg, holderLeg, taxLeg] = await Promise.allSettled([
       this.dexscreener.getPairsBatch([mint]),
       this.whaleWatcher.enrich(mint, WHALE_THRESHOLD_USD, WHALE_LOOKBACK_H),
       this.birdeye ? this.birdeye.getTokenOverview(mint) : Promise.resolve(null),
+      this.taxReader ? this.taxReader.get(mint) : Promise.resolve(null),
     ]);
+    const transferTax = taxLeg.status === 'fulfilled' ? taxLeg.value : null;
 
     const caveats: string[] = [];
 
@@ -184,6 +192,12 @@ export class ExitSignalAnalyzer {
         : null,
     });
 
+    if (transferTax && transferTax.bps > 0) {
+      caveats.push(
+        `This mint charges a ${transferTax.bps} bps transfer tax: selling costs ${transferTax.per_transfer_pct}% on top of slippage, and a round trip costs ${transferTax.round_trip_pct}%. net_pnl_after_exit_tax_pct is the number to act on.`,
+      );
+    }
+
     caveats.push(
       'A read of the current tape, not a price prediction. Signals are minutes-scale — a verdict older than the cache window is stale. Not financial advice.',
     );
@@ -205,6 +219,7 @@ export class ExitSignalAnalyzer {
       metrics: assessment.metrics,
       whales,
       position: null,
+      transfer_tax: transferTax,
       reasoning: assessment.reasoning,
       delta_window_minutes: useDelta ? Math.round(priorAgeMs! / 60_000) : null,
       caveats,
@@ -227,8 +242,13 @@ export function withPosition(result: ExitSignalResult, entryPriceUsd?: number): 
     result.price_usd != null && result.price_usd > 0
       ? Math.round(((result.price_usd - entryPriceUsd) / entryPriceUsd) * 1000) / 10
       : null;
+  const bps = result.transfer_tax?.bps ?? 0;
+  const net =
+    result.price_usd != null && result.price_usd > 0
+      ? bps > 0 ? netPnlAfterExitTaxPct(entryPriceUsd, result.price_usd, bps) : pnl
+      : null;
   return {
     ...result,
-    position: { entry_price_usd: entryPriceUsd, unrealized_pnl_pct: pnl },
+    position: { entry_price_usd: entryPriceUsd, unrealized_pnl_pct: pnl, net_pnl_after_exit_tax_pct: net },
   };
 }

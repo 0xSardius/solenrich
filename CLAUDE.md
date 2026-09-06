@@ -656,12 +656,37 @@ pre-stocks, currencies, custom mints) and ~69% launch in **reward mode**: a Toke
 product (working name Pair Router) that launches coins through StonkFun from ClawPump agents.
 Prompt: `solana-idea-exploration/docs/prompts/solenrich-stonkfun-x402-prompt.md`.
 
-**Endpoints (42 paid + 1 free):** `stonk-pairs` (FREE — `FREE_ENDPOINTS` in config, kept out of
-PRICING so x402/MPP never gate it), `stonk-reward-risk` $0.005, `stonk-yield` $0.005,
-`stonk-screener` $0.01, `stonk-launch-preflight` $0.25. All on the standard
-`POST /entrypoints/{key}/invoke` surface (the prompt's REST paths were mapped onto the repo
-convention). MCP: `stonk_pairs`, `stonk_reward_risk`, `stonk_yield`, `stonk_screener`,
-`stonk_preflight`.
+**Endpoints (44 paid + 1 free, as of 2026-09-06 PM):** `stonk-pairs` (FREE — `FREE_ENDPOINTS` in
+config, kept out of PRICING so x402/MPP never gate it), `stonk-reward-risk` $0.005, `stonk-yield`
+$0.005, `stonk-screener` $0.01, `stonk-launch-preflight` $0.25, **`stonk-gems` $0.03**,
+**`stonk-launch-intel` $0.02**. All on the standard `POST /entrypoints/{key}/invoke` surface (the
+prompt's REST paths were mapped onto the repo convention). MCP: `stonk_pairs`, `stonk_reward_risk`,
+`stonk_yield`, `stonk_screener`, `stonk_preflight`, `stonk_gems`, `stonk_launch_intel`.
+
+**PMF reframe (2026-09-06 PM, Sardius):** the jobs are (1) launch stonk coins and make money,
+(2) agentically trade them, (3) agentically launch them, (4) get accurate data. Nobody buys after a
+config audit; a holder observes one thing — did the payout land. So the line now sells **find, cost,
+and time a stonk trade** + **what to launch**, not "is the tax a rug":
+- `stonk-reward-risk` leads with `payout_status` (PAYING / STALE / NEVER / NOT_REWARD) +
+  `trading_cost` (bps, round-trip %). Health score kept, demoted. Key unchanged (bazaar rows intact).
+- `stonk-screener`: default sort `volume24h` (was `rewardsUsd`, which favored old coins); new
+  filters `paying_only`, `live_only`, `max_age_days`, `min_volume_24h_usd`, `max_market_cap_usd`;
+  sorts `lastPayout`, `holders`, `priceChange24h`; rows carry `payout_status`, `live`,
+  `round_trip_pct`.
+- `stonk-gems` (`src/enrichers/stonk-gems.ts`, pure over index rows): 0-100 = recent payout (25) +
+  holders (12) + size (15) + turnover (15) + age (10) + momentum (10, negative past +200%) + quote
+  strength (10) + flywheel (3); GEM ≥ 80 / WATCH ≥ 62 / NOISE; no 24h volume = DEAD. First cut
+  (max 110, GEM ≥ 70) put 263/331 live candidates at 100 — rebalanced same session. Thresholds are
+  constants meant to be tuned from the Eris outcome tape.
+- `stonk-launch-intel`: `quoteStats()` per quote asset (launches, traded/paying shares, survival
+  past day 3, tax mix with per-level trading/paying rates, crowding, demand score) + overall + plain
+  recommendations. `buildLaunchIntel()` in `src/entrypoints/stonk.ts` is pure (tested).
+- **Trenches suite is tax-aware:** `TransferTaxReader` (`src/sources/token-2022.ts`, 1h cache,
+  `t22:tax:{mint}`) injected into token-analyzer (`transfer_tax` + `transfer_tax` risk flag),
+  runner-scan (per returned runner), trenches-check (block + caveat), exit-signal (block, caveat,
+  and `position.net_pnl_after_exit_tax_pct` = sell-leg-only: proceeds × (1 − bps/1e4)).
+- **CDP gotcha re-hit:** `ENDPOINT_META` descriptions must stay ≤ 480 chars or payments fail
+  silently (unit test enforces). Long copy goes in the entrypoint/MCP/docs descriptions instead.
 
 **Files:** `src/sources/stonkfun.ts` (API client, 429/Retry-After aware), `src/sources/token-2022.ts`
 (jsonParsed mint → transfer-fee config, no spl-token dep), `src/sources/launchlab.ts` (LaunchLab
@@ -672,8 +697,18 @@ initialize codec: decoder for legacy/v0 txs + encoder for fixtures), `src/enrich
 tests in CI; `STONK_LIVE=1` adds live smoke), fixtures in `test/fixtures/stonk/`.
 
 **Facts measured 2026-09-06 (design drivers):**
-- `/tokens` pageSize caps at **100** → ~64 pages per ingest; `/rewards?limit=10000` returns the
-  whole ledger (4,719 coins, 1.4MB, ~9s) in one call. Ingest ≈ 65 upstream calls / 10 min.
+- **Liveness census (PM, 8,000 reward coins via a one-off ingest):** 45.5% traded in 24h, 12.7%
+  paid holders in 24h, 60.9% have ever paid, 12.6% both traded and paid. Median holders **2**;
+  119 coins ≥ 500 holders; 557 coins > $10K vol. Of coins older than 3d, 13.6% still traded (7d:
+  11.6%). Tax: 300 bps coins pay more often (17.8% vs 7.6%), 100 bps coins trade more (58% vs
+  41%). **Quote choice dominates:** ZEC 505 coins / 87% traded / $34.7M vol vs SPCXX (most
+  launched, 613 coins) 25% traded. ~1,000+ launches/day (4,750 → 8,000 in ~3 days). Consequence:
+  the trading job is "find the ~1,000 live coins among 8,000 fast" → screener defaults + gems.
+  Script: scratchpad `measure-stonk.ts` pattern (instantiate StonkIndex, `refresh()`, read rows).
+- `/tokens` total drifts during pagination (8,049 → 8,060 → 8,049 across pages; sort by volume
+  is unstable while coins launch) → the Map dedupe lands ~8,000. Not a cap.
+- `/tokens` pageSize caps at **100** → ~81 pages per ingest now; `/rewards?limit=10000` returns the
+  whole ledger (4,719 coins on 09-06 AM, 1.4MB, ~9s) in one call. Ingest ≈ 82 upstream calls / 10 min.
 - `/rewards.recentDistributions` is capped at the **last 100 payouts (~1 minute)** — no history →
   trailing 7d/30d yields need our own daily snapshots. Windows report `actual_days` + `caution`
   until the series covers them; under 1h of history returns null, not 0%.

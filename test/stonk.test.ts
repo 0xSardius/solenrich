@@ -462,3 +462,214 @@ describe.skipIf(!process.env.STONK_LIVE)('LIVE: StonkFun API + chain', () => {
     expect(r.mismatches).toEqual([]);
   }, 30_000);
 });
+
+// ---------------------------------------------------------------------------
+import { scoreGem, quoteStats, payoutStatus, hoursSince } from '../src/enrichers/stonk-gems';
+import { describeTransferTax, netPnlAfterExitTaxPct } from '../src/sources/token-2022';
+import { buildLaunchIntel, toScreenerRowOut } from '../src/entrypoints/stonk';
+import { formatStonkGemsBriefing, formatStonkLaunchIntelBriefing } from '../src/formatters/llm-stonk';
+import type { StonkIndexRow } from '../src/enrichers/stonk-index';
+
+const H = 3_600_000;
+const D = 86_400_000;
+const iso = (t: number) => new Date(t).toISOString();
+
+function row(over: Partial<StonkIndexRow> = {}): StonkIndexRow {
+  return {
+    mint: 'M' + Math.random().toString(36).slice(2, 10),
+    symbol: 'X', name: 'X',
+    quoteMint: 'QZEC', quoteSymbol: 'ZEC', quoteDecimals: 8, quoteCategory: 'custom', quoteCategoryRaw: 'custom',
+    launchpad: 'raydium', mode: 'reward', bps: 300, flywheelActive: false,
+    priceUsd: 0.001, marketCapUsd: 250_000, volume24hUsd: 100_000, priceChange24h: 20,
+    status: 'graduated', createdAt: iso(NOW - 3 * D), graduatedAt: null,
+    distributedTokens: 10, distributedRaw: null, payoutCount: 40, holderCount: 300, lastPayoutAt: iso(NOW - 2 * H),
+    ...over,
+  };
+}
+
+describe('gems: scoreGem + payoutStatus', () => {
+  test('a young, paying, small, liquid coin on a strong quote is a GEM', () => {
+    const g = scoreGem(row(), NOW, { tradedShare24h: 0.87, coins: 505 });
+    expect(g.stage).toBe('GEM');
+    expect(g.score).toBeGreaterThanOrEqual(70);
+    expect(g.reasons.some((r) => r.includes('paid holders'))).toBe(true);
+    expect(g.reasons.some((r) => r.includes('ZEC quote'))).toBe(true);
+  });
+
+  test('no 24h volume is DEAD regardless of everything else', () => {
+    const g = scoreGem(row({ volume24hUsd: 0 }), NOW, null);
+    expect(g.stage).toBe('DEAD');
+    expect(g.score).toBe(0);
+  });
+
+  test('never-paid, tiny-holder, parabolic coin on a weak quote is NOISE with warnings', () => {
+    const g = scoreGem(row({ payoutCount: 0, lastPayoutAt: null, holderCount: 3, priceChange24h: 900, marketCapUsd: 50_000_000, volume24hUsd: 1000 }), NOW, { tradedShare24h: 0.1, coins: 600 });
+    expect(g.stage).toBe('NOISE');
+    expect(g.warnings.some((w) => w.includes('never paid'))).toBe(true);
+    expect(g.warnings.some((w) => w.includes('already ran'))).toBe(true);
+    expect(g.warnings.some((w) => w.includes('only 3'))).toBe(true);
+  });
+
+  test('a stale payout scores lower than a fresh one, all else equal', () => {
+    const fresh = scoreGem(row(), NOW, null).score;
+    const stale = scoreGem(row({ lastPayoutAt: iso(NOW - 5 * D) }), NOW, null).score;
+    expect(fresh - stale).toBeGreaterThanOrEqual(20);
+  });
+
+  test('payoutStatus is what a holder observes', () => {
+    expect(payoutStatus(row(), NOW)).toBe('PAYING');
+    expect(payoutStatus(row({ lastPayoutAt: iso(NOW - 3 * D) }), NOW)).toBe('STALE');
+    expect(payoutStatus(row({ payoutCount: 0, lastPayoutAt: null }), NOW)).toBe('NEVER');
+    expect(payoutStatus(row({ mode: 'standard' }), NOW)).toBe('NOT_REWARD');
+    expect(hoursSince(iso(NOW - 90 * 60_000), NOW)).toBe(1.5);
+    expect(hoursSince(null, NOW)).toBeNull();
+  });
+
+  test('reward-risk result carries payout_status + trading_cost', () => {
+    const r = scoreRewardRisk({
+      mint: zcat.token.mint, listed: true, token: zcat.token, launch: zcat.launch,
+      rewards: { ...zcatRewards.rewards, lastPayoutAt: iso(NOW - 1 * H) }, rewardsQuote: zcatRewards.quote,
+      onchain: parseMintAccount(mintZcat), expectedWithdrawAuthority: STONKFUN_WITHDRAW_AUTHORITY,
+      top10Pct: 20, holderCountRpc: 20, now: NOW,
+    });
+    expect(r.payout_status).toBe('PAYING');
+    expect(r.trading_cost.bps).toBe(300);
+    expect(r.trading_cost.round_trip_pct).toBe(6);
+    const brief = formatStonkRewardRiskBriefing(r);
+    expect(brief).toContain('PAYING');
+    expect(brief).toContain('round trip costs 6%');
+  });
+});
+
+describe('transfer tax as a trading cost', () => {
+  test('describeTransferTax reads bps and computes the round trip', () => {
+    const t = describeTransferTax(parseMintAccount(mintZcat));
+    expect(t?.bps).toBe(300);
+    expect(t?.per_transfer_pct).toBe(3);
+    expect(t?.round_trip_pct).toBe(6);
+    expect(t?.program).toBe('token-2022');
+    expect(describeTransferTax(parseMintAccount(null))).toBeNull();
+  });
+
+  test('netPnlAfterExitTaxPct pays only the sell leg', () => {
+    // +50% gross, 300 bps sell tax -> proceeds 1.5 x 0.97 = 1.455 -> +45.5%
+    expect(netPnlAfterExitTaxPct(1, 1.5, 300)).toBe(45.5);
+    expect(netPnlAfterExitTaxPct(1, 1, 300)).toBe(-3);
+    expect(netPnlAfterExitTaxPct(1, 1.5, 0)).toBe(50);
+  });
+});
+
+describe('launch intel: quoteStats + buildLaunchIntel', () => {
+  const rows: StonkIndexRow[] = [
+    // ZEC: 4 coins, 3 traded, 2 paying, 2 older than 3d of which 2 traded
+    row({ quoteMint: 'QZEC', quoteSymbol: 'ZEC', createdAt: iso(NOW - 5 * D) }),
+    row({ quoteMint: 'QZEC', quoteSymbol: 'ZEC', createdAt: iso(NOW - 4 * D), bps: 100 }),
+    row({ quoteMint: 'QZEC', quoteSymbol: 'ZEC', createdAt: iso(NOW - 2 * H), lastPayoutAt: null, payoutCount: 0 }),
+    row({ quoteMint: 'QZEC', quoteSymbol: 'ZEC', createdAt: iso(NOW - 1 * D), volume24hUsd: 0, lastPayoutAt: null, payoutCount: 0 }),
+    // SPCXX: 6 coins, 1 traded, 0 paying, 5 older than 3d none traded -> crowded, weak
+    ...Array.from({ length: 5 }, () => row({ quoteMint: 'QSPCXX', quoteSymbol: 'SPCXX', quoteCategory: 'xstock', createdAt: iso(NOW - 4 * D), volume24hUsd: 0, lastPayoutAt: null, payoutCount: 0 })),
+    row({ quoteMint: 'QSPCXX', quoteSymbol: 'SPCXX', quoteCategory: 'xstock', createdAt: iso(NOW - 1 * D), lastPayoutAt: null, payoutCount: 0, bps: 100 }),
+  ];
+
+  test('quoteStats aggregates per quote', () => {
+    const qs = quoteStats(rows, NOW);
+    const zec = qs.find((q) => q.quote_symbol === 'ZEC')!;
+    const sp = qs.find((q) => q.quote_symbol === 'SPCXX')!;
+    expect(zec.coins).toBe(4);
+    expect(zec.traded_24h).toBe(3);
+    expect(zec.paying_24h).toBe(2);
+    expect(zec.launches_24h).toBe(2);
+    expect(zec.launches_7d).toBe(4);
+    expect(zec.survival_3d).toBe(1);
+    expect(zec.tax_mix).toEqual({ bps_100: 1, bps_300: 3, other: 0 });
+    expect(sp.coins).toBe(6);
+    expect(sp.traded_share_24h).toBeCloseTo(1 / 6, 3);
+    expect(sp.survival_3d).toBe(0);
+    expect(zec.demand_score).toBeGreaterThan(sp.demand_score);
+  });
+
+  test('buildLaunchIntel ranks by demand, honors min_coins, and writes recommendations', () => {
+    const status = { rows: rows.length, lastRefreshAt: iso(NOW), lastRefreshMs: 1, lastError: null, refreshing: false, seriesCoins: 0, seriesDays: 0, oldestPointAt: null, quotePrices: 2 };
+    const r = buildLaunchIntel(quoteStats(rows, NOW), { minCoins: 1, sort: 'demand', limit: 10 }, status);
+    expect(r.quotes[0].quote_symbol).toBe('ZEC');
+    expect(r.quotes[0].rank).toBe(1);
+    expect(r.overall.coins).toBe(10);
+    expect(r.overall.traded_24h).toBe(4);
+    expect(r.overall.tax.bps_300.coins).toBe(8);
+    expect(r.overall.tax.bps_100.coins).toBe(2);
+    expect(r.overall.by_category.xstock.coins).toBe(6);
+    const only5 = buildLaunchIntel(quoteStats(rows, NOW), { minCoins: 5, sort: 'launches', limit: 10 }, status);
+    expect(only5.quotes.map((q) => q.quote_symbol)).toEqual(['SPCXX']);
+    expect(r.recommendations.length).toBeGreaterThan(0);
+    const brief = formatStonkLaunchIntelBriefing(r);
+    expect(brief).toContain('Launch Intel');
+    expect(brief).toContain('ZEC');
+  });
+});
+
+describe('index: gems + new screener filters', () => {
+  const makeIndex = async () => {
+    const page = fixture<{ data: { tokens: StonkToken[] } }>('tokens-reward-page.json').data.tokens;
+    const ledger = fixture<{ data: { launches: any[] } }>('rewards-ledger.json').data.launches;
+    const client = {
+      getTokens: async () => ({ tokens: page, pagination: { page: 1, pageSize: 25, total: page.length, totalPages: 1 } }),
+      getRewardsLedger: async () => ledger,
+    } as unknown as StonkFunClient;
+    const jupiter = { getPrice: async (mints: string[]) => Object.fromEntries(mints.map((m) => [m, { id: m, price: 100, mintSymbol: '', vsToken: '', vsTokenSymbol: 'USDC' }])) } as any;
+    const idx = new StonkIndex(client, jupiter, new Cache(), () => NOW);
+    await idx.refresh();
+    return idx;
+  };
+
+  test('screener rows carry payout status, live flag, and round-trip cost; filters apply', async () => {
+    const idx = await makeIndex();
+    const all = idx.screen({ limit: 100 });
+    expect(all.rows.length).toBeGreaterThan(0);
+    for (const r of all.rows) {
+      expect(['PAYING', 'STALE', 'NEVER', 'NOT_REWARD']).toContain(r.payoutStatus);
+      if (r.bps != null) expect(r.roundTripPct).toBe(r.bps * 2 / 100);
+      expect(r.live).toBe(r.paying24h && r.volume24hUsd > 0);
+    }
+    const paying = idx.screen({ payingOnly: true, limit: 100 });
+    expect(paying.rows.every((r) => r.paying24h)).toBe(true);
+    const live = idx.screen({ liveOnly: true, limit: 100 });
+    expect(live.rows.every((r) => r.live)).toBe(true);
+    expect(live.matched).toBeLessThanOrEqual(paying.matched);
+    const small = idx.screen({ maxMarketCapUsd: 1, limit: 100 });
+    expect(small.rows.every((r) => r.marketCapUsd <= 1)).toBe(true);
+    const byPayout = idx.screen({ sort: 'lastPayout', limit: 100 }).rows.filter((r) => r.hoursSinceLastPayout != null);
+    for (let i = 1; i < byPayout.length; i++) expect(byPayout[i - 1].hoursSinceLastPayout!).toBeLessThanOrEqual(byPayout[i].hoursSinceLastPayout!);
+    const out = toScreenerRowOut(all.rows[0], 1);
+    expect(out.rank).toBe(1);
+    expect(out.payout_status).toBe(all.rows[0].payoutStatus);
+  });
+
+  test('gems() scores, ranks, and respects filters; briefing renders', async () => {
+    const idx = await makeIndex();
+    const g = idx.gems({ maxAgeDays: 3650, minHolders: 0, maxMarketCapUsd: 1e15, limit: 10 });
+    expect(g.scanned).toBe(25);
+    expect(g.gems.length).toBeLessThanOrEqual(10);
+    for (let i = 1; i < g.gems.length; i++) expect(g.gems[i - 1].gem.score).toBeGreaterThanOrEqual(g.gems[i].gem.score);
+    expect(g.stageCounts.DEAD).toBe(0); // zero-volume rows are filtered before scoring
+    const none = idx.gems({ maxAgeDays: 0, limit: 10 });
+    expect(none.gems.length).toBe(0);
+    const qs = idx.quoteStats();
+    expect(qs.reduce((a, q) => a + q.coins, 0)).toBe(25);
+    expect(idx.quoteStats()).toBe(qs); // memoized per refresh
+    const brief = formatStonkGemsBriefing({
+      gems: g.gems.map((r, i) => ({
+        rank: i + 1, mint: r.mint, symbol: r.symbol, name: r.name, quote_mint: r.quoteMint, quote_symbol: r.quoteSymbol, quote_category: r.quoteCategory,
+        gem_score: r.gem.score, stage: r.gem.stage, reasons: r.gem.reasons, warnings: r.gem.warnings, payout_status: r.payoutStatus,
+        hours_since_last_payout: r.hoursSinceLastPayout, payout_count: r.payoutCount, transfer_fee_bps: r.bps, round_trip_pct: r.roundTripPct,
+        holder_count: r.holderCount, age_days: r.ageDays, price_usd: r.priceUsd, market_cap_usd: r.marketCapUsd, volume_24h_usd: r.volume24hUsd,
+        turnover_24h_pct: null, price_change_24h_pct: r.priceChange24h, flywheel_active: r.flywheelActive, rewards_usd: r.rewardsUsd, yield_7d_pct: r.yield7dPct,
+        launchpad: r.launchpad, status: r.status,
+      })),
+      scanned: g.scanned, passed_filters: g.passedFilters, stage_counts: g.stageCounts,
+      filters: { quote_mint: null, category: null, max_age_days: 3650, min_holders: 0, max_market_cap_usd: 1e15, limit: 10 },
+      index: { rows: 25, last_refresh_at: iso(NOW), series_days: 0, oldest_point_at: null }, caveats: [], next_steps: [],
+    });
+    expect(brief).toContain('StonkFun Gems');
+    expect(brief).toContain('How to read this');
+  });
+});

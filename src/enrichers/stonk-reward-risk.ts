@@ -1,4 +1,5 @@
 import { CACHE_TTL } from '../config';
+import type { PayoutStatus } from './stonk-gems';
 import type { Cache } from '../cache';
 import type { SolanaRpcClient } from '../sources/solana-rpc';
 import type { StonkFunClient, StonkToken, StonkLaunch, StonkRewardTotals } from '../sources/stonkfun';
@@ -34,6 +35,10 @@ export interface RewardRiskResult {
   mint: string;
   symbol: string | null;
   name: string | null;
+  /** The thing a holder observes: PAYING (payout in the last 24h), STALE (has paid, not recently), NEVER (adopted, no payouts), NOT_REWARD (nothing pays holders). */
+  payout_status: PayoutStatus;
+  /** Transfer tax as a trading cost: one transfer and a full round trip, from the on-chain bps. */
+  trading_cost: { bps: number | null; per_transfer_pct: number | null; round_trip_pct: number | null };
   score: number;
   level: RewardRiskLevel;
   reasons: string[];
@@ -212,10 +217,22 @@ export function scoreRewardRisk(input: RewardRiskInput): Omit<RewardRiskResult, 
     ? ['Do not buy for the holder yield — the tax does not reach holders.', 'If you own it, exit-signal gives the sell-side read.']
     : ['stonk-yield for the realized 7d/30d holder yield on this coin.', 'due-diligence for structural safety (authorities, liquidity, rug flags).', 'exit-signal while you hold it.'];
 
+  const payout: PayoutStatus =
+    level === 'BROKEN' || mechanism === 'none' ? 'NOT_REWARD'
+    : !rewards || rewards.payoutCount <= 0 ? 'NEVER'
+    : hoursSince != null && hoursSince <= 24 ? 'PAYING'
+    : 'STALE';
+
   return {
     mint: input.mint,
     symbol: token?.symbol ?? launch?.symbol ?? null,
     name: token?.name ?? launch?.name ?? null,
+    payout_status: payout,
+    trading_cost: {
+      bps: fee?.bps ?? null,
+      per_transfer_pct: fee ? Math.round(fee.bps) / 100 : null,
+      round_trip_pct: fee ? Math.round(fee.bps * 2) / 100 : null,
+    },
     score,
     level,
     reasons,

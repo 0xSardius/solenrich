@@ -530,8 +530,8 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'stonk-reward-risk': {
-    summary: 'Score a StonkFun reward coin: does the holder tax reach holders?',
-    description: 'Reward-coin health score 0-100 for a StonkFun reward-mode coin, read from the chain: Token-2022 transfer-fee bps + cap, withdraw authority (must be StonkFun\'s distributor), fee mutability, zero-rate / unadopted detection, distributions to date + recency, flywheel, holders + top-10 concentration, quote category, age, graduation. Zero-rate or unadopted coins score under 20. Call before buying a reward coin for its yield.',
+    summary: 'Payout status + trading cost for a StonkFun reward coin',
+    description: 'Payout status for a StonkFun reward coin — what a holder observes: PAYING (payout in the last 24h), STALE, NEVER, or NOT_REWARD — plus trading cost (tax bps, round-trip %) and a 0-100 health score read from the chain: fee bps and cap, withdraw authority (must be StonkFun\'s distributor), fee mutability, distributions and recency, flywheel, holders and concentration, quote category, age. Call before sizing a reward-coin position.',
     schema: {
       type: 'object',
       required: ['mint'],
@@ -554,8 +554,8 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'stonk-screener': {
-    summary: 'Rank every StonkFun reward coin by yield, rewards, or volume',
-    description: 'Ranked list across every StonkFun reward coin from a 10-minute ingest, served from memory. Filters: quote_mint, category, min_holders, min_age_days. Sort by yield7d, yield30d, rewardsUsd, or volume24h. Per row: quote asset + category, transfer-fee bps, flywheel, holders, payouts, rewards USD, trailing yields with actual window length, volume, market cap. "Which coins pay holders in NVDAX?" is one call.',
+    summary: 'Screen every StonkFun reward coin: payout status, live flag, tax cost',
+    description: 'Screen every StonkFun reward coin from a 10-minute index. Per row: payout status (PAYING / STALE / NEVER), hours since last payout, live flag (traded AND paid in 24h), round-trip transfer-tax cost, holders, rewards USD, yields, volume, mcap, 24h change. Filters: quote_mint, category, holders, age, volume, market cap, paying_only, live_only. Sort by volume24h (default), lastPayout, holders, priceChange24h, or yield. "Which coins on NVDAX paid holders today?" is one call.',
     schema: {
       type: 'object',
       properties: {
@@ -563,8 +563,43 @@ export const ENDPOINT_META: Record<string, {
         category: { type: 'string', enum: ['xstock', 'prestock', 'currency', 'leverage', 'solana', 'collectible', 'custom'] },
         min_holders: { type: 'integer', minimum: 0 },
         min_age_days: { type: 'number', minimum: 0 },
-        sort: { type: 'string', enum: ['yield7d', 'yield30d', 'rewardsUsd', 'volume24h'], default: 'rewardsUsd' },
+        max_age_days: { type: 'number', minimum: 0 },
+        min_volume_24h_usd: { type: 'number', minimum: 0 },
+        max_market_cap_usd: { type: 'number', minimum: 0 },
+        paying_only: { type: 'boolean', default: false, description: 'Only coins that paid holders in the last 24h' },
+        live_only: { type: 'boolean', default: false, description: 'Only coins that traded AND paid in the last 24h' },
+        sort: { type: 'string', enum: ['yield7d', 'yield30d', 'rewardsUsd', 'volume24h', 'lastPayout', 'holders', 'priceChange24h'], default: 'volume24h' },
         limit: { type: 'integer', minimum: 1, maximum: 100, default: 25 },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
+  'stonk-gems': {
+    summary: 'Find gems on StonkFun: early, real, paying reward coins',
+    description: 'Gem finder over every StonkFun reward coin: which look early, real, and paying? Scores 0-100 from the 10-minute index — recent holder payout, holders (found but not saturated), market cap headroom, 24h turnover, age, momentum (not yet parabolic), quote-asset strength, flywheel. Stages GEM / WATCH / NOISE / DEAD with plain reasons and warnings per coin, plus the round-trip tax cost. Filters: quote_mint, category, max_age_days, min_holders, max_market_cap_usd. Milliseconds.',
+    schema: {
+      type: 'object',
+      properties: {
+        quote_mint: { type: 'string', minLength: 32, maxLength: 44 },
+        category: { type: 'string', enum: ['xstock', 'prestock', 'currency', 'leverage', 'solana', 'collectible', 'custom'] },
+        max_age_days: { type: 'number', minimum: 0, maximum: 90, default: 14 },
+        min_holders: { type: 'integer', minimum: 0, default: 25 },
+        max_market_cap_usd: { type: 'number', minimum: 0, default: 5000000 },
+        limit: { type: 'integer', minimum: 1, maximum: 50, default: 15 },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
+  'stonk-launch-intel': {
+    summary: 'What to launch on StonkFun and against which quote asset',
+    description: 'What to launch on StonkFun, and against what. Per quote asset: coins, launches (24h / 7d), share trading today, share paying holders today, survival past day 3, volume, median holders and mcap, 100 vs 300 bps tax mix with trading and paying rates, crowding, and a 0-100 demand score. Plus overall stats and plain recommendations. Sort by demand, survival, volume, launches, or paying. Milliseconds.',
+    schema: {
+      type: 'object',
+      properties: {
+        category: { type: 'string', enum: ['xstock', 'prestock', 'currency', 'leverage', 'solana', 'collectible', 'custom'] },
+        min_coins: { type: 'integer', minimum: 1, default: 5, description: 'Only quotes with at least this many reward coins' },
+        sort: { type: 'string', enum: ['demand', 'survival', 'volume', 'launches', 'paying'], default: 'demand' },
+        limit: { type: 'integer', minimum: 1, maximum: 100, default: 20 },
         format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
       },
     },

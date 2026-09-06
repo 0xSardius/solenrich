@@ -1,5 +1,6 @@
 import { PublicKey } from '@solana/web3.js';
 import type { Connection } from '@solana/web3.js';
+import type { Cache } from '../cache';
 
 // Token-2022 mint reader. Uses the RPC's jsonParsed mint decoding, which
 // already expands Token-2022 extensions (transferFeeConfig, metadataPointer,
@@ -109,4 +110,89 @@ export async function readMintInfo(connection: Connection, mint: string): Promis
     space: (data as { space?: number }).space,
     parsed: (data as { parsed: ParsedMintAccount['parsed'] }).parsed,
   });
+}
+
+// --- Transfer tax, as a trading cost ------------------------------------------
+
+/**
+ * A Token-2022 transfer fee expressed the way a trading agent needs it: the
+ * cost of one transfer and of a full round trip (buy + sell). Null bps means
+ * the mint carries no fee (classic SPL or a Token-2022 mint without the
+ * extension). StonkFun reward coins charge 100 or 300 bps per transfer, so a
+ * round trip costs 2–6% before slippage — enough to change what a "runner"
+ * is and what an exit is worth.
+ */
+export interface TransferTax {
+  program: MintInfo['program'];
+  /** Basis points per transfer. 0 when the mint has no fee. */
+  bps: number;
+  /** Cost of one transfer in % (bps / 100). */
+  per_transfer_pct: number;
+  /** Buy + sell cost in % — the hurdle a trade must clear before slippage. */
+  round_trip_pct: number;
+  /** Non-null when an authority can change the rate later. */
+  fee_mutable_by: string | null;
+  /** Who can withdraw withheld fees (StonkFun's distributor for adopted reward coins). */
+  withdraw_authority: string | null;
+}
+
+/** Pure: interpret a MintInfo as a trading cost. Exported for tests. */
+export function describeTransferTax(info: MintInfo | null): TransferTax | null {
+  if (!info || !info.exists) return null;
+  const bps = info.transferFee?.bps ?? 0;
+  return {
+    program: info.program,
+    bps,
+    per_transfer_pct: Math.round(bps) / 100,
+    round_trip_pct: Math.round(bps * 2) / 100,
+    fee_mutable_by: info.transferFee?.configAuthority ?? null,
+    withdraw_authority: info.transferFee?.withdrawWithheldAuthority ?? null,
+  };
+}
+
+/**
+ * Net move from entry after paying the sell-side tax. The buy-side tax was
+ * paid when the position was opened (fewer tokens received), so an exit
+ * only pays the sell leg: proceeds = price × (1 − bps/10000).
+ */
+export function netPnlAfterExitTaxPct(entryPriceUsd: number, priceUsd: number, bps: number): number {
+  const proceeds = priceUsd * (1 - bps / 10_000);
+  return Math.round(((proceeds - entryPriceUsd) / entryPriceUsd) * 1000) / 10;
+}
+
+const TAX_CACHE_TTL_S = 3600; // fee config changes rarely; a mutable fee still re-reads hourly
+
+/**
+ * Cached reader for a mint's transfer tax. One RPC read per mint per hour;
+ * failures return null so a cost annotation never blocks a verdict.
+ */
+export class TransferTaxReader {
+  constructor(
+    private readonly connection: Connection,
+    private readonly cache: Cache,
+  ) {}
+
+  async get(mint: string): Promise<TransferTax | null> {
+    const key = `t22:tax:${mint}`;
+    try {
+      const cached = await this.cache.get<TransferTax | { none: true }>(key);
+      if (cached) return 'none' in cached ? null : cached;
+    } catch { /* cache miss path */ }
+    let tax: TransferTax | null = null;
+    try {
+      tax = describeTransferTax(await readMintInfo(this.connection, mint));
+    } catch (err) {
+      console.warn(`[transfer-tax] read failed for ${mint}: ${err instanceof Error ? err.message : String(err)}`);
+      return null;
+    }
+    try { await this.cache.set(key, tax ?? { none: true }, TAX_CACHE_TTL_S); } catch { /* never block */ }
+    return tax;
+  }
+
+  /** Read several mints in parallel; a failed read yields null for that mint. */
+  async getMany(mints: string[]): Promise<Map<string, TransferTax | null>> {
+    const out = new Map<string, TransferTax | null>();
+    await Promise.all([...new Set(mints)].map(async (m) => { out.set(m, await this.get(m)); }));
+    return out;
+  }
 }

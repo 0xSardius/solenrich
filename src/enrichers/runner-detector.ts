@@ -4,6 +4,7 @@ import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { formatTimestamp } from '../utils/normalize';
 import { assessRunner, type RunnerStage, type RunnerMetrics } from './runner-score';
+import type { TransferTax, TransferTaxReader } from '../sources/token-2022';
 
 // --- Types ---
 
@@ -28,6 +29,8 @@ export interface RunnerCandidate {
   reasoning: string;
   /** Minutes since the prior snapshot the liquidity/holder deltas are measured against. Null on first sight. */
   delta_window_minutes: number | null;
+  /** Token-2022 transfer tax as a trading cost. Null = no tax; absent when not read (no reader configured). */
+  transfer_tax?: TransferTax | null;
 }
 
 export interface RunnerScanResult {
@@ -106,6 +109,7 @@ export class RunnerDetector {
     private dexscreener: DexScreenerClient,
     private cache: Cache,
     private birdeye?: BirdeyeClient,
+    private taxReader?: TransferTaxReader,
   ) {}
 
   async scan(
@@ -237,6 +241,13 @@ export class RunnerDetector {
     const ranked = runners
       .sort((x, y) => y.runner_score - x.runner_score || y.volume_h1_usd - x.volume_h1_usd)
       .slice(0, limit);
+
+    // Transfer tax only for the returned runners (one cached RPC read each).
+    // A taxed mint needs a bigger move to pay for the round trip.
+    if (this.taxReader && ranked.length > 0) {
+      const taxes = await this.taxReader.getMany(ranked.map((r) => r.mint));
+      for (const r of ranked) r.transfer_tax = taxes.get(r.mint) ?? null;
+    }
 
     const stage_counts = EMPTY_STAGE_COUNTS();
     for (const r of runners) stage_counts[r.stage]++;

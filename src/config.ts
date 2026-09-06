@@ -78,6 +78,8 @@ export const PRICING = {
   'stonk-yield': '0.005',
   'stonk-screener': '0.01',
   'stonk-launch-preflight': '0.25',
+  'stonk-gems': '0.03',
+  'stonk-launch-intel': '0.02',
 } as const;
 
 /** Entrypoints served without a paywall. Kept out of PRICING so x402/MPP never gate them. */

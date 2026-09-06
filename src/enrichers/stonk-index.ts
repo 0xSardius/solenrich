@@ -1,6 +1,7 @@
 import type { Cache } from '../cache';
 import type { JupiterClient } from '../sources/jupiter';
 import type { StonkFunClient, StonkToken, StonkRewardsLedgerEntry } from '../sources/stonkfun';
+import { scoreGem, quoteStats, payoutStatus, hoursSince, type GemAssessment, type QuoteStats, type QuoteContext, type PayoutStatus } from './stonk-gems';
 
 // StonkFun reward-coin index. A scheduled ingest (every 10 minutes) pulls
 // every reward-mode token (market data, paginated at 100/page) plus the
@@ -78,12 +79,21 @@ export interface DayPoint {
   holders: number;
 }
 
+export type StonkScreenerSort = 'yield7d' | 'yield30d' | 'rewardsUsd' | 'volume24h' | 'lastPayout' | 'holders' | 'priceChange24h';
+
 export interface StonkScreenerFilters {
   quoteMint?: string;
   category?: StonkCategory;
   minHolders?: number;
   minAgeDays?: number;
-  sort?: 'yield7d' | 'yield30d' | 'rewardsUsd' | 'volume24h';
+  maxAgeDays?: number;
+  minVolume24hUsd?: number;
+  maxMarketCapUsd?: number;
+  /** Only coins that paid holders in the last 24h. */
+  payingOnly?: boolean;
+  /** Only coins that both traded AND paid in the last 24h. */
+  liveOnly?: boolean;
+  sort?: StonkScreenerSort;
   limit?: number;
 }
 
@@ -97,6 +107,27 @@ export interface StonkScreenerRow extends StonkIndexRow {
   /** Days of history behind each yield figure (< window = partial). */
   window7dActualDays: number | null;
   window30dActualDays: number | null;
+  /** Buy + sell transfer-tax cost in %, from the recorded bps. Null for legacy (no-tax) coins. */
+  roundTripPct: number | null;
+  hoursSinceLastPayout: number | null;
+  payoutStatus: PayoutStatus;
+  /** Paid holders in the last 24h. */
+  paying24h: boolean;
+  /** Traded AND paid in the last 24h. */
+  live: boolean;
+}
+
+export interface StonkGemsFilters {
+  quoteMint?: string;
+  category?: StonkCategory;
+  maxAgeDays?: number;
+  minHolders?: number;
+  maxMarketCapUsd?: number;
+  limit?: number;
+}
+
+export interface StonkGemRow extends StonkScreenerRow {
+  gem: GemAssessment;
 }
 
 export interface StonkIndexStatus {
@@ -164,6 +195,7 @@ export class StonkIndex {
   private lastRefreshMs: number | null = null;
   private lastError: string | null = null;
   private refreshing = false;
+  private quoteStatsMemo: { at: number; rows: number; stats: QuoteStats[] } | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
   private loaded = false;
 
@@ -223,6 +255,75 @@ export class StonkIndex {
     return this.quotePrices.get(quoteMint) ?? null;
   }
 
+  /** Per-quote aggregates over the current rows. Memoized per refresh. */
+  quoteStats(): QuoteStats[] {
+    const now = this.now();
+    const m = this.quoteStatsMemo;
+    if (m && m.rows === this.rows.size && m.at === (this.lastRefreshAt ?? 0)) return m.stats;
+    const stats = quoteStats(this.rows.values(), now);
+    this.quoteStatsMemo = { at: this.lastRefreshAt ?? 0, rows: this.rows.size, stats };
+    return stats;
+  }
+
+  private quoteContexts(): Map<string, QuoteContext> {
+    const out = new Map<string, QuoteContext>();
+    for (const q of this.quoteStats()) out.set(q.quote_mint, { tradedShare24h: q.traded_share_24h, coins: q.coins });
+    return out;
+  }
+
+  /** Gem finder: score every row that passes the filters, rank by gem score. No I/O. */
+  gems(filters: StonkGemsFilters = {}): { gems: StonkGemRow[]; scanned: number; passedFilters: number; stageCounts: Record<GemAssessment['stage'], number> } {
+    const now = this.now();
+    const limit = Math.max(1, Math.min(filters.limit ?? 15, 50));
+    const maxAge = filters.maxAgeDays ?? 14;
+    const minHolders = filters.minHolders ?? 25;
+    const maxMcap = filters.maxMarketCapUsd ?? 5_000_000;
+    const ctx = this.quoteContexts();
+    const stageCounts: Record<GemAssessment['stage'], number> = { GEM: 0, WATCH: 0, NOISE: 0, DEAD: 0 };
+    const scored: StonkGemRow[] = [];
+    let passed = 0;
+    for (const row of this.rows.values()) {
+      if (filters.quoteMint && row.quoteMint !== filters.quoteMint) continue;
+      if (filters.category && row.quoteCategory !== filters.category) continue;
+      const ageDays = (now - Date.parse(row.createdAt)) / 86_400_000;
+      if (ageDays > maxAge) continue;
+      if (row.holderCount < minHolders) continue;
+      if (row.marketCapUsd > maxMcap) continue;
+      if (row.volume24hUsd <= 0) continue;
+      passed++;
+      const gem = scoreGem(row, now, ctx.get(row.quoteMint) ?? null);
+      stageCounts[gem.stage]++;
+      scored.push({ ...this.toScreenerRow(row, now), gem });
+    }
+    scored.sort((a, b) => b.gem.score - a.gem.score || b.volume24hUsd - a.volume24hUsd);
+    return { gems: scored.slice(0, limit), scanned: this.rows.size, passedFilters: passed, stageCounts };
+  }
+
+  private toScreenerRow(row: StonkIndexRow, now: number): StonkScreenerRow {
+    const ageDays = (now - Date.parse(row.createdAt)) / 86_400_000;
+    const quoteUsd = this.quotePrices.get(row.quoteMint) ?? null;
+    const series = this.series.get(row.mint) ?? [];
+    const y7 = trailingYield(series, now, 7, row.distributedTokens, row.marketCapUsd, quoteUsd);
+    const y30 = trailingYield(series, now, 30, row.distributedTokens, row.marketCapUsd, quoteUsd);
+    const hSince = hoursSince(row.lastPayoutAt, now);
+    const paying24h = hSince != null && hSince <= 24;
+    return {
+      ...row,
+      quoteUsd,
+      rewardsUsd: quoteUsd != null ? row.distributedTokens * quoteUsd : null,
+      ageDays: Math.round(ageDays * 100) / 100,
+      yield7dPct: y7.yieldPct,
+      yield30dPct: y30.yieldPct,
+      window7dActualDays: y7.actualDays,
+      window30dActualDays: y30.actualDays,
+      roundTripPct: row.bps != null ? Math.round(row.bps * 2) / 100 : null,
+      hoursSinceLastPayout: hSince,
+      payoutStatus: payoutStatus(row, now),
+      paying24h,
+      live: paying24h && row.volume24hUsd > 0,
+    };
+  }
+
   /** Record a point for a coin outside the ingest (e.g. when an endpoint reads fresh totals). */
   observe(mint: string, point: DayPoint): void {
     const pts = this.series.get(mint) ?? [];
@@ -235,7 +336,7 @@ export class StonkIndex {
   /** Ranked screener over the in-memory rows. Sub-millisecond; no I/O. */
   screen(filters: StonkScreenerFilters = {}): { rows: StonkScreenerRow[]; total: number; matched: number } {
     const now = this.now();
-    const sort = filters.sort ?? 'rewardsUsd';
+    const sort: StonkScreenerSort = filters.sort ?? 'volume24h';
     const limit = Math.max(1, Math.min(filters.limit ?? 25, 100));
     const out: StonkScreenerRow[] = [];
 
@@ -245,25 +346,23 @@ export class StonkIndex {
       if (filters.minHolders != null && row.holderCount < filters.minHolders) continue;
       const ageDays = (now - Date.parse(row.createdAt)) / 86_400_000;
       if (filters.minAgeDays != null && ageDays < filters.minAgeDays) continue;
-
-      const quoteUsd = this.quotePrices.get(row.quoteMint) ?? null;
-      const series = this.series.get(row.mint) ?? [];
-      const y7 = trailingYield(series, now, 7, row.distributedTokens, row.marketCapUsd, quoteUsd);
-      const y30 = trailingYield(series, now, 30, row.distributedTokens, row.marketCapUsd, quoteUsd);
-      out.push({
-        ...row,
-        quoteUsd,
-        rewardsUsd: quoteUsd != null ? row.distributedTokens * quoteUsd : null,
-        ageDays: Math.round(ageDays * 100) / 100,
-        yield7dPct: y7.yieldPct,
-        yield30dPct: y30.yieldPct,
-        window7dActualDays: y7.actualDays,
-        window30dActualDays: y30.actualDays,
-      });
+      if (filters.maxAgeDays != null && ageDays > filters.maxAgeDays) continue;
+      if (filters.minVolume24hUsd != null && row.volume24hUsd < filters.minVolume24hUsd) continue;
+      if (filters.maxMarketCapUsd != null && row.marketCapUsd > filters.maxMarketCapUsd) continue;
+      const r = this.toScreenerRow(row, now);
+      if (filters.payingOnly && !r.paying24h) continue;
+      if (filters.liveOnly && !r.live) continue;
+      out.push(r);
     }
 
     const key = (r: StonkScreenerRow): number | null =>
-      sort === 'yield7d' ? r.yield7dPct : sort === 'yield30d' ? r.yield30dPct : sort === 'volume24h' ? r.volume24hUsd : r.rewardsUsd;
+      sort === 'yield7d' ? r.yield7dPct
+      : sort === 'yield30d' ? r.yield30dPct
+      : sort === 'volume24h' ? r.volume24hUsd
+      : sort === 'lastPayout' ? (r.hoursSinceLastPayout != null ? -r.hoursSinceLastPayout : null)
+      : sort === 'holders' ? r.holderCount
+      : sort === 'priceChange24h' ? r.priceChange24h
+      : r.rewardsUsd;
     out.sort((a, b) => {
       const ka = key(a); const kb = key(b);
       if (ka == null && kb == null) return b.volume24hUsd - a.volume24hUsd;

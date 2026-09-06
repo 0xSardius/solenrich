@@ -14,6 +14,7 @@ import type { TrenchesSmartMoneyAnalyzer } from './trenches-smart-money';
 import type { TrenchesBuy } from './trenches-smart-money';
 import type { SignalTracker } from './signal-tracker';
 import { W_RUNNER, W_SMART, W_ATTENTION, smartComponent } from './trenches-scan';
+import type { TransferTax, TransferTaxReader } from '../sources/token-2022';
 
 // --- Types ---
 
@@ -58,6 +59,8 @@ export interface TrenchesCheckResult {
     percentile: number;
     rising: boolean;
   } | null;
+  /** Token-2022 transfer tax as a trading cost. Null = no tax or read unavailable. */
+  transfer_tax: TransferTax | null;
   reasoning: string;
   caveats: string[];
   last_updated: string;
@@ -85,6 +88,7 @@ export class TrenchesCheckAnalyzer {
     private signals: SignalTracker,
     private cache: Cache,
     private birdeye?: BirdeyeClient,
+    private taxReader?: TransferTaxReader,
   ) {}
 
   async check(mint: string): Promise<TrenchesCheckResult> {
@@ -92,12 +96,14 @@ export class TrenchesCheckAnalyzer {
     const cached = await this.cache.get<TrenchesCheckResult>(cacheKey);
     if (cached) return cached;
 
-    const [pairsLeg, smartLeg, attentionLeg, holderLeg] = await Promise.allSettled([
+    const [pairsLeg, smartLeg, attentionLeg, holderLeg, taxLeg] = await Promise.allSettled([
       this.dexscreener.getPairsBatch([mint]),
       this.smartMoney.enrich(12, SMART_MONEY_MAX_AGE_H, 1, 25),
       this.signals.getSignal('token', mint, '6h', 1),
       this.birdeye ? this.birdeye.getTokenOverview(mint) : Promise.resolve(null),
+      this.taxReader ? this.taxReader.get(mint) : Promise.resolve(null),
     ]);
+    const transferTax = taxLeg.status === 'fulfilled' ? taxLeg.value : null;
 
     const caveats: string[] = [];
 
@@ -221,6 +227,12 @@ export class TrenchesCheckAnalyzer {
       : confluence >= 2 || composite >= 0.5 ? 'MODERATE'
       : 'SINGLE_SIGNAL';
 
+    if (transferTax && transferTax.bps > 0) {
+      caveats.push(
+        `This mint charges a ${transferTax.bps} bps transfer tax — a round trip costs ${transferTax.round_trip_pct}% before slippage. A scalp needs more than that to break even; treat IGNITING as weaker than on an untaxed mint.`,
+      );
+    }
+
     caveats.push(
       'A verdict on the signals, not the token\'s safety — run due-diligence for holder concentration and rug flags. Not financial advice.',
     );
@@ -239,6 +251,7 @@ export class TrenchesCheckAnalyzer {
       runner,
       smart_money,
       attention,
+      transfer_tax: transferTax,
       reasoning: buildCheckReasoning(runner, smart_money, attention, verdict),
       caveats,
       last_updated: formatTimestamp(),

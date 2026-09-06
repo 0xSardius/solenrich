@@ -699,6 +699,36 @@ export const ENDPOINTS: Array<{
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Preflight') },
     ],
   },
+  {
+    // Gem finder over the in-memory index. Tolerates an empty index right after
+    // boot (rows=0) but demands the shape and the ordering invariant.
+    key: 'stonk-gems',
+    input: { max_age_days: 30, min_holders: 10, limit: 10, format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'has gems array', test: (d) => Array.isArray(d.gems), detail: (d) => `gems=${d.gems?.length} passed=${d.passed_filters} scanned=${d.scanned}` },
+      { name: 'has stage counts', test: (d) => d.stage_counts && ['GEM', 'WATCH', 'NOISE', 'DEAD'].every((k) => typeof d.stage_counts[k] === 'number') },
+      { name: 'gems ≤ limit', test: (d) => d.gems.length <= 10 },
+      { name: 'ranked by gem_score desc', test: (d) => d.gems.length < 2 || d.gems[0].gem_score >= d.gems[d.gems.length - 1].gem_score },
+      { name: 'every gem has a payout_status + reasons', test: (d) => d.gems.every((g: any) => ['PAYING', 'STALE', 'NEVER', 'NOT_REWARD'].includes(g.payout_status) && Array.isArray(g.reasons)) },
+      { name: 'echoes filters', test: (d) => d.filters?.max_age_days === 30 && d.filters?.min_holders === 10 },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Gems') },
+    ],
+  },
+  {
+    key: 'stonk-launch-intel',
+    input: { min_coins: 20, sort: 'demand', limit: 10, format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'has quotes array', test: (d) => Array.isArray(d.quotes), detail: (d) => `quotes=${d.quotes?.length} coins=${d.overall?.coins}` },
+      { name: 'has overall block', test: (d) => d.overall && typeof d.overall.coins === 'number' && d.overall.tax?.bps_100 && d.overall.tax?.bps_300 },
+      { name: 'quotes ≤ limit', test: (d) => d.quotes.length <= 10 },
+      { name: 'ranked by demand desc', test: (d) => d.quotes.length < 2 || d.quotes[0].demand_score >= d.quotes[d.quotes.length - 1].demand_score },
+      { name: 'every quote meets min_coins', test: (d) => d.quotes.every((q: any) => q.coins >= 20) },
+      { name: 'has recommendations', test: (d) => Array.isArray(d.recommendations) },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Launch Intel') },
+    ],
+  },
 ];
 
 // --- Coverage guard ---------------------------------------------------------

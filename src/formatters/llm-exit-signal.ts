@@ -30,9 +30,17 @@ export function formatExitSignalBriefing(data: ExitSignalResult): string {
       `Position: entry ${formatUsd(data.position.entry_price_usd)}` +
         (pnl != null ? ` → unrealized ${pnl > 0 ? '+' : ''}${pnl}%` : ' (current price unavailable, PnL unknown)'),
     );
-    if (pnl != null && pnl > 0 && (data.verdict === 'DERISK' || data.verdict === 'EXIT')) {
-      lines.push(`_Exiting here locks in ${pnl > 0 ? '+' : ''}${pnl}%._`);
+    const net = data.position.net_pnl_after_exit_tax_pct;
+    if (net != null && pnl != null && net !== pnl) {
+      lines.push(`After the ${data.transfer_tax?.bps ?? 0} bps sell tax: ${net > 0 ? '+' : ''}${net}% net.`);
     }
+    if (pnl != null && pnl > 0 && (data.verdict === 'DERISK' || data.verdict === 'EXIT')) {
+      const lock = net ?? pnl;
+      lines.push(`_Exiting here locks in ${lock > 0 ? '+' : ''}${lock}%${net != null && net !== pnl ? ' net of tax' : ''}._`);
+    }
+  }
+  if (data.transfer_tax && data.transfer_tax.bps > 0) {
+    lines.push(`Transfer tax: ${data.transfer_tax.bps} bps per transfer — selling costs ${data.transfer_tax.per_transfer_pct}% before slippage.`);
   }
 
   lines.push('');

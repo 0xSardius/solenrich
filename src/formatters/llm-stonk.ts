@@ -1,8 +1,15 @@
 import type { RewardRiskResult } from '../enrichers/stonk-reward-risk';
 import type { StonkYieldResult, YieldWindow } from '../enrichers/stonk-yield';
 import type { StonkPreflightResult } from '../enrichers/stonk-preflight';
-import type { StonkPairsResult, StonkScreenerResult } from '../entrypoints/stonk';
+import type { StonkPairsResult, StonkScreenerResult, StonkGemsResult, StonkLaunchIntelResult } from '../entrypoints/stonk';
 import { shortenAddress, formatUsd } from '../utils/normalize';
+
+const PAYOUT_LINE: Record<RewardRiskResult['payout_status'], string> = {
+  PAYING: '🟢 PAYING — holders received a payout in the last 24h',
+  STALE: '🟡 STALE — has paid before, nothing in the last 24h',
+  NEVER: '🟠 NEVER PAID — adopted, but no payout has happened yet',
+  NOT_REWARD: '🔴 NOT PAYING — nothing on this mint pays holders',
+};
 
 const LEVEL_LINE: Record<RewardRiskResult['level'], string> = {
   HEALTHY: '🟢 HEALTHY — the tax reaches holders and the coin has a payout record',
@@ -16,7 +23,9 @@ export function formatStonkRewardRiskBriefing(d: Omit<RewardRiskResult, 'llm_bri
   const name = d.symbol ? `$${d.symbol}` : shortenAddress(d.mint);
   lines.push(`## StonkFun Reward Risk — ${name} (${shortenAddress(d.mint)})`);
   lines.push('');
-  lines.push(`**${LEVEL_LINE[d.level]}** | score ${d.score}/100`);
+  lines.push(`**${PAYOUT_LINE[d.payout_status]}**${d.rewards.hours_since_last_payout != null ? ` — last payout ${d.rewards.hours_since_last_payout}h ago` : ''}`);
+  if (d.trading_cost.round_trip_pct != null) lines.push(`Trading cost: ${d.trading_cost.bps} bps per transfer — a round trip costs ${d.trading_cost.round_trip_pct}% before slippage.`);
+  lines.push(`${LEVEL_LINE[d.level]} | health score ${d.score}/100`);
   lines.push('');
   const facts: string[] = [];
   facts.push(d.adoption.listed_on_stonkfun ? `listed (${d.adoption.mode}, ${d.adoption.launchpad})` : 'NOT listed on StonkFun');
@@ -104,15 +113,16 @@ export function formatStonkScreenerBriefing(d: StonkScreenerResult): string {
   if (!d.rows.length) {
     lines.push(d.index.rows === 0 ? '_Index is still warming up — retry in a minute._' : '_No coins match these filters._');
   } else {
-    lines.push('| # | Coin | Quote | Tax | Holders | Rewards USD | 7d yield | 30d yield | Vol 24h | Mcap |');
-    lines.push('|---|------|-------|-----|---------|-------------|----------|-----------|---------|------|');
+    lines.push('| # | Coin | Quote | Payout | RT cost | Holders | Rewards USD | 7d yield | Vol 24h | Mcap | 24h |');
+    lines.push('|---|------|-------|--------|---------|---------|-------------|----------|---------|------|-----|');
     d.rows.forEach((r, i) => {
       const y7 = r.yield_7d_pct != null ? `${r.yield_7d_pct.toFixed(2)}%${r.window_7d_actual_days != null && r.window_7d_actual_days < 6.5 ? '*' : ''}` : '—';
-      const y30 = r.yield_30d_pct != null ? `${r.yield_30d_pct.toFixed(2)}%${r.window_30d_actual_days != null && r.window_30d_actual_days < 29.5 ? '*' : ''}` : '—';
-      lines.push(`| ${i + 1} | $${r.symbol} | ${r.quote_symbol} (${r.quote_category}) | ${r.transfer_fee_bps != null ? `${r.transfer_fee_bps}bps` : 'legacy'} | ${r.holder_count} | ${r.rewards_usd != null ? formatUsd(r.rewards_usd) : '—'} | ${y7} | ${y30} | ${formatUsd(r.volume_24h_usd)} | ${formatUsd(r.market_cap_usd)} |`);
+      const pay = r.payout_status === 'PAYING' ? `paying (${r.hours_since_last_payout}h)` : r.payout_status.toLowerCase();
+      const chg = r.price_change_24h_pct != null ? `${r.price_change_24h_pct > 0 ? '+' : ''}${r.price_change_24h_pct.toFixed(0)}%` : '—';
+      lines.push(`| ${i + 1} | $${r.symbol} | ${r.quote_symbol} (${r.quote_category}) | ${pay} | ${r.round_trip_pct != null ? `${r.round_trip_pct}%` : 'none'} | ${r.holder_count} | ${r.rewards_usd != null ? formatUsd(r.rewards_usd) : '—'} | ${y7} | ${formatUsd(r.volume_24h_usd)} | ${formatUsd(r.market_cap_usd)} | ${chg} |`);
     });
     lines.push('');
-    lines.push('_* partial window — fewer days of history than the window length._');
+    lines.push('_* partial window — fewer days of history than the window length. RT cost = transfer tax on a buy + a sell, before slippage._');
   }
   lines.push('');
   lines.push(`Next: ${d.next_steps.join(' ')}`);
@@ -160,6 +170,81 @@ export function formatStonkPairsBriefing(d: StonkPairsResult): string {
     lines.push(`| ${p.symbol} | ${p.name} | ${p.category}${p.category_raw !== p.category ? ` (${p.category_raw})` : ''} | ${p.decimals} | ${p.token_program === 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb' ? 'Token-2022' : 'SPL'} | ${p.launchable ? '✓' : '✗'} | ${p.launch_lab_ready == null ? '?' : p.launch_lab_ready ? '✓' : '✗'} | ${p.is_agent_launchable ? '✓' : '✗'} |`);
   }
   if (d.pairs.length > shown.length) lines.push(`_…${d.pairs.length - shown.length} more in the JSON._`);
+  lines.push('');
+  lines.push(`Next: ${d.next_steps.join(' ')}`);
+  return lines.join('\n');
+}
+
+const GEM_LINE: Record<StonkGemsResult['gems'][number]['stage'], string> = {
+  GEM: '💎 GEM',
+  WATCH: '👀 WATCH',
+  NOISE: '· noise',
+  DEAD: '✖ dead',
+};
+
+export function formatStonkGemsBriefing(d: StonkGemsResult): string {
+  const lines: string[] = [];
+  lines.push(`## StonkFun Gems — ${d.gems.length} of ${d.passed_filters} candidates (${d.scanned} reward coins scanned)`);
+  lines.push('');
+  lines.push(`Stages: ${d.stage_counts.GEM} GEM · ${d.stage_counts.WATCH} WATCH · ${d.stage_counts.NOISE} noise${d.filters.quote_mint ? ` | quote ${shortenAddress(d.filters.quote_mint)}` : ''}${d.filters.category ? ` | ${d.filters.category}` : ''} | ≤${d.filters.max_age_days}d old, ≥${d.filters.min_holders} holders, mcap ≤ ${formatUsd(d.filters.max_market_cap_usd)}${d.index.last_refresh_at ? ` | refreshed ${d.index.last_refresh_at}` : ' | index warming up'}`);
+  lines.push('');
+  if (!d.gems.length) {
+    lines.push(d.index.rows === 0 ? '_Index is still warming up — retry in a minute._' : '_Nothing passes these filters right now. Loosen max_market_cap_usd or min_holders, or widen max_age_days._');
+  } else {
+    lines.push('| # | Coin | Quote | Score | Payout | Holders | Mcap | Turnover | 24h | RT cost |');
+    lines.push('|---|------|-------|-------|--------|---------|------|----------|-----|---------|');
+    for (const g of d.gems) {
+      const pay = g.payout_status === 'PAYING' ? `${g.hours_since_last_payout}h ago` : g.payout_status.toLowerCase();
+      const chg = g.price_change_24h_pct != null ? `${g.price_change_24h_pct > 0 ? '+' : ''}${g.price_change_24h_pct.toFixed(0)}%` : '—';
+      lines.push(`| ${g.rank} | $${g.symbol} | ${g.quote_symbol} | ${GEM_LINE[g.stage]} ${g.gem_score} | ${pay} | ${g.holder_count} | ${formatUsd(g.market_cap_usd)} | ${g.turnover_24h_pct != null ? `${g.turnover_24h_pct}%` : '—'} | ${chg} | ${g.round_trip_pct != null ? `${g.round_trip_pct}%` : 'none'} |`);
+    }
+    lines.push('');
+    for (const g of d.gems.filter((x) => x.stage === 'GEM' || x.stage === 'WATCH').slice(0, 6)) {
+      lines.push(`### $${g.symbol} — ${GEM_LINE[g.stage]} ${g.gem_score}/100`);
+      lines.push(`\`${g.mint}\``);
+      if (g.reasons.length) lines.push(`+ ${g.reasons.join(' · ')}`);
+      if (g.warnings.length) lines.push(`⚠️ ${g.warnings.join(' · ')}`);
+      lines.push('');
+    }
+  }
+  lines.push('### How to read this');
+  lines.push('Score = recent holder payout (25) + holders (12) + size (15) + 24h turnover vs mcap (15) + age (10) + 24h momentum (10, negative once a coin has already run) + quote strength (10) + flywheel (3). GEM ≥ 80, WATCH ≥ 62. A coin with no 24h volume is DEAD regardless. RT cost is the transfer tax on a buy plus a sell — the move must clear it before slippage.');
+  lines.push('');
+  for (const c of d.caveats) lines.push(`_${c}_`);
+  lines.push('');
+  lines.push(`Next: ${d.next_steps.join(' ')}`);
+  return lines.join('\n');
+}
+
+export function formatStonkLaunchIntelBriefing(d: StonkLaunchIntelResult): string {
+  const lines: string[] = [];
+  const pct = (x: number | null) => (x == null ? '—' : `${(x * 100).toFixed(0)}%`);
+  const o = d.overall;
+  lines.push(`## StonkFun Launch Intel — ${d.quotes.length} of ${o.quotes} quote assets, sorted by ${d.filters.sort}`);
+  lines.push('');
+  lines.push(`Across ${o.coins} reward coins: ${o.launches_24h} launched in 24h, ${o.launches_7d} in 7d. ${pct(o.traded_share_24h)} traded today, ${pct(o.paying_share_24h)} paid holders today, ${pct(o.survival_3d)} of coins older than 3 days still trade.`);
+  lines.push(`Tax: 100 bps → ${o.tax.bps_100.coins} coins, ${pct(o.tax.bps_100.traded_share)} trading, ${pct(o.tax.bps_100.paying_share)} paying · 300 bps → ${o.tax.bps_300.coins} coins, ${pct(o.tax.bps_300.traded_share)} trading, ${pct(o.tax.bps_300.paying_share)} paying.`);
+  lines.push('');
+  if (d.recommendations.length) {
+    lines.push('### Recommendations');
+    for (const r of d.recommendations) lines.push(`- ${r}`);
+    lines.push('');
+  }
+  if (d.quotes.length) {
+    lines.push('| # | Quote | Cat | Coins | 7d launches | Traded 24h | Paying 24h | Survival 3d | Crowding | Med holders | Vol 24h | Demand |');
+    lines.push('|---|-------|-----|-------|-------------|------------|------------|-------------|----------|-------------|---------|--------|');
+    for (const q of d.quotes) {
+      lines.push(`| ${q.rank} | ${q.quote_symbol}${q.is_new ? ' (new)' : ''} | ${q.quote_category} | ${q.coins} | ${q.launches_7d} | ${pct(q.traded_share_24h)} | ${pct(q.paying_share_24h)} | ${q.is_new ? 'new' : pct(q.survival_3d)} | ${q.crowding ?? '—'} | ${q.holders_median} | ${formatUsd(q.volume_24h_usd)} | ${q.demand_score} |`);
+    }
+    lines.push('');
+  } else {
+    lines.push(d.index.rows === 0 ? '_Index is still warming up — retry in a minute._' : '_No quote asset matches these filters._');
+    lines.push('');
+  }
+  lines.push('### How to read this');
+  lines.push('Demand = traded share (40) + survival past day 3 (40) + paying share (20), minus a crowding penalty when 7d launches exceed twice the coins trading today. Survival is the share of coins older than 3 days that still traded in the last 24h. A quote marked (new) has no coin past day 3 yet: survival is unknown and demand is capped at 80.');
+  lines.push('');
+  for (const c of d.caveats) lines.push(`_${c}_`);
   lines.push('');
   lines.push(`Next: ${d.next_steps.join(' ')}`);
   return lines.join('\n');

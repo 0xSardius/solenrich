@@ -8,6 +8,7 @@ import { CACHE_TTL } from '../config';
 import { parallelFetch, type ParallelTask } from '../utils/parallel';
 import { formatTimestamp } from '../utils/normalize';
 import type { SnapshotStore } from './snapshot-store';
+import type { TransferTax, TransferTaxReader } from '../sources/token-2022';
 
 // --- Types ---
 
@@ -46,6 +47,8 @@ export interface TokenEnrichment {
   concentration?: HolderConcentration;
   holders_source?: 'rpc' | 'birdeye' | 'unavailable';
   slippage_estimates?: SlippageEstimate[];
+  /** Token-2022 transfer tax as a trading cost. Null = no fee. Absent when the read was unavailable. */
+  transfer_tax?: TransferTax | null;
   liquidity: number;
   risk_flags: string[];
   verified: boolean;
@@ -67,6 +70,7 @@ export class TokenAnalyzer {
     private cache: Cache,
     snapshotStore?: SnapshotStore,
     private birdeye?: BirdeyeClient,
+    private taxReader?: TransferTaxReader,
   ) {
     this.snapshotStore = snapshotStore;
   }
@@ -91,6 +95,10 @@ export class TokenAnalyzer {
 
     if (includeHolders) {
       tasks.push({ name: 'largestAccounts', fn: () => this.solanaRpc.getTokenLargestAccounts(mint) });
+    }
+
+    if (this.taxReader) {
+      tasks.push({ name: 'transferTax', fn: () => this.taxReader!.get(mint) });
     }
 
     if (this.birdeye) {
@@ -118,6 +126,7 @@ export class TokenAnalyzer {
     const slippageEstimates = (fetched.slippage as SlippageEstimate[] | null) ?? [];
     const birdeyeOverview = (fetched.birdeyeOverview as TokenOverview | null) ?? null;
     const birdeyeCandles = (fetched.birdeyeCandles as OHLCV[] | null) ?? null;
+    const transferTax = this.taxReader ? ((fetched.transferTax as TransferTax | null) ?? null) : undefined;
 
     const price = dexData?.price ?? birdeyeOverview?.price ?? 0;
     const decimals = mintInfo?.decimals ?? jupiterToken?.decimals ?? birdeyeOverview?.decimals ?? 0;
@@ -305,6 +314,10 @@ export class TokenAnalyzer {
     if (slippage1k && Math.abs(slippage1k.price_impact_pct) > 5) {
       riskFlags.push('high_slippage');
     }
+    // A transfer tax is a cost on every buy AND sell (StonkFun reward coins: 100/300 bps).
+    if (transferTax && transferTax.bps > 0) {
+      riskFlags.push('transfer_tax');
+    }
 
     // --- Assemble ---
     const enrichment: TokenEnrichment = {
@@ -323,6 +336,7 @@ export class TokenAnalyzer {
       concentration,
       holders_source: holdersSource,
       slippage_estimates: slippageEstimates.length > 0 ? slippageEstimates : undefined,
+      ...(transferTax !== undefined ? { transfer_tax: transferTax } : {}),
       liquidity: dexData?.liquidity ?? birdeyeOverview?.liquidity ?? 0,
       risk_flags: riskFlags,
       verified: jupiterToken?.verified === true,

@@ -69,6 +69,9 @@ export function formatRunnerBriefing(data: RunnerScanResult): string {
     );
     lines.push(`- ${describeDeltas(r)}`);
     if (r.flags.length > 0) lines.push(`- Flags: ${r.flags.join(', ')}`);
+    if (r.transfer_tax && r.transfer_tax.bps > 0) {
+      lines.push(`- Transfer tax ${r.transfer_tax.bps} bps — round trip ${r.transfer_tax.round_trip_pct}% before slippage`);
+    }
     lines.push('');
   }
 

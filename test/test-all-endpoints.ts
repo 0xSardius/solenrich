@@ -387,6 +387,24 @@ check('zero-rate + missing curve rule + misspelled fields rejected', pf2.body?.o
 check('names the misspelled field', (pf2.body?.output?.mismatches ?? []).some((m: any) => m.actual === 'maximumFee' && m.expected === 'maxinumFee'));
 console.log(`  ⏱ ${pf.ms}ms / ${pf2.ms}ms\n`);
 
+console.log('━━━ 20f. stonk-gems ━━━');
+const sg = await invoke('stonk-gems', { max_age_days: 30, min_holders: 10, limit: 10, format: 'both' }, 30000);
+check('returns 200', sg.status === 200, `got ${sg.status}`);
+check('has gems + stage counts', Array.isArray(sg.body?.output?.gems) && typeof sg.body?.output?.stage_counts?.GEM === 'number', `gems=${sg.body?.output?.gems?.length} passed=${sg.body?.output?.passed_filters}`);
+check('ranked by gem_score', (sg.body?.output?.gems?.length ?? 0) < 2 || sg.body.output.gems[0].gem_score >= sg.body.output.gems.at(-1).gem_score);
+check('rows carry payout_status + round_trip_pct', (sg.body?.output?.gems ?? []).every((g: any) => typeof g.payout_status === 'string' && 'round_trip_pct' in g));
+check('has llm_summary', typeof sg.body?.output?.llm_summary === 'string' && sg.body.output.llm_summary.includes('Gems'));
+console.log(`  ⏱ ${sg.ms}ms\n`);
+
+console.log('━━━ 20g. stonk-launch-intel ━━━');
+const si = await invoke('stonk-launch-intel', { min_coins: 20, limit: 10, format: 'both' }, 30000);
+check('returns 200', si.status === 200, `got ${si.status}`);
+check('has quotes + overall', Array.isArray(si.body?.output?.quotes) && typeof si.body?.output?.overall?.coins === 'number', `quotes=${si.body?.output?.quotes?.length} coins=${si.body?.output?.overall?.coins}`);
+check('quotes meet min_coins', (si.body?.output?.quotes ?? []).every((q: any) => q.coins >= 20));
+check('has recommendations', Array.isArray(si.body?.output?.recommendations));
+check('has llm_summary', typeof si.body?.output?.llm_summary === 'string' && si.body.output.llm_summary.includes('Launch Intel'));
+console.log(`  ⏱ ${si.ms}ms\n`);
+
 // ============================================================
 // Summary
 // ============================================================

@@ -15,7 +15,7 @@ curl https://api.solenrich.com/health
 # Agent card (A2A discovery)
 curl https://api.solenrich.com/.well-known/agent.json
 
-# List all 43 endpoints (42 paid + 1 free)
+# List all 45 endpoints (44 paid + 1 free)
 curl https://api.solenrich.com/entrypoints
 
 # Full API documentation (agent-readable JSON)
@@ -116,9 +116,11 @@ Coins launched on [stonkfun.xyz](https://www.stonkfun.xyz) are priced against a 
 | Endpoint | Price | Input | Description |
 |----------|-------|-------|-------------|
 | `stonk-pairs` | free | `category`, `launchable_only`, `format` | Quote assets a launch can be paired against, normalized categories, `is_agent_launchable` flag (launchable + LaunchLab-ready + allowed category). Call first: a launch `quoteMint` must be one of these |
-| `stonk-reward-risk` | $0.005 | `mint`, `format` | 0–100 health score for a reward coin, read from the chain: transfer-fee bps + cap, withdraw authority (must be StonkFun's distributor), fee mutability, zero-rate / unadopted detection, distributions + recency, flywheel, holders + top-10 concentration, quote category, age. Zero-rate or unadopted coins score under 20 |
+| `stonk-reward-risk` | $0.005 | `mint`, `format` | Payout status — `PAYING` (holders paid in the last 24h), `STALE`, `NEVER`, `NOT_REWARD` — plus `trading_cost` (tax bps, round-trip %) and a 0–100 health score read from the chain: fee bps + cap, withdraw authority (must be StonkFun's distributor), fee mutability, distributions + recency, flywheel, holders + concentration, quote category, age |
 | `stonk-yield` | $0.005 | `mint`, `format` | Trailing 7d / 30d / lifetime holder yield — rewards in the quote asset, priced in USD, over average market cap; annualized with a caution flag under 7 days. Plus quote exposure: the holder is long the coin *and* its quote asset |
-| `stonk-screener` | $0.01 | `quote_mint`, `category`, `min_holders`, `min_age_days`, `sort`, `limit`, `format` | Ranked list across every reward coin from a 10-minute ingest, served from memory. Sort by `yield7d`, `yield30d`, `rewardsUsd`, `volume24h`. "Which coins pay holders in NVDAX?" is one call |
+| `stonk-screener` | $0.01 | `quote_mint`, `category`, `min_holders`, `min_age_days`, `max_age_days`, `min_volume_24h_usd`, `max_market_cap_usd`, `paying_only`, `live_only`, `sort`, `limit`, `format` | Every reward coin from a 10-minute ingest, served from memory. Per row: `payout_status`, hours since last payout, `live` (traded AND paid in 24h), `round_trip_pct` tax cost, holders, yields, volume, mcap. Sort by `volume24h` (default), `lastPayout`, `holders`, `priceChange24h`, `yield7d`, `yield30d`, `rewardsUsd` |
+| `stonk-gems` | $0.03 | `quote_mint`, `category`, `max_age_days`, `min_holders`, `max_market_cap_usd`, `limit`, `format` | Gem finder: ranks reward coins 0–100 on recent holder payout, holders, mcap headroom, 24h turnover, age, momentum, quote strength, flywheel. Stages `GEM` / `WATCH` / `NOISE` / `DEAD` with reasons and warnings per coin. "What should I look at on StonkFun right now?" |
+| `stonk-launch-intel` | $0.02 | `category`, `min_coins`, `sort`, `limit`, `format` | What to launch and against what. Per quote asset: launches (24h/7d), share trading today, share paying today, survival past day 3, median holders + mcap, 100 vs 300 bps tax mix with trading/paying rates, crowding, 0–100 demand score, plus overall stats and plain recommendations |
 | `stonk-launch-preflight` | $0.25 | `unsigned_transaction`, `quote_mint`, `mode`, `launch_params`, `format` | Decodes the LaunchLab initialize instruction and diffs every parameter against StonkFun's `/launchlab/pricing` — GlobalConfig, platform id per mode, curve, supply, totalSellA, raise, 6-decimal Token-2022 base mint, quote token program, curve-rule account last, and the reward-mode transfer fee (catches Raydium's `transferFeeBasePoints` / `maxinumFee` spelling). Returns `ok`, `mismatches[{field, expected, actual, fix}]`, `warnings`. A mismatched pool is never adopted: the tax goes to nobody |
 
 ### Intelligence Feed & Signals (4 endpoints)

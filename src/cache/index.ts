@@ -21,8 +21,13 @@ export class Cache {
   private redis: Redis | null = null;
   private memory = new Map<string, MemoryEntry>();
 
-  constructor() {
-    if (isRedisConfigured()) {
+  constructor(opts: { memoryOnly?: boolean } = {}) {
+    // Unit tests must never write to the production Redis (a fixture ingest
+    // once overwrote today's stonk snapshot chunk). Bun sets NODE_ENV=test.
+    const memoryOnly = opts.memoryOnly === true || process.env.NODE_ENV === 'test';
+    if (memoryOnly) {
+      console.log('[cache] Using in-memory cache (test mode)');
+    } else if (isRedisConfigured()) {
       try {
         this.redis = new Redis({ url: CONFIG.cache.url, token: CONFIG.cache.token });
         console.log('[cache] Using Upstash Redis');

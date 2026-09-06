@@ -32,7 +32,12 @@ export const StonkScreenerInput = z.object({
   category: StonkCategorySchema.optional(),
   min_holders: z.number().int().min(0).optional(),
   min_age_days: z.number().min(0).optional(),
-  sort: z.enum(['yield7d', 'yield30d', 'rewardsUsd', 'volume24h']).default('rewardsUsd'),
+  max_age_days: z.number().min(0).optional(),
+  min_volume_24h_usd: z.number().min(0).optional(),
+  max_market_cap_usd: z.number().min(0).optional(),
+  paying_only: z.boolean().default(false),
+  live_only: z.boolean().default(false),
+  sort: z.enum(['yield7d', 'yield30d', 'rewardsUsd', 'volume24h', 'lastPayout', 'holders', 'priceChange24h']).default('volume24h'),
   limit: z.number().int().min(1).max(100).default(25),
   format: FormatSchema,
 });
@@ -48,3 +53,21 @@ export const StonkPreflightInput = z.object({
   format: FormatSchema,
 });
 export type StonkPreflightInput = z.infer<typeof StonkPreflightInput>;
+
+export const StonkGemsInput = z.object({
+  quote_mint: SolanaAddressSchema.optional(),
+  category: StonkCategorySchema.optional(),
+  max_age_days: z.number().min(0).max(90).default(14),
+  min_holders: z.number().int().min(0).default(25),
+  max_market_cap_usd: z.number().min(0).default(5_000_000),
+  limit: z.number().int().min(1).max(50).default(15),
+  format: FormatSchema,
+});
+
+export const StonkLaunchIntelInput = z.object({
+  category: StonkCategorySchema.optional(),
+  min_coins: z.number().int().min(1).default(5),
+  sort: z.enum(['demand', 'survival', 'volume', 'launches', 'paying']).default('demand'),
+  limit: z.number().int().min(1).max(100).default(20),
+  format: FormatSchema,
+});

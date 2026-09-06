@@ -74,6 +74,7 @@ import { TrenchesCheckAnalyzer } from "../enrichers/trenches-check";
 import { registerExitSignalEntrypoint } from "../entrypoints/exit";
 import { ExitSignalAnalyzer } from "../enrichers/exit-analyzer";
 import { StonkFunClient } from "../sources/stonkfun";
+import { TransferTaxReader } from "../sources/token-2022";
 import { StonkIndex } from "../enrichers/stonk-index";
 import { StonkRewardRiskAnalyzer } from "../enrichers/stonk-reward-risk";
 import { StonkYieldAnalyzer } from "../enrichers/stonk-yield";
@@ -364,6 +365,8 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'stonk-yield': ['solana', 'stonkfun', 'holder-yield', 'reward-coin', 'xstocks'],
     'stonk-screener': ['solana', 'stonkfun', 'screener', 'holder-yield', 'xstocks'],
     'stonk-launch-preflight': ['solana', 'stonkfun', 'launchlab', 'launch-preflight', 'token-2022'],
+    'stonk-gems': ['solana', 'stonkfun', 'gems', 'reward-coin', 'screener', 'xstocks'],
+    'stonk-launch-intel': ['solana', 'stonkfun', 'launch', 'quote-assets', 'xstocks'],
   };
 
   // --- Bazaar input examples (ROLLOUT 2026-06-28; canary CONFIRMED) ------------
@@ -567,7 +570,10 @@ const birdeye = CONFIG.birdeye.apiKey ? new BirdeyeClient(cache) : undefined;
 const priceAggregator = new PriceAggregator(dexscreener, jupiter);
 
 const walletProfiler = new WalletProfiler(helius, solanaRpc, dexscreener, cache, priceAggregator, snapshotStore);
-const tokenAnalyzer = new TokenAnalyzer(helius, dexscreener, solanaRpc, jupiter, cache, snapshotStore, birdeye);
+// Token-2022 transfer tax as a trading cost (StonkFun reward coins charge 100/300 bps).
+// One cached RPC read per mint per hour; shared by the token analyzer and the trenches suite.
+const transferTaxReader = new TransferTaxReader(solanaRpc.getConnection(), cache);
+const tokenAnalyzer = new TokenAnalyzer(helius, dexscreener, solanaRpc, jupiter, cache, snapshotStore, birdeye, transferTaxReader);
 const txParser = new TxParser(helius, cache);
 const whaleWatcher = new WhaleWatcher(helius, dexscreener, solanaRpc, cache, priceAggregator, birdeye);
 const graphMapper = new GraphMapper(helius, cache);
@@ -679,7 +685,7 @@ registerTrenchesEntrypoints(addEntrypoint, trenchesSmartMoney);
 // (docs/runner-detection-scope.md). On-chain velocity: accelerating buy rate,
 // buy pressure, volume/price velocity, holder growth, liquidity trend. Pairs
 // with smart-money-trenches (the "WHO is buying" half); both feed trenches-scan.
-const runnerDetector = new RunnerDetector(dexscreener, cache, birdeye);
+const runnerDetector = new RunnerDetector(dexscreener, cache, birdeye, transferTaxReader);
 registerRunnerEntrypoint(addEntrypoint, runnerDetector);
 
 // NL query — routes to the right enricher(s). Single-intent questions hit one
@@ -732,13 +738,14 @@ const trenchesCheckAnalyzer = new TrenchesCheckAnalyzer(
   signalTracker,
   cache,
   birdeye,
+  transferTaxReader,
 );
 registerTrenchesCheckEntrypoint(addEntrypoint, trenchesCheckAnalyzer);
 
 // Exit Signal — the sell-side verdict for a held position. Shares the runner
 // snapshot rails (liquidity/holder deltas) and composes whale-watch for
 // top-holder flow. Works on tokens of any age, not just fresh launches.
-const exitSignalAnalyzer = new ExitSignalAnalyzer(dexscreener, whaleWatcher, cache, birdeye);
+const exitSignalAnalyzer = new ExitSignalAnalyzer(dexscreener, whaleWatcher, cache, birdeye, transferTaxReader);
 registerExitSignalEntrypoint(addEntrypoint, exitSignalAnalyzer);
 
 // StonkFun product line — quote-paired + reward-mode (transfer-tax) coins.
@@ -1180,7 +1187,7 @@ app.get('/docs', (c) => {
       'stonk-reward-risk': {
         price: '0.005',
         input: { mint: 'string (required) — StonkFun coin mint', format: 'json | llm | both' },
-        description: 'Reward-coin health score 0-100 for a StonkFun reward-mode (transfer-tax) coin, read from the chain not only the API: Token-2022 transfer-fee bps and per-transfer cap, withdraw-withheld authority (must be StonkFun\'s distributor), fee mutability, zero-rate / unadopted detection, rewards distributed to date + last payout recency, flywheel, holder count and top-10 concentration, quote category, age, graduation. Zero-rate or unadopted coins score under 20 with a plain reason. Levels HEALTHY / MIXED / WEAK / BROKEN. Includes llm_brief.',
+        description: 'Payout status for a StonkFun reward coin — the thing a holder observes: PAYING (payout in the last 24h), STALE, NEVER, or NOT_REWARD — plus the trading cost (transfer-tax bps, round-trip %) and a 0-100 health score read from the chain: Token-2022 fee bps and cap, withdraw authority (must be StonkFun\'s distributor), fee mutability, zero-rate/unadopted detection, distributions and recency, flywheel, holders and top-10 concentration, quote category, age. Call before sizing a reward-coin position. Levels HEALTHY / MIXED / WEAK / BROKEN. Includes llm_brief.',
       },
       'stonk-yield': {
         price: '0.005',
@@ -1189,8 +1196,18 @@ app.get('/docs', (c) => {
       },
       'stonk-screener': {
         price: '0.01',
-        input: { quote_mint: 'string (optional)', category: 'xstock | prestock | currency | leverage | solana | collectible | custom (optional)', min_holders: 'number (optional)', min_age_days: 'number (optional)', sort: 'yield7d | yield30d | rewardsUsd | volume24h (default rewardsUsd)', limit: 'number 1-100 (default 25)', format: 'json | llm | both' },
-        description: 'Ranked list across every StonkFun reward coin, served from memory (10-minute ingest of /tokens?mode=reward and the /rewards ledger). Per row: quote asset + category, transfer-fee bps, flywheel, holders, payouts, rewards USD, trailing 7d/30d yield with actual window length, volume, market cap. "Which coins pay holders in NVDAX?" is one call.',
+        input: { quote_mint: 'string (optional)', category: 'xstock | prestock | currency | leverage | solana | collectible | custom (optional)', min_holders: 'number (optional)', min_age_days: 'number (optional)', max_age_days: 'number (optional)', min_volume_24h_usd: 'number (optional)', max_market_cap_usd: 'number (optional)', paying_only: 'boolean (default false) — paid holders in the last 24h', live_only: 'boolean (default false) — traded AND paid in the last 24h', sort: 'volume24h | lastPayout | holders | priceChange24h | yield7d | yield30d | rewardsUsd (default volume24h)', limit: 'number 1-100 (default 25)', format: 'json | llm | both' },
+        description: 'Ranked screener across every StonkFun reward coin, served from a 10-minute ingest. Per row: payout status (PAYING / STALE / NEVER), hours since last payout, live flag (traded AND paid in 24h), round-trip transfer-tax cost, holders, rewards USD, trailing yields, volume, market cap, 24h change. Filters: quote_mint, category, min_holders, min_age_days, max_age_days, min_volume_24h_usd, max_market_cap_usd, paying_only, live_only. Sort by volume24h (default), lastPayout, holders, priceChange24h, yield7d, yield30d, rewardsUsd. "Which coins on NVDAX paid holders today?" is one call.',
+      },
+      'stonk-gems': {
+        price: '0.03',
+        input: { quote_mint: 'string (optional)', category: 'xstock | prestock | currency | leverage | solana | collectible | custom (optional)', max_age_days: 'number (default 14)', min_holders: 'number (default 25)', max_market_cap_usd: 'number (default 5000000)', limit: 'number 1-50 (default 15)', format: 'json | llm | both' },
+        description: 'Gem finder over every StonkFun reward coin: which coins look early, real, and paying? Scores each coin 0-100 from the 10-minute index — recent holder payout (the flywheel is real), holders (discovered but not saturated), market cap (room to move), 24h turnover vs mcap, age, 24h momentum (not already parabolic), quote-asset strength (share of that quote\'s coins trading today), flywheel. Stages GEM / WATCH / NOISE / DEAD with plain reasons and warnings per coin, plus the round-trip transfer-tax cost. Filters: quote_mint, category, max_age_days (14), min_holders (25), max_market_cap_usd (5M). Answers in milliseconds. Score = recent payout (25) + holders (12) + size (15) + turnover (15) + age (10) + momentum (10, negative once already run) + quote strength (10) + flywheel (3); GEM ≥ 80, WATCH ≥ 62, no 24h volume = DEAD.',
+      },
+      'stonk-launch-intel': {
+        price: '0.02',
+        input: { category: 'xstock | prestock | currency | leverage | solana | collectible | custom (optional)', min_coins: 'number (default 5)', sort: 'demand | survival | volume | launches | paying (default demand)', limit: 'number 1-100 (default 20)', format: 'json | llm | both' },
+        description: 'What to launch on StonkFun, and against what. Per quote asset: coins, launches in 24h / 7d, share that traded today, share that paid holders today, survival (coins older than 3 days that still trade), volume, median holders and market cap, tax mix (100 vs 300 bps) with trading and paying rates per level, crowding (7d launches per coin trading today), and a 0-100 demand score. Plus overall survival and tax-level stats and plain recommendations. Sort by demand, survival, volume, launches, or paying. Demand = traded share (40) + survival (40) + paying share (20) minus a crowding penalty; quotes with no coin past day 3 are flagged is_new and capped at 80.',
       },
       'stonk-launch-preflight': {
         price: '0.25',

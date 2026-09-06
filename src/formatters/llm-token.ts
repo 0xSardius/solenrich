@@ -48,6 +48,12 @@ export function formatTokenBriefing(data: TokenEnrichment): string {
     }
   }
 
+  // Transfer tax (Token-2022) — a cost on every buy and sell
+  if (data.transfer_tax && data.transfer_tax.bps > 0) {
+    const t = data.transfer_tax;
+    lines.push(`Transfer tax: ${t.bps} bps per transfer — a round trip costs ${t.round_trip_pct}% before slippage${t.fee_mutable_by ? ' (rate is MUTABLE)' : ''}.`);
+  }
+
   // Volatility
   if (data.volatility) {
     const v = data.volatility;

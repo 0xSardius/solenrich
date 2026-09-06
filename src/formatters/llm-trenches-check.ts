@@ -27,6 +27,10 @@ export function formatTrenchesCheckBriefing(data: TrenchesCheckResult): string {
   lines.push('');
   lines.push(`**Read:** ${data.reasoning}`);
 
+  if (data.transfer_tax && data.transfer_tax.bps > 0) {
+    lines.push(`Transfer tax: ${data.transfer_tax.bps} bps per transfer — round trip ${data.transfer_tax.round_trip_pct}% before slippage.`);
+  }
+
   if (data.runner) {
     const r = data.runner;
     lines.push('');
