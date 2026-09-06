@@ -306,4 +306,4 @@ MIT
 
 ## Built by
 
-[Parallax Labs](https://github.com/0xSardius)
+[@0xSardius](https://github.com/0xSardius)
