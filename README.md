@@ -15,7 +15,7 @@ curl https://api.solenrich.com/health
 # Agent card (A2A discovery)
 curl https://api.solenrich.com/.well-known/agent.json
 
-# List all 38 endpoints
+# List all 43 endpoints (42 paid + 1 free)
 curl https://api.solenrich.com/entrypoints
 
 # Full API documentation (agent-readable JSON)
@@ -108,6 +108,18 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 | Endpoint | Price | Input | Description |
 |----------|-------|-------|-------------|
 | `gacha-ev-scan` | $0.02 | `machine`, `franchise`, `exit_strategy`, `min_edge_pct`, `format` | Jupiter Gacha (Collector Crypt) pack EV scan — gross insured EV vs the guaranteed instant-buyback floor (85–93%, ≤72h) vs a marketplace sale (−2% fee, fill-risk). POSITIVE_EV / HOUSE_EDGE / NEGATIVE_EV verdict per machine — the realizable EV the platform hides behind its gross-EV headline |
+
+### StonkFun — Quote-Paired & Reward Coins (5 endpoints, 1 free)
+
+Coins launched on [stonkfun.xyz](https://www.stonkfun.xyz) are priced against a quote asset (xStocks such as NVDAX/SPYX/TSLAX, Backpack pre-stocks, currencies, custom mints). Reward-mode coins carry a Token-2022 transfer tax (100 or 300 bps) paid to holders in the quote token. These endpoints read the tax config from the chain, score whether it reaches holders, compute holder yield, screen the whole reward-coin set, and preflight a self-built LaunchLab launch before it is broadcast.
+
+| Endpoint | Price | Input | Description |
+|----------|-------|-------|-------------|
+| `stonk-pairs` | free | `category`, `launchable_only`, `format` | Quote assets a launch can be paired against, normalized categories, `is_agent_launchable` flag (launchable + LaunchLab-ready + allowed category). Call first: a launch `quoteMint` must be one of these |
+| `stonk-reward-risk` | $0.005 | `mint`, `format` | 0–100 health score for a reward coin, read from the chain: transfer-fee bps + cap, withdraw authority (must be StonkFun's distributor), fee mutability, zero-rate / unadopted detection, distributions + recency, flywheel, holders + top-10 concentration, quote category, age. Zero-rate or unadopted coins score under 20 |
+| `stonk-yield` | $0.005 | `mint`, `format` | Trailing 7d / 30d / lifetime holder yield — rewards in the quote asset, priced in USD, over average market cap; annualized with a caution flag under 7 days. Plus quote exposure: the holder is long the coin *and* its quote asset |
+| `stonk-screener` | $0.01 | `quote_mint`, `category`, `min_holders`, `min_age_days`, `sort`, `limit`, `format` | Ranked list across every reward coin from a 10-minute ingest, served from memory. Sort by `yield7d`, `yield30d`, `rewardsUsd`, `volume24h`. "Which coins pay holders in NVDAX?" is one call |
+| `stonk-launch-preflight` | $0.25 | `unsigned_transaction`, `quote_mint`, `mode`, `launch_params`, `format` | Decodes the LaunchLab initialize instruction and diffs every parameter against StonkFun's `/launchlab/pricing` — GlobalConfig, platform id per mode, curve, supply, totalSellA, raise, 6-decimal Token-2022 base mint, quote token program, curve-rule account last, and the reward-mode transfer fee (catches Raydium's `transferFeeBasePoints` / `maxinumFee` spelling). Returns `ok`, `mismatches[{field, expected, actual, fix}]`, `warnings`. A mismatched pool is never adopted: the tax goes to nobody |
 
 ### Intelligence Feed & Signals (4 endpoints)
 

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SolEnrich — Onchain Intelligence for Solana Agents</title>
-  <meta name="description" content="Onchain intelligence API for Solana agents and LLMs. 38 endpoints: wallet profiling and risk scoring, token due diligence with holder concentration and slippage, whale and smart-money tracking, cross-venue perps market structure (Jupiter, Adrena, Flash, Hyperliquid, dYdX), event alerts, portfolio time-series, agent-attention signals, and a fresh-launch trade-lifecycle suite. Deterministic scoring, JSON or LLM-ready briefings. Pay per call with USDC on Solana or Base via x402, or by card via Stripe. No API keys.">
+  <meta name="description" content="Onchain intelligence API for Solana agents and LLMs. 42 endpoints: wallet profiling and risk scoring, token due diligence with holder concentration and slippage, whale and smart-money tracking, cross-venue perps market structure (Jupiter, Adrena, Flash, Hyperliquid, dYdX), event alerts, portfolio time-series, agent-attention signals, a fresh-launch trade-lifecycle suite, and StonkFun reward-coin intelligence (holder-tax verification, yield, screener, launch preflight). Deterministic scoring, JSON or LLM-ready briefings. Pay per call with USDC on Solana or Base via x402, or by card via Stripe. No API keys.">
 
   <link rel="canonical" href="https://www.solenrich.com/">
   <link rel="icon" type="image/png" href="/logo.png">
@@ -1486,7 +1486,7 @@
         </h1>
         <p class="hero-sub">
           Wallet risk, token due diligence, whale and smart-money flows, cross-venue perps structure,
-          and agent-attention signals. 38 endpoints, one API, deterministic scoring, returned as JSON or
+          and agent-attention signals. 42 endpoints, one API, deterministic scoring, returned as JSON or
           as briefings sized for an LLM context window. Pay per call with USDC on Solana or Base (x402),
           or by card (Stripe). No keys, no subscription.
         </p>
@@ -1549,6 +1549,7 @@
     <div class="container">
       <span class="update-tag">New</span>
       <div class="update-items">
+        <span class="update-item"><span class="check">&#10003;</span> StonkFun reward coins — does the holder tax reach holders, what it yields, a screener over every reward coin, and a launch preflight for self-built LaunchLab launches</span>
         <span class="update-item"><span class="check">&#10003;</span> NFT enrichment — every wallet's non-fungibles split into collected / airdropped / spam</span>
         <span class="update-item"><span class="check">&#10003;</span> Exit-signal — sell-side verdict for any token you hold: EXIT / DERISK / HOLD with hard rug triggers</span>
         <span class="update-item"><span class="check">&#10003;</span> Attention-momentum — where agent attention is accelerating ahead of price, from our own query stream</span>
@@ -2016,6 +2017,42 @@
           </div>
           <p class="endpoint-desc">Every other endpoint answers &ldquo;should I enter.&rdquo; This one answers &ldquo;I hold it &mdash; should I get out?&rdquo; Pass a mint and get an EXIT / DERISK / HOLD verdict with a 0&ndash;1 exit score: sell pressure, buy-rate deceleration, volume fade, distribution into strength, top-holder flow (whales distributing vs accumulating), liquidity trend, holder churn. Rug triggers &mdash; LP pull, active dump &mdash; override everything else. Works on tokens of any age, and an optional entry price adds unrealized-PnL context.</p>
           <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">trenches</span><span class="tag">sell-side</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">stonk-reward-risk</span>
+            <span class="endpoint-price">$0.005</span>
+          </div>
+          <p class="endpoint-desc">StonkFun reward coins pay holders a transfer tax in the quote asset &mdash; NVDAX, SPYX, ZEC, whatever the coin is paired to. This reads the Token-2022 fee config from the chain, not the API: rate, cap, who can withdraw it (must be StonkFun&rsquo;s distributor), whether it can be changed later. Zero-rate, zero-cap, or unadopted mints score under 20 with a plain reason. Then distributions, recency, flywheel, holders, concentration, age.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">reward coins</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">stonk-yield</span>
+            <span class="endpoint-price">$0.005</span>
+          </div>
+          <p class="endpoint-desc">What does holding this coin actually pay? Trailing 7d / 30d / lifetime yield: rewards distributed in the quote asset, priced in USD, over average market cap. Annualized only with an explicit caution flag when the window is under seven days. Spells out the exposure &mdash; a holder is long the coin <em>and</em> its quote asset, and every reward accrues in that asset.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">holder yield</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">stonk-screener</span>
+            <span class="endpoint-price">$0.01</span>
+          </div>
+          <p class="endpoint-desc">&ldquo;Which coins pay holders in NVDAX?&rdquo; in one call. Every StonkFun reward coin, ingested every ten minutes and served from memory: filter by quote mint, category, holders, age; sort by 7d yield, 30d yield, rewards paid, or volume. Answers in milliseconds.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">screener</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">stonk-launch-preflight</span>
+            <span class="endpoint-price">$0.25</span>
+          </div>
+          <p class="endpoint-desc">For agents that launch coins through StonkFun by building the Raydium LaunchLab transaction themselves. A pool is adopted only if every curve parameter matches exactly; one typo and the tax goes to nobody. Pass the unsigned transaction and get a diff against the published shape: GlobalConfig, platform id per mode, curve, supply, raise, 6-decimal Token-2022 mint, curve-rule account last, and the transfer fee &mdash; including Raydium&rsquo;s <code>transferFeeBasePoints</code> / <code>maxinumFee</code> spelling. Each mismatch comes with a fix. <code>stonk-pairs</code> (free) lists what you can pair against.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">launch</span></div>
         </div>
       </div>
     </div>

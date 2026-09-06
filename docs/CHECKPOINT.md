@@ -1,7 +1,43 @@
 # Session Checkpoint
 
 ## Last session date
-2026-09-03
+2026-09-06
+
+## ▶️ RESUME HERE (2026-09-06) — STONKFUN PRODUCT LINE SHIPPED (5 endpoints, 42 paid + 1 free)
+
+### What was completed (2026-09-06)
+
+- **StonkFun product line built + verified locally in one session.** stonkfun.xyz (quote-paired
+  coins, reward-mode transfer-tax coins) launched on Solana; Sardius flagged it as a queue-jumper
+  and a dependency for the Pair Router hackathon product. Five entrypoints: `stonk-pairs` (free),
+  `stonk-reward-risk`, `stonk-yield`, `stonk-screener`, `stonk-launch-preflight`. Five MCP tools.
+  Wired through every surface (PRICING, /docs, OpenAPI incl. `x-free` path, llms.txt "Free
+  Endpoints", bazaar tags + input examples, SolScout stress, test-all-endpoints, README, landing
+  cards + banner, CI). Design notes + measured facts in CLAUDE.md "StonkFun product line".
+- **Verified on the local server:** ZCAT (live reward coin on ZEC) → 95 HEALTHY; NCAT (self-built
+  LaunchLab launch, mutable fee, no payouts yet) → 45 MIXED; BONK → 6 BROKEN "not a StonkFun
+  coin". Screener: 6,270 reward coins indexed in ~23s, 20ms responses, xstock filter → 2,342
+  matches, NVDAX quote → 261. Preflight: reference launch ok=true with zero mismatches against the
+  LIVE pricing doc; broken launch (0 bps, 0 cap, no curve rule, misspelled `launch_params`)
+  → 5 named mismatches with fixes. Unit: 37/37 fixture tests + 2 live smoke; full unit suite
+  231/231; MCP method guard 10/10; tsc clean.
+- **Acceptance vs the prompt:** all met except the prompt's GET REST paths — mapped onto the
+  repo's `POST /entrypoints/{key}/invoke` convention so x402/MPP/bazaar/MCP work unchanged.
+
+### Next steps
+
+1. **Deploy + verify prod** (auto-deploys on push): boot log shows `[stonk-index] refreshed N`,
+   `stonk-pairs` returns 200 unpaid, the four paid ones 402, then a SolScout `--paid` seed run so
+   the CDP bazaar catalogs the four paid endpoints (preflight has a concrete input example).
+2. **Watch the ingest for 48h:** Railway RSS (index ≈ 6.3K rows + ≤31 daily points per active
+   coin), Upstash command count (≈5 writes per refresh + boot reload), StonkFun 429s in logs.
+   Yield windows become meaningful after 7 days of snapshots.
+3. **Tell the Pair Router side:** input field names are snake_case (`unsigned_transaction`,
+   `quote_mint`, `mode`, optional `launch_params`); `stonk-pairs` is free and the
+   `is_agent_launchable` rule is `AGENT_LAUNCHABLE_CATEGORIES` in `src/entrypoints/stonk.ts`
+   (xstock/prestock/currency/solana/custom — adjust if Pair Router's allowed set differs).
+4. Optional follow-ups: `/stonk/token/{mint}/backing` + `/burns` reads; screener sort by
+   `flywheel`; per-payout USD pricing (needs a price history source) instead of current price.
 
 ## ▶️ RESUME HERE (2026-09-04) — TRACK A HYGIENE DONE · ERIS HARNESS v0.2 SHIPPED (own repo)
 

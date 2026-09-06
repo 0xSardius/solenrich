@@ -648,6 +648,49 @@ bazaar now, dual-network — 31 resources.)
 - **Dashboards.** No UI. Even a pretty one. Dilutes agent-native positioning.
 - **Enterprise sales motion.** Doesn't fit product. Let them come to us.
 
+### StonkFun product line (SHIPPED 2026-09-06) — quote-paired + reward-mode coins
+
+stonkfun.xyz launched on Solana 2026-09; coins are priced against a quote asset (xStocks, Backpack
+pre-stocks, currencies, custom mints) and ~69% launch in **reward mode**: a Token-2022 transfer tax
+(100/300 bps) paid to holders in the quote token. Built as a dependency for a separate hackathon
+product (working name Pair Router) that launches coins through StonkFun from ClawPump agents.
+Prompt: `solana-idea-exploration/docs/prompts/solenrich-stonkfun-x402-prompt.md`.
+
+**Endpoints (42 paid + 1 free):** `stonk-pairs` (FREE — `FREE_ENDPOINTS` in config, kept out of
+PRICING so x402/MPP never gate it), `stonk-reward-risk` $0.005, `stonk-yield` $0.005,
+`stonk-screener` $0.01, `stonk-launch-preflight` $0.25. All on the standard
+`POST /entrypoints/{key}/invoke` surface (the prompt's REST paths were mapped onto the repo
+convention). MCP: `stonk_pairs`, `stonk_reward_risk`, `stonk_yield`, `stonk_screener`,
+`stonk_preflight`.
+
+**Files:** `src/sources/stonkfun.ts` (API client, 429/Retry-After aware), `src/sources/token-2022.ts`
+(jsonParsed mint → transfer-fee config, no spl-token dep), `src/sources/launchlab.ts` (LaunchLab
+initialize codec: decoder for legacy/v0 txs + encoder for fixtures), `src/enrichers/stonk-index.ts`
+(10-min ingest + daily snapshot series persisted to Redis as `stonk:snap:{date}:{chunk}`),
+`stonk-reward-risk.ts`, `stonk-yield.ts`, `stonk-preflight.ts`, `src/entrypoints/stonk.ts`,
+`src/formatters/llm-stonk.ts`, `src/schemas/stonk.ts`. Tests: `test/stonk.test.ts` (37 fixture
+tests in CI; `STONK_LIVE=1` adds live smoke), fixtures in `test/fixtures/stonk/`.
+
+**Facts measured 2026-09-06 (design drivers):**
+- `/tokens` pageSize caps at **100** → ~64 pages per ingest; `/rewards?limit=10000` returns the
+  whole ledger (4,719 coins, 1.4MB, ~9s) in one call. Ingest ≈ 65 upstream calls / 10 min.
+- `/rewards.recentDistributions` is capped at the **last 100 payouts (~1 minute)** — no history →
+  trailing 7d/30d yields need our own daily snapshots. Windows report `actual_days` + `caution`
+  until the series covers them; under 1h of history returns null, not 0%.
+- On-chain: adopted reward mints carry `withdrawWithheldAuthority = 5KXDF6Qn…K6tD` (StonkFun's
+  distributor, also published in `/launchlab/pricing modes.reward`). That equality is the
+  adoption check. API-launched mints (launchpad `raydium`) are 9-decimal with an immutable fee;
+  self-built LaunchLab mints are 6-decimal with `maximumFee = supply` and a **mutable** fee
+  authority (`WLHv2…` = a third-party launcher) → `fee_mutable` warning.
+- Reward launches before ~2026-08-13 are classic SPL (no tax) → `reward_mechanism:
+  legacy_fee_share`, scored on the distribution record instead of BROKEN.
+- Preflight catches the misspelled Raydium fields two ways: at the byte level (a dropped key
+  serializes as Option=None / 0 bps / 0 cap → mismatch with a fix naming `transferFeeBasePoints` /
+  `maxinumFee`) and via the optional `launch_params` object lint (literal key check).
+- `buildExampleLaunchTransaction()` in `launchlab.ts` is the deterministic correct reward launch
+  (SPYX) used as the bazaar input example, the SolScout stress fixture, and the endpoint test.
+  Only `totalFundRaisingB` drifts with price (±2% warn / ±10% mismatch).
+
 ## Post-Launch Upgrade Roadmap
 
 ### Quick Wins

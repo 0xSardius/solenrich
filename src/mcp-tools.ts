@@ -596,6 +596,79 @@ export const MCP_TOOLS: McpToolDef[] = [
       format: 'llm',
     }),
   },
+  // --- StonkFun product line (quote-paired + reward-mode coins) ---
+  {
+    name: 'stonk_pairs',
+    title: 'StonkFun Launchable Pairs (free)',
+    description: 'FREE. List the quote assets a StonkFun (stonkfun.xyz) coin can be launched against — xStocks like NVDAX/SPYX/TSLAX, Backpack pre-stocks, currencies, custom mints — with normalized categories and an is_agent_launchable flag. Call this BEFORE sizing or preflighting a launch: the quoteMint must be one of these, and only launchLabReady pairs can be built on-chain.',
+    inputSchema: {
+      category: z.enum(['xstock', 'prestock', 'currency', 'leverage', 'solana', 'collectible', 'custom']).optional().describe('Normalized category filter'),
+      launchable_only: z.boolean().default(false).describe('Only pairs an agent can launch against right now'),
+    },
+    handler: async (args) => invoke('stonk-pairs', {
+      ...(args.category ? { category: args.category } : {}),
+      launchable_only: args.launchable_only ?? false,
+      format: 'llm',
+    }),
+  },
+  {
+    name: 'stonk_reward_risk',
+    title: 'StonkFun Reward-Coin Risk',
+    description: 'Call BEFORE buying a StonkFun reward-mode coin for its holder yield. Scores 0-100 whether the transfer tax actually reaches holders, read from the chain: Token-2022 fee bps + cap, withdraw authority (must be StonkFun\'s distributor), fee mutability, zero-rate or unadopted mint, distributions to date + last payout, flywheel, holders + top-10 concentration, quote category, age, graduation. Zero-rate or unadopted coins score under 20 with a plain reason.',
+    inputSchema: {
+      mint: z.string().describe('StonkFun coin mint address (base58)'),
+    },
+    handler: async (args) => invoke('stonk-reward-risk', { mint: args.mint, format: 'llm' }),
+  },
+  {
+    name: 'stonk_yield',
+    title: 'StonkFun Holder Yield',
+    description: 'Trailing 7d / 30d / lifetime holder yield for a StonkFun reward coin: rewards paid in the quote asset, priced in USD, divided by average market cap over the window. The annualized figure carries an explicit caution flag when the window is under 7 days. Also explains quote exposure — the holder is long both the coin and its quote asset (e.g. NVDAX), and rewards accrue in that asset. Use when asked "what does this coin pay holders?"',
+    inputSchema: {
+      mint: z.string().describe('StonkFun reward coin mint address (base58)'),
+    },
+    handler: async (args) => invoke('stonk-yield', { mint: args.mint, format: 'llm' }),
+  },
+  {
+    name: 'stonk_screener',
+    title: 'StonkFun Reward-Coin Screener',
+    description: 'Rank every StonkFun reward coin by trailing yield, rewards paid, or volume, with filters for quote mint, category, minimum holders, and minimum age. Use for questions like "which coins pay holders in NVDAX?" or "best-yielding xStock-paired coins this week". Served from a 10-minute ingest, so it answers fast. Follow up with stonk_reward_risk on any candidate.',
+    inputSchema: {
+      quote_mint: z.string().optional().describe('Only coins paired against this quote mint'),
+      category: z.enum(['xstock', 'prestock', 'currency', 'leverage', 'solana', 'collectible', 'custom']).optional().describe('Quote category filter'),
+      min_holders: z.number().int().min(0).optional().describe('Minimum reward-receiving holders'),
+      min_age_days: z.number().min(0).optional().describe('Minimum coin age in days'),
+      sort: z.enum(['yield7d', 'yield30d', 'rewardsUsd', 'volume24h']).default('rewardsUsd').describe('Ranking key'),
+      limit: z.number().int().min(1).max(100).default(25).describe('Rows to return'),
+    },
+    handler: async (args) => invoke('stonk-screener', {
+      ...(args.quote_mint ? { quote_mint: args.quote_mint } : {}),
+      ...(args.category ? { category: args.category } : {}),
+      ...(args.min_holders != null ? { min_holders: args.min_holders } : {}),
+      ...(args.min_age_days != null ? { min_age_days: args.min_age_days } : {}),
+      sort: args.sort ?? 'rewardsUsd',
+      limit: args.limit ?? 25,
+      format: 'llm',
+    }),
+  },
+  {
+    name: 'stonk_preflight',
+    title: 'StonkFun Launch Preflight',
+    description: 'Call BEFORE broadcasting a self-built Raydium LaunchLab launch meant for StonkFun. Pass the base64 unsigned transaction, the quote mint, and the mode; it decodes the initialize instruction and diffs every parameter against StonkFun\'s /launchlab/pricing — GlobalConfig, platform id per mode, curve, supply, totalSellA, raise, 6-decimal Token-2022 base mint, quote token program, curve-rule account last, and the reward-mode transfer fee (including Raydium\'s transferFeeBasePoints / maxinumFee spelling). Returns ok, mismatches with fixes, warnings. A mismatched pool is never adopted: the tax goes to nobody.',
+    inputSchema: {
+      unsigned_transaction: z.string().describe('Base64 unsigned transaction (legacy or v0) with the LaunchLab initialize instruction'),
+      quote_mint: z.string().describe('Quote mint the launch is priced against'),
+      mode: z.enum(['standard', 'reward']).describe('Launch mode'),
+      launch_params: z.record(z.string(), z.unknown()).optional().describe('Optional: the params object you passed to the SDK, linted for misspelled fee fields'),
+    },
+    handler: async (args) => invoke('stonk-launch-preflight', {
+      unsigned_transaction: args.unsigned_transaction,
+      quote_mint: args.quote_mint,
+      mode: args.mode,
+      ...(args.launch_params ? { launch_params: args.launch_params } : {}),
+      format: 'llm',
+    }),
+  },
 ];
 
 export function createSolEnrichMcpServer(): McpServer {

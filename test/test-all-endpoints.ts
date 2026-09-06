@@ -335,6 +335,59 @@ check('has llm_summary', typeof ex.body?.output?.llm_summary === 'string' && ex.
 console.log(`  ⏱ ${ex.ms}ms\n`);
 
 // ============================================================
+// 20. StonkFun product line
+// ============================================================
+import { buildExampleLaunchTransaction, EXAMPLE_LAUNCH } from '../src/sources/launchlab';
+const STONK_MINT = 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR'; // ZCAT (reward, ZEC quote)
+
+console.log('━━━ 20a. stonk-pairs (free) ━━━');
+const sp = await invoke('stonk-pairs', { launchable_only: true, format: 'both' }, 30000);
+check('returns 200', sp.status === 200, `got ${sp.status}`);
+check('has pairs array', Array.isArray(sp.body?.output?.pairs) && sp.body.output.pairs.length > 0);
+check('all rows agent-launchable', (sp.body?.output?.pairs ?? []).every((p: any) => p.is_agent_launchable === true));
+check('has by_category', sp.body?.output?.by_category != null);
+check('has llm_summary', typeof sp.body?.output?.llm_summary === 'string' && sp.body.output.llm_summary.includes('Pairs'));
+console.log(`  ⏱ ${sp.ms}ms\n`);
+
+console.log('━━━ 20b. stonk-reward-risk ━━━');
+const sr = await invoke('stonk-reward-risk', { mint: STONK_MINT, format: 'both' }, 45000);
+check('returns 200', sr.status === 200, `got ${sr.status}`);
+check('score 0-100', sr.body?.output?.score >= 0 && sr.body?.output?.score <= 100, `score=${sr.body?.output?.score}`);
+check('listed + withdraw authority is stonkfun', sr.body?.output?.adoption?.listed_on_stonkfun === true && sr.body?.output?.adoption?.withdraw_authority_is_stonkfun === true);
+check('not BROKEN', sr.body?.output?.level !== 'BROKEN', `level=${sr.body?.output?.level}`);
+check('has llm_brief', typeof sr.body?.output?.llm_brief === 'string');
+console.log(`  ⏱ ${sr.ms}ms\n`);
+
+console.log('━━━ 20c. stonk-yield ━━━');
+const sy = await invoke('stonk-yield', { mint: STONK_MINT, format: 'both' }, 45000);
+check('returns 200', sy.status === 200, `got ${sy.status}`);
+check('lifetime yield computed', typeof sy.body?.output?.lifetime?.yield_pct === 'number', `lifetime=${sy.body?.output?.lifetime?.yield_pct}`);
+check('windows carry caution flags', typeof sy.body?.output?.trailing_7d?.caution === 'boolean' && typeof sy.body?.output?.trailing_30d?.caution === 'boolean');
+check('quote exposure', sy.body?.output?.quote_exposure?.long?.length === 2);
+check('has llm_summary', typeof sy.body?.output?.llm_summary === 'string' && sy.body.output.llm_summary.includes('Holder Yield'));
+console.log(`  ⏱ ${sy.ms}ms\n`);
+
+console.log('━━━ 20d. stonk-screener ━━━');
+const ss = await invoke('stonk-screener', { sort: 'volume24h', limit: 5, format: 'both' }, 30000);
+check('returns 200', ss.status === 200, `got ${ss.status}`);
+check('has rows + index status', Array.isArray(ss.body?.output?.rows) && typeof ss.body?.output?.index?.rows === 'number', `rows=${ss.body?.output?.rows?.length} index=${ss.body?.output?.index?.rows}`);
+check('rows ≤ limit', (ss.body?.output?.rows?.length ?? 0) <= 5);
+check('fast from cache', ss.ms < 1500, `${ss.ms}ms`);
+check('has llm_summary', typeof ss.body?.output?.llm_summary === 'string' && ss.body.output.llm_summary.includes('Screener'));
+console.log(`  ⏱ ${ss.ms}ms\n`);
+
+console.log('━━━ 20e. stonk-launch-preflight ━━━');
+const okTx = buildExampleLaunchTransaction();
+const pf = await invoke('stonk-launch-preflight', { unsigned_transaction: okTx, quote_mint: EXAMPLE_LAUNCH.quoteMint, mode: 'reward', format: 'both' }, 30000);
+check('returns 200', pf.status === 200, `got ${pf.status}`);
+check('reference launch passes', pf.body?.output?.ok === true, JSON.stringify(pf.body?.output?.mismatches));
+const badTx = buildExampleLaunchTransaction({ transferFee: { present: true, transferFeeBasePoints: 0, maxinumFee: '0' } }, []);
+const pf2 = await invoke('stonk-launch-preflight', { unsigned_transaction: badTx, quote_mint: EXAMPLE_LAUNCH.quoteMint, mode: 'reward', launch_params: { transferFeeExtensionParams: { transferFeeBasisPoints: 300, maximumFee: '1000000000000000' } }, format: 'json' }, 30000);
+check('zero-rate + missing curve rule + misspelled fields rejected', pf2.body?.output?.ok === false && (pf2.body?.output?.mismatches?.length ?? 0) >= 3, `mismatches=${pf2.body?.output?.mismatches?.map((m: any) => m.field).join(',')}`);
+check('names the misspelled field', (pf2.body?.output?.mismatches ?? []).some((m: any) => m.actual === 'maximumFee' && m.expected === 'maxinumFee'));
+console.log(`  ⏱ ${pf.ms}ms / ${pf2.ms}ms\n`);
+
+// ============================================================
 // Summary
 // ============================================================
 console.log('═══════════════════════════════════════════════════');
