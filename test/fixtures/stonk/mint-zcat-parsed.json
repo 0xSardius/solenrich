@@ -1,0 +1,41 @@
+{
+ "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+ "space": 516,
+ "parsed": {
+  "type": "mint",
+  "info": {
+   "decimals": 9,
+   "supply": "969073021629889998",
+   "mintAuthority": null,
+   "freezeAuthority": null,
+   "isInitialized": true,
+   "extensions": [
+    {
+     "extension": "transferFeeConfig",
+     "state": {
+      "newerTransferFee": {
+       "epoch": 1025,
+       "maximumFee": 1000000000000000000,
+       "transferFeeBasisPoints": 300
+      },
+      "olderTransferFee": {
+       "epoch": 1025,
+       "maximumFee": 1000000000000000000,
+       "transferFeeBasisPoints": 300
+      },
+      "transferFeeConfigAuthority": null,
+      "withdrawWithheldAuthority": "5KXDF6QnqhBj72hDtJNkkpFaQVUfbFXNybMsp3DiK6tD",
+      "withheldAmount": 1910395011756
+     }
+    },
+    {
+     "extension": "metadataPointer",
+     "state": {
+      "authority": null,
+      "metadataAddress": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR"
+     }
+    }
+   ]
+  }
+ }
+}

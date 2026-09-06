@@ -1,0 +1,23 @@
+{
+ "data": {
+  "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+  "mode": "reward",
+  "quote": {
+   "mint": "A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+   "symbol": "ZEC",
+   "decimals": 8
+  },
+  "rewards": {
+   "distributedRaw": "144690050624",
+   "distributedTokens": 1446.90050624,
+   "undistributedRaw": "3326",
+   "undistributedTokens": 3.326e-05,
+   "payoutCount": 300226,
+   "holderCount": 12580,
+   "lastPayoutAt": "2026-09-06T10:43:29.035Z"
+  }
+ },
+ "meta": {
+  "generatedAt": "2026-09-06T11:42:34.784Z"
+ }
+}

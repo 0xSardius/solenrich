@@ -1,0 +1,34 @@
+{
+ "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+ "space": 501,
+ "parsed": {
+  "type": "mint",
+  "info": {
+   "decimals": 6,
+   "supply": "1000000000000000",
+   "mintAuthority": null,
+   "freezeAuthority": null,
+   "isInitialized": true,
+   "extensions": [
+    {
+     "extension": "transferFeeConfig",
+     "state": {
+      "newerTransferFee": {
+       "epoch": 1029,
+       "maximumFee": 1000000000000000,
+       "transferFeeBasisPoints": 100
+      },
+      "olderTransferFee": {
+       "epoch": 1029,
+       "maximumFee": 1000000000000000,
+       "transferFeeBasisPoints": 100
+      },
+      "transferFeeConfigAuthority": "WLHv2UAZm6z4KyaaELi5pjdbJh6RESMva1Rnn8pJVVh",
+      "withdrawWithheldAuthority": "5KXDF6QnqhBj72hDtJNkkpFaQVUfbFXNybMsp3DiK6tD",
+      "withheldAmount": 0
+     }
+    }
+   ]
+  }
+ }
+}

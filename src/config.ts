@@ -73,7 +73,15 @@ export const PRICING = {
   'portfolio-history': '0.006',
   'check-alerts': '0.008',
   'gacha-ev-scan': '0.02',
+  // StonkFun product line (quote-paired + reward-mode coins). stonk-pairs is free (FREE_ENDPOINTS).
+  'stonk-reward-risk': '0.005',
+  'stonk-yield': '0.005',
+  'stonk-screener': '0.01',
+  'stonk-launch-preflight': '0.25',
 } as const;
+
+/** Entrypoints served without a paywall. Kept out of PRICING so x402/MPP never gate them. */
+export const FREE_ENDPOINTS = ['stonk-pairs'] as const;
 
 /** Cache TTL in seconds per data type */
 export const CACHE_TTL = {
@@ -103,4 +111,9 @@ export const CACHE_TTL = {
   exitSignal: 60,        // sell-side verdict — a stale exit call is a wrong one
   feedLatest: 86_400,    // 24 hours — daily intelligence brief, lazy-populated
   gacha: 60,             // 1 minute — pack EV/stock drift as packs are opened
+  stonkPairs: 300,       // 5 minutes — quote-pair catalog changes rarely
+  stonkToken: 60,        // 1 minute — token record + reward totals
+  stonkPricing: 60,      // 1 minute — LaunchLab curve constants (raise drifts with price)
+  stonkRewardRisk: 120,  // 2 minutes — on-chain fee config + rewards read
+  stonkYield: 300,       // 5 minutes — window math over daily snapshots
 } as const;

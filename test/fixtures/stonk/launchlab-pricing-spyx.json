@@ -1,0 +1,77 @@
+{
+ "data": {
+  "quote": {
+   "mint": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
+   "symbol": "SPYX",
+   "decimals": 8,
+   "tokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+  },
+  "raise": {
+   "raw": "1164789044",
+   "units": 11.64789044,
+   "minimumRaw": "1",
+   "basis": "Sized so this launch is worth the same as the default 85 SOL raise."
+  },
+  "marketCap": {
+   "startUsd": 2974.6157380704585,
+   "graduationUsd": 43708.48874753674,
+   "startQuote": 3.831350350410847,
+   "graduationQuote": 56.297198840019334,
+   "graduationMultiple": 14.693826899433098
+  },
+  "prices": {
+   "solUsd": 106.39160379319578,
+   "quoteUsd": 776.3883398842609,
+   "observedAt": "2026-09-06T11:42:38.812Z"
+  },
+  "curve": {
+   "programId": "LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj",
+   "configId": "B7ctMMdGvy46Am56myTtzfkNzt9kWZVTNGM2BWrJ9adg",
+   "curveType": "ConstantCurve",
+   "migrateType": "cpmm",
+   "baseDecimals": 6,
+   "supply": "1000000000000000",
+   "totalSellA": "793100000000000",
+   "totalSupplyTokens": 1000000000,
+   "vesting": {
+    "totalLockedAmount": "0",
+    "cliffPeriod": "0",
+    "unlockPeriod": "0"
+   },
+   "cpmmCreatorFeeOn": 0,
+   "migrateFeeRaw": "0",
+   "derived": {
+    "virtualA": "1073025605595988",
+    "virtualB": "411113703"
+   }
+  },
+  "platform": {
+   "standard": "4E876qZTE9FJMrBzgVtBrSrzz2TLivB5Y5QXPjB4gZL7",
+   "reward": "6BwHHDg3u1854jC8PDLXvR4spTcLNaoBxLJNGC4nTESt"
+  },
+  "curveRule": {
+   "standard": "QYZp1YzqEHU67ngXphF9LAkxkxWGvpWEv3rXh4yDbWA",
+   "reward": "7MNLMFMmFVhN9Z3sj51QZso28oD2Ta3zDPwNAmfrs2vk",
+   "derivation": "[\"platform_curve_rule\", platform_config, global_config] on the LaunchLab program",
+   "note": "Append the address for your chosen platform as the LAST account of the initialize instruction, read-only. Required once the platform enforces its launch shape; harmless before."
+  },
+  "modes": {
+   "standard": {
+    "transferFee": null,
+    "note": "Omit the transfer-fee extension entirely; the mint provably carries none."
+   },
+   "reward": {
+    "transferFeeBps": [
+     100,
+     300
+    ],
+    "baseTokenProgram": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+    "withdrawWithheldAuthority": "5KXDF6QnqhBj72hDtJNkkpFaQVUfbFXNybMsp3DiK6tD",
+    "note": "Raydium assigns the platform transferFeeExtensionAuth as the withdraw authority at creation; holder rewards are collected and distributed from it."
+   }
+  }
+ },
+ "meta": {
+  "generatedAt": "2026-09-06T11:42:38.825Z"
+ }
+}

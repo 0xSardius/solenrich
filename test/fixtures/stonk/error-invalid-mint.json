@@ -1,0 +1,6 @@
+{
+ "error": {
+  "code": "invalid_request",
+  "message": "The mint must be a base58 Solana address."
+ }
+}

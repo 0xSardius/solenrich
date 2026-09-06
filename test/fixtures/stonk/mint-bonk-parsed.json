@@ -1,0 +1,14 @@
+{
+ "owner": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+ "space": 82,
+ "parsed": {
+  "type": "mint",
+  "info": {
+   "decimals": 5,
+   "supply": "8799453422121328716",
+   "mintAuthority": null,
+   "freezeAuthority": null,
+   "isInitialized": true
+  }
+ }
+}

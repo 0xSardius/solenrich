@@ -1,0 +1,66 @@
+{
+ "data": {
+  "token": {
+   "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+   "pool": "BTccxxTFi7a9xJTE1exKn38Jgie35s6gNeRxd8DM61Rc",
+   "name": "Anonymous Cat",
+   "symbol": "ZCAT",
+   "quote": {
+    "mint": "A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+    "symbol": "ZEC",
+    "name": "Zcash",
+    "logoUrl": "https://arweave.net/QSYqnmB7NYlB7n1R6rz935Y07dlRK0tIuKe2mof5Sho",
+    "category": "custom",
+    "categoryLabel": "Custom"
+   },
+   "launchpad": "raydium",
+   "mode": "reward",
+   "quoteOnlyFees": true,
+   "transferFee": {
+    "bps": 300
+   },
+   "flywheel": {
+    "active": true
+   },
+   "imageUrl": "https://gateway.irys.xyz/7uFsXwyuyzKDiqdda4L2cq3DcpcdRqYhwe4m8ZoVJ1BQ",
+   "metadataUri": "https://gateway.irys.xyz/GNy6d9dhhEuxFBqKb8Egm5beiRML4fDUS6zuKQuTs7Ys",
+   "links": {},
+   "market": {
+    "priceUsd": 0.08820739172611378,
+    "marketCapUsd": 85479403.63011643,
+    "fdvUsd": 85479403.63011643,
+    "volume24hUsd": 19512885.92913395,
+    "priceChange24h": 275.4005046335672,
+    "peakMarketCapUsd": 107962024.31195864
+   },
+   "status": "graduated",
+   "graduationProgress": 1,
+   "graduatedAt": "2026-08-30T23:59:36.276Z",
+   "createdAt": "2026-08-30T23:30:26.185Z"
+  },
+  "launch": {
+   "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+   "pool": "BTccxxTFi7a9xJTE1exKn38Jgie35s6gNeRxd8DM61Rc",
+   "name": "Anonymous Cat",
+   "symbol": "ZCAT",
+   "creator": "7gAKiGycmoSKtKWwVeSwqWxfmf9qVUtiyXKi6amTRTM6",
+   "quote": {
+    "mint": "A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+    "symbol": "ZEC"
+   },
+   "launchpad": "raydium",
+   "mode": "reward",
+   "transferFee": {
+    "bps": 300
+   },
+   "logoUrl": "https://gateway.irys.xyz/7uFsXwyuyzKDiqdda4L2cq3DcpcdRqYhwe4m8ZoVJ1BQ",
+   "startMarketCapUsd": 5093.020873884586,
+   "targetMarketCapUsd": 5000,
+   "createdAt": "2026-08-30T23:29:57.301Z"
+  },
+  "network": "mainnet-beta"
+ },
+ "meta": {
+  "generatedAt": "2026-09-06T11:42:33.766Z"
+ }
+}

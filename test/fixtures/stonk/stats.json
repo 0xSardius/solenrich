@@ -1,0 +1,35 @@
+{
+ "data": {
+  "network": "mainnet-beta",
+  "tokens": {
+   "poolsAvailable": true,
+   "total": 9041,
+   "graduated": 713,
+   "aboutToGraduate": 35,
+   "rewardLaunches": 6316,
+   "totalMarketCapUsd": 317362003.6076936,
+   "totalVolume24hUsd": 78156625.66531399
+  },
+  "revenue": {
+   "totalRevenueUsd": 2264051.4742819527,
+   "totalBuybackUsd": 1330709.6586918938
+  },
+  "burns": {
+   "totalValueUsdAtBurn": 1598009.661505465,
+   "burnCount": 27348
+  },
+  "config": {
+   "graduationMarketCapUsd": 40000,
+   "aboutToGraduateMarketCapUsd": 32000,
+   "rewardLaunchesEnabled": true,
+   "pumpLaunchesEnabled": false,
+   "apiLaunchesEnabled": true,
+   "devBuysEnabled": true,
+   "paidLaunchesEnabled": true,
+   "launchLabEnabled": true
+  }
+ },
+ "meta": {
+  "generatedAt": "2026-09-06T11:41:11.911Z"
+ }
+}

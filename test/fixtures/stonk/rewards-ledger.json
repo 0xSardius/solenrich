@@ -1,0 +1,576 @@
+{
+ "data": {
+  "launches": [
+   {
+    "mint": "GMQ4REe8swuRWwKVL15CRV4exocsF3FMu1qekoGVXfvu",
+    "quote": {
+     "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+     "symbol": "Bonk",
+     "decimals": 5
+    },
+    "distributedRaw": "31684833017713",
+    "distributedTokens": 316848330.17713,
+    "payoutCount": 144,
+    "holderCount": 62,
+    "lastPayoutAt": "2026-08-15T12:33:05.539Z"
+   },
+   {
+    "mint": "4P6Bu848LrP2dqrvSDEjH5u7t72g4n9kHHmDZjHqHn5e",
+    "quote": {
+     "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+     "symbol": "Bonk",
+     "decimals": 5
+    },
+    "distributedRaw": "22467117220474",
+    "distributedTokens": 224671172.20474,
+    "payoutCount": 59,
+    "holderCount": 59,
+    "lastPayoutAt": "2026-09-06T06:10:55.975Z"
+   },
+   {
+    "mint": "7KYMTHP2PPKKsxNsktHrtsmRdCytqPFk455PEinUUcZy",
+    "quote": {
+     "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+     "symbol": "Bonk",
+     "decimals": 5
+    },
+    "distributedRaw": "22205178280525",
+    "distributedTokens": 222051782.80525,
+    "payoutCount": 150,
+    "holderCount": 62,
+    "lastPayoutAt": "2026-08-16T15:38:21.469Z"
+   },
+   {
+    "mint": "FBMTAev5gVEWoCwknPjf63YDTSrxUNW4K7NoU56yey9Z",
+    "quote": {
+     "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+     "symbol": "Bonk",
+     "decimals": 5
+    },
+    "distributedRaw": "18252976021986",
+    "distributedTokens": 182529760.21986,
+    "payoutCount": 27,
+    "holderCount": 23,
+    "lastPayoutAt": "2026-08-21T07:22:33.103Z"
+   },
+   {
+    "mint": "247uuP9jhGJAFkrj6boGHYLWuGsb9knUF2u3eAC7n4MV",
+    "quote": {
+     "mint": "AjdE84dGqhbqDYhh8Pm8oCRMCTpUGQ4oDaRBF5vwpump",
+     "symbol": "GPRO",
+     "decimals": 6
+    },
+    "distributedRaw": "179230313182830",
+    "distributedTokens": 179230313.18283,
+    "payoutCount": 99,
+    "holderCount": 89,
+    "lastPayoutAt": "2026-09-01T14:50:36.820Z"
+   },
+   {
+    "mint": "DBfepZW9pfJga5t8fg7uUNXcY8cybF2FXEZaiBhTeQKe",
+    "quote": {
+     "mint": "CAKRPCtdgRfQWjTCX1TnBbSfCeQXrH7RLWdpvhKpump",
+     "symbol": "UOTF",
+     "decimals": 6
+    },
+    "distributedRaw": "136277615756864",
+    "distributedTokens": 136277615.756864,
+    "payoutCount": 33,
+    "holderCount": 26,
+    "lastPayoutAt": "2026-08-17T19:18:45.074Z"
+   },
+   {
+    "mint": "2TLk4dc6xqz1CbDVzSPct4fsefRNstwptmBKeyV51sPf",
+    "quote": {
+     "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+     "symbol": "Bonk",
+     "decimals": 5
+    },
+    "distributedRaw": "8972804355405",
+    "distributedTokens": 89728043.55405,
+    "payoutCount": 16,
+    "holderCount": 13,
+    "lastPayoutAt": "2026-08-05T23:02:21.919Z"
+   },
+   {
+    "mint": "AXB26SiCnsqfKmKDuSEe8PhGQBg6kiESwMs3fFj3y36x",
+    "quote": {
+     "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+     "symbol": "Bonk",
+     "decimals": 5
+    },
+    "distributedRaw": "5720213498683",
+    "distributedTokens": 57202134.98683,
+    "payoutCount": 4,
+    "holderCount": 4,
+    "lastPayoutAt": "2026-08-14T11:49:11.508Z"
+   },
+   {
+    "mint": "BQHyS1P2VKR8hyTMtdRqXnFiPdtdA7rM6eGniBCw9grC",
+    "quote": {
+     "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+     "symbol": "Bonk",
+     "decimals": 5
+    },
+    "distributedRaw": "4704759059484",
+    "distributedTokens": 47047590.59484,
+    "payoutCount": 8,
+    "holderCount": 7,
+    "lastPayoutAt": "2026-08-11T21:49:43.271Z"
+   },
+   {
+    "mint": "63eJ5mwqwNbGPNMjRV6CubB8qbQ1PvsRsdmnFz75Pd7T",
+    "quote": {
+     "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+     "symbol": "Bonk",
+     "decimals": 5
+    },
+    "distributedRaw": "4607253652693",
+    "distributedTokens": 46072536.52693,
+    "payoutCount": 51,
+    "holderCount": 51,
+    "lastPayoutAt": "2026-08-17T23:24:55.616Z"
+   },
+   {
+    "mint": "FeDrozMMWvy1MjV7Y5pcgssxiN42TR1fV3GqYmohqA6W",
+    "quote": {
+     "mint": "7hGgx1VtNTj193fFXXuMEkp1MRV6JbWYgMBhHRYxaxu2",
+     "symbol": "FRIES",
+     "decimals": 9
+    },
+    "distributedRaw": "37934546597418673",
+    "distributedTokens": 37934546.59741867,
+    "payoutCount": 12798,
+    "holderCount": 1035,
+    "lastPayoutAt": "2026-09-06T09:20:01.510Z"
+   },
+   {
+    "mint": "ALDatuqH9M21M6cB435drUaH4DfGwzqKea5eKDJTkhKn",
+    "quote": {
+     "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+     "symbol": "Bonk",
+     "decimals": 5
+    },
+    "distributedRaw": "3595005359126",
+    "distributedTokens": 35950053.59126,
+    "payoutCount": 51,
+    "holderCount": 51,
+    "lastPayoutAt": "2026-08-17T22:04:35.872Z"
+   },
+   {
+    "mint": "7y5RFCQTjRGEuwCo4hNpy5dKgWnWFnicMuJR8Rr2CTvU",
+    "quote": {
+     "mint": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
+     "symbol": "PUMP",
+     "decimals": 6
+    },
+    "distributedRaw": "31074905295720",
+    "distributedTokens": 31074905.29572,
+    "payoutCount": 28629,
+    "holderCount": 2063,
+    "lastPayoutAt": "2026-09-06T11:33:43.443Z"
+   },
+   {
+    "mint": "6zq6xap2Y4fDqKStCJiNhmuwdVSxDNNgq7o7XFJusk4w",
+    "quote": {
+     "mint": "3HDSWzJLkJ2APzmboz3bNefqZPZ835rXbrDftmptpump",
+     "symbol": "CATE",
+     "decimals": 6
+    },
+    "distributedRaw": "30284937716145",
+    "distributedTokens": 30284937.716145,
+    "payoutCount": 1,
+    "holderCount": 1,
+    "lastPayoutAt": "2026-08-15T02:28:51.496Z"
+   },
+   {
+    "mint": "8cYm8T5ZKqYnNRXYjW3GQHFzv3qETpJEHZLqs661zBke",
+    "quote": {
+     "mint": "EkgbQHYmZ4Az4Ek8dwnqA2NGeqfakktmoENwJh7FvY6h",
+     "symbol": "ROCK",
+     "decimals": 6
+    },
+    "distributedRaw": "29783089548574",
+    "distributedTokens": 29783089.548574,
+    "payoutCount": 27,
+    "holderCount": 27,
+    "lastPayoutAt": "2026-08-10T17:32:42.035Z"
+   },
+   {
+    "mint": "6HyWRm1ch6Td8uBBQLyywE72tdZCHv9bLLjk6QBHCJKX",
+    "quote": {
+     "mint": "3HDSWzJLkJ2APzmboz3bNefqZPZ835rXbrDftmptpump",
+     "symbol": "CATE",
+     "decimals": 6
+    },
+    "distributedRaw": "24459325530766",
+    "distributedTokens": 24459325.530766,
+    "payoutCount": 1,
+    "holderCount": 1,
+    "lastPayoutAt": "2026-08-15T02:52:06.813Z"
+   },
+   {
+    "mint": "DKpxH69PYufsBQHWQjPdSrubkRPugrN8RMiLqteoYDFw",
+    "quote": {
+     "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+     "symbol": "Bonk",
+     "decimals": 5
+    },
+    "distributedRaw": "2395842320270",
+    "distributedTokens": 23958423.2027,
+    "payoutCount": 1,
+    "holderCount": 1,
+    "lastPayoutAt": "2026-08-14T18:25:37.726Z"
+   },
+   {
+    "mint": "5eR626AGttRePYNehQoX7fPPW87WGtmYKSMMeaNW88vG",
+    "quote": {
+     "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+     "symbol": "Bonk",
+     "decimals": 5
+    },
+    "distributedRaw": "2371325887855",
+    "distributedTokens": 23713258.87855,
+    "payoutCount": 3,
+    "holderCount": 3,
+    "lastPayoutAt": "2026-08-14T15:37:21.227Z"
+   },
+   {
+    "mint": "EpngQfWmhxrgZdNUUajAHnbciP5ySoCmNEcrirB8TrTx",
+    "quote": {
+     "mint": "moJA7YR7ZfCsfAnjQwR94zjmn886ik9KchMjBnrpump",
+     "symbol": "Monero",
+     "decimals": 6
+    },
+    "distributedRaw": "22802483913743",
+    "distributedTokens": 22802483.913743,
+    "payoutCount": 18,
+    "holderCount": 13,
+    "lastPayoutAt": "2026-09-02T08:00:11.935Z"
+   },
+   {
+    "mint": "9CFhTN8wcjBwmwNv1qd9YjmAtYqE8FGnYVrWqsjfWvB2",
+    "quote": {
+     "mint": "5DQwhyBRkjSyEZDCRqsvfA1n8BnDcJAHpxy6EokQjcra",
+     "symbol": "MRNA",
+     "decimals": 6
+    },
+    "distributedRaw": "22425386528298",
+    "distributedTokens": 22425386.528298,
+    "payoutCount": 34,
+    "holderCount": 17,
+    "lastPayoutAt": "2026-08-19T20:46:09.938Z"
+   },
+   {
+    "mint": "3nT6MeKmg5TQ8xnd6YbtygwYDwtsuBAXWurD2e2fz6av",
+    "quote": {
+     "mint": "FXcRRoYiAhi12NjqrXVmseZfabFSkesuT9ru6Smupump",
+     "symbol": "NVIDIA",
+     "decimals": 6
+    },
+    "distributedRaw": "19858706238091",
+    "distributedTokens": 19858706.238091,
+    "payoutCount": 2,
+    "holderCount": 2,
+    "lastPayoutAt": "2026-08-17T12:55:29.287Z"
+   },
+   {
+    "mint": "JCFpACVSwE5pJJYDv3BGK9oz3NEShpBYoUjBA79uDUbg",
+    "quote": {
+     "mint": "5DQwhyBRkjSyEZDCRqsvfA1n8BnDcJAHpxy6EokQjcra",
+     "symbol": "MRNA",
+     "decimals": 6
+    },
+    "distributedRaw": "18101691688236",
+    "distributedTokens": 18101691.688236,
+    "payoutCount": 85,
+    "holderCount": 85,
+    "lastPayoutAt": "2026-09-01T22:50:21.291Z"
+   },
+   {
+    "mint": "5MmJmsKUxJRrm1uP2aU7xJM3NEEnoc2ChghfmHTGZGaV",
+    "quote": {
+     "mint": "EnA53NmMzfsAs7p44dATdvT55HHUACxpEbC9AKY3pump",
+     "symbol": "HTZ",
+     "decimals": 6
+    },
+    "distributedRaw": "16563424316876",
+    "distributedTokens": 16563424.316876,
+    "payoutCount": 731,
+    "holderCount": 548,
+    "lastPayoutAt": "2026-08-11T14:45:40.880Z"
+   },
+   {
+    "mint": "Hm5yXP479DcZ4h5UruUmvD6QgNym5j7dxjYmJh6BEmzj",
+    "quote": {
+     "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+     "symbol": "Bonk",
+     "decimals": 5
+    },
+    "distributedRaw": "1635326307887",
+    "distributedTokens": 16353263.07887,
+    "payoutCount": 6,
+    "holderCount": 6,
+    "lastPayoutAt": "2026-08-21T16:23:59.132Z"
+   },
+   {
+    "mint": "6WVHVds5WRqUMmGf8Athj32iHYjVbR2BEZwM5xj62qf8",
+    "quote": {
+     "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+     "symbol": "Bonk",
+     "decimals": 5
+    },
+    "distributedRaw": "1629093366116",
+    "distributedTokens": 16290933.66116,
+    "payoutCount": 7,
+    "holderCount": 7,
+    "lastPayoutAt": "2026-09-06T10:29:40.942Z"
+   },
+   {
+    "mint": "B34MMYFq6XEQ7NSEFMPhAbaT5FoXzcdJBBx67kWu7rbM",
+    "quote": {
+     "mint": "5DQwhyBRkjSyEZDCRqsvfA1n8BnDcJAHpxy6EokQjcra",
+     "symbol": "MRNA",
+     "decimals": 6
+    },
+    "distributedRaw": "15157617942403",
+    "distributedTokens": 15157617.942403,
+    "payoutCount": 37,
+    "holderCount": 26,
+    "lastPayoutAt": "2026-08-19T20:46:59.605Z"
+   },
+   {
+    "mint": "HoHJCRJFybNBMed52DCpen73yMzt5xrejFwGgVavMzvM",
+    "quote": {
+     "mint": "RNrjv3M2hBciaNyYTZD6xKRKivgoZJLQ9Hs9nd8pump",
+     "symbol": "AMC",
+     "decimals": 6
+    },
+    "distributedRaw": "14684894837724",
+    "distributedTokens": 14684894.837724,
+    "payoutCount": 1,
+    "holderCount": 1,
+    "lastPayoutAt": "2026-09-04T14:26:58.086Z"
+   },
+   {
+    "mint": "HjqRdvNg3cEbSHJRHhvXqEmLatf5w7SjsBPxPbt2C9KH",
+    "quote": {
+     "mint": "FfJ6PPxbDHJHbRWE2zXTRqKu2PhahpxXnhuKxiXEpump",
+     "symbol": "USCR",
+     "decimals": 6
+    },
+    "distributedRaw": "14228015318732",
+    "distributedTokens": 14228015.318732,
+    "payoutCount": 2,
+    "holderCount": 2,
+    "lastPayoutAt": "2026-08-27T15:33:18.052Z"
+   },
+   {
+    "mint": "Gue3KqdBAKAGmQv1Lc49axGWfGZVmvutaUWh6Dpn4tj4",
+    "quote": {
+     "mint": "AjdE84dGqhbqDYhh8Pm8oCRMCTpUGQ4oDaRBF5vwpump",
+     "symbol": "GPRO",
+     "decimals": 6
+    },
+    "distributedRaw": "12265352659382",
+    "distributedTokens": 12265352.659382,
+    "payoutCount": 26,
+    "holderCount": 21,
+    "lastPayoutAt": "2026-09-01T14:50:34.218Z"
+   },
+   {
+    "mint": "7ZvqpzrCXscUKWaVQBjDSvSKVXMWDxmWUtdirSXy1ubX",
+    "quote": {
+     "mint": "moJA7YR7ZfCsfAnjQwR94zjmn886ik9KchMjBnrpump",
+     "symbol": "Monero",
+     "decimals": 6
+    },
+    "distributedRaw": "12196453219511",
+    "distributedTokens": 12196453.219511,
+    "payoutCount": 1,
+    "holderCount": 1,
+    "lastPayoutAt": "2026-08-10T17:32:00.267Z"
+   },
+   {
+    "mint": "3gUwvCPXPQiGxZ7MTPJWy8gUF28fT4JaeUXmq9NYtgdw",
+    "quote": {
+     "mint": "AjdE84dGqhbqDYhh8Pm8oCRMCTpUGQ4oDaRBF5vwpump",
+     "symbol": "GPRO",
+     "decimals": 6
+    },
+    "distributedRaw": "11328963118535",
+    "distributedTokens": 11328963.118535,
+    "payoutCount": 1,
+    "holderCount": 1,
+    "lastPayoutAt": "2026-09-01T15:07:27.575Z"
+   },
+   {
+    "mint": "6v92nRt5t3XbxJhPYu51Efw1uVokGys43vo43hcV9W8F",
+    "quote": {
+     "mint": "7ssJZGFT3twGqeYA1kvpoMWwZYvMZvrMEbjRaWgg46BL",
+     "symbol": "BUTTHOLE",
+     "decimals": 9
+    },
+    "distributedRaw": "10926161422378844",
+    "distributedTokens": 10926161.422378844,
+    "payoutCount": 6866,
+    "holderCount": 577,
+    "lastPayoutAt": "2026-09-06T08:54:07.423Z"
+   },
+   {
+    "mint": "78NGJ1zE1fhBnEyP1QA6R5RrifWYsMqZXjoLC1L6otX2",
+    "quote": {
+     "mint": "3HDSWzJLkJ2APzmboz3bNefqZPZ835rXbrDftmptpump",
+     "symbol": "CATE",
+     "decimals": 6
+    },
+    "distributedRaw": "9670030591530",
+    "distributedTokens": 9670030.59153,
+    "payoutCount": 10,
+    "holderCount": 10,
+    "lastPayoutAt": "2026-08-21T03:20:28.956Z"
+   },
+   {
+    "mint": "2zcgjEptFV8crPbj5j2ZDHgxhKsQX5MHuKZQxUwNqtjE",
+    "quote": {
+     "mint": "BKXtSJWJk8s6DGEv71a3HohqHMhzn1iXLAzxMm6ZXjmy",
+     "symbol": "GPRO",
+     "decimals": 6
+    },
+    "distributedRaw": "8877888917598",
+    "distributedTokens": 8877888.917598,
+    "payoutCount": 6079,
+    "holderCount": 1557,
+    "lastPayoutAt": "2026-09-02T19:43:30.281Z"
+   },
+   {
+    "mint": "FHPLJ64EUGdKj5N1gWhVHkJNib8a6zPrNdL7N7NAKuJT",
+    "quote": {
+     "mint": "2zcgjEptFV8crPbj5j2ZDHgxhKsQX5MHuKZQxUwNqtjE",
+     "symbol": "GPRO",
+     "decimals": 9
+    },
+    "distributedRaw": "8038825344756530",
+    "distributedTokens": 8038825.34475653,
+    "payoutCount": 176,
+    "holderCount": 96,
+    "lastPayoutAt": "2026-09-01T15:39:14.832Z"
+   },
+   {
+    "mint": "DC6HP2A7SUy49WeazfeWgbwxVpzKdEPuB46mtb7XBzWx",
+    "quote": {
+     "mint": "6GmAFSYs4gk3FDao5FzzySQpPZaWsa4rUJHacpMpUNgx",
+     "symbol": "STONK",
+     "decimals": 9
+    },
+    "distributedRaw": "7214941711953228",
+    "distributedTokens": 7214941.711953228,
+    "payoutCount": 28912,
+    "holderCount": 1583,
+    "lastPayoutAt": "2026-09-06T09:42:24.559Z"
+   },
+   {
+    "mint": "Z4JGyoGqsyFmqU3mqyUHqZpdcs3nBBc8rEuDp61WQzG",
+    "quote": {
+     "mint": "7M9KJcPNC65ShLDmJmTNhVFcuY95Y1VMeYngKgt67D1t",
+     "symbol": "r/snoofi",
+     "decimals": 6
+    },
+    "distributedRaw": "6487348635472",
+    "distributedTokens": 6487348.635472,
+    "payoutCount": 9,
+    "holderCount": 6,
+    "lastPayoutAt": "2026-08-13T21:27:56.227Z"
+   },
+   {
+    "mint": "CChPSr42aCq9SEgpuuVN47siPfCqpmre5EYQW8nxkBgs",
+    "quote": {
+     "mint": "FhwV2wZicstWLnULi7dXZYaCRRv17AtQ9RcmJSngpump",
+     "symbol": "Stickman",
+     "decimals": 6
+    },
+    "distributedRaw": "6441203186401",
+    "distributedTokens": 6441203.186401,
+    "payoutCount": 1560,
+    "holderCount": 136,
+    "lastPayoutAt": "2026-09-06T08:27:47.185Z"
+   },
+   {
+    "mint": "HGxmdp4hEaq9YDCGx6qUYb6SKQoT4DhDNFJ7Ns86tizX",
+    "quote": {
+     "mint": "pumpCmXqMfrsAkQ5r49WcJnRayYRqmXz6ae8H7H9Dfn",
+     "symbol": "PUMP",
+     "decimals": 6
+    },
+    "distributedRaw": "5842998995797",
+    "distributedTokens": 5842998.995797,
+    "payoutCount": 12252,
+    "holderCount": 1011,
+    "lastPayoutAt": "2026-09-06T10:49:32.870Z"
+   },
+   {
+    "mint": "FTn54iqJH4Lhb1d7bcmxodHyK76Dw66CJPH2Pj4t5MzG",
+    "quote": {
+     "mint": "AjdE84dGqhbqDYhh8Pm8oCRMCTpUGQ4oDaRBF5vwpump",
+     "symbol": "GPRO",
+     "decimals": 6
+    },
+    "distributedRaw": "4957575948762",
+    "distributedTokens": 4957575.948762,
+    "payoutCount": 1,
+    "holderCount": 1,
+    "lastPayoutAt": "2026-09-01T15:26:58.914Z"
+   }
+  ],
+  "recentDistributions": [
+   {
+    "signature": "2217Kti3LMHpQdWw85D9GcKxNn9zS7FWgfnX4gb2BV6meph5Z5rJKRLhMUnfFQSZGx8b5ANaTcBJimskKrAnfNGF",
+    "mint": "2pouN3by7twkiZGy5aEKYUpf78ALDpKRTNu2WsQkpkqt",
+    "quoteMint": "taoC6xyv2v8tDLcev4uaGUgV4vdQsWJrGft2kcBRrBY",
+    "amountRaw": "54775939",
+    "amountTokens": 0.054775939,
+    "holderCount": 17,
+    "distributedAt": "2026-09-06T11:44:33.616Z"
+   },
+   {
+    "signature": "481XS13cDQzpkYVwqg64R88Uz34JDmUG9UKHJqeL6h3zpqzWuR9SoZp74mwHcueMmreZo2PojrjhwiepXVadyHF3",
+    "mint": "2pouN3by7twkiZGy5aEKYUpf78ALDpKRTNu2WsQkpkqt",
+    "quoteMint": "taoC6xyv2v8tDLcev4uaGUgV4vdQsWJrGft2kcBRrBY",
+    "amountRaw": "26180374",
+    "amountTokens": 0.026180374,
+    "holderCount": 9,
+    "distributedAt": "2026-09-06T11:44:33.613Z"
+   },
+   {
+    "signature": "5n6PgthKG8mjABphoaeLo3h2VA25ih2yKZ4bjJsDDRPB3vvfmKAHijmZS95BaR3tt43yMnoAXiniYRCvCvxoKCak",
+    "mint": "2pouN3by7twkiZGy5aEKYUpf78ALDpKRTNu2WsQkpkqt",
+    "quoteMint": "taoC6xyv2v8tDLcev4uaGUgV4vdQsWJrGft2kcBRrBY",
+    "amountRaw": "121840813",
+    "amountTokens": 0.121840813,
+    "holderCount": 20,
+    "distributedAt": "2026-09-06T11:44:32.991Z"
+   },
+   {
+    "signature": "4oEC4wV1YAKuYU5L9tujSfMrw7TkMCVPw3KX1X5QprwqNCmiJqjTrZSNvjcaiyULDzAkDjQ9Eb1PqVE52mMirgZR",
+    "mint": "2pouN3by7twkiZGy5aEKYUpf78ALDpKRTNu2WsQkpkqt",
+    "quoteMint": "taoC6xyv2v8tDLcev4uaGUgV4vdQsWJrGft2kcBRrBY",
+    "amountRaw": "229780901",
+    "amountTokens": 0.229780901,
+    "holderCount": 20,
+    "distributedAt": "2026-09-06T11:44:32.990Z"
+   },
+   {
+    "signature": "4TDKy2cEf42f6EjDKRjJB5TpQLftB7QhFdkzQHwuFb8vXyPGeNceu5bvuvEqfY2EvkM3UpgYfgCeTYA3i5MovvVK",
+    "mint": "2pouN3by7twkiZGy5aEKYUpf78ALDpKRTNu2WsQkpkqt",
+    "quoteMint": "taoC6xyv2v8tDLcev4uaGUgV4vdQsWJrGft2kcBRrBY",
+    "amountRaw": "152504631",
+    "amountTokens": 0.152504631,
+    "holderCount": 20,
+    "distributedAt": "2026-09-06T11:44:32.989Z"
+   }
+  ]
+ },
+ "meta": {
+  "generatedAt": "2026-09-06T11:45:26.845Z"
+ }
+}
