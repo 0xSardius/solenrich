@@ -26,9 +26,10 @@
 
 ### Next steps
 
-1. **Deploy + verify prod** (auto-deploys on push): boot log shows `[stonk-index] refreshed N`,
-   `stonk-pairs` returns 200 unpaid, the four paid ones 402, then a SolScout `--paid` seed run so
-   the CDP bazaar catalogs the four paid endpoints (preflight has a concrete input example).
+1. ~~Deploy + verify prod~~ **DONE 2026-09-06:** deployed `bf795db`; `stonk-pairs` 200 unpaid, four
+   paid ones 402; SolScout `--paid --only stonk-*` seed run **4/4 settled + passed** (reward-risk 9/9,
+   yield 7/7, screener 7/7 on the prod index, preflight 5/5; avg 1.7s). **Re-check the CDP bazaar
+   after ~15 min** for the four `stonk-*` rows (preflight carries a concrete input example).
 2. **Watch the ingest for 48h:** Railway RSS (index ≈ 6.3K rows + ≤31 daily points per active
    coin), Upstash command count (≈5 writes per refresh + boot reload), StonkFun 429s in logs.
    Yield windows become meaningful after 7 days of snapshots.
