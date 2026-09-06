@@ -42,10 +42,11 @@ function build402Body(url: URL) {
       facilitator: FACILITATOR,
       docs: 'https://www.x402.org/',
     },
+    // Every paid endpoint, `query` included. An earlier filter dropped `query`
+    // because it did not exist yet (2026-03-17); it shipped four days later and
+    // stayed hidden from the embedded catalog until an external report (2026-09-06).
     all_endpoints: Object.fromEntries(
-      Object.entries(PRICING)
-        .filter(([k]) => k !== 'query')
-        .map(([k, v]) => [k, `$${v} USDC`]),
+      Object.entries(PRICING).map(([k, v]) => [k, `$${v} USDC`]),
     ),
   };
 }
