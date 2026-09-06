@@ -3,6 +3,43 @@
 ## Last session date
 2026-09-06
 
+## ▶️ RESUME HERE (2026-09-06 PM) — STONKFUN PMF REFRAME: GEMS + LAUNCH INTEL + TAX-AWARE TRENCHES (44 paid + 1 free)
+
+### What was completed (2026-09-06 PM, commit `47f1424`)
+
+- **Tweet drafts pulled from the public repo.** The four `docs/outreach/stonkfun-launch-tweet.md`
+  commits were dropped from `main` (force-push) and the file now lives in gitignored
+  `local/outreach/`. Option D (plain language) and Option E (post-reframe copy) added there.
+- **Measured before building** (scratchpad one-off ingest, 8,000 reward coins): 45.5% traded in
+  24h, 12.7% paid holders in 24h, median holders 2, 13.6% of coins older than 3 days still trade,
+  ~1,000 launches/day. Quote choice dominates (ZEC 87% traded vs SPCXX 25%). 300 bps coins pay
+  2× as often as 100 bps; 100 bps trade more. Numbers recorded in CLAUDE.md "Facts measured".
+- **PMF reframe (Sardius):** sell find / cost / time a stonk trade + what to launch. Not rug audits.
+- **Shipped:** `stonk-gems` $0.03 (pure gem scorer, `src/enrichers/stonk-gems.ts`), `stonk-launch-intel`
+  $0.02 (per-quote stats + recommendations, `buildLaunchIntel()` pure), `stonk-reward-risk` leads with
+  `payout_status` + `trading_cost`, `stonk-screener` default sort `volume24h` + live/paying filters +
+  `round_trip_pct`. **Trenches suite tax-aware** via `TransferTaxReader` (token-analyzer,
+  runner-scan, trenches-check, exit-signal `net_pnl_after_exit_tax_pct`).
+- **Two hazards fixed:** (1) unit tests were writing fixture snapshots into production Redis —
+  `Cache` is memory-only under `bun test`; (2) new `ENDPOINT_META` descriptions exceeded CDP's
+  480-char limit (silent payment failure) — unit test caught it, trimmed.
+- **Verified:** tsc clean, unit 300/300, local smoke on all 7 touched endpoints (gems 57ms over
+  8,197 coins → 66 GEM / 199 WATCH / 67 NOISE of 332 live candidates; exit-signal ZCAT
+  +30.7% gross → +26.8% net of 300 bps sell tax).
+
+### Next steps
+
+1. **Prod verify (in flight at session end):** deploy of `47f1424` → `stonk-gems` + `stonk-launch-intel`
+   return 402; then `bun run agents/solscout/index.ts --target production --paid --mode stress --only
+   stonk-gems,stonk-launch-intel,stonk-screener,stonk-reward-risk` to seed the bazaar (no required
+   inputs on the two new ones → they catalog automatically). Re-check the CDP bazaar after ~15 min.
+2. **Watch gem quality:** the score weights are heuristic (see CLAUDE.md). Feed `stonk-gems` picks into
+   the Eris outcome sampler (+15m/+1h/+6h/+24h) to calibrate thresholds from the tape.
+3. **Yield endpoint:** no change until the snapshot series has 7 days (2026-09-13).
+4. **Optional:** stock-market-hours context for xStock quotes; `/stonk/token/{mint}/backing` reads.
+5. **Tweet:** post Option E from `local/outreach/stonkfun-launch-tweet.md` after re-measuring the
+   census numbers (they move daily). Do not name specific gems in the tweet.
+
 ## ▶️ RESUME HERE (2026-09-06) — STONKFUN PRODUCT LINE SHIPPED (5 endpoints, 42 paid + 1 free)
 
 ### What was completed (2026-09-06)
