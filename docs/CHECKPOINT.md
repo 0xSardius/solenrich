@@ -3,6 +3,37 @@
 ## Last session date
 2026-09-06
 
+## ▶️ RESUME HERE (2026-09-09) — SOLENRICH SKILL SHIPPED TO TWO REGISTRIES · pay.sh refreshed · 402 catalog fix
+
+### What was completed (2026-09-06 → 09-09)
+
+- **SolEnrich skill PRs open (no `src/` change — a skill is a markdown package in an external registry):**
+  - `sendaifun/skills#107` (Agent Skills format; installs into Claude Code via `/plugin install solenrich`,
+    Cursor, `npx skills add`; ClawPump agents load this registry). Files: SKILL.md, resources/endpoints.md,
+    resources/x402.md, examples/x402/pay-per-request.ts (type-checked), examples/trade-lifecycle.md.
+    Precedent: birdeye + metengine x402 skills merged there. Local: `../sendai-skills` (branch feat/solenrich).
+  - `Clawpump/agents-skills#10` (Hermes frontmatter, `pay curl` payment path). Local: `../clawpump-skills`
+    (branch add-solenrich). Registry is small; 4 PRs open since June — expect slow.
+  - Why not the ClawPump *marketplace*: it sells ClawPump-built agents, not APIs. Doors in: pay.sh
+    services (`service_offers_list`), community skills (this), or a first-party intelligence provider seat
+    (Trader Ralph holds one — pitch drafted in chat, not sent).
+- **pay.sh PR #176 refreshed** to 45 endpoints + StonkFun section (`9de4967`). Queue-wide stall: 30+
+  external PRs unmerged since Aug; CI needs maintainer approval (`action_required`). Contact = Ludo
+  Galabru (`@ludo_txtx`) / Rishin Sharma; Sardius exploring a channel. Memory: reference_pay_sh_listing.md.
+- **402 `all_endpoints` catalog fix** (`28a3140`): `query` had been filtered out since 2026-03-17.
+  Reported externally. Verified live: 44 entries.
+- README "Built by @0xSardius" (`19086b4`). Copywriting skill installed (`~/.claude/skills/copywriting`);
+  launch tweet Option F in `local/outreach/stonkfun-launch-tweet.md`.
+
+### Next steps
+
+1. Watch both skill PRs; answer review comments. Skill is usable before merge:
+   `npx skills add 0xSardius/skills` (fork) — mention in outreach.
+2. Discovery consistency unit test (402 catalog = /entrypoints = /openapi.json = /docs = PRICING).
+3. Playbook `next_steps` surfaces → identity health pass → public tape v1 (standing queue).
+4. **Sardius:** pay.sh maintainer channel; post the tweet (re-run census first); confirm landing
+   cards on solenrich.com; fund Eris; Smithery/agentic.market/Glama logins.
+
 ## ▶️ RESUME HERE (2026-09-06 PM) — STONKFUN PMF REFRAME: GEMS + LAUNCH INTEL + TAX-AWARE TRENCHES (44 paid + 1 free)
 
 ### What was completed (2026-09-06 PM, commit `47f1424`)

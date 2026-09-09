@@ -55,6 +55,10 @@ descriptions. They exist because clever writing hides meaning. Say the thing.
   7. `test/test-all-endpoints.ts` — a verification entry
   8. README endpoint table + landing page if user-facing
   9. **`src/lib/agent.ts` — `BAZAAR_INPUT_EXAMPLES` entry IF the endpoint has required input params.** CDP's bazaar only catalogs endpoints it can demonstrate as callable: no-required-input endpoints catalog automatically, but a parameterized one (required `address`/`mint`/`market`/`signature`/etc.) needs a concrete `input` example or it stays **invisible** in the bazaar + agentic.market (confirmed empirically 2026-06-28 — input example → cataloged in ~11 min; without one, parameterized endpoints never catalog despite settling). Reuse the SolScout stress fixture as the example.
+  10. **Skill registries (2026-09-09):** update `resources/endpoints.md` + the decision table in the
+  SolEnrich skill in BOTH forks — `../sendai-skills/skills/solenrich/` (PR sendaifun/skills#107, Agent
+  Skills format, also installs into Claude Code/Cursor) and `../clawpump-skills/skills/solenrich/`
+  (PR Clawpump/agents-skills#10, Hermes frontmatter) — and the pay.sh listing (`../pay-skills`).
   After deploy, a SolScout `--paid` run seeds the endpoint into the CDP x402 Bazaar (settlement-driven discovery). Parameterized endpoints only appear there if step 9 is done.
 
 ## Project Overview
