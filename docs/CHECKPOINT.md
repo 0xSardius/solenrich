@@ -3,6 +3,55 @@
 ## Last session date
 2026-09-06
 
+## ▶️ RESUME HERE (2026-09-17 PM) — CDP OUTAGE FIXED · full paid run 44/45 · settle-fail alarm · TODO re-ranked
+
+### What happened (2026-09-17, second half)
+
+- **Revenue outage found + fixed.** Seeding `stonk-quote` failed with 402-despite-payment; a known-good endpoint
+  failed the same way; SolScout wallet was funded. Decoded `payment-response`: CDP settle 402
+  `payment-method-required`. CDP facilitator free tier = **1,000 settlements/month**; the 9/12 buyer's 1,047
+  crossed it → every paid call from some point after 9/12 until Sardius added a card (2026-09-17) was refused.
+  Cost now $0.001/settlement past 1,000 (20% of a $0.005 call). Memory: project_cdp_free_tier_outage_2026_09.md.
+  Buyer damage assessment: their 1,022 yield calls == the paying-coin set (12.7% of 8,000) → session completed
+  by design, not cutoff; only a return visit 9/13–9/17 would have been refused (CDP portal shows failed settles).
+- **`[settle-fail]` alarm (`fe69806`):** a 402 with a payment attached logs the decoded facilitator reason and
+  counts in /metrics `process.settlement_failures_today` + `settlement_last_failure_reason`.
+- **Full paid SolScout run on prod: 46/48 checks, 44/45 endpoints settled.** `stonk-quote` seeded (7/7).
+  Misses: (1) **`smart-money-flow` — settlement refused, reason `transaction_simulation_failed`**: handler ran
+  ~60s, settlement happens after the handler, the payer's Solana tx blockhash expired. Real flaw for slow
+  endpoints (smart-money-trenches 34s, trenches-check 34s, trenches-scan 26s are near the edge).
+  (2) check-alerts perps variant: quiet fixture wallet → `first_observation` only; test expectation, not a bug.
+- pay-skills PR #176 refreshed to 46 paths + stonk-quote (`3326b86`). Skill forks updated (PRs #107, #10).
+- Moneta name-level check clean (Jupiter / DexScreener / StonkFun: only "Monetary" tokens, all <$3K liq).
+
+### TODO — re-ranked 2026-09-17 (what the last week's evidence says to build)
+
+**Revenue-protecting, do first (Claude):**
+1. **Settle-before-handler (or warm cache) for slow endpoints** — smart-money-flow fails every paid call today;
+   three more endpoints are within 30s of the same failure. Half a day.
+2. **Scheduled prod smoke with a real settlement** (one $0.002 paid call/hour + 402 sweep) — the CDP outage sat
+   for 5 days; this catches the next one within the hour. Small.
+3. **Richer /health** (cache mode, index age, facilitator reachability) + Sardius points an uptime checker at it.
+
+**Growth, in order (Claude):**
+4. **Moneta `stonk` strategy plugin** on the Eris harness: scout gems/screener-live → vet reward-risk +
+   trenches-check → size **stonk-quote** → watch exit-signal + payout staleness. Paper 2 weeks; calibrates the
+   gem weights from outcomes. Blocked past paper on wallet funding.
+5. **Stonk Ledger payout endpoints** (after its 9/23 submission): ledger-side keyset paging + `since` cursor +
+   shared header → `stonk-coin-payouts` $0.002/page, `stonk-wallet-payouts` $0.005. The buyer's exact verb.
+6. Playbook `next_steps` surfaces → identity health pass (+ERC-8004 Base) → public tape (standing queue).
+
+**Pricing/infra decisions (Sardius, with Claude sizing):**
+7. Sub-cent fee: $0.001 settlement = 20% of $0.005 endpoints → raise floor to $0.01 or CDP batch settlement.
+8. Facilitator fallback re-test (PayAI vs @x402/core 2.17) so one vendor's billing can't zero revenue.
+9. Spend caps: CDP billing limit (~$50/mo) + Upstash monthly budget. USDC sweep from the pay-to wallet.
+
+**Sardius, unchanged:** Eris/Moneta wallet funding · pay.sh maintainer channel · Smithery/agentic.market/Glama
+logins · Pack D founders · token relaunch decision (reward mode + holder-gated pricing, new symbol).
+
+**Deprioritized:** payout webhooks (no subscriber yet), DRIP-prepare (write path), any new stonk endpoint beyond
+#5 until a second buyer or a return.
+
 ## ▶️ RESUME HERE (2026-09-17) — stonk-quote SHIPPED (45 paid + 1 free) · Redis regression fixed · Moneta repo
 
 ### What happened (2026-09-16 PM → 09-17)
