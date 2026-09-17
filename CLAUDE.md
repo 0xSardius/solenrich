@@ -646,6 +646,21 @@ bazaar now, dual-network — 31 resources.)
   dev-reputation/token-x-ray/smart-money-trenches to ClawPump launches + Eris feed source.
   (3) SIWS holder-gated pricing (mpp32 pattern) — radar, monetization knob not discovery.
 
+### Tokenization macro thesis → what it means for us (2026-09-17)
+
+Sardius shared a long macro thread (US debt → stablecoin push → "need good things to trade" → on-chain
+stocks + prediction markets → privacy/ZK → investable agents → corporate issuance on chain). Assessment:
+- It **confirms the lane** (on-chain stocks × speculation × agents = StonkFun; investable agents with
+  verified balances = Moneta's public tape) and **changes no build order**.
+- Two cheap follow-ups: a **quote-asset issuer registry** (issuer / redemption / jurisdiction risk for
+  xStocks, PreStocks, Tessera) in `stonk-quote` + `stonk-launch-intel` — a holder is long the coin, the
+  quote, and the quote's issuer; and a **ZEC receipt post** (ZEC = StonkFun's top quote by volume in our
+  census; re-measure first).
+- Tokenized-equity basis (xStock vs spot, reuses `perps-basis-signal`) moves up but stays demand-gated.
+- **Privacy is a long-run threat** to public-ledger intelligence; the hedge is verification
+  (know-your-agent / proof-of-reserves on our 8004 + Metaplex identities). Radar.
+- Prediction markets and CBDC/corporate-finance steps stay declined.
+
 ### What to deprioritize
 
 - **Raw data breadth.** Don't add endpoints just to have them. Can't out-breadth Helius/Nansen. Out-synthesize them.

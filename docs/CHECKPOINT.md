@@ -52,6 +52,23 @@ logins · Pack D founders · token relaunch decision (reward mode + holder-gated
 **Deprioritized:** payout webhooks (no subscriber yet), DRIP-prepare (write path), any new stonk endpoint beyond
 #5 until a second buyer or a return.
 
+**From the tokenization macro thesis (2026-09-17, Sardius shared a long tweet; assessed in chat):**
+- **Confirms the lane, changes no build order.** "Good things to trade" = on-chain stocks × speculation × agents
+  = StonkFun. Investable agents with verified balances (its step 9) = Moneta's public tape → tape stays at #6.
+- **Small build, queue behind #1–#3:** quote-asset **issuer registry** (issuer, redemption structure,
+  jurisdiction, one-line risk) for xStocks/Backed, PreStocks, Tessera — surfaced in `stonk-quote` and
+  `stonk-launch-intel`. A holder is long the coin, the quote, AND the quote's issuer; we name only two.
+  Config table, an afternoon. The tweet's ADR/YNDX warning is the reason.
+- **Content receipt (Sardius, free):** the thesis ends on ZEC; our census shows ZEC is StonkFun's top quote by
+  volume ($35M/day, 87% of ZEC-paired coins trading vs 25% for the most-launched xStock). "Timeline says
+  ZEC, chain says …" — re-measure before posting.
+- **Nudged up, still demand-gated:** tokenized-equity basis (xStock vs real spot; reuses perps-basis-signal) —
+  the thesis says the market is at "leveraged stock vs perp yield" now. Build on the first ask.
+- **Long-run threat noted:** privacy adoption (shielded ZEC, private swaps) shrinks the public ledger we read.
+  Hedge = verification (know-your-agent / proof-of-reserves on our 8004 + Metaplex identities). Radar only.
+- **Stays declined:** prediction markets (off-Solana growth; Aug measurement stands), CBDC/corporate-finance/FX
+  steps 8–12.
+
 ## ▶️ RESUME HERE (2026-09-17) — stonk-quote SHIPPED (45 paid + 1 free) · Redis regression fixed · Moneta repo
 
 ### What happened (2026-09-16 PM → 09-17)
