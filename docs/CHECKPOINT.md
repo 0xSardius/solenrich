@@ -3,6 +3,41 @@
 ## Last session date
 2026-09-06
 
+## ▶️ RESUME HERE (2026-09-16) — FIRST ORGANIC BUYER OF THE STONK LINE · Redis on paid plan · tweet posted
+
+### What happened (2026-09-12 → 09-16)
+
+- **First organic buyer at scale:** wallet `2otm6W…1wJz` paid **1,022 × `stonk-yield` + 24 × `stonk-screener`
+  = $5.35** on 2026-09-12 UTC (05:39→14:29; = evening of 9/11 US time, which is the "580 on 9/11" on
+  x402scan). Confirmed from Redis per-endpoint counters. Six days after the line shipped. Larger than all
+  prior lifetime revenue. Memory: project_first_organic_buyer_2026_09_12.md (incl. how to read payments
+  from the USDC ATA `ApsGW4…3xdJ` via Helius when Redis is down).
+- **Upstash free tier capped 2026-09-16** (500K cmds/mo) → Sardius added a card → pay-as-you-go
+  ($0.20/100K). Nothing lost (writes had landed; the zeros were failed reads). Metrics keys are prefixed
+  `solenrich:`.
+- **Free `stonk-pairs` traffic:** 200–300 calls/day from 15–30 cloud IPs since 9/10 (discovery probes),
+  ~all of the daily call count and none of the revenue.
+- **Tweets posted by Sardius:** StonkFun launch (Option F) and stonk-yield receipt (Option G, 2026-09-16).
+  Drafts live in `local/outreach/stonkfun-launch-tweet.md` (gitignored).
+
+### Next steps
+
+1. **Hygiene pass (Claude, ~2h, one commit):** (a) structured invoke log per paid call — endpoint key,
+   status, ms, shortened payer id — so "what did they buy" never depends on Redis; (b) per-request Redis
+   command counter surfaced in /metrics; (c) discovery consistency unit test (402 `all_endpoints` =
+   /entrypoints = /openapi.json = /docs = PRICING).
+2. **Watch the buyer:** `/metrics` `callers_by_endpoint` daily for `2otm6W…`. If it returns, note what it
+   calls; per-coin detail is what it paid for (screener would have been cheaper). Do NOT build for one
+   buyer — the new-endpoint freeze holds until a second buyer or a return.
+3. Standing queue: playbook `next_steps` surfaces → identity health pass (+ERC-8004 Base) → public
+   tape v1 → Eris loop (blocked on wallet funding).
+4. **Sardius:** Eris wallet funding · pay.sh maintainer channel (PR #176 refreshed to 45, CI awaiting
+   maintainer approval) · Smithery / agentic.market / Glama logins · open decisions (Pack D founders,
+   Eris stakes, Virtuals ACP, Bags fee check) · token relaunch on StonkFun (decision pending; see chat
+   2026-09-13: reward mode + holder-gated pricing, no burn until revenue, new symbol availability-checked).
+5. Skill PRs open, no review yet: sendaifun/skills#107, Clawpump/agents-skills#10. Skill installs now
+   from the fork: `npx skills add 0xSardius/skills`.
+
 ## ▶️ RESUME HERE (2026-09-09) — SOLENRICH SKILL SHIPPED TO TWO REGISTRIES · pay.sh refreshed · 402 catalog fix
 
 ### What was completed (2026-09-06 → 09-09)
