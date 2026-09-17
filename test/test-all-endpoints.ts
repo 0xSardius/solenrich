@@ -405,6 +405,22 @@ check('has recommendations', Array.isArray(si.body?.output?.recommendations));
 check('has llm_summary', typeof si.body?.output?.llm_summary === 'string' && si.body.output.llm_summary.includes('Launch Intel'));
 console.log(`  ⏱ ${si.ms}ms\n`);
 
+console.log('━━━ 21. discovery surfaces agree (live) ━━━');
+{
+  const [ep, oa, docs] = await Promise.all([
+    fetch(`${BASE}/entrypoints`).then((r) => r.json()),
+    fetch(`${BASE}/openapi.json`).then((r) => r.json()),
+    fetch(`${BASE}/docs`).then((r) => r.json()),
+  ]);
+  const epKeys = new Set<string>((ep.items ?? ep).map((e: any) => e.key));
+  const oaKeys = new Set<string>(Object.keys(oa.paths).map((p) => p.split('/')[2]).filter(Boolean));
+  const docKeys = new Set<string>(Object.keys(docs.endpoints ?? {}));
+  const same = (a: Set<string>, b: Set<string>) => a.size === b.size && [...a].every((k) => b.has(k));
+  check(`/entrypoints (${epKeys.size}) == /openapi.json paths (${oaKeys.size})`, same(epKeys, oaKeys), [...epKeys].filter((k) => !oaKeys.has(k)).concat([...oaKeys].filter((k) => !epKeys.has(k))).join(','));
+  check(`/entrypoints (${epKeys.size}) == /docs endpoints (${docKeys.size})`, same(epKeys, docKeys), [...epKeys].filter((k) => !docKeys.has(k)).concat([...docKeys].filter((k) => !epKeys.has(k))).join(','));
+  console.log('');
+}
+
 // ============================================================
 // Summary
 // ============================================================

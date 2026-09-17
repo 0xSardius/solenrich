@@ -1219,3 +1219,61 @@ describe('assessExit verdicts', () => {
     expect(a.reasoning).toContain('derisk in steps');
   });
 });
+
+// --- Discovery consistency (2026-09-16) ------------------------------------
+// Two outside parties found surface mismatches before we did (pay.sh reviewer:
+// 38 vs 32 endpoints; an external report: `query` missing from the 402
+// catalog since March). Every surface that lists endpoints must carry the same
+// key set as PRICING ∪ FREE_ENDPOINTS. Sources that cannot be imported without
+// booting the agent are checked from their text.
+import { readFileSync as _rf } from 'node:fs';
+import { join as _join } from 'node:path';
+import { PRICING as _PRICING, FREE_ENDPOINTS as _FREE } from '../src/config';
+import { ENDPOINT_META as _META } from '../src/openapi';
+
+describe('discovery consistency: every surface lists the same endpoints', () => {
+  const expected = new Set<string>([...Object.keys(_PRICING), ..._FREE]);
+  const src = (rel: string) => _rf(_join(import.meta.dir, '..', rel), 'utf8');
+  const diff = (a: Set<string>, b: Set<string>) => ({ missing: [...a].filter((k) => !b.has(k)), extra: [...b].filter((k) => !a.has(k)) });
+
+  test('openapi ENDPOINT_META == PRICING ∪ FREE', () => {
+    expect(diff(expected, new Set(Object.keys(_META)))).toEqual({ missing: [], extra: [] });
+  });
+
+  test('/docs endpoints block == PRICING ∪ FREE', () => {
+    const agent = src('src/lib/agent.ts');
+    // Each documented endpoint is `      'key': {` followed by a `price:` line.
+    const keys = new Set([...agent.matchAll(/^      '([a-z0-9-]+)': \{\n\s+price:/gm)].map((m) => m[1]));
+    expect(diff(expected, keys)).toEqual({ missing: [], extra: [] });
+  });
+
+  test('MCP tools invoke only real endpoints, and every paid endpoint has a tool', () => {
+    const mcp = src('src/mcp-tools.ts');
+    // Keys appear either inline in invoke('key', …) or chosen by a ternary
+    // (enrich_wallet → light/full), so match every quoted endpoint-shaped key.
+    const invoked = new Set([...mcp.matchAll(/'([a-z][a-z0-9-]*)'/g)].map((m) => m[1]).filter((k) => expected.has(k)));
+    expect([...invoked].filter((k) => !expected.has(k))).toEqual([]);
+    expect([...expected].filter((k) => !invoked.has(k))).toEqual([]);
+  });
+
+  test('README endpoint tables == PRICING ∪ FREE', () => {
+    const readme = src('README.md');
+    const keys = new Set([...readme.matchAll(/^\| `([a-z0-9-]+)` \| (?:\$[0-9.]+|free) \|/gm)].map((m) => m[1]));
+    expect(diff(expected, keys)).toEqual({ missing: [], extra: [] });
+  });
+
+  test('402 catalog is built from PRICING with no filter', () => {
+    const index = src('src/index.ts');
+    const block = index.slice(index.indexOf('all_endpoints:'), index.indexOf('all_endpoints:') + 200);
+    expect(block).toContain('Object.entries(PRICING).map(');
+    expect(block).not.toContain('.filter(');
+  });
+
+  test('bazaar tags cover every paid endpoint', () => {
+    const agent = src('src/lib/agent.ts');
+    const start = agent.indexOf('BAZAAR_TAGS');
+    const block = agent.slice(start, agent.indexOf('};', start));
+    const tagged = new Set([...block.matchAll(/'([a-z0-9-]+)': \[/g)].map((m) => m[1]));
+    expect(Object.keys(_PRICING).filter((k) => !tagged.has(k))).toEqual([]);
+  });
+});

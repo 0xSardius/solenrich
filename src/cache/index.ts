@@ -17,9 +17,46 @@ function isRedisConfigured(): boolean {
   );
 }
 
+/**
+ * Redis command accounting. Upstash bills per command (free tier: 500K/month —
+ * capped 2026-09-16 after one buyer's 1,047-call session plus our own metrics
+ * writes). Every method call on the client counts as one command, so a Proxy
+ * around the client is the whole instrumentation: no per-method edits.
+ */
+export interface CacheStats {
+  redis_commands_since_boot: number;
+  by_op: Record<string, number>;
+}
+
 export class Cache {
   private redis: Redis | null = null;
   private memory = new Map<string, MemoryEntry>();
+  private commands = 0;
+  private byOp: Record<string, number> = {};
+
+  /** Total Redis commands issued by this instance since boot. Memory mode: always 0. */
+  get commandCount(): number {
+    return this.commands;
+  }
+
+  stats(): CacheStats {
+    return { redis_commands_since_boot: this.commands, by_op: { ...this.byOp } };
+  }
+
+  private counting(client: Redis): Redis {
+    const self = this;
+    return new Proxy(client, {
+      get(target, prop, receiver) {
+        const v = Reflect.get(target, prop, receiver);
+        if (typeof v !== 'function' || typeof prop !== 'string') return v;
+        return (...args: unknown[]) => {
+          self.commands++;
+          self.byOp[prop] = (self.byOp[prop] ?? 0) + 1;
+          return (v as (...a: unknown[]) => unknown).apply(target, args);
+        };
+      },
+    });
+  }
 
   constructor(opts: { memoryOnly?: boolean } = {}) {
     // Unit tests must never write to the production Redis (a fixture ingest
@@ -29,7 +66,7 @@ export class Cache {
       console.log('[cache] Using in-memory cache (test mode)');
     } else if (isRedisConfigured()) {
       try {
-        this.redis = new Redis({ url: CONFIG.cache.url, token: CONFIG.cache.token });
+        this.redis = this.counting(new Redis({ url: CONFIG.cache.url, token: CONFIG.cache.token }));
         console.log('[cache] Using Upstash Redis');
       } catch (err) {
         console.warn('[cache] Failed to init Redis, falling back to in-memory:', err);

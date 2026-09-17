@@ -174,7 +174,15 @@ app.use('/mcp', async (c, next) => {
   await next();
 });
 
+// Per-endpoint Redis cost, in memory, since boot. Approximate under concurrency
+// (the delta spans every command issued while this request was in flight), but
+// it answers "what does a buyer like 2otm6W… cost us in commands" without a
+// dashboard. Surfaced in /metrics → process.redis.
+const redisPerCall = new Map<string, { calls: number; commands: number }>();
+
 app.use('/entrypoints/*/invoke', async (c, next) => {
+  const startedAt = Date.now();
+  const redisBefore = cache.commandCount;
   // Clone before next() — payment middleware + handler consume the body stream.
   let reqClone: Request | null = null;
   try { reqClone = c.req.raw.clone(); } catch { reqClone = null; }
@@ -196,6 +204,20 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
   let cloneText: string | null = null;
   if (reqClone) {
     try { cloneText = await reqClone.text(); } catch { cloneText = null; }
+  }
+
+  // One structured line per invocation, every status. Added 2026-09-16 after
+  // "which endpoint did the 1,047-call buyer use?" took an hour of on-chain
+  // forensics because Redis was capped and nothing else recorded the key.
+  // grep '[invoke]' in Railway logs answers it from now on. Payer is the x402
+  // wallet (public), the MPP credential hash, or an IP for unpaid calls.
+  const endpointKey = c.req.path.split('/')[2];
+  const payer = extractCaller(xPaymentHeader, authHeader, forwardedFor) ?? 'unknown';
+  const redisUsed = cache.commandCount - redisBefore;
+  console.log(`[invoke] key=${endpointKey} status=${c.res.status} ms=${Date.now() - startedAt} redis=${redisUsed} payer=${payer}`);
+  if (c.res.status === 200) {
+    const r = redisPerCall.get(endpointKey) ?? { calls: 0, commands: 0 };
+    r.calls++; r.commands += redisUsed; redisPerCall.set(endpointKey, r);
   }
 
   // Only count successful responses
@@ -1455,6 +1477,18 @@ app.get('/metrics', async (c) => {
       // JS heap ~= RSS means an object leak (top_object_types names it);
       // JS heap << RSS means native memory (buffers/streams/allocator).
       memory: memoryBreakdown(),
+      // Redis command accounting (2026-09-16). Upstash bills per command; the
+      // free tier capped at 500K after one 1,047-call buyer session. Per-call
+      // averages are approximate under concurrency but good enough to price a
+      // buyer: calls × avg ≈ commands ≈ $0.20 per 100K on pay-as-you-go.
+      redis: {
+        ...cache.stats(),
+        per_call_avg_by_endpoint: Object.fromEntries(
+          [...redisPerCall.entries()]
+            .sort((a, b) => b[1].commands - a[1].commands)
+            .map(([k, v]) => [k, { calls: v.calls, avg_commands: Math.round((v.commands / v.calls) * 10) / 10 }]),
+        ),
+      },
     },
     today: {
       total_calls: todayTotal,
