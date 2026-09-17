@@ -405,6 +405,14 @@ check('has recommendations', Array.isArray(si.body?.output?.recommendations));
 check('has llm_summary', typeof si.body?.output?.llm_summary === 'string' && si.body.output.llm_summary.includes('Launch Intel'));
 console.log(`  ⏱ ${si.ms}ms\n`);
 
+console.log('━━━ 20h. stonk-quote ━━━');
+const sq = await invoke('stonk-quote', { mint: STONK_MINT, size_usd: 250, hold_days: 14, format: 'both' }, 45000);
+check('returns 200', sq.status === 200, `got ${sq.status}`);
+check('legs + round trip', typeof sq.body?.output?.round_trip?.cost_pct === 'number' && sq.body.output.round_trip.cost_pct >= 6, `rt=${sq.body?.output?.round_trip?.cost_pct}`);
+check('verdict present', typeof sq.body?.output?.net?.verdict === 'string', `verdict=${sq.body?.output?.net?.verdict}`);
+check('has llm_summary', typeof sq.body?.output?.llm_summary === 'string' && sq.body.output.llm_summary.includes('Quote'));
+console.log(`  ⏱ ${sq.ms}ms\n`);
+
 console.log('━━━ 21. discovery surfaces agree (live) ━━━');
 {
   const [ep, oa, docs] = await Promise.all([

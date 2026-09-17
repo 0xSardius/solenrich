@@ -619,6 +619,20 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'stonk-quote': {
+    summary: 'Cost and payback of one StonkFun trade at one size',
+    description: 'Cost and payback of one StonkFun trade at one size, no swap: entry and exit cost (transfer tax + price impact at size), round-trip % and the breakeven price move, your pro-rata share of each payout with a dust warning, expected payout over the hold from the yield window with real history, and a PAYS / MARGINAL / COSTS / NOT_PAYING verdict with breakeven hold days. Composes stonk-reward-risk, stonk-yield, and enrich-token-light. Inputs: mint, size_usd (100), hold_days (7).',
+    schema: {
+      type: 'object',
+      required: ['mint'],
+      properties: {
+        mint: { type: 'string', description: 'StonkFun reward coin mint (base58)', minLength: 32, maxLength: 44 },
+        size_usd: { type: 'number', minimum: 1, maximum: 1000000, default: 100, description: 'Position size in USD' },
+        hold_days: { type: 'number', minimum: 0.25, maximum: 365, default: 7, description: 'Intended holding period' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
 };
 
 const BASE_URL = 'https://api.solenrich.com';

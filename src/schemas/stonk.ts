@@ -71,3 +71,10 @@ export const StonkLaunchIntelInput = z.object({
   limit: z.number().int().min(1).max(100).default(20),
   format: FormatSchema,
 });
+
+export const StonkQuoteInput = z.object({
+  mint: SolanaAddressSchema,
+  size_usd: z.number().min(1).max(1_000_000).default(100),
+  hold_days: z.number().min(0.25).max(365).default(7),
+  format: FormatSchema,
+});

@@ -79,6 +79,7 @@ import { StonkIndex } from "../enrichers/stonk-index";
 import { StonkRewardRiskAnalyzer } from "../enrichers/stonk-reward-risk";
 import { StonkYieldAnalyzer } from "../enrichers/stonk-yield";
 import { StonkPreflightAnalyzer } from "../enrichers/stonk-preflight";
+import { StonkQuoteAnalyzer } from "../enrichers/stonk-quote";
 import { registerStonkEntrypoints } from "../entrypoints/stonk";
 import { formatStonkRewardRiskBriefing } from "../formatters/llm-stonk";
 import { buildExampleLaunchTransaction, EXAMPLE_LAUNCH } from "../sources/launchlab";
@@ -411,6 +412,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'stonk-launch-preflight': ['solana', 'stonkfun', 'launchlab', 'launch-preflight', 'token-2022'],
     'stonk-gems': ['solana', 'stonkfun', 'gems', 'reward-coin', 'screener', 'xstocks'],
     'stonk-launch-intel': ['solana', 'stonkfun', 'launch', 'quote-assets', 'xstocks'],
+    'stonk-quote': ['solana', 'stonkfun', 'trade-cost', 'reward-coin', 'transfer-tax', 'holder-yield'],
   };
 
   // --- Bazaar input examples (ROLLOUT 2026-06-28; canary CONFIRMED) ------------
@@ -456,6 +458,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     // stonkfun (ZCAT = live reward coin on ZEC; preflight example is a deterministic correct launch)
     'stonk-reward-risk': { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR' },
     'stonk-yield': { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR' },
+    'stonk-quote': { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR', size_usd: 100, hold_days: 7 },
     'stonk-launch-preflight': { unsigned_transaction: buildExampleLaunchTransaction(), quote_mint: EXAMPLE_LAUNCH.quoteMint, mode: EXAMPLE_LAUNCH.mode },
   };
 
@@ -801,12 +804,14 @@ const stonkIndex = new StonkIndex(stonkfun, jupiter, cache);
 const stonkRewardRisk = new StonkRewardRiskAnalyzer(stonkfun, solanaRpc, cache, formatStonkRewardRiskBriefing);
 const stonkYield = new StonkYieldAnalyzer(stonkfun, stonkIndex, jupiter, cache);
 const stonkPreflight = new StonkPreflightAnalyzer(stonkfun, solanaRpc.getConnection());
+const stonkQuote = new StonkQuoteAnalyzer(stonkRewardRisk, stonkYield, tokenAnalyzer, cache);
 registerStonkEntrypoints(addEntrypoint, {
   client: stonkfun,
   index: stonkIndex,
   rewardRisk: stonkRewardRisk,
   yieldAnalyzer: stonkYield,
   preflight: stonkPreflight,
+  quote: stonkQuote,
   cache,
 });
 if (process.env.NODE_ENV !== 'test' && process.env.STONK_INGEST !== 'off') {
@@ -1252,6 +1257,11 @@ app.get('/docs', (c) => {
         price: '0.02',
         input: { category: 'xstock | prestock | currency | leverage | solana | collectible | custom (optional)', min_coins: 'number (default 5)', sort: 'demand | survival | volume | launches | paying (default demand)', limit: 'number 1-100 (default 20)', format: 'json | llm | both' },
         description: 'What to launch on StonkFun, and against what. Per quote asset: coins, launches in 24h / 7d, share that traded today, share that paid holders today, survival (coins older than 3 days that still trade), volume, median holders and market cap, tax mix (100 vs 300 bps) with trading and paying rates per level, crowding (7d launches per coin trading today), and a 0-100 demand score. Plus overall survival and tax-level stats and plain recommendations. Sort by demand, survival, volume, launches, or paying. Demand = traded share (40) + survival (40) + paying share (20) minus a crowding penalty; quotes with no coin past day 3 are flagged is_new and capped at 80.',
+      },
+      'stonk-quote': {
+        price: '0.005',
+        input: { mint: 'string (required) — StonkFun reward coin mint', size_usd: 'number (default 100)', hold_days: 'number (default 7)', format: 'json | llm | both' },
+        description: 'Cost and payback of one StonkFun trade at one size, no swap: entry and exit cost (transfer tax + price impact at size), round-trip % and the breakeven price move, your pro-rata share of each payout with a dust warning, expected payout over the hold from the yield window with real history, and a PAYS / MARGINAL / COSTS / NOT_PAYING verdict with breakeven hold days. Composes stonk-reward-risk, stonk-yield, and enrich-token-light. Inputs: mint, size_usd (100), hold_days (7). Verdict thresholds: PAYS when expected payout over the hold ≥ 1.5× the round trip, MARGINAL when ≥ 1×, else COSTS. Yield basis = the shortest window with ≥ 6.5 days of real history, else lifetime.',
       },
       'stonk-launch-preflight': {
         price: '0.25',

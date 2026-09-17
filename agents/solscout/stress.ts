@@ -729,6 +729,20 @@ export const ENDPOINTS: Array<{
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Launch Intel') },
     ],
   },
+  {
+    key: 'stonk-quote',
+    input: { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR', size_usd: 100, hold_days: 7, format: 'both' },
+    timeout: 45000,
+    checks: [
+      { name: 'echoes mint + size', test: (d) => d.mint === 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR' && d.size_usd === 100 && d.hold_days === 7 },
+      { name: 'entry/exit legs priced', test: (d) => typeof d.entry?.total_pct === 'number' && typeof d.exit?.total_pct === 'number', detail: (d) => `entry=${d.entry?.total_pct}% exit=${d.exit?.total_pct}%` },
+      { name: 'round trip = entry + exit', test: (d) => Math.abs(d.round_trip.cost_pct - (d.entry.total_pct + d.exit.total_pct)) < 0.02 },
+      { name: 'tax reflects 300 bps', test: (d) => d.entry.tax_pct === 3 },
+      { name: 'has verdict', test: (d) => ['PAYS', 'MARGINAL', 'COSTS', 'NOT_PAYING', 'UNKNOWN'].includes(d.net?.verdict), detail: (d) => `verdict=${d.net?.verdict} basis=${d.expected_payout?.basis}` },
+      { name: 'has reasoning + caveats', test: (d) => typeof d.reasoning === 'string' && Array.isArray(d.caveats) && d.caveats.length > 0 },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Quote') },
+    ],
+  },
 ];
 
 // --- Coverage guard ---------------------------------------------------------

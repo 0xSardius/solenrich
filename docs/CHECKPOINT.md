@@ -3,6 +3,47 @@
 ## Last session date
 2026-09-06
 
+## ▶️ RESUME HERE (2026-09-17) — stonk-quote SHIPPED (45 paid + 1 free) · Redis regression fixed · Moneta repo
+
+### What happened (2026-09-16 PM → 09-17)
+
+- **Hygiene pass (`4759126`, `1170e0c`):** `[invoke]` log line per call (key, status, ms, redis, payer, ua); Redis
+  command counter (Proxy on the Upstash client) in /metrics `process.redis`; discovery consistency unit tests;
+  `[rediswatch]` daily threshold warning.
+- **Redis regression found + fixed (`defad6b`):** the StonkFun index's 10-min quote-price refresh cost ~520 commands
+  per cycle (per-mint GET + SET in `JupiterClient.getPrice`, 60s TTL = always miss) ≈ 2.2M/month — THAT hit the
+  free-tier cap, not the buyer. Now `getPriceUncached` for the index + one MGET for everyone else. Measured on
+  prod after: ~4 commands/min idle (~190K/month). Upstash is pay-as-you-go now (Sardius added a card).
+- **Where the buyer came from:** no referrer exists in x402; timeline rules out every human channel (tweets came
+  after 9/12). A 68-IP AWS us-east-1 fleet has probed free `stonk-pairs` ~300×/day since 9/10 (indexer). Most
+  likely: CDP bazaar / agentic.market machine discovery. User-agent now logged so the next one is named.
+- **Agent wallet:** private key is NOT on Railway (only local `.env`; runtime never signs). 16.6 USDC + 0.064 SOL
+  on the pay-to wallet; sweep to cold storage periodically. USDC ATA `ApsGW4…3xdJ`.
+- **`stonk-quote` SHIPPED** (`src/enrichers/stonk-quote.ts`, $0.005): composed from reward-risk + yield + token
+  analyzer; verified locally on ZCAT ($100/7d → COSTS: 6.06% round trip vs $2.73 expected; $10K/30d → PAYS,
+  breakeven hold ≈15.5d). Wired through all 10 checklist steps + both skill forks. **Prod verify + paid seed +
+  pay-skills snapshot refresh (46 paths) were in flight at session end.**
+- **Moneta** repo created (`github.com/0xSardius/moneta`, private after Sardius flipped it): the StonkFun
+  yield-and-trading lab, a second strategy plugin on the Eris harness. Name = Juno Moneta; symbol clean on
+  DexScreener (0 Solana pairs); name-level check vs Jupiter list + StonkFun index still to run.
+- **Stonk Ledger** (`../../solana/stonk-ledger`, live at stonk-ledger.vercel.app, Stocklana hackathon, closes
+  9/25) is the payout index. Plan after its submission (9/23): keyset paging on `/api/feed/[mint]` + `since` on
+  the wallet statement + a shared header → SolEnrich `stonk-coin-payouts` ($0.002/page) and
+  `stonk-wallet-payouts` ($0.005). Webhooks deferred; DRIP-prepare declined (write path).
+
+### Next steps
+
+1. Confirm `stonk-quote` on prod (402 → SolScout `--paid --only stonk-quote` seed) and refresh the pay-skills
+   snapshot to 46 paths (`../pay-skills`, PR #176). Push the skill-fork updates to PRs #107 / #10 (done if the
+   forks show `stonk-quote`).
+2. Moneta: name-level availability check → `stonk` strategy plugin (scout: gems + screener live; vet:
+   reward-risk + trenches-check; size: **stonk-quote**; watch: exit-signal + yield/payout staleness). Paper 2 weeks.
+   Blocked on wallet funding for anything past paper.
+3. After 9/23: Stonk Ledger paging → coin/wallet payout endpoints.
+4. Hardening leftovers (Claude): richer /health, free-route limiter, scheduled prod smoke. (Sardius): Upstash
+   budget cap, uptime checker, USDC sweep.
+5. Standing queue unchanged below (playbook surfaces, identity pass, tape, Eris/Moneta loop).
+
 ## ▶️ RESUME HERE (2026-09-16) — FIRST ORGANIC BUYER OF THE STONK LINE · Redis on paid plan · tweet posted
 
 ### What happened (2026-09-12 → 09-16)

@@ -660,12 +660,12 @@ pre-stocks, currencies, custom mints) and ~69% launch in **reward mode**: a Toke
 product (working name Pair Router) that launches coins through StonkFun from ClawPump agents.
 Prompt: `solana-idea-exploration/docs/prompts/solenrich-stonkfun-x402-prompt.md`.
 
-**Endpoints (44 paid + 1 free, as of 2026-09-06 PM):** `stonk-pairs` (FREE — `FREE_ENDPOINTS` in
+**Endpoints (45 paid + 1 free, as of 2026-09-17):** `stonk-pairs` (FREE — `FREE_ENDPOINTS` in
 config, kept out of PRICING so x402/MPP never gate it), `stonk-reward-risk` $0.005, `stonk-yield`
 $0.005, `stonk-screener` $0.01, `stonk-launch-preflight` $0.25, **`stonk-gems` $0.03**,
-**`stonk-launch-intel` $0.02**. All on the standard `POST /entrypoints/{key}/invoke` surface (the
+**`stonk-launch-intel` $0.02**, **`stonk-quote` $0.005** (2026-09-17: cost + payback of one trade at one size — entry/exit = tax + log-interpolated price impact, breakeven move, pro-rata payout share with a base-unit dust rule, expected payout from the shortest yield window with ≥6.5d real history, PAYS ≥1.5× round trip / MARGINAL ≥1× / COSTS / NOT_PAYING; pure `buildStonkQuote()` in `src/enrichers/stonk-quote.ts`; the size step for Moneta). All on the standard `POST /entrypoints/{key}/invoke` surface (the
 prompt's REST paths were mapped onto the repo convention). MCP: `stonk_pairs`, `stonk_reward_risk`,
-`stonk_yield`, `stonk_screener`, `stonk_preflight`, `stonk_gems`, `stonk_launch_intel`.
+`stonk_yield`, `stonk_screener`, `stonk_preflight`, `stonk_gems`, `stonk_launch_intel`, `stonk_quote`.
 
 **PMF reframe (2026-09-06 PM, Sardius):** the jobs are (1) launch stonk coins and make money,
 (2) agentically trade them, (3) agentically launch them, (4) get accurate data. Nobody buys after a

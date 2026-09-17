@@ -1,6 +1,7 @@
 import type { RewardRiskResult } from '../enrichers/stonk-reward-risk';
 import type { StonkYieldResult, YieldWindow } from '../enrichers/stonk-yield';
 import type { StonkPreflightResult } from '../enrichers/stonk-preflight';
+import type { StonkQuoteResult } from '../enrichers/stonk-quote';
 import type { StonkPairsResult, StonkScreenerResult, StonkGemsResult, StonkLaunchIntelResult } from '../entrypoints/stonk';
 import { shortenAddress, formatUsd } from '../utils/normalize';
 
@@ -243,6 +244,56 @@ export function formatStonkLaunchIntelBriefing(d: StonkLaunchIntelResult): strin
   }
   lines.push('### How to read this');
   lines.push('Demand = traded share (40) + survival past day 3 (40) + paying share (20), minus a crowding penalty when 7d launches exceed twice the coins trading today. Survival is the share of coins older than 3 days that still traded in the last 24h. A quote marked (new) has no coin past day 3 yet: survival is unknown and demand is capped at 80.');
+  lines.push('');
+  for (const c of d.caveats) lines.push(`_${c}_`);
+  lines.push('');
+  lines.push(`Next: ${d.next_steps.join(' ')}`);
+  return lines.join('\n');
+}
+
+const QUOTE_LINE: Record<StonkQuoteResult['net']['verdict'], string> = {
+  PAYS: '🟢 PAYS — expected payouts over the hold cover the round trip with room',
+  MARGINAL: '🟡 MARGINAL — payouts roughly cover the round trip; price must do the rest',
+  COSTS: '🔴 COSTS — the round trip is more than the hold is expected to pay back',
+  NOT_PAYING: '⛔ NOT PAYING — this coin pays holders nothing right now',
+  UNKNOWN: '⚪ UNKNOWN — no payout history to project from',
+};
+
+export function formatStonkQuoteBriefing(d: StonkQuoteResult): string {
+  const lines: string[] = [];
+  const name = d.symbol ? `$${d.symbol}` : shortenAddress(d.mint);
+  lines.push(`## StonkFun Quote — ${name} at ${formatUsd(d.size_usd)} for ${d.hold_days}d`);
+  lines.push('');
+  lines.push(`**${QUOTE_LINE[d.net.verdict]}**`);
+  lines.push('');
+  lines.push(`**Read:** ${d.reasoning}`);
+  lines.push('');
+  lines.push('| Leg | Tax | Price impact | Total |');
+  lines.push('|---|---|---|---|');
+  const imp = (l: StonkQuoteResult['entry']) => (l.price_impact_pct != null ? `${l.price_impact_pct}% (${formatUsd(l.price_impact_usd ?? 0)})` : 'n/a');
+  lines.push(`| Entry | ${d.entry.tax_pct}% (${formatUsd(d.entry.tax_usd)}) | ${imp(d.entry)} | ${d.entry.total_pct}% (${formatUsd(d.entry.total_usd)}) |`);
+  lines.push(`| Exit | ${d.exit.tax_pct}% (${formatUsd(d.exit.tax_usd)}) | ${imp(d.exit)} | ${d.exit.total_pct}% (${formatUsd(d.exit.total_usd)}) |`);
+  lines.push(`| Round trip | | | **${d.round_trip.cost_pct}% (${formatUsd(d.round_trip.cost_usd)})** — price must move +${d.round_trip.breakeven_move_pct}% to break even |`);
+  lines.push('');
+  const ep = d.expected_payout;
+  if (ep.usd_over_hold != null) {
+    lines.push(`Expected payout: ${formatUsd(ep.usd_per_week ?? 0)}/week (${ep.yield_pct_per_week}% of size, basis ${ep.basis} over ${ep.basis_actual_days}d) → ${formatUsd(ep.usd_over_hold)} in ${ep.reward_asset ?? 'the quote asset'} over ${d.hold_days} days${ep.caution ? ' ⚠ partial history' : ''}.`);
+    if (d.net.usd_over_hold != null) lines.push(`Net of the round trip: ${d.net.usd_over_hold >= 0 ? '+' : ''}${formatUsd(d.net.usd_over_hold)} (${d.net.pct_of_size}% of size)${d.net.breakeven_hold_days != null ? ` — payouts alone cover the trip after ≈${d.net.breakeven_hold_days} days` : ''}.`);
+  } else {
+    lines.push(`Expected payout: unknown${ep.caution_reason ? ` (${ep.caution_reason})` : ''}.`);
+  }
+  const el = d.eligibility;
+  if (el.share_of_supply_pct != null) lines.push(`Your share of each payout: ${el.share_of_supply_pct}% of supply${el.est_usd_per_payout != null ? ` ≈ ${formatUsd(el.est_usd_per_payout)} per distribution` : ''}${el.dust_risk ? ' — DUST RISK' : ''}.`);
+  lines.push('');
+  const facts: string[] = [];
+  if (d.market.market_cap_usd != null) facts.push(`mcap ${formatUsd(d.market.market_cap_usd)}`);
+  if (d.market.liquidity_usd != null) facts.push(`liquidity ${formatUsd(d.market.liquidity_usd)}`);
+  if (d.market.volume_24h_usd != null) facts.push(`24h vol ${formatUsd(d.market.volume_24h_usd)}`);
+  if (d.market.holders != null) facts.push(`${d.market.holders} holders`);
+  if (d.quote.symbol) facts.push(`quote ${d.quote.symbol}${d.quote.category ? ` (${d.quote.category})` : ''}`);
+  facts.push(`payout status ${d.payout_status}`);
+  lines.push(facts.join(' | '));
+  if (d.warnings.length) { lines.push(''); lines.push(`⚠️ ${d.warnings.join(' · ')}`); }
   lines.push('');
   for (const c of d.caveats) lines.push(`_${c}_`);
   lines.push('');

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>SolEnrich — Onchain Intelligence for Solana Agents</title>
-  <meta name="description" content="Onchain intelligence API for Solana agents and LLMs. 44 endpoints: wallet profiling and risk scoring, token due diligence with holder concentration and slippage, whale and smart-money tracking, cross-venue perps market structure (Jupiter, Adrena, Flash, Hyperliquid, dYdX), event alerts, portfolio time-series, agent-attention signals, a fresh-launch trade-lifecycle suite, and StonkFun reward-coin intelligence (gem finder, payout status, yield, screener, launch intel, launch preflight). Deterministic scoring, JSON or LLM-ready briefings. Pay per call with USDC on Solana or Base via x402, or by card via Stripe. No API keys.">
+  <meta name="description" content="Onchain intelligence API for Solana agents and LLMs. 45 endpoints: wallet profiling and risk scoring, token due diligence with holder concentration and slippage, whale and smart-money tracking, cross-venue perps market structure (Jupiter, Adrena, Flash, Hyperliquid, dYdX), event alerts, portfolio time-series, agent-attention signals, a fresh-launch trade-lifecycle suite, and StonkFun reward-coin intelligence (gem finder, payout status, yield, screener, launch intel, launch preflight). Deterministic scoring, JSON or LLM-ready briefings. Pay per call with USDC on Solana or Base via x402, or by card via Stripe. No API keys.">
 
   <link rel="canonical" href="https://www.solenrich.com/">
   <link rel="icon" type="image/png" href="/logo.png">
@@ -1486,7 +1486,7 @@
         </h1>
         <p class="hero-sub">
           Wallet risk, token due diligence, whale and smart-money flows, cross-venue perps structure,
-          and agent-attention signals. 44 endpoints, one API, deterministic scoring, returned as JSON or
+          and agent-attention signals. 45 endpoints, one API, deterministic scoring, returned as JSON or
           as briefings sized for an LLM context window. Pay per call with USDC on Solana or Base (x402),
           or by card (Stripe). No keys, no subscription.
         </p>
@@ -2062,6 +2062,15 @@
           </div>
           <p class="endpoint-desc">What to launch, and against what. Per quote asset: how many coins launched this week, how many still trade, how many paid holders today, survival past day three, median holders, 100 vs 300 bps tax mix with trading and paying rates for each, crowding, and a demand score. Measured 2026-09-06: quote choice moves the odds more than anything else &mdash; 87% of ZEC-paired coins traded today against 25% for the most-launched xStock quote. Plain recommendations on top.</p>
           <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">launch</span></div>
+        </div>
+
+        <div class="endpoint-card reveal">
+          <div class="endpoint-header">
+            <span class="endpoint-name">stonk-quote</span>
+            <span class="endpoint-price">$0.005</span>
+          </div>
+          <p class="endpoint-desc">What does this trade cost, and does the coin pay it back? One size in, one answer out: entry and exit cost with the transfer tax and price impact at that size, the round trip and the price move that breaks even, your share of every payout with a dust warning, and the payout you can expect over the hold from real yield history. PAYS, MARGINAL, or COSTS, with how many days of payouts cover the trip. No swap.</p>
+          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">trade cost</span></div>
         </div>
 
         <div class="endpoint-card reveal">

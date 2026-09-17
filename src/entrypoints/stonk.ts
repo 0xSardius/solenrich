@@ -1,12 +1,13 @@
 import { z } from 'zod';
 import type { Cache } from '../cache';
-import { StonkPairsInput, StonkRewardRiskInput, StonkYieldInput, StonkScreenerInput, StonkPreflightInput, StonkGemsInput, StonkLaunchIntelInput } from '../schemas/stonk';
+import { StonkPairsInput, StonkRewardRiskInput, StonkYieldInput, StonkScreenerInput, StonkPreflightInput, StonkGemsInput, StonkLaunchIntelInput, StonkQuoteInput } from '../schemas/stonk';
 import type { StonkFunClient, StonkPair } from '../sources/stonkfun';
 import { normalizeCategory, type StonkIndex, type StonkCategory, type StonkIndexStatus, type StonkScreenerRow } from '../enrichers/stonk-index';
 import type { GemStage, PayoutStatus, QuoteStats } from '../enrichers/stonk-gems';
 import type { StonkRewardRiskAnalyzer } from '../enrichers/stonk-reward-risk';
 import type { StonkYieldAnalyzer } from '../enrichers/stonk-yield';
 import type { StonkPreflightAnalyzer } from '../enrichers/stonk-preflight';
+import type { StonkQuoteAnalyzer } from '../enrichers/stonk-quote';
 import { formatResponse } from '../formatters';
 import {
   formatStonkPairsBriefing,
@@ -16,6 +17,7 @@ import {
   formatStonkPreflightBriefing,
   formatStonkGemsBriefing,
   formatStonkLaunchIntelBriefing,
+  formatStonkQuoteBriefing,
 } from '../formatters/llm-stonk';
 
 type AddEntrypoint = (def: any) => void;
@@ -149,6 +151,7 @@ export function registerStonkEntrypoints(
     rewardRisk: StonkRewardRiskAnalyzer;
     yieldAnalyzer: StonkYieldAnalyzer;
     preflight: StonkPreflightAnalyzer;
+    quote: StonkQuoteAnalyzer;
     cache: Cache;
   },
 ) {
@@ -354,6 +357,19 @@ export function registerStonkEntrypoints(
         launchParams: input.launch_params,
       });
       return { output: formatResponse(data, input.format, formatStonkPreflightBriefing) };
+    },
+  });
+
+  // --- stonk-quote --------------------------------------------------------------
+  addEntrypoint({
+    key: 'stonk-quote',
+    description:
+      'Cost and payback of one StonkFun trade at one size, no swap: entry and exit cost (transfer tax + price impact at size), round-trip % and the breakeven price move, your pro-rata share of each payout with a dust warning, expected payout over the hold from the yield window with real history, and a PAYS / MARGINAL / COSTS / NOT_PAYING verdict with breakeven hold days. Composes stonk-reward-risk, stonk-yield, and enrich-token-light. Inputs: mint, size_usd (100), hold_days (7).',
+    input: StonkQuoteInput,
+    handler: async (ctx: { input: z.infer<typeof StonkQuoteInput> }) => {
+      const input = ctx.input;
+      const data = await deps.quote.quote(input.mint, input.size_usd, input.hold_days);
+      return { output: formatResponse(data, input.format, formatStonkQuoteBriefing) };
     },
   });
 }

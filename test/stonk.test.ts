@@ -675,3 +675,88 @@ describe('index: gems + new screener filters', () => {
     expect(brief).toContain('How to read this');
   });
 });
+
+// ---------------------------------------------------------------------------
+import { buildStonkQuote, impactAtSize, pickYieldBasis } from '../src/enrichers/stonk-quote';
+import { formatStonkQuoteBriefing } from '../src/formatters/llm-stonk';
+
+describe('stonk-quote: pure math', () => {
+  const est = [
+    { size_usd: 100, price_impact_pct: 0.1 }, { size_usd: 1000, price_impact_pct: 0.5 },
+    { size_usd: 10000, price_impact_pct: 3 }, { size_usd: 100000, price_impact_pct: 20 },
+  ].map((e) => ({ ...e, output_amount: 0, input_amount: 0 }));
+
+  test('impactAtSize interpolates on a log scale and clamps at the ends', () => {
+    expect(impactAtSize(est, 100)).toBe(0.1);
+    expect(impactAtSize(est, 1000)).toBe(0.5);
+    const mid = impactAtSize(est, 3162)!; // geometric midpoint of 1K and 10K
+    expect(mid).toBeGreaterThan(1.5); expect(mid).toBeLessThan(2.0);
+    expect(impactAtSize(est, 1_000_000)).toBe(20);
+    expect(impactAtSize(est, 10)).toBe(0.01);
+    expect(impactAtSize(undefined, 100)).toBeNull();
+    expect(impactAtSize([], 100)).toBeNull();
+  });
+
+  const win = (yield_pct: number | null, actual_days: number | null, window_days: number, caution = false) =>
+    ({ window_days, actual_days, rewards_quote: null, rewards_usd: yield_pct != null ? 100 : null, avg_market_cap_usd: 1e6, yield_pct, annualized_pct: null, caution, caution_reason: caution ? 'partial' : null });
+
+  test('pickYieldBasis prefers the shortest complete window, else lifetime', () => {
+    expect(pickYieldBasis({ trailing_7d: win(1, 7, 7), trailing_30d: win(4, 30, 30), lifetime: win(6, 40, 0) }).basis).toBe('7d');
+    expect(pickYieldBasis({ trailing_7d: win(1, 3, 7, true), trailing_30d: win(4, 10, 30, true), lifetime: win(6, 12, 0) }).basis).toBe('30d');
+    expect(pickYieldBasis({ trailing_7d: win(null, null, 7, true), trailing_30d: win(null, null, 30, true), lifetime: win(2, 2, 0) }).basis).toBe('lifetime');
+    expect(pickYieldBasis({ trailing_7d: win(null, null, 7, true), trailing_30d: win(null, null, 30, true), lifetime: win(null, null, 0, true) }).basis).toBeNull();
+  });
+
+  const risk = (over: Partial<any> = {}) => ({
+    mint: 'M', symbol: 'ZCAT', name: 'Anonymous Cat', payout_status: 'PAYING', trading_cost: { bps: 300, per_transfer_pct: 3, round_trip_pct: 6 },
+    score: 90, level: 'HEALTHY', reasons: [], warnings: [], reward_mechanism: 'transfer_tax',
+    adoption: { listed_on_stonkfun: true, mode: 'reward', launchpad: 'raydium', withdraw_authority_is_stonkfun: true },
+    transfer_fee: { onchain_bps: 300, onchain_maximum_fee_raw: '1', maximum_fee_binds: false, withdraw_withheld_authority: 'X', config_authority: null, withheld_amount_raw: '0', stonkfun_bps: 300, token_program: 'token-2022' },
+    rewards: { distributed_tokens: 10, distributed_raw: null, reward_asset: 'ZEC', payout_count: 100, holder_count: 500, last_payout_at: null, hours_since_last_payout: 1 },
+    flywheel_active: true, holders: { count: 500, top10_pct: 20, source: 'stonkfun' },
+    quote: { mint: 'Q', symbol: 'ZEC', category: 'custom', category_raw: 'custom' },
+    market: { price_usd: 0.1, market_cap_usd: 1_000_000, volume_24h_usd: 50_000, price_change_24h_pct: 5 },
+    age_days: 10, status: 'graduated', graduated: true, next_steps: [], ...over,
+  }) as any;
+  const yld = (weeklyPct: number) => ({
+    mint: 'M', symbol: 'ZCAT', name: null, mode: 'reward', reward_asset: { mint: 'Q', symbol: 'ZEC', decimals: 8, category: 'custom', usd_price: 50 },
+    lifetime: win(weeklyPct * 4, 28, 0), trailing_7d: win(weeklyPct, 7, 7), trailing_30d: win(weeklyPct * 4, 28, 30, true),
+    quote_exposure: { long: ['ZCAT', 'ZEC'], reward_asset: 'ZEC', note: '' }, distributed_tokens_total: 10, payout_count: 100, holder_count: 500,
+    last_payout_at: null, market_cap_usd: 1_000_000, age_days: 10, history: { points: 10, oldest_at: null, index_started: true }, caveats: [], next_steps: [],
+  }) as any;
+  const token = { price_usd: 0.1, market_cap: 1_000_000, volume_24h: 50_000, liquidity: 200_000, slippage_estimates: est, transfer_tax: { bps: 300 } } as any;
+  const NOWQ = Date.parse('2026-09-17T00:00:00Z');
+
+  test('a coin paying 8%/week PAYS at $100 over 7 days; costs are tax + impact each way', () => {
+    const q = buildStonkQuote({ mint: 'M', sizeUsd: 100, holdDays: 7, risk: risk(), yld: yld(8), token, now: NOWQ });
+    expect(q.entry.tax_pct).toBe(3); expect(q.entry.price_impact_pct).toBe(0.1); expect(q.entry.total_pct).toBe(3.1);
+    expect(q.round_trip.cost_pct).toBe(6.2); expect(q.round_trip.cost_usd).toBe(6.2);
+    expect(q.round_trip.breakeven_move_pct).toBeGreaterThan(6.2); // (1.031/0.969 − 1) ≈ 6.4%
+    expect(q.expected_payout.basis).toBe('7d'); expect(q.expected_payout.usd_per_week).toBe(8); expect(q.expected_payout.usd_over_hold).toBe(8);
+    expect(q.net.verdict).toBe('MARGINAL'); // 8 ≥ 6.2 but < 9.3
+    const q2 = buildStonkQuote({ mint: 'M', sizeUsd: 100, holdDays: 14, risk: risk(), yld: yld(8), token, now: NOWQ });
+    expect(q2.net.verdict).toBe('PAYS'); expect(q2.net.usd_over_hold).toBe(9.8);
+    expect(q2.net.breakeven_hold_days).toBeCloseTo(5.43, 1);
+    expect(q.eligibility.share_of_supply_pct).toBe(0.01);
+  });
+
+  test('a thin payout COSTS; no payouts is NOT_PAYING; no history is UNKNOWN', () => {
+    expect(buildStonkQuote({ mint: 'M', sizeUsd: 100, holdDays: 7, risk: risk(), yld: yld(0.5), token, now: NOWQ }).net.verdict).toBe('COSTS');
+    const never = buildStonkQuote({ mint: 'M', sizeUsd: 100, holdDays: 7, risk: risk({ payout_status: 'NEVER' }), yld: yld(8), token, now: NOWQ });
+    expect(never.net.verdict).toBe('NOT_PAYING'); expect(never.warnings.some((w) => w.includes('never paid'))).toBe(true);
+    const none = buildStonkQuote({ mint: 'M', sizeUsd: 100, holdDays: 7, risk: risk(), yld: null, token, now: NOWQ });
+    expect(none.net.verdict).toBe('UNKNOWN'); expect(none.caveats.some((c) => c.includes('unknown, not zero'))).toBe(true);
+  });
+
+  test('size drives impact and dust risk; missing token leg degrades to tax only', () => {
+    const big = buildStonkQuote({ mint: 'M', sizeUsd: 10_000, holdDays: 7, risk: risk(), yld: yld(8), token, now: NOWQ });
+    expect(big.entry.price_impact_pct).toBe(3); expect(big.round_trip.cost_pct).toBe(12);
+    const tiny = buildStonkQuote({ mint: 'M', sizeUsd: 1, holdDays: 7, risk: risk(), yld: yld(8), token, now: NOWQ });
+    expect(tiny.eligibility.dust_risk).toBe(true);
+    const noTok = buildStonkQuote({ mint: 'M', sizeUsd: 100, holdDays: 7, risk: risk(), yld: yld(8), token: null, now: NOWQ });
+    expect(noTok.entry.price_impact_pct).toBeNull(); expect(noTok.entry.total_pct).toBe(3);
+    expect(noTok.caveats.some((c) => c.includes('tax only'))).toBe(true);
+    const brief = formatStonkQuoteBriefing(big);
+    expect(brief).toContain('StonkFun Quote'); expect(brief).toContain('Round trip');
+  });
+});

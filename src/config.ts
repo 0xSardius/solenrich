@@ -80,6 +80,7 @@ export const PRICING = {
   'stonk-launch-preflight': '0.25',
   'stonk-gems': '0.03',
   'stonk-launch-intel': '0.02',
+  'stonk-quote': '0.005',
 } as const;
 
 /** Entrypoints served without a paywall. Kept out of PRICING so x402/MPP never gate them. */
@@ -118,4 +119,5 @@ export const CACHE_TTL = {
   stonkPricing: 60,      // 1 minute — LaunchLab curve constants (raise drifts with price)
   stonkRewardRisk: 120,  // 2 minutes — on-chain fee config + rewards read
   stonkYield: 300,       // 5 minutes — window math over daily snapshots
+  stonkQuote: 120,       // 2 minutes — composed cost/payback at one size
 } as const;

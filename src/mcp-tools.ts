@@ -719,6 +719,17 @@ export const MCP_TOOLS: McpToolDef[] = [
       format: 'llm',
     }),
   },
+  {
+    name: 'stonk_quote',
+    title: 'StonkFun Trade Quote',
+    description: 'What one StonkFun trade costs at a given size and what the position is expected to pay back while held. Entry and exit cost (transfer tax + price impact at size), round-trip % and breakeven price move, pro-rata payout share with a dust warning, expected payout over the hold from real yield history, and a PAYS / MARGINAL / COSTS / NOT_PAYING verdict with breakeven hold days. No swap. Use before sizing any reward-coin position; follow with trenches_check to time the entry.',
+    inputSchema: {
+      mint: z.string().describe('StonkFun reward coin mint address (base58)'),
+      size_usd: z.number().min(1).max(1_000_000).default(100).describe('Position size in USD'),
+      hold_days: z.number().min(0.25).max(365).default(7).describe('Intended holding period in days'),
+    },
+    handler: async (args) => invoke('stonk-quote', { mint: args.mint, size_usd: args.size_usd ?? 100, hold_days: args.hold_days ?? 7, format: 'llm' }),
+  },
 ];
 
 export function createSolEnrichMcpServer(): McpServer {
