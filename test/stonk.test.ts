@@ -375,7 +375,8 @@ describe('index: screener over injected rows', () => {
       getTokens: async () => ({ tokens: page, pagination: { page: 1, pageSize: 25, total: page.length, totalPages: 1 } }),
       getRewardsLedger: async () => ledger,
     } as unknown as StonkFunClient;
-    const jupiter = { getPrice: async (mints: string[]) => Object.fromEntries(mints.map((m) => [m, { id: m, price: 100, mintSymbol: '', vsToken: '', vsTokenSymbol: 'USDC' }])) } as any;
+    const fakePrices = async (mints: string[]) => Object.fromEntries(mints.map((m) => [m, { id: m, price: 100, mintSymbol: '', vsToken: '', vsTokenSymbol: 'USDC' }]));
+    const jupiter = { getPrice: fakePrices, getPriceUncached: fakePrices } as any;
     const idx = new StonkIndex(client, jupiter, new Cache(), () => NOW);
     await idx.refresh();
     return idx;
@@ -615,7 +616,8 @@ describe('index: gems + new screener filters', () => {
       getTokens: async () => ({ tokens: page, pagination: { page: 1, pageSize: 25, total: page.length, totalPages: 1 } }),
       getRewardsLedger: async () => ledger,
     } as unknown as StonkFunClient;
-    const jupiter = { getPrice: async (mints: string[]) => Object.fromEntries(mints.map((m) => [m, { id: m, price: 100, mintSymbol: '', vsToken: '', vsTokenSymbol: 'USDC' }])) } as any;
+    const fakePrices = async (mints: string[]) => Object.fromEntries(mints.map((m) => [m, { id: m, price: 100, mintSymbol: '', vsToken: '', vsTokenSymbol: 'USDC' }]));
+    const jupiter = { getPrice: fakePrices, getPriceUncached: fakePrices } as any;
     const idx = new StonkIndex(client, jupiter, new Cache(), () => NOW);
     await idx.refresh();
     return idx;

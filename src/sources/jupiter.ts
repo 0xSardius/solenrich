@@ -59,37 +59,51 @@ export class JupiterClient {
     const result: Record<string, JupiterPrice> = {};
     const misses: string[] = [];
 
-    for (const mint of mints) {
-      const cached = await this.cache.get<JupiterPrice>(`jupiter:price:${mint}`);
-      if (cached) {
-        result[mint] = cached;
-      } else {
-        misses.push(mint);
-      }
-    }
+    // One multi-get instead of one get per mint. The per-mint loop cost N Redis
+    // commands per call; with 257 quote mints refreshed every 10 minutes by the
+    // StonkFun index, that plus the per-miss sets was ~520 commands per refresh
+    // (~2.2M/month) and is what exhausted the Upstash free tier on 2026-09-16.
+    const cached = await this.cache.mget<JupiterPrice>(mints.map((m) => `jupiter:price:${m}`));
+    mints.forEach((mint, i) => {
+      const hit = cached[i];
+      if (hit) result[mint] = hit;
+      else misses.push(mint);
+    });
 
     if (misses.length === 0) return result;
 
-    const url = `https://lite-api.jup.ag/price/v3?ids=${misses.join(',')}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`Jupiter Price HTTP ${res.status}: ${await res.text()}`);
-
-    const raw: Record<string, { usdPrice?: number; decimals?: number } | null> = await res.json();
-
-    for (const [mint, entry] of Object.entries(raw ?? {})) {
-      if (!entry || typeof entry.usdPrice !== 'number') continue;
-      const price: JupiterPrice = {
-        id: mint,
-        mintSymbol: '',
-        vsToken: '',
-        vsTokenSymbol: 'USDC',
-        price: entry.usdPrice,
-      };
+    const fetched = await this.fetchPrices(misses);
+    for (const [mint, price] of Object.entries(fetched)) {
       result[mint] = price;
       await this.cache.set(`jupiter:price:${mint}`, price, CACHE_TTL.jupiterPrice);
     }
 
     return result;
+  }
+
+  /**
+   * Prices with NO cache reads or writes. For callers that keep their own
+   * price table and refresh on a schedule (the StonkFun index): the 60s price
+   * TTL guarantees a miss on every 10-minute refresh, so caching only spends
+   * Redis commands. Upstream cost is identical (one Jupiter request per ≤50
+   * mints either way).
+   */
+  async getPriceUncached(mints: string[]): Promise<Record<string, JupiterPrice>> {
+    return this.fetchPrices(mints);
+  }
+
+  private async fetchPrices(mints: string[]): Promise<Record<string, JupiterPrice>> {
+    if (mints.length === 0) return {};
+    const url = `https://lite-api.jup.ag/price/v3?ids=${mints.join(',')}`;
+    const res = await fetch(url);
+    if (!res.ok) throw new Error(`Jupiter Price HTTP ${res.status}: ${await res.text()}`);
+    const raw: Record<string, { usdPrice?: number; decimals?: number } | null> = await res.json();
+    const out: Record<string, JupiterPrice> = {};
+    for (const [mint, entry] of Object.entries(raw ?? {})) {
+      if (!entry || typeof entry.usdPrice !== 'number') continue;
+      out[mint] = { id: mint, mintSymbol: '', vsToken: '', vsTokenSymbol: 'USDC', price: entry.usdPrice };
+    }
+    return out;
   }
 
   /** Get token metadata by mint address */

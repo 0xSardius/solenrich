@@ -430,7 +430,9 @@ export class StonkIndex {
     for (let i = 0; i < mints.length; i += 50) {
       const batch = mints.slice(i, i + 50);
       try {
-        const prices = await this.jupiter.getPrice(batch);
+        // Uncached on purpose: the index owns `quotePrices`, and the 60s price
+        // TTL made every 10-minute refresh a full miss (257 gets + 257 sets).
+        const prices = await this.jupiter.getPriceUncached(batch);
         for (const [mint, p] of Object.entries(prices)) {
           if (p && typeof p.price === 'number' && p.price > 0) this.quotePrices.set(mint, p.price);
         }
