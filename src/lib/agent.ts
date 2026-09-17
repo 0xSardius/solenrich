@@ -171,6 +171,7 @@ setInterval(() => {
   const now = new Date();
   const day = now.toISOString().slice(0, 10);
   if (day !== redisDay) { redisDay = day; redisDayStart = cache.commandCount; }
+  if (day !== settleFailures.day) { settleFailures.day = day; settleFailures.today = 0; }
   const today = cache.commandCount - redisDayStart;
   const hour = now.toISOString().slice(0, 13);
   if (today > REDIS_WARN_PER_DAY && hour !== redisLastWarnHour) {
@@ -198,6 +199,8 @@ app.use('/mcp', async (c, next) => {
 // it answers "what does a buyer like 2otm6W… cost us in commands" without a
 // dashboard. Surfaced in /metrics → process.redis.
 const redisPerCall = new Map<string, { calls: number; commands: number }>();
+// Paid attempts that came back 402 (payment attached, settlement refused).
+const settleFailures = { today: 0, day: new Date().toISOString().slice(0, 10), lastReason: null as string | null };
 
 app.use('/entrypoints/*/invoke', async (c, next) => {
   const startedAt = Date.now();
@@ -238,6 +241,21 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
   // first organic buyer's discovery channel could not be reconstructed).
   const ua = (c.req.header('user-agent') ?? '-').replace(/\s+/g, ' ').slice(0, 80);
   console.log(`[invoke] key=${endpointKey} status=${c.res.status} ms=${Date.now() - startedAt} redis=${redisUsed} payer=${payer} ua="${ua}"`);
+  // A 402 with a payment attached is a FAILED SETTLEMENT, not an unpaid probe.
+  // 2026-09-12 → 09-17: CDP's free tier (1,000 settlements/month) ran out
+  // mid-session for the first organic buyer and every paid call after it was
+  // refused for five days with nothing in the logs but ordinary-looking 402s.
+  // Decode the facilitator's reason so the line says why.
+  if (c.res.status === 402 && (payer.startsWith('x402:') || payer.startsWith('mpp:'))) {
+    let reason = 'unknown';
+    try {
+      const pr = c.res.headers.get('payment-response');
+      if (pr) reason = String(JSON.parse(Buffer.from(pr, 'base64').toString('utf8')).errorReason ?? 'unknown').slice(0, 200);
+    } catch { /* keep unknown */ }
+    settleFailures.today++;
+    settleFailures.lastReason = reason;
+    console.warn(`[settle-fail] key=${endpointKey} payer=${payer} reason="${reason}"`);
+  }
   if (c.res.status === 200) {
     const r = redisPerCall.get(endpointKey) ?? { calls: 0, commands: 0 };
     r.calls++; r.commands += redisUsed; redisPerCall.set(endpointKey, r);
@@ -1513,6 +1531,10 @@ app.get('/metrics', async (c) => {
       // free tier capped at 500K after one 1,047-call buyer session. Per-call
       // averages are approximate under concurrency but good enough to price a
       // buyer: calls × avg ≈ commands ≈ $0.20 per 100K on pay-as-you-go.
+      // Paid attempts refused by the facilitator today, with the last decoded
+      // reason. Nonzero here means revenue is being turned away right now.
+      settlement_failures_today: settleFailures.today,
+      settlement_last_failure_reason: settleFailures.lastReason,
       redis: {
         ...cache.stats(),
         per_call_avg_by_endpoint: Object.fromEntries(
