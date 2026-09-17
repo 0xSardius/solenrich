@@ -153,11 +153,29 @@ app.use('*', async (c, next) => {
 });
 
 const RSS_WARN_BYTES = 1_073_741_824; // 1GB — ~5x normal baseline, far below the 8GB cap
+// Redis command budget watch (2026-09-16). Upstash bills per command; a
+// background regression (the price refresh, ~75K/day) exhausted the free
+// tier before anyone noticed. Warn once an hour once today's count passes
+// the threshold. Default 100K/day ≈ $0.20/day on pay-as-you-go.
+const REDIS_WARN_PER_DAY = Number(process.env.REDIS_WARN_PER_DAY ?? 100_000);
+let redisDay = new Date().toISOString().slice(0, 10);
+let redisDayStart = cache.commandCount;
+let redisLastWarnHour = '';
 setInterval(() => {
   const rss = process.memoryUsage().rss;
   if (rss > RSS_WARN_BYTES) {
     const active = [...inflight.entries()].map(([r, n]) => `${r} x${n}`).join(', ') || 'none';
     console.warn(`[memwatch] RSS ${(rss / 1e6).toFixed(0)}MB — in-flight: ${active}`);
+  }
+  const now = new Date();
+  const day = now.toISOString().slice(0, 10);
+  if (day !== redisDay) { redisDay = day; redisDayStart = cache.commandCount; }
+  const today = cache.commandCount - redisDayStart;
+  const hour = now.toISOString().slice(0, 13);
+  if (today > REDIS_WARN_PER_DAY && hour !== redisLastWarnHour) {
+    redisLastWarnHour = hour;
+    const byOp = Object.entries(cache.stats().by_op).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => `${k}=${v}`).join(' ');
+    console.warn(`[rediswatch] ${today.toLocaleString()} Redis commands since 00:00 UTC (threshold ${REDIS_WARN_PER_DAY.toLocaleString()}; ≈$${((today * 30) / 100_000 * 0.2).toFixed(2)}/mo at this pace) — top ops since boot: ${byOp}`);
   }
 }, 60_000);
 
@@ -214,7 +232,11 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
   const endpointKey = c.req.path.split('/')[2];
   const payer = extractCaller(xPaymentHeader, authHeader, forwardedFor) ?? 'unknown';
   const redisUsed = cache.commandCount - redisBefore;
-  console.log(`[invoke] key=${endpointKey} status=${c.res.status} ms=${Date.now() - startedAt} redis=${redisUsed} payer=${payer}`);
+  // user-agent names the client (x402 fetch lib, pay CLI, python, a platform)
+  // — the only hint we get about WHERE a caller found us (2026-09-16: the
+  // first organic buyer's discovery channel could not be reconstructed).
+  const ua = (c.req.header('user-agent') ?? '-').replace(/\s+/g, ' ').slice(0, 80);
+  console.log(`[invoke] key=${endpointKey} status=${c.res.status} ms=${Date.now() - startedAt} redis=${redisUsed} payer=${payer} ua="${ua}"`);
   if (c.res.status === 200) {
     const r = redisPerCall.get(endpointKey) ?? { calls: 0, commands: 0 };
     r.calls++; r.commands += redisUsed; redisPerCall.set(endpointKey, r);
