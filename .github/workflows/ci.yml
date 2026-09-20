@@ -31,3 +31,6 @@ jobs:
       # /mcp method-gating guard — imports the app in-process, no network needed.
       # Protects the 2026-07-21 OOM fix (GET /mcp must stay 405).
       - run: bun test test/mcp-methods.test.ts
+      # Settle-first middleware + cache warmer (A1, 2026-09-20) — fake resource
+      # server, in-process Hono app, no network.
+      - run: bun test test/settle-first.test.ts
