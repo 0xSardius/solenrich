@@ -1,7 +1,95 @@
 # Session Checkpoint
 
 ## Last session date
-2026-09-06
+2026-09-20
+
+## ▶️ RESUME HERE (2026-09-20) — REGROUP: stonk suite first, then site/SEO, then Moneta · goal 1,000 tx/day
+
+### What happened (2026-09-19 → 09-20)
+
+- **Traffic since 9/17 (Redis counters, cross-checked against USDC landing in the ATA):** 9/17 = 49 paid calls,
+  all SolScout dogfood ($0.976). 9/18 = 1 organic (`stonk-yield`, wallet `34CMQ3…5v2z`, new). 9/19 = 4 organic
+  (`34CMQ3` again: `stonk-screener`, `smart-money-trenches`, `whale-watch`; plus `s3ntry…qgNk`, new, one
+  `whale-watch`). Organic total 5 payments / $0.081, every Redis 200 matched a settlement → the CDP card fix
+  holds. `34CMQ3` calls land on the hour, 12h apart → a scheduled agent. Third paying wallet on the stonk line.
+  Free `stonk-pairs`: 270–290/day from the same cloud IP fleet. Prod up 47h, 313 MB RSS.
+  Script: `local/scripts/since-last.ts` (gitignored) — one command for this report.
+- **TypeSafe (`typesafe:typesafe-ai` plugin, Jev 1.13) assessed for Moneta.** Verdict: bad fit for the core
+  loop (all inputs numeric; their own limits page says Jev is "not a calculator", weak on numeric comparison and
+  dates). Good fit for one leg: semantic features over coin name/symbol/theme (narrative fit to the quote asset,
+  copycat of a known ticker, launch theme) as extra columns in Moneta's feature vector, labeled by the tape
+  (their feature-discovery pattern). $0.042/M input tokens → ~15¢ to score the whole 8,000-coin index. Best fit
+  in the whole portfolio is actually the `query` router (intent routing is their headline pattern). **Decision:
+  not on the Moneta v1 path.** Pilot = offline: score index rows with 3–4 questions, join to census labels (paid
+  24h / traded past day 3), see if any text bucket beats the 12.7% base pay rate. Needs `TYPESAFE_API_KEY`.
+- **Site + agent-surface audit (live, 2026-09-20):** findings are the tasks in Block B below. Headline: Google
+  already ranks www #4 for "stonkfun reward coins api agents yield screener" with zero targeting; the other
+  results (Bitquery raw API, The Stonk Board, STONKSCREENER) are human dashboards. Nobody else sells StonkFun
+  intelligence to agents.
+- **Regroup decisions (Sardius):** emphasize the stonk suite and complete it BEFORE Moneta; do the site/SEO
+  audit fixes plus a dedicated StonkFun page; then Moneta; goal **1,000 tx/day** (= one daily scanning agent
+  like the 9/12 buyer, or ~50 agents × 20 calls; ≈ $6/day on the stonk price mix — a traffic goal, not a
+  revenue goal yet). Work one task at a time, review each before the next.
+
+### TASK LIST — 2026-09-20 (one at a time, in this order; each row = one review)
+
+Status key: `[ ]` open · `[~]` in progress · `[x]` done + verified live · `[-]` dropped
+
+**Block A — revenue protection (do first, unchanged from 9/17)**
+
+| # | Task | Size | Done when |
+|---|---|---|---|
+| A1 | `[ ]` Settle-before-handler (or warm-cache) for slow endpoints. `smart-money-flow` fails every paid call (handler ~60s > blockhash expiry); `smart-money-trenches` 34s, `trenches-check` 34s, `trenches-scan` 26s are near the edge. | ½ day | Paid SolScout run settles `smart-money-flow`; no endpoint over 20s between payment verify and settle. |
+| A2 | `[ ]` Hourly prod smoke with one real settlement ($0.002 `parse-transaction`) + 402 sweep; alerts on failure. The CDP outage sat 5 days. | small | Runs on Railway cron; a forced failure is reported within the hour. |
+| A3 | `[ ]` Richer `/health`: cache mode, stonk index age, facilitator reachability, settlement failures today. Sardius points an uptime checker at it. | small | `/health` returns the fields; uptime checker configured (Sardius). |
+
+**Block B — site + agent surfaces (audit fixes) + the StonkFun page**
+
+| # | Task | Size | Done when |
+|---|---|---|---|
+| B1 | `[ ]` One endpoint count everywhere. Stale "38" in og:description, twitter:description, JSON-LD, the "38 enrichment endpoints" H2, GitHub README title/description; docs.html says 42. Prefer copy that does not hard-code the number, or derive it in one place. | small | `grep -n "38 \|42 " landing/ README.md` finds no stale count; live pages verified. |
+| B2 | `[ ]` Kill the duplicate site: `api.solenrich.com/` serves the full landing with no canonical and no robots.txt. Add `<link rel="canonical" href="https://www.solenrich.com/">` on the API root, `robots.txt` on the API host (allow `/llms.txt` `/docs` `/openapi.json` `/.well-known/*`, disallow `/entrypoints/`), and `llms-full.txt` (docs JSON rendered to markdown) on both hosts. | small | curl shows canonical + robots on api host; `llms-full.txt` 200 on www and api. |
+| B3 | `[ ]` `llms.txt` reorder: lead paragraph names StonkFun + trenches + perps; group endpoints by suite with headers, stonk suite first; `stonk-pairs` (free) marked as the entry call. | small | Live `llms.txt` opens with the suites; stonk block is the first endpoint group. |
+| B4 | `[ ]` **StonkFun page** `/stonkfun` on www: what reward coins are, the census numbers (8,000 coins / 13% paying / median 2 holders / ZEC 87% traded), the 7 endpoints with one paid-call example each, the trade loop (pairs → gems → reward-risk → quote → exit-signal), FAQ targeting "StonkFun API", "StonkFun reward coins", "StonkFun yield", "StonkFun gems". Links from the landing nav + sitemap + JSON-LD. | 1 day | Page live, in sitemap, Search Console re-index requested; landing links to it. |
+| B5 | `[ ]` Per-endpoint static pages `/endpoints/{key}` generated from `ENDPOINT_META` + OpenAPI (46 pages: description, price, input schema, example request/response, `next_steps`, pay instructions). Build script writes into `landing/endpoints/`; sitemap regenerated by the same script. | 1 day | 46 pages live, each in sitemap, spot-check 3 in Search Console URL inspection. |
+| B6 | `[ ]` Sitemap: regenerate (B4/B5 pages, `/agent-card`, real lastmod); robots on www unchanged. Search Console: confirm property exists (Sardius) and submit sitemap. | small | Sitemap lists every html page; Search Console shows it fetched. |
+| B7 | `[ ]` Per-quote-asset stonk pages (NVDAX, SPYX, ZEC, …) with daily-refreshed quote stats from the index — content The Stonk Board does for humans, ours for agents. **Phase 2, only after B4/B5 show impressions.** | 1 day | Deferred. |
+
+**Block C — complete the stonk suite (before Moneta, per 2026-09-20 decision)**
+
+| # | Task | Size | Done when |
+|---|---|---|---|
+| C1 | `[ ]` Payout-staleness alerts on `check-alerts`: new event types `stonk_payout_stale` (PAYING → STALE), `stonk_payout_resumed`, `stonk_payout_never_after_24h`; criteria knob `stonk_stale_hours` (default 24). The hold leg for a yield holder; reuses existing alert infra + the 10-min index. | ½ day | Unit test with fixture transitions; live check-alerts on a known coin; docs/OpenAPI/MCP/stress/README updated per the checklist. |
+| C2 | `[ ]` Quote-asset issuer registry (issuer, redemption structure, jurisdiction, one-line risk) for xStocks/Backed, PreStocks, Tessera, ZEC; surfaced in `stonk-quote.quote_exposure` and `stonk-launch-intel` per-quote rows. Config table, no new endpoint. | ½ day | Registry file + tests; `stonk-quote` on a NVDAX coin shows the issuer line live. |
+| C3 | `[ ]` `stonk-coin-payouts` ($0.002/page) + `stonk-wallet-payouts` ($0.005) backed by Stonk Ledger (`../../solana/stonk-ledger`, live at stonk-ledger.vercel.app). Needs ledger-side keyset paging + `since` cursor + shared header. **Gated: after the Stocklana submission closes 9/23.** The 9/12 buyer's exact verb. Full new-endpoint checklist (10 items) both endpoints. | 1 day | Both settle in a paid SolScout run; bazaar rows appear; pay.sh snapshot + skill forks refreshed. |
+| C4 | `[ ]` Batched `stonk-yield` (`mints[]` ≤ 25, priced per mint so revenue is neutral: $0.005 × n). Better for the scanning buyer, lowers tx count; accepted. | ½ day | Settles live; documented as the scan path in llms.txt + the StonkFun page. |
+| C5 | `[ ]` Decide the sub-cent floor (CDP $0.001/settlement = 20% of a $0.005 call): raise floor to $0.01, or CDP batch settlement, or accept. **Sardius decision; Claude sizes.** Blocks nothing. | decision | Written into config + docs. |
+| C6 | `[-]` `stonk-payout-webhook` (no subscriber yet) · `[-]` `stonk-drip-prepare` (write path). Revisit on the first ask. | — | — |
+
+**Block D — Moneta (after Block C)**
+
+| # | Task | Size | Done when |
+|---|---|---|---|
+| D1 | `[ ]` Moneta `stonk` strategy plugin on the Eris harness (own repo `../moneta`, remote `0xSardius/moneta`): scout `stonk-gems` + `stonk-screener` live_only → vet `stonk-reward-risk` + `trenches-check` → size `stonk-quote` → watch `exit-signal` + payout staleness (C1). Two books: yield + trading. Paper only. | 1–1½ sessions | Smoke-verified against prod; daily tape written; excluded from organic metrics (wallet listed in `organic_callers`). |
+| D2 | `[ ]` Two-week paper run on Railway; read hit rate and rotation cost from the tape; feed gem weights back (the outcome loop). | 2 wk elapsed | Tape has ≥ 200 labeled verdicts; weight change proposed with numbers. |
+| D3 | `[ ]` TypeSafe pilot (offline, optional): text-feature questions over index rows vs census labels. Needs `TYPESAFE_API_KEY`. Goes into D1 only if a text bucket beats the 12.7% base pay rate. | ½ day | Two numbers in the checkpoint: pay-rate split by bucket, and cost/latency per call. |
+| D4 | `[ ]` Public tape card on www (Moneta's non-cherry-picked verdicts + outcomes). | 1 day | Deferred until D2 has data. |
+
+**Block E — distribution (parallel, mostly Sardius)**
+
+| # | Task | Owner | Status |
+|---|---|---|---|
+| E1 | pay.sh listing PR `solana-foundation/pay-skills#176` — maintainer channel | Sardius | stalled since Aug |
+| E2 | agentic.market enrichment ask (name/category/copy) | Sardius | pending |
+| E3 | Skill PRs `sendaifun/skills#107`, `Clawpump/agents-skills#10` — watch; refresh after C1–C4 | Claude | open |
+| E4 | Smithery claim + SE01 dedupe; Glama/mcp.so status | Sardius | pending |
+| E5 | Search Console property for www.solenrich.com (needed by B4–B6) | Sardius | **ask** |
+| E6 | Spend caps: CDP billing limit (~$50/mo) + Upstash budget; USDC sweep from the pay-to wallet | Sardius | pending |
+| E7 | Weekly traffic read: `bun run local/scripts/since-last.ts` (edit DATES) | Claude | recurring |
+
+**Verification loop for the 1,000/day goal:** organic paid calls/day and distinct paying wallets/week from
+`since-last.ts`; Search Console impressions for "stonkfun" queries after B4/B5; bazaar/agentic.market rows after
+C3. Re-rank the list when any of these moves.
 
 ## ▶️ RESUME HERE (2026-09-17 PM) — CDP OUTAGE FIXED · full paid run 44/45 · settle-fail alarm · TODO re-ranked
 
