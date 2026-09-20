@@ -86,6 +86,23 @@ export const PRICING = {
 /** Entrypoints served without a paywall. Kept out of PRICING so x402/MPP never gate them. */
 export const FREE_ENDPOINTS = ['stonk-pairs'] as const;
 
+/**
+ * Endpoints whose cold handler can outlive the payer's Solana blockhash (~60s).
+ * These settle BEFORE the handler runs (src/lib/settle-first.ts). Measured cold
+ * 2026-09-20, local vs prod upstreams: smart-money-flow 30s (60s on Railway),
+ * smart-money-trenches 27s, trenches-scan 26s, trenches-check 24s. Everything
+ * else is under 5s cold and keeps the stock verify → handler → settle order.
+ */
+export const SETTLE_FIRST_ENDPOINTS = new Set([
+  'smart-money-flow',
+  'smart-money-trenches',
+  'trenches-scan',
+  'trenches-check',
+]);
+
+/** Cache warmer: keep a default-input result warm only while the endpoint was called within this window. */
+export const WARM_DEMAND_WINDOW_SEC = 2 * 3600;
+
 /** Cache TTL in seconds per data type */
 export const CACHE_TTL = {
   tokenPrice: 60,

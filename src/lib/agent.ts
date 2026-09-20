@@ -5,8 +5,10 @@ import { http } from "@lucid-agents/http";
 // We handle Solana x402 payments manually with @x402/svm below.
 
 // x402 payment middleware
-import { paymentMiddleware } from "@x402/hono";
+import { paymentMiddlewareFromHTTPServer, x402HTTPResourceServer } from "@x402/hono";
 import { x402ResourceServer } from "@x402/hono";
+import { settleFirstMiddleware, settleFirstStats } from "./settle-first";
+import { CacheWarmer } from "./cache-warmer";
 import { ExactSvmScheme } from "@x402/svm/exact/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
@@ -90,7 +92,7 @@ import { registerSignalEntrypoint } from "../entrypoints/signals";
 import { SignalTracker } from "../enrichers/signal-tracker";
 import { registerAlertEntrypoint } from "../entrypoints/alerts";
 import { AlertChecker } from "../enrichers/alert-checker";
-import { CONFIG, PRICING, FREE_ENDPOINTS } from "../config";
+import { CONFIG, PRICING, FREE_ENDPOINTS, CACHE_TTL, SETTLE_FIRST_ENDPOINTS, WARM_DEMAND_WINDOW_SEC } from "../config";
 
 // --- Agent setup ---
 
@@ -199,6 +201,9 @@ app.use('/mcp', async (c, next) => {
 // it answers "what does a buyer like 2otm6W… cost us in commands" without a
 // dashboard. Surfaced in /metrics → process.redis.
 const redisPerCall = new Map<string, { calls: number; commands: number }>();
+// Demand-driven cache warmer for the slow default-input endpoints. Entries are
+// registered once the enrichers exist (below); demand is noted per 200 here.
+const warmer = new CacheWarmer({ defaultDemandWindowSec: WARM_DEMAND_WINDOW_SEC });
 // Paid attempts that came back 402 (payment attached, settlement refused).
 const settleFailures = { today: 0, day: new Date().toISOString().slice(0, 10), lastReason: null as string | null };
 
@@ -257,6 +262,7 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
     console.warn(`[settle-fail] key=${endpointKey} payer=${payer} reason="${reason}"`);
   }
   if (c.res.status === 200) {
+    warmer.note(endpointKey);
     const r = redisPerCall.get(endpointKey) ?? { calls: 0, commands: 0 };
     r.calls++; r.commands += redisUsed; redisPerCall.set(endpointKey, r);
   }
@@ -545,7 +551,19 @@ if (PAYMENTS_ENABLED && resourceServer) {
   const x402RouteEntries = Object.entries(PRICING)
     .map(([key, price]) => [`POST /entrypoints/${key}/invoke`, routeConfig(key, price)] as const);
   const x402Routes: RoutesConfig = Object.fromEntries(x402RouteEntries);
-  const x402MW = paymentMiddleware(x402Routes, resourceServer);
+  // One HTTP resource server shared by both middlewares below, so route config,
+  // facilitator, and bazaar extension are identical whichever order settles.
+  const x402HttpServer = new x402HTTPResourceServer(resourceServer, x402Routes);
+  const x402MW = paymentMiddlewareFromHTTPServer(x402HttpServer);
+  // Slow endpoints settle BEFORE the handler (see src/lib/settle-first.ts):
+  // the stock verify → handler → settle order loses the payment when the
+  // handler outlives the payer's ~60s blockhash. Losses (paid, then 5xx) are
+  // logged and counted; they are the price of not refusing every settlement.
+  const settleFirstMW = settleFirstMiddleware(x402HttpServer, {
+    onLoss: ({ key, status, error }) =>
+      console.warn(`[settle-first-loss] key=${key} status=${status}${error ? ` error="${error.slice(0, 160)}"` : ''} — buyer paid, handler failed`),
+  });
+  const isSettleFirst = (path: string) => SETTLE_FIRST_ENDPOINTS.has(path.split('/')[2] ?? '');
 
   // Conditional x402 middleware: x402 is the default payment protocol.
   // Only skip x402 when an explicit MPP credential (Authorization: Payment) is present.
@@ -560,10 +578,11 @@ if (PAYMENTS_ENABLED && resourceServer) {
       return;
     }
     // x402 handles: validates X-Payment if present, returns 402 challenge if not
+    if (isSettleFirst(c.req.path)) return settleFirstMW(c, next);
     return x402MW(c, next);
   });
 
-  console.log(`[x402] Payment middleware enabled on ${Object.keys(x402Routes).length} endpoints — ${PAYMENT_NETWORK}, payTo: ${PAY_TO}`);
+  console.log(`[x402] Payment middleware enabled on ${Object.keys(x402Routes).length} endpoints — ${PAYMENT_NETWORK}, payTo: ${PAY_TO}; settle-first on ${SETTLE_FIRST_ENDPOINTS.size}: ${[...SETTLE_FIRST_ENDPOINTS].join(', ')}`);
 
   // --- MPP Payment Middleware (Stripe fiat fallback on all endpoints) ---
 
@@ -745,6 +764,15 @@ registerOrchestrationEntrypoints(addEntrypoint, trendingSignalsAnalyzer, smartMo
 // docs/trenches-scope.md — first trenches endpoint, Eris's first signal).
 const trenchesSmartMoney = new TrenchesSmartMoneyAnalyzer(helius, dexscreener, copyTradeAnalyzer, cache);
 registerTrenchesEntrypoints(addEntrypoint, trenchesSmartMoney);
+
+// Warm the default-input results of the two slowest cacheable endpoints while
+// they are in demand. The `run` calls mirror the handlers' schema defaults so
+// they fill the same cache key (smart-money-flow: 14d / 0.55 / 10 / graph;
+// smart-money-trenches: 12h / 6h / 1 / 10). trenches-scan (90s TTL) and
+// trenches-check (per mint) are not warmed — settle-first covers them.
+warmer.register({ key: 'smart-money-flow', ttlSec: CACHE_TTL.copyTrade, run: () => smartMoneyAnalyzer.enrich(undefined, 14, 0.55, 10, true) });
+warmer.register({ key: 'smart-money-trenches', ttlSec: CACHE_TTL.trenches, run: () => trenchesSmartMoney.enrich(12, 6, 1, 10) });
+if (process.env.NODE_ENV !== 'test') warmer.start();
 
 // runner-scan — the "WHAT is the token doing" half of runner detection
 // (docs/runner-detection-scope.md). On-chain velocity: accelerating buy rate,
@@ -1535,6 +1563,16 @@ app.get('/metrics', async (c) => {
       // reason. Nonzero here means revenue is being turned away right now.
       settlement_failures_today: settleFailures.today,
       settlement_last_failure_reason: settleFailures.lastReason,
+      // Settle-first endpoints (src/lib/settle-first.ts): settlements taken
+      // before the handler, and the paid-then-failed count. A nonzero loss
+      // number means a buyer paid for an error today — look for
+      // [settle-first-loss] in the logs.
+      settle_first_settled_today: settleFirstStats.settledToday,
+      settle_first_losses_today: settleFirstStats.today,
+      settle_first_last_loss: settleFirstStats.lastKey ? { key: settleFirstStats.lastKey, status: settleFirstStats.lastStatus } : null,
+      // Demand-driven warmer (src/lib/cache-warmer.ts): default-input results
+      // kept warm while the endpoint is being called.
+      warmer: warmer.stats(),
       redis: {
         ...cache.stats(),
         per_call_avg_by_endpoint: Object.fromEntries(
