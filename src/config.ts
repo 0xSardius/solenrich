@@ -100,8 +100,13 @@ export const SETTLE_FIRST_ENDPOINTS = new Set([
   'trenches-check',
 ]);
 
-/** Cache warmer: keep a default-input result warm only while the endpoint was called within this window. */
-export const WARM_DEMAND_WINDOW_SEC = 2 * 3600;
+/**
+ * Cache warmer: keep a default-input result warm only while the endpoint was
+ * called within this window. 30 min (was 2h, trimmed 2026-09-20): an agent
+ * polling more often than that renews it; a single one-off call costs at most
+ * 15 re-runs of smart-money-trenches instead of 60.
+ */
+export const WARM_DEMAND_WINDOW_SEC = 30 * 60;
 
 /** Cache TTL in seconds per data type */
 export const CACHE_TTL = {
