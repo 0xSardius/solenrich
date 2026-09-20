@@ -36,3 +36,6 @@ jobs:
       - run: bun test test/settle-first.test.ts
       # /status verdict rules (A3, 2026-09-20) — pure function.
       - run: bun test test/status.test.ts
+      # Copy-count guard (B1, 2026-09-20): "<N> endpoints/tools" on the landing,
+      # docs page, and READMEs must equal the counts in code.
+      - run: bun test test/copy-counts.test.ts
