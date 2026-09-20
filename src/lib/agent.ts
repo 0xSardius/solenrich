@@ -10,6 +10,8 @@ import { x402ResourceServer } from "@x402/hono";
 import { settleFirstMiddleware, settleFirstStats } from "./settle-first";
 import { CacheWarmer } from "./cache-warmer";
 import { computeStatus, type FacilitatorState } from "./status";
+import { buildLlmsFull } from "./llms-full";
+import { API_ROBOTS_TXT } from "./root";
 import { ExactSvmScheme } from "@x402/svm/exact/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
@@ -1069,7 +1071,12 @@ app.get('/docs', (c) => {
     return c.redirect('/llms.txt', 302);
   }
 
-  const docs = {
+  return docsResponse(c, buildDocs());
+});
+
+/** The /docs object. Also feeds llms-full.txt (methodology + data_sources). */
+function buildDocs() {
+  return {
     name: 'SolEnrich',
     version: '1.0.0',
     description: 'Solana onchain data enrichment agent. All scoring is deterministic — no LLM inference in the pipeline.',
@@ -1411,14 +1418,16 @@ app.get('/docs', (c) => {
         'The nft_collector label requires 10+ collected NFTs. It no longer fires on airdrop volume.',
     },
   };
+}
 
-  // Pretty-printed JSON — same parse semantics as minified, readable to humans
-  // who hit the endpoint directly via curl or a browser-with-no-JSON-extension.
+// Pretty-printed JSON — same parse semantics as minified, readable to humans
+// who hit the endpoint directly via curl or a browser-with-no-JSON-extension.
+function docsResponse(c: { body: (data: string, status: 200, headers: Record<string, string>) => Response }, docs: unknown) {
   return c.body(JSON.stringify(docs, null, 2), 200, {
     'Content-Type': 'application/json; charset=utf-8',
     'Cache-Control': 'public, max-age=300',
   });
-});
+}
 
 console.log('[docs] Documentation endpoint available at GET /docs');
 
@@ -1819,6 +1828,34 @@ app.get('/llms.txt', (c) => {
 });
 
 console.log('[discovery] llms.txt available at GET /llms.txt');
+
+// --- llms-full.txt: the long form (every input, methodology, data sources) ---
+// Built once at boot from the same objects /docs and /openapi.json serve, so it
+// cannot disagree with them. www rewrites /llms-full.txt here (landing/vercel.json).
+const LLMS_FULL_TXT = buildLlmsFull({
+  pricing: PRICING as Record<string, string>,
+  free: FREE_ENDPOINTS,
+  meta: ENDPOINT_META,
+  docs: buildDocs() as unknown as Record<string, unknown>,
+  baseAccepts: !!EVM_PAY_TO,
+});
+
+app.get('/llms-full.txt', (c) => {
+  c.header('Content-Type', 'text/markdown; charset=utf-8');
+  c.header('Cache-Control', 'public, max-age=300');
+  return c.body(LLMS_FULL_TXT);
+});
+
+// robots.txt for the API host (B2, 2026-09-20): allow the discovery files,
+// keep crawlers off paid routes. The root itself redirects browsers to www
+// (src/lib/root.ts), so the brand query has one indexable home.
+app.get('/robots.txt', (c) => {
+  c.header('Content-Type', 'text/plain; charset=utf-8');
+  c.header('Cache-Control', 'public, max-age=3600');
+  return c.body(API_ROBOTS_TXT);
+});
+
+console.log(`[discovery] llms-full.txt (${Math.round(LLMS_FULL_TXT.length / 1024)} KB) at GET /llms-full.txt; robots.txt at GET /robots.txt`);
 
 // --- Agent Card discovery metadata ---
 

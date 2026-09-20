@@ -1,5 +1,6 @@
 import { app } from './lib/agent';
 import { PRICING } from './config';
+import { rootResponse } from './lib/root';
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const PAY_TO = process.env.AGENT_WALLET_ADDRESS ?? '';
@@ -82,6 +83,12 @@ export default {
     if (LEGACY_HOSTS.has(host)) {
       return Response.redirect(`https://${CANONICAL_API_HOST}${path}${reqUrl.search}`, 301);
     }
+
+    // API root (B2, 2026-09-20): browsers/crawlers → 301 www, agents → JSON
+    // index of the discovery surfaces. Intercepted here for the same reason as
+    // /tasks: Lucid registers `GET /` inside createAgentApp.
+    const root = rootResponse(request);
+    if (root) return root;
 
     if (path === '/tasks' || path.startsWith('/tasks/')) {
       return new Response(

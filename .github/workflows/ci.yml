@@ -39,3 +39,5 @@ jobs:
       # Copy-count guard (B1, 2026-09-20): "<N> endpoints/tools" on the landing,
       # docs page, and READMEs must equal the counts in code.
       - run: bun test test/copy-counts.test.ts
+      # B2 (2026-09-20): API root negotiation, API robots.txt, llms-full.txt — pure modules.
+      - run: bun test test/discovery-surfaces.test.ts
