@@ -43,6 +43,15 @@ Status key: `[ ]` open · `[~]` in progress · `[x]` done + verified live · `[-
 | A2 | `[-]` **Declined 2026-09-20 (Sardius): manual instead of scheduled.** The check is `bun run agents/solscout/index.ts --target production --paid --mode stress --only parse-transaction` ($0.001, one real settlement); without `--paid` it is the free 402 sweep. Trade-off accepted: detection depends on someone running it; `/metrics.process.settlement_failures_today` + `[settle-fail]` logs catch refused settlements from real buyers. Revisit if a second silent outage happens. Brief (GitHub Actions hourly cron, ~$1.44/mo, key in Actions secrets) is in the session log. | — | — |
 | A3 | `[x]` **DONE 2026-09-20 (`b9c4f33`), verified live.** New public `GET /status` (not `/health` — the Lucid SDK owns that route and registers first). 200 = ok, 503 = degraded/down. Rules in `src/lib/status.ts` (pure, 10 tests): down = facilitator unreachable (payments on) or Redis PING fails; degraded = memory cache in prod, refused settlement or settle-first loss in the last 15 min, stonk index empty after 5-min boot grace or older than 30 min; facilitator probe (getSupported, cached 5 min, 3s cap) timeout = note only. Body: payments {facilitator, failures today}, cache {redis, commands_today}, stonk_index {rows, age_min, last_error}, process {uptime, rss, warm}. Local: bogus CDP creds → 503 "facilitator unreachable". Live: 200 ok, facilitator ok, redis ok. Post-deploy free 402 sweep 48/48. `/health` unchanged. **Sardius: point an uptime checker (UptimeRobot free, 5-min) at `https://api.solenrich.com/status` expecting 200.** | small | ✅ live 200 with real fields; forced 503 verified locally. Uptime checker = Sardius. |
 
+**A4 (small, found 2026-09-20):** `[ ]` local dev runs with the prod `.env` write to the PROD Redis
+metrics counters (a local timing run added phantom 200s with no caller). Gate metrics writes on
+`PAYMENTS_ENABLED` (or `NODE_ENV === 'production'`). Two lines in the invoke middleware.
+
+**Traffic note 2026-09-20:** first Base-network buyer — `0x4c29…9494` paid 10 × `stonk-yield` in Base USDC
+($0.05, verified via eth_getLogs). `34CMQ3…5v2z` returned a third day (query, perps-trader-profile,
+stonk-reward-risk). Four distinct paying wallets on the stonk line in 9 days. Memory:
+`project_first_base_buyer_2026_09_20.md`.
+
 **Block B — site + agent surfaces (audit fixes) + the StonkFun page**
 
 | # | Task | Size | Done when |
