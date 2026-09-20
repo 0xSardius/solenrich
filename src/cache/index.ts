@@ -43,6 +43,18 @@ export class Cache {
     return { redis_commands_since_boot: this.commands, by_op: { ...this.byOp } };
   }
 
+  /** Liveness for /status: one PING. Memory mode reports 'memory'; a failed PING reports 'error'. */
+  async ping(): Promise<'ok' | 'error' | 'memory'> {
+    if (!this.redis) return 'memory';
+    try {
+      const r = await this.redis.ping();
+      return r === 'PONG' ? 'ok' : 'error';
+    } catch (err) {
+      console.warn('[cache] ping failed:', err instanceof Error ? err.message : err);
+      return 'error';
+    }
+  }
+
   private counting(client: Redis): Redis {
     const self = this;
     return new Proxy(client, {

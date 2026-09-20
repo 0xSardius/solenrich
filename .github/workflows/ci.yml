@@ -34,3 +34,5 @@ jobs:
       # Settle-first middleware + cache warmer (A1, 2026-09-20) — fake resource
       # server, in-process Hono app, no network.
       - run: bun test test/settle-first.test.ts
+      # /status verdict rules (A3, 2026-09-20) — pure function.
+      - run: bun test test/status.test.ts

@@ -9,6 +9,7 @@ import { paymentMiddlewareFromHTTPServer, x402HTTPResourceServer } from "@x402/h
 import { x402ResourceServer } from "@x402/hono";
 import { settleFirstMiddleware, settleFirstStats } from "./settle-first";
 import { CacheWarmer } from "./cache-warmer";
+import { computeStatus, type FacilitatorState } from "./status";
 import { ExactSvmScheme } from "@x402/svm/exact/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
 import { HTTPFacilitatorClient } from "@x402/core/server";
@@ -205,7 +206,7 @@ const redisPerCall = new Map<string, { calls: number; commands: number }>();
 // registered once the enrichers exist (below); demand is noted per 200 here.
 const warmer = new CacheWarmer({ defaultDemandWindowSec: WARM_DEMAND_WINDOW_SEC });
 // Paid attempts that came back 402 (payment attached, settlement refused).
-const settleFailures = { today: 0, day: new Date().toISOString().slice(0, 10), lastReason: null as string | null };
+const settleFailures = { today: 0, day: new Date().toISOString().slice(0, 10), lastReason: null as string | null, lastAt: null as number | null };
 
 app.use('/entrypoints/*/invoke', async (c, next) => {
   const startedAt = Date.now();
@@ -259,6 +260,7 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
     } catch { /* keep unknown */ }
     settleFailures.today++;
     settleFailures.lastReason = reason;
+    settleFailures.lastAt = Date.now();
     console.warn(`[settle-fail] key=${endpointKey} payer=${payer} reason="${reason}"`);
   }
   if (c.res.status === 200) {
@@ -357,11 +359,15 @@ const BASE_ACCEPTS_ENABLED = PAYMENTS_ENABLED && EVM_PAY_TO !== "";
 // the process enters its restart loop. If init fails we log and fall back to
 // MPP/Stripe + free endpoints only — no crash, no Railway health-check flapping.
 let resourceServer: x402ResourceServer | null = null;
+// Kept for /status: one cheap authenticated call to the facilitator's
+// supported-networks route, cached 5 min, proves "a payment could settle now".
+let statusFacilitator: HTTPFacilitatorClient | null = null;
 if (PAYMENTS_ENABLED) {
   // CDP x402 facilitator — speaks current @x402/core 2.6 schema, supports Solana mainnet,
   // and auto-registers us on the x402 bazaar. Reads CDP_API_KEY_ID + CDP_API_KEY_SECRET from env.
   const { facilitator } = await import("@coinbase/x402");
   const facilitatorClient = new HTTPFacilitatorClient(facilitator);
+  statusFacilitator = facilitatorClient;
   try {
     const rs = new x402ResourceServer(facilitatorClient)
       .register(PAYMENT_NETWORK, new ExactSvmScheme());
@@ -1466,6 +1472,77 @@ function memoryBreakdown(): Record<string, unknown> {
   }
   return out;
 }
+
+// --- /status: "can SolEnrich take money right now?" (A3, 2026-09-20) ---
+// Public, no secrets, no buyer names. 200 = ok, 503 = degraded or down, so an
+// uptime checker can key on the status code. Rules live in src/lib/status.ts.
+// The facilitator probe is cached 5 min and capped at 3s; on timeout it
+// reports 'unknown' rather than failing the page.
+const facilitatorProbe = { at: 0, state: 'unknown' as FacilitatorState };
+async function probeFacilitator(): Promise<FacilitatorState> {
+  if (!PAYMENTS_ENABLED || !statusFacilitator) return 'disabled';
+  if (Date.now() - facilitatorProbe.at < 5 * 60_000) return facilitatorProbe.state;
+  const timeout = new Promise<'unknown'>((resolve) => setTimeout(() => resolve('unknown'), 3_000));
+  const call = statusFacilitator.getSupported().then(() => 'ok' as const).catch((err) => {
+    console.warn('[status] facilitator probe failed:', err instanceof Error ? err.message : err);
+    return 'unreachable' as const;
+  });
+  const state = await Promise.race([call, timeout]);
+  facilitatorProbe.at = Date.now();
+  facilitatorProbe.state = state;
+  return state;
+}
+
+app.get('/status', async (c) => {
+  const now = Date.now();
+  const [facilitatorState, redisState] = await Promise.all([probeFacilitator(), cache.ping()]);
+  const idx = stonkIndex.status();
+  const indexLastRefreshAt = idx.lastRefreshAt ? Date.parse(idx.lastRefreshAt) : null;
+  const verdict = computeStatus({
+    now,
+    uptime_sec: process.uptime(),
+    payments_enabled: PAYMENTS_ENABLED,
+    facilitator: facilitatorState,
+    last_settlement_failure_at: settleFailures.lastAt,
+    settlement_failures_today: settleFailures.today,
+    last_settle_first_loss_at: settleFirstStats.lastAt,
+    settle_first_losses_today: settleFirstStats.today,
+    redis: redisState,
+    index_rows: idx.rows,
+    index_last_refresh_at: indexLastRefreshAt,
+    index_last_error: idx.lastError,
+  });
+  const warm = warmer.stats(now);
+  return c.json({
+    status: verdict.verdict,
+    reasons: verdict.reasons,
+    checked_at: new Date(now).toISOString(),
+    payments: {
+      enabled: PAYMENTS_ENABLED,
+      facilitator: facilitatorState,
+      facilitator_checked_at: facilitatorProbe.at ? new Date(facilitatorProbe.at).toISOString() : null,
+      settlement_failures_today: settleFailures.today,
+      settle_first_losses_today: settleFirstStats.today,
+    },
+    cache: {
+      redis: redisState,
+      commands_today: cache.commandCount - redisDayStart,
+      warn_per_day: REDIS_WARN_PER_DAY,
+    },
+    stonk_index: {
+      rows: idx.rows,
+      last_refresh_at: idx.lastRefreshAt,
+      age_min: indexLastRefreshAt ? Math.round((now - indexLastRefreshAt) / 60_000) : null,
+      refreshing: idx.refreshing,
+      last_error: idx.lastError,
+    },
+    process: {
+      uptime_hours: Math.round(process.uptime() / 36) / 100,
+      rss_mb: Math.round(process.memoryUsage().rss / 1e6),
+      warm: Object.fromEntries(Object.entries(warm).map(([k, v]) => [k, v.warm])),
+    },
+  }, verdict.http);
+});
 
 app.get('/metrics', async (c) => {
   // Proprietary signal (per-endpoint traffic, top queried entities) — gated.

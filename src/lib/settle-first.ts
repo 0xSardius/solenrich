@@ -47,6 +47,8 @@ export const settleFirstStats = {
   day: new Date().toISOString().slice(0, 10),
   lastKey: null as string | null,
   lastStatus: null as number | null,
+  /** ms timestamp of the last loss; /status marks the service degraded for 15 min after one. */
+  lastAt: null as number | null,
   /** Settlements completed before the handler ran (today). */
   settledToday: 0,
 };
@@ -65,6 +67,7 @@ function recordLoss(key: string, status: number): void {
   settleFirstStats.today++;
   settleFirstStats.lastKey = key;
   settleFirstStats.lastStatus = status;
+  settleFirstStats.lastAt = Date.now();
 }
 
 const defaultEndpointKey = (path: string): string => path.split('/')[2] ?? path;
