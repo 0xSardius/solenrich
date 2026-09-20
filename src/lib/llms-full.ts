@@ -7,6 +7,8 @@
  * Pure: takes the same objects the API serves, returns markdown. Built once at
  * boot in agent.ts; served on api.solenrich.com and rewritten on www.
  */
+import type { EndpointSuite } from './suites';
+
 export interface LlmsFullInput {
   pricing: Record<string, string>;
   free: readonly string[];
@@ -14,6 +16,8 @@ export interface LlmsFullInput {
   /** The /docs object; `methodology` and `data_sources` are rendered if present. */
   docs: Record<string, unknown>;
   baseAccepts: boolean;
+  /** Presentation order (B3). Keys not in any suite are appended under "Other". */
+  suites?: EndpointSuite[];
 }
 
 type JsonSchema = {
@@ -111,11 +115,22 @@ export function buildLlmsFull(i: LlmsFullInput): string {
     '',
     '## Endpoints',
     '',
-    ...paid.map((k) => endpoint(k, i.pricing[k])),
-    '## Free endpoints',
-    '',
-    ...i.free.map((k) => endpoint(k, null)),
   ];
+  const priceOf = (k: string) => (i.pricing[k] != null ? i.pricing[k] : null);
+  const all = [...paid, ...i.free];
+  if (i.suites?.length) {
+    const seen = new Set<string>();
+    for (const s of i.suites) {
+      const keys = s.keys.filter((k) => all.includes(k));
+      if (!keys.length) continue;
+      sections.push(`## ${s.title}`, '', s.blurb, '');
+      for (const k of keys) { sections.push(endpoint(k, priceOf(k))); seen.add(k); }
+    }
+    const rest = all.filter((k) => !seen.has(k));
+    if (rest.length) sections.push('## Other', '', ...rest.map((k) => endpoint(k, priceOf(k))));
+  } else {
+    sections.push(...paid.map((k) => endpoint(k, i.pricing[k])), '## Free endpoints', '', ...i.free.map((k) => endpoint(k, null)));
+  }
 
   if (i.docs.methodology) {
     sections.push('## Scoring methodology', '', ...renderTree(i.docs.methodology), '');

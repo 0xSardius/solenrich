@@ -49,7 +49,7 @@ descriptions. They exist because clever writing hides meaning. Say the thing.
   1. `src/config.ts` — `PRICING` (+ `CACHE_TTL` if needed)
   2. Entrypoint handler + Zod schema + LLM formatter, registered in `src/lib/agent.ts`
   3. `src/mcp-tools.ts` — matching MCP tool
-  4. `src/openapi.ts` — `ENDPOINT_META` entry (auto-flows to `/llms.txt`)
+  4. `src/openapi.ts` — `ENDPOINT_META` entry (auto-flows to `/llms.txt`, `/llms-full.txt`) **and `src/lib/suites.ts` — add the key to its suite** (order = presentation order on llms.txt and the generated pages; `test/llms-order.test.ts` fails CI if a priced key is in no suite)
   5. `/docs` JSON in `src/lib/agent.ts`
   6. **`agents/solscout/stress.ts` — a stress config** (input + quality checks). Enforced: `STRESS_COVERAGE` + the `test/unit.test.ts` coverage test FAIL CI if a `PRICING` endpoint has no stress config.
   7. `test/test-all-endpoints.ts` — a verification entry

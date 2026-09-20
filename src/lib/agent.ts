@@ -11,6 +11,8 @@ import { settleFirstMiddleware, settleFirstStats } from "./settle-first";
 import { CacheWarmer } from "./cache-warmer";
 import { computeStatus, type FacilitatorState } from "./status";
 import { buildLlmsFull } from "./llms-full";
+import { buildLlmsTxt } from "./llms-txt";
+import { ENDPOINT_SUITES } from "./suites";
 import { API_ROBOTS_TXT } from "./root";
 import { ExactSvmScheme } from "@x402/svm/exact/server";
 import { ExactEvmScheme } from "@x402/evm/exact/server";
@@ -1779,47 +1781,16 @@ console.log('[discovery] x402 well-known available at GET /.well-known/x402');
 // --- llms.txt: human + crawler-readable service summary ---
 // Follows the llms.txt convention (llmstxt.org). agentic.market itself
 // publishes one; their crawler likely checks candidate services for it.
-const LLMS_TXT = `# SolEnrich
-
-> Solana onchain data enrichment API for AI agents and LLMs. Pay-per-request via x402 (USDC on Solana) or Stripe (fiat). ${Object.keys(PRICING).length} endpoints covering wallet profiling, token analysis, whale tracking, copy-trade signals, due diligence, protocol analytics, Jupiter Perps + cross-venue perps funding, smart-money orchestration, consensus attention signal, portfolio time-series, event-driven alerts, and a daily intelligence feed.
-
-- Base URL: https://api.solenrich.com
-- Payment: x402 (USDC on Solana${EVM_PAY_TO ? ' or Base' : ''}) or MPP/Stripe (fiat cards)
-- Discovery: GET /.well-known/x402 and GET /openapi.json
-- Docs: GET /docs
-- Provider: @0xSardius (https://twitter.com/0xSardius)
-
-## Endpoints
-
-${Object.entries(PRICING).map(([key, price]) => {
-  const meta = ENDPOINT_META[key];
-  return `- [${key}](https://api.solenrich.com/entrypoints/${key}/invoke) — ${meta?.description ?? meta?.summary ?? key} ($${price} USDC)`;
-}).join('\n')}
-
-## Free Endpoints
-
-${FREE_ENDPOINTS.map((key) => {
-  const meta = ENDPOINT_META[key];
-  return `- [${key}](https://api.solenrich.com/entrypoints/${key}/invoke) — ${meta?.description ?? meta?.summary ?? key} (free)`;
-}).join('\n')}
-
-## Networks
-
-- Solana Mainnet (CAIP-2: solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp)
-- USDC: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v${EVM_PAY_TO ? `
-- Base Mainnet (CAIP-2: eip155:8453) — same USDC price per call, payer picks the network
-- USDC (Base): 0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913` : ''}
-
-## Integration
-
-Agents can call any endpoint with a USDC x402 payment header${EVM_PAY_TO ? ' (Solana or Base — the 402 lists both)' : ''}. First call returns 402 with payment requirements; second call includes signed payment and receives JSON enrichment data. LLM-optimized natural language briefings available by setting format: "llm" in the request body.
-
-MCP server available at https://api.solenrich.com/mcp for direct Claude/Cursor integration.
-
-## Settlement History
-
-- x402scan: https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641 — lifetime on-chain settlement history.
-`;
+// Reordered 2026-09-20 (B3): lead names the suites that sell, endpoints are
+// grouped by ENDPOINT_SUITES (stonk first), "start here" gives the trade loops.
+// Builder in src/lib/llms-txt.ts; order in src/lib/suites.ts.
+const LLMS_TXT = buildLlmsTxt({
+  pricing: PRICING as Record<string, string>,
+  free: FREE_ENDPOINTS,
+  meta: ENDPOINT_META,
+  suites: ENDPOINT_SUITES,
+  baseAccepts: !!EVM_PAY_TO,
+});
 
 app.get('/llms.txt', (c) => {
   c.header('Content-Type', 'text/markdown; charset=utf-8');
@@ -1838,6 +1809,7 @@ const LLMS_FULL_TXT = buildLlmsFull({
   meta: ENDPOINT_META,
   docs: buildDocs() as unknown as Record<string, unknown>,
   baseAccepts: !!EVM_PAY_TO,
+  suites: ENDPOINT_SUITES,
 });
 
 app.get('/llms-full.txt', (c) => {

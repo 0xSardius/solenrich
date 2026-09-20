@@ -41,3 +41,5 @@ jobs:
       - run: bun test test/copy-counts.test.ts
       # B2 (2026-09-20): API root negotiation, API robots.txt, llms-full.txt — pure modules.
       - run: bun test test/discovery-surfaces.test.ts
+      # B3 (2026-09-20): suite map covers every endpoint once; llms.txt / llms-full.txt order.
+      - run: bun test test/llms-order.test.ts
