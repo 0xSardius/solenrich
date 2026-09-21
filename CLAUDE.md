@@ -53,7 +53,7 @@ descriptions. They exist because clever writing hides meaning. Say the thing.
   5. `/docs` JSON in `src/lib/agent.ts`
   6. **`agents/solscout/stress.ts` — a stress config** (input + quality checks). Enforced: `STRESS_COVERAGE` + the `test/unit.test.ts` coverage test FAIL CI if a `PRICING` endpoint has no stress config.
   7. `test/test-all-endpoints.ts` — a verification entry
-  8. README endpoint table + landing page if user-facing
+  8. README endpoint table + **a home page card in `landing/index.html`, inside the `<details class="suite">` of its suite, with the price from `PRICING`** (enforced: `test/landing-suites.test.ts` fails CI if a suite key has no card, sits in the wrong suite, or shows a different price; the suite header count must match). Shared page styles and the nav live in `landing/site.css` / `site.js` (`test/mobile-layout.test.ts`); run `test/mobile-audit.browser.js` in a browser before a layout deploy.
   9. **`src/lib/agent.ts` — `BAZAAR_INPUT_EXAMPLES` entry IF the endpoint has required input params.** CDP's bazaar only catalogs endpoints it can demonstrate as callable: no-required-input endpoints catalog automatically, but a parameterized one (required `address`/`mint`/`market`/`signature`/etc.) needs a concrete `input` example or it stays **invisible** in the bazaar + agentic.market (confirmed empirically 2026-06-28 — input example → cataloged in ~11 min; without one, parameterized endpoints never catalog despite settling). Reuse the SolScout stress fixture as the example.
   10. **Skill registries (2026-09-09):** update `resources/endpoints.md` + the decision table in the
   SolEnrich skill in BOTH forks — `../sendai-skills/skills/solenrich/` (PR sendaifun/skills#107, Agent

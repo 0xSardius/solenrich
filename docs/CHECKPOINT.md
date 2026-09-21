@@ -3,7 +3,7 @@
 ## Last session date
 2026-09-20
 
-## ▶️ RESUME HERE (2026-09-20 NIGHT) — mobile audit done + fixed on production · one open decision (endpoint suites on a phone)
+## ▶️ RESUME HERE (2026-09-21) — mobile audit done + fixed on production · endpoint suites shipped · next = B5 or C1
 
 **Mobile audit (B8, added 2026-09-20 night).** Report: `docs/mobile-audit-2026-09-20.md` (19 findings, method, fix plan).
 Shipped and verified on production (`98c4091`, `ebcaffd`, + the agent-card link fix):
@@ -19,9 +19,15 @@ Shipped and verified on production (`98c4091`, `ebcaffd`, + the agent-card link 
   input size). Rendered check: `test/mobile-audit.browser.js` — paste into a console on a same-origin page
   (`/robots.txt`), `await mobileAudit()`. Production result: over 0, taps 0, fonts 0, inputs 0 on all four pages at
   320/375/430/768; the only "wider" elements are code blocks and the quote table, which scroll inside their box.
-- **Not done:** (1) home page endpoints section is ~12,500px tall on a phone (42 cards, one column) — proposal: group by
-  suite (`src/lib/suites.ts` order), first suite open, others in `<details>` under 768px. **Needs Sardius's OK on a
-  preview before it ships.** (2) buttons / code-block / footer styles are still per page, not in `site.css` — do it
+- **Endpoint suites SHIPPED 2026-09-21 (`c667645`, Sardius approved):** the home page cards sit in nine `<details>`
+  suites in `src/lib/suites.ts` order; all open on a wide screen, first one open at 768px and under (inline script after
+  the markup; `/#suite-{id}` opens a suite). Section at 375px: 12,565px → 4,437px; page 28,003px → 19,674px. Four
+  endpoints had NO card before (stonk-pairs, smart-money-trenches, hyperliquid-smart-money, hyperliquid-trader-profile)
+  — cards added. Guard `test/landing-suites.test.ts` in CI: suites/order/membership, header counts, card price =
+  `PRICING`. **New endpoint checklist: a home page card inside its suite is now enforced by CI.** Verified on production:
+  46 cards, 9 suites, audit clean at all four widths. Vercel preview URLs do not work for this site (`vercel.json`
+  redirects every `*.vercel.app` host to www) — preview locally with `bunx serve -l 4173 landing`.
+- **Not done:** (2) buttons / code-block / footer styles are still per page, not in `site.css` — do it
   with B5, which needs them shared anyway. (3) 79 inline `style=""` attributes in `index.html` (now fewer by two).
   (4) Font request still loads 11 weights. (5) No real-device check yet — **Sardius: open the four pages on a phone.**
 - Local preview: `bunx serve -l 4173 landing` (cleanUrls on; `/agent-card` cannot load its data locally — the
