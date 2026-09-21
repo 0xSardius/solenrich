@@ -354,9 +354,72 @@
       margin-bottom: 56px;
     }
 
+    /* Suites: one <details> per suite of src/lib/suites.ts. All open on a wide screen;
+       on a phone the script after the markup leaves only the first open. */
+    .suites { display: grid; gap: 16px; margin-top: 48px; }
+
+    .suite {
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-radius: 12px;
+    }
+
+    .suite-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      min-height: 64px;
+      padding: 12px 24px;
+      cursor: pointer;
+      list-style: none;
+    }
+
+    .suite-summary::-webkit-details-marker { display: none; }
+
+    .suite-title {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      font-size: 20px;
+      line-height: 1.3;
+    }
+
+    .suite-meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .suite-meta::after {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-right: 1.5px solid currentColor;
+      border-bottom: 1.5px solid currentColor;
+      transform: rotate(45deg);
+      transition: transform 0.2s;
+      margin-bottom: 3px;
+    }
+
+    .suite[open] .suite-meta::after { transform: rotate(-135deg); margin-bottom: -3px; }
+
+    .suite-blurb {
+      padding: 0 24px;
+      margin-bottom: 20px;
+      max-width: 820px;
+      color: var(--text-secondary);
+      font-size: 15px;
+    }
+
+    .suite .endpoint-grid { padding: 0 24px 24px; }
+
     .endpoint-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
       gap: 16px;
     }
 
@@ -1341,6 +1404,12 @@
     @media (max-width: 768px) {
       section { padding: 64px 0; }
       .endpoint-grid { grid-template-columns: 1fr; }
+      .suites { margin-top: 32px; gap: 12px; }
+      .suite-summary { padding: 12px 16px; }
+      .suite-title { font-size: 17px; }
+      .suite-blurb { padding: 0 16px; font-size: 14px; }
+      .suite .endpoint-grid { padding: 0 12px 12px; }
+      .suite .endpoint-card { padding: 18px; }
       .source-grid { grid-template-columns: repeat(2, 1fr); }
       .value-grid { grid-template-columns: 1fr; }
       .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
@@ -1600,392 +1669,521 @@
     <div class="container">
       <div class="reveal">
         <div class="section-label">Endpoints</div>
-        <h2 class="section-title">45 enrichment endpoints</h2>
+        <h2 class="section-title">45 paid endpoints and 1 free, in nine suites</h2>
         <p class="section-desc">
-          From quick wallet lookups to full due diligence reports.
-          Every endpoint returns data in your choice of format.
+          Grouped by the job they do, from a quick wallet lookup to a full due diligence report.
+          Every endpoint returns JSON, an LLM briefing, or both.
         </p>
       </div>
 
-      <div class="endpoint-grid">
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">enrich-wallet-light</span>
-            <span class="endpoint-price">$0.002</span>
-          </div>
-          <p class="endpoint-desc">SOL balance, token holdings, NFT breakdown (collected vs airdropped vs spam), behavioral labels (automated activity detection), risk score with risk level.</p>
-          <div class="tag-row"><span class="tag">core</span><span class="tag">wallet</span></div>
-        </div>
+      <!-- Suites follow src/lib/suites.ts (order and membership); test/landing-suites.test.ts checks it. -->
+      <div class="suites">
+        <details class="suite" id="suite-stonkfun" open>
+          <summary class="suite-summary">
+            <h3 class="suite-title">StonkFun reward coins</h3>
+            <span class="suite-meta">8 calls</span>
+          </summary>
+          <p class="suite-blurb">Token-2022 coins paired to xStocks, pre-stocks, ZEC and other quote assets; a transfer tax pays holders in the quote. Find, cost, and time a stonk trade, or decide what to launch.</p>
+          <div class="endpoint-grid">
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">stonk-pairs</span>
+                <span class="endpoint-price">free</span>
+              </div>
+              <p class="endpoint-desc">Every quote asset a StonkFun launch can pair against &mdash; xStocks, pre-stocks, currencies, custom mints &mdash; with a normalized category and an <code>is_agent_launchable</code> flag. No payment. Call it first if you launch; a launch quote mint must be one of these.</p>
+              <div class="tag-row"><span class="tag">stonkfun</span><span class="tag">free</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">enrich-wallet-full</span>
-            <span class="endpoint-price">$0.005</span>
-          </div>
-          <p class="endpoint-desc">Full profile with DeFi positions, connected wallets, transaction history, per-collection NFT breakdown, and risk level.</p>
-          <div class="tag-row"><span class="tag">core</span><span class="tag">wallet</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">stonk-gems</span>
+                <span class="endpoint-price">$0.03</span>
+              </div>
+              <p class="endpoint-desc">&ldquo;What should I look at on StonkFun right now?&rdquo; Ranks every reward coin 0&ndash;100 on what makes a gem: a holder payout in the last hours (the flywheel is real, not promised), holders who found it before everyone did, a market cap with room to move, real turnover, momentum that has not gone parabolic yet, and a quote asset traders actually use. GEM / WATCH / NOISE with plain reasons and warnings per coin, and the round-trip tax cost the trade must clear. Answers in milliseconds.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">gems</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">enrich-token-light</span>
-            <span class="endpoint-price">$0.002</span>
-          </div>
-          <p class="endpoint-desc">Price, market cap, liquidity assessment, holder concentration, risk flags.</p>
-          <div class="tag-row"><span class="tag">core</span><span class="tag">token</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">stonk-screener</span>
+                <span class="endpoint-price">$0.01</span>
+              </div>
+              <p class="endpoint-desc">&ldquo;Which coins on NVDAX paid holders today?&rdquo; in one call. Every StonkFun reward coin, ingested every ten minutes and served from memory. Each row carries its payout status, a live flag (traded <em>and</em> paid in the last 24h), and the round-trip tax cost. Filter by quote, category, holders, age, volume, market cap, paying-only, live-only; sort by volume, last payout, holders, 24h change, or yield. Answers in milliseconds.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">screener</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">enrich-token-full</span>
-            <span class="endpoint-price">$0.004</span>
-          </div>
-          <p class="endpoint-desc">Full token analysis with top 20 holders, concentration metrics (top 1/5/10%), and rug-pull detection.</p>
-          <div class="tag-row"><span class="tag">core</span><span class="tag">token</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">stonk-reward-risk</span>
+                <span class="endpoint-price">$0.005</span>
+              </div>
+              <p class="endpoint-desc">StonkFun reward coins pay holders a transfer tax in the quote asset &mdash; NVDAX, SPYX, ZEC, whatever the coin is paired to. Holders either get paid or they don&rsquo;t, and this answers which: PAYING, STALE, NEVER, or NOT_REWARD, with hours since the last payout. Then the trading cost (a 300 bps tax is 6% per round trip before slippage) and a health score read from the chain: rate, cap, who can withdraw it, whether it can change, distributions, holders, concentration, age.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">reward coins</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">parse-transaction</span>
-            <span class="endpoint-price">$0.001</span>
-          </div>
-          <p class="endpoint-desc">Type detection, protocol identification, transfer details, fee breakdown.</p>
-          <div class="tag-row"><span class="tag">core</span><span class="tag">transaction</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">stonk-yield</span>
+                <span class="endpoint-price">$0.005</span>
+              </div>
+              <p class="endpoint-desc">What does holding this coin actually pay? Trailing 7d / 30d / lifetime yield: rewards distributed in the quote asset, priced in USD, over average market cap. Annualized only with an explicit caution flag when the window is under seven days. Spells out the exposure &mdash; a holder is long the coin <em>and</em> its quote asset, and every reward accrues in that asset.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">holder yield</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">whale-watch</span>
-            <span class="endpoint-price">$0.008</span>
-          </div>
-          <p class="endpoint-desc">Top holders with balances and % supply. Buy/sell volume tracking. Accumulation vs distribution signals.</p>
-          <div class="tag-row"><span class="tag premium">premium</span><span class="tag">token</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">stonk-quote</span>
+                <span class="endpoint-price">$0.005</span>
+              </div>
+              <p class="endpoint-desc">What does this trade cost, and does the coin pay it back? One size in, one answer out: entry and exit cost with the transfer tax and price impact at that size, the round trip and the price move that breaks even, your share of every payout with a dust warning, and the payout you can expect over the hold from real yield history. PAYS, MARGINAL, or COSTS, with how many days of payouts cover the trip. No swap.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">trade cost</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">batch-enrich</span>
-            <span class="endpoint-price">$0.015</span>
-          </div>
-          <p class="endpoint-desc">Enrich multiple wallets or tokens in a single parallel request.</p>
-          <div class="tag-row"><span class="tag premium">premium</span><span class="tag">batch</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">stonk-launch-intel</span>
+                <span class="endpoint-price">$0.02</span>
+              </div>
+              <p class="endpoint-desc">What to launch, and against what. Per quote asset: how many coins launched this week, how many still trade, how many paid holders today, survival past day three, median holders, 100 vs 300 bps tax mix with trading and paying rates for each, crowding, and a demand score. Measured 2026-09-06: quote choice moves the odds more than anything else &mdash; 87% of ZEC-paired coins traded today against 25% for the most-launched xStock quote. Plain recommendations on top.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">launch</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">wallet-graph</span>
-            <span class="endpoint-price">$0.010</span>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">stonk-launch-preflight</span>
+                <span class="endpoint-price">$0.25</span>
+              </div>
+              <p class="endpoint-desc">For agents that launch coins through StonkFun by building the Raydium LaunchLab transaction themselves. A pool is adopted only if every curve parameter matches exactly; one typo and the tax goes to nobody. Pass the unsigned transaction and get a diff against the published shape: GlobalConfig, platform id per mode, curve, supply, raise, 6-decimal Token-2022 mint, curve-rule account last, and the transfer fee &mdash; including Raydium&rsquo;s <code>transferFeeBasePoints</code> / <code>maxinumFee</code> spelling. Each mismatch comes with a fix. <code>stonk-pairs</code> (free) lists what you can pair against.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">launch</span></div>
+            </div>
           </div>
-          <p class="endpoint-desc">Map transaction connections. Detect suspicious wallet clusters.</p>
-          <div class="tag-row"><span class="tag premium">premium</span><span class="tag">wallet</span></div>
-        </div>
+        </details>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">copy-trade-signals</span>
-            <span class="endpoint-price">$0.010</span>
-          </div>
-          <p class="endpoint-desc">Sharpe ratio, Sortino, max drawdown, profit factor, win rate. Separates skilled traders from lucky ones.</p>
-          <div class="tag-row"><span class="tag premium">premium</span><span class="tag">wallet</span></div>
-        </div>
+        <details class="suite" id="suite-trenches" open>
+          <summary class="suite-summary">
+            <h3 class="suite-title">Trenches (fresh-launch trade lifecycle)</h3>
+            <span class="suite-meta">6 calls</span>
+          </summary>
+          <p class="suite-blurb">Memecoins minutes to hours old: what is running, who is buying, should I enter this one, should I exit the one I hold.</p>
+          <div class="endpoint-grid">
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">runner-scan</span>
+                <span class="endpoint-price">$0.04</span>
+              </div>
+              <p class="endpoint-desc">Which fresh launches are <em>accelerating</em> right now &mdash; not the lagging fact that price already moved. Buy-rate acceleration (5m vs 1h, 1h vs 6h), buy pressure, volume and price velocity, holder growth, liquidity trend. Stages RUNNING / IGNITING / PARABOLIC_LATE / FADING with a 0&ndash;1 score. Flags already-ran tokens as entry risk and LP pulls as rugs instead of dressing them up as momentum.</p>
+              <div class="tag-row"><span class="tag">trenches</span><span class="tag">momentum</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">due-diligence</span>
-            <span class="endpoint-price">$0.020</span>
-          </div>
-          <p class="endpoint-desc">Comprehensive research: security, holder concentration, whale flows, detailed risk factors. SAFE / CAUTION / RISKY verdict.</p>
-          <div class="tag-row"><span class="tag premium">premium</span><span class="tag">token</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">smart-money-trenches</span>
+                <span class="endpoint-price">$0.05</span>
+              </div>
+              <p class="endpoint-desc">Which proven-winner wallets are buying launches under six hours old, and what they are buying. A vetted seed set of realized-PnL winners, bot-filtered, with live cadence re-checked on every scan. Tokens ranked by distinct smart buyers and recency. An attention signal before entry &mdash; pair it with <code>trenches-check</code>.</p>
+              <div class="tag-row"><span class="tag">trenches</span><span class="tag">smart money</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">query</span>
-            <span class="endpoint-price">$0.003</span>
-          </div>
-          <p class="endpoint-desc">Plain-English questions routed to one or more enrichers. Single intent ("is X safe?", "whales for X") or compound chains in parallel ("should I buy X?" runs DD + trend + whales; "wallet deep dive on X" runs profile + history + perps; "what's trending?" calls trending-signals).</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">upgraded</span><span class="tag">NL</span><span class="tag">orchestration</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">trenches-check</span>
+                <span class="endpoint-price">$0.03</span>
+              </div>
+              <p class="endpoint-desc">Before you enter, run the check. The trenches suite pointed at <em>one token</em>: pass a mint &mdash; from a discovery, a Telegram call, anywhere &mdash; and get a HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL / NO_SIGNAL verdict with reasoning. On-chain velocity, proven-winner buys, and agent attention, targeted at your candidate. Re-check 5+ minutes later and liquidity/holder trends fill in.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">trenches</span><span class="tag">vetting</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">compare-tokens</span>
-            <span class="endpoint-price">$0.006</span>
-          </div>
-          <p class="endpoint-desc">Side-by-side comparison of 2-3 tokens: price, liquidity, volatility, HHI concentration, risk flags. Rankings + summary picks.</p>
-          <div class="tag-row"><span class="tag">comparison</span><span class="tag">token</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">trenches-scan</span>
+                <span class="endpoint-price">$0.08</span>
+              </div>
+              <p class="endpoint-desc">The full pre-entry scan in one call. Three independent signals &mdash; on-chain velocity (runner detection), proven-winner wallet buys (smart money), and agent attention (our proprietary query stream) &mdash; composited into a ranked list with confluence counts, per-token reasoning, and HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL verdicts. Confluence across independent signals is the edge.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">trenches</span><span class="tag">orchestration</span><span class="tag">flagship</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">compare-wallets</span>
-            <span class="endpoint-price">$0.006</span>
-          </div>
-          <p class="endpoint-desc">Side-by-side comparison of 2-3 wallets: portfolio value, activity, risk score, labels, holdings. Rankings + summary picks.</p>
-          <div class="tag-row"><span class="tag">comparison</span><span class="tag">wallet</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">exit-signal</span>
+                <span class="endpoint-price">$0.04</span>
+              </div>
+              <p class="endpoint-desc">Every other endpoint answers &ldquo;should I enter.&rdquo; This one answers &ldquo;I hold it &mdash; should I get out?&rdquo; Pass a mint and get an EXIT / DERISK / HOLD verdict with a 0&ndash;1 exit score: sell pressure, buy-rate deceleration, volume fade, distribution into strength, top-holder flow (whales distributing vs accumulating), liquidity trend, holder churn. Rug triggers &mdash; LP pull, active dump &mdash; override everything else. Works on tokens of any age, and an optional entry price adds unrealized-PnL context.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">trenches</span><span class="tag">sell-side</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">token-trend</span>
-            <span class="endpoint-price">$0.006</span>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">attention-momentum</span>
+                <span class="endpoint-price">$0.02</span>
+              </div>
+              <p class="endpoint-desc">Tokens ranked by <em>acceleration</em> of agent attention, cross-referenced with price over the same window. early_signal = attention up while price is flat (agents researching before the market moves); distribution_risk = attention cooling while price pumps. Windows: 1h, 6h, 24h.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">proprietary</span><span class="tag">signal</span><span class="tag">divergence</span></div>
+            </div>
           </div>
-          <p class="endpoint-desc">"What changed?" — price, liquidity, concentration, and risk changes over 7/14/30 days. Direction indicators per metric. Snapshots accumulate automatically.</p>
-          <div class="tag-row"><span class="tag">temporal</span><span class="tag">token</span></div>
-        </div>
+        </details>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">wallet-history</span>
-            <span class="endpoint-price">$0.006</span>
-          </div>
-          <p class="endpoint-desc">"What changed?" — portfolio value, SOL balance, risk score, and position changes over 7/14/30 days. Tracks added and removed holdings.</p>
-          <div class="tag-row"><span class="tag">temporal</span><span class="tag">wallet</span></div>
-        </div>
+        <details class="suite" id="suite-smart-money" open>
+          <summary class="suite-summary">
+            <h3 class="suite-title">Smart money and whales</h3>
+            <span class="suite-meta">5 calls</span>
+          </summary>
+          <p class="suite-blurb">Proven-winner wallets and large holders: where they move on Solana spot and on Hyperliquid perps.</p>
+          <div class="endpoint-grid">
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">smart-money-flow</span>
+                <span class="endpoint-price">$0.100</span>
+              </div>
+              <p class="endpoint-desc">Three-phase pipeline: scores wallets via copy-trade win rates, filters to qualifying winners, surfaces accumulated tokens + cluster relationships. Highest-margin endpoint — composed across copy-trade-signals + whale-watch + wallet-graph.</p>
+              <div class="tag-row"><span class="tag">orchestration</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">new-tokens</span>
-            <span class="endpoint-price">$0.012</span>
-          </div>
-          <p class="endpoint-desc">Discover recently launched Solana tokens. Scans DexScreener listings, runs risk scoring on each, filters by liquidity and risk. Safest first.</p>
-          <div class="tag-row"><span class="tag">discovery</span><span class="tag">token</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">copy-trade-signals</span>
+                <span class="endpoint-price">$0.010</span>
+              </div>
+              <p class="endpoint-desc">Sharpe ratio, Sortino, max drawdown, profit factor, win rate. Separates skilled traders from lucky ones.</p>
+              <div class="tag-row"><span class="tag premium">premium</span><span class="tag">wallet</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">protocol-profile</span>
-            <span class="endpoint-price">$0.008</span>
-          </div>
-          <p class="endpoint-desc">DeFi protocol analytics: TVL, yield pools, on-chain activity, health signals. Automated activity detection — what % of volume is bot-driven?</p>
-          <div class="tag-row"><span class="tag">protocol</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">whale-watch</span>
+                <span class="endpoint-price">$0.008</span>
+              </div>
+              <p class="endpoint-desc">Top holders with balances and % supply. Buy/sell volume tracking. Accumulation vs distribution signals.</p>
+              <div class="tag-row"><span class="tag premium">premium</span><span class="tag">token</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">perps-market-structure</span>
-            <span class="endpoint-price">$0.012</span>
-          </div>
-          <p class="endpoint-desc">Jupiter Perps market structure — per-market OI, utilization, borrow APR, skew, OI caps, and health flags for SOL/BTC/ETH. Reads on-chain Anchor accounts directly.</p>
-          <div class="tag-row"><span class="tag">perps</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">hyperliquid-smart-money</span>
+                <span class="endpoint-price">$0.05</span>
+              </div>
+              <p class="endpoint-desc">Where consistent Hyperliquid traders are positioned. Scans the leaderboard, removes market makers, HFT, dust and mega accounts, keeps traders with positive week and month PnL, then reports per-coin consensus: long and short counts, net notional, bias, conviction, and the top traders behind it. A positioning signal, not a trade.</p>
+              <div class="tag-row"><span class="tag">perps</span><span class="tag">smart money</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">perps-trader-profile</span>
-            <span class="endpoint-price">$0.010</span>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">hyperliquid-trader-profile</span>
+                <span class="endpoint-price">$0.012</span>
+              </div>
+              <p class="endpoint-desc">Live perp positions for one Hyperliquid address: coin, side, leverage, notional, entry, unrealized PnL, distance to liquidation, and risk flags. Plus account value, directional bias, and realized and unrealized PnL over week, month and all time.</p>
+              <div class="tag-row"><span class="tag">perps</span><span class="tag">wallet</span></div>
+            </div>
           </div>
-          <p class="endpoint-desc">Multi-venue: Jupiter Perps + Adrena positions for a wallet in one call. Per-venue breakdown + combined totals, every position tagged with venue, multi_venue flag. Size, leverage, entry, unrealized PnL, trader classification (scalper / swing / position), risk flags for high leverage and approaching liquidation.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span><span class="tag">multi-venue</span></div>
-        </div>
+        </details>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">perps-cross-venue-funding</span>
-            <span class="endpoint-price">$0.015</span>
-          </div>
-          <p class="endpoint-desc">Borrow / funding APR + open interest aggregated across Jupiter Perps, Adrena, Hyperliquid, and dYdX v4 in one call. Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities surfaced above 5pt spread.</p>
-          <div class="tag-row"><span class="tag">perps</span></div>
-        </div>
+        <details class="suite" id="suite-perps" open>
+          <summary class="suite-summary">
+            <h3 class="suite-title">Perps (Jupiter, Adrena, Flash, Hyperliquid, dYdX)</h3>
+            <span class="suite-meta">6 calls</span>
+          </summary>
+          <p class="suite-blurb">Cross-venue funding, open interest, entry cost at size, basis, and trader positioning.</p>
+          <div class="endpoint-grid">
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">perps-venue-comparison</span>
+                <span class="endpoint-price">$0.020</span>
+              </div>
+              <p class="endpoint-desc">Where to trade at a given size. Adds Jupiter Quote spot slippage, per-venue fee, OI cap headroom, first-hour borrow cost. Returns total entry cost rankings + recommendation with warnings (insufficient_headroom, stressed health).</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span><span class="tag">sizing</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">perps-venue-comparison</span>
-            <span class="endpoint-price">$0.020</span>
-          </div>
-          <p class="endpoint-desc">Where to trade at a given size. Adds Jupiter Quote spot slippage, per-venue fee, OI cap headroom, first-hour borrow cost. Returns total entry cost rankings + recommendation with warnings (insufficient_headroom, stressed health).</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span><span class="tag">sizing</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">perps-cross-venue-funding</span>
+                <span class="endpoint-price">$0.015</span>
+              </div>
+              <p class="endpoint-desc">Borrow / funding APR + open interest aggregated across Jupiter Perps, Adrena, Hyperliquid, and dYdX v4 in one call. Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities surfaced above 5pt spread.</p>
+              <div class="tag-row"><span class="tag">perps</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">perps-basis-signal</span>
-            <span class="endpoint-price">$0.015</span>
-          </div>
-          <p class="endpoint-desc">Net-yield-after-borrow basis trade scanner. Computes perp mark vs spot, surfaces real funding APR earnable on Hyperliquid + dYdX, correctly flags pool perps (Jupiter, Adrena) as not-viable. Returns per-venue trade + filtered opportunities + best trade.</p>
-          <div class="tag-row"><span class="tag">perps</span><span class="tag">basis</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">perps-market-structure</span>
+                <span class="endpoint-price">$0.012</span>
+              </div>
+              <p class="endpoint-desc">Jupiter Perps market structure — per-market OI, utilization, borrow APR, skew, OI caps, and health flags for SOL/BTC/ETH. Reads on-chain Anchor accounts directly.</p>
+              <div class="tag-row"><span class="tag">perps</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">perps-market-trend</span>
-            <span class="endpoint-price">$0.008</span>
-          </div>
-          <p class="endpoint-desc">Jupiter Perps trend across SOL/BTC/ETH. Per-symbol deltas for mark price, total OI, long/short skew, utilization, borrow APR over 7/14/30d. Direction indicators per metric and per market. Built for regime-detection bots.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span><span class="tag">trend</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">perps-basis-signal</span>
+                <span class="endpoint-price">$0.015</span>
+              </div>
+              <p class="endpoint-desc">Net-yield-after-borrow basis trade scanner. Computes perp mark vs spot, surfaces real funding APR earnable on Hyperliquid + dYdX, correctly flags pool perps (Jupiter, Adrena) as not-viable. Returns per-venue trade + filtered opportunities + best trade.</p>
+              <div class="tag-row"><span class="tag">perps</span><span class="tag">basis</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">trending-signals</span>
-            <span class="endpoint-price">$0.050</span>
-          </div>
-          <p class="endpoint-desc">Ranks trending Solana tokens by composite signal: liquidity, holder concentration, whale flow, risk. Composed across new-tokens + due-diligence + whale-watch in one call. Returns ranked list with per-token reasoning + overall sentiment.</p>
-          <div class="tag-row"><span class="tag">orchestration</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">perps-market-trend</span>
+                <span class="endpoint-price">$0.008</span>
+              </div>
+              <p class="endpoint-desc">Jupiter Perps trend across SOL/BTC/ETH. Per-symbol deltas for mark price, total OI, long/short skew, utilization, borrow APR over 7/14/30d. Direction indicators per metric and per market. Built for regime-detection bots.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span><span class="tag">trend</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">smart-money-flow</span>
-            <span class="endpoint-price">$0.100</span>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">perps-trader-profile</span>
+                <span class="endpoint-price">$0.010</span>
+              </div>
+              <p class="endpoint-desc">Multi-venue: Jupiter Perps + Adrena positions for a wallet in one call. Per-venue breakdown + combined totals, every position tagged with venue, multi_venue flag. Size, leverage, entry, unrealized PnL, trader classification (scalper / swing / position), risk flags for high leverage and approaching liquidation.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">perps</span><span class="tag">multi-venue</span></div>
+            </div>
           </div>
-          <p class="endpoint-desc">Three-phase pipeline: scores wallets via copy-trade win rates, filters to qualifying winners, surfaces accumulated tokens + cluster relationships. Highest-margin endpoint — composed across copy-trade-signals + whale-watch + wallet-graph.</p>
-          <div class="tag-row"><span class="tag">orchestration</span></div>
-        </div>
+        </details>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">feed-latest</span>
-            <span class="endpoint-price">$0.005</span>
-          </div>
-          <p class="endpoint-desc">Daily SolEnrich intelligence brief — pre-computed ranking of trending Solana tokens with composite-signal scoring. 24h cache, recurring-poll model. Pass <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">since</code> (ISO 8601) to short-circuit on no-change polls.</p>
-          <div class="tag-row"><span class="tag">feed</span></div>
-        </div>
+        <details class="suite" id="suite-core" open>
+          <summary class="suite-summary">
+            <h3 class="suite-title">Core wallet, token, and transaction intelligence</h3>
+            <span class="suite-meta">6 calls</span>
+          </summary>
+          <p class="suite-blurb">The primitives every other suite composes: token safety and slippage, wallet risk and bot flags, parsed transactions.</p>
+          <div class="endpoint-grid">
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">due-diligence</span>
+                <span class="endpoint-price">$0.020</span>
+              </div>
+              <p class="endpoint-desc">Comprehensive research: security, holder concentration, whale flows, detailed risk factors. SAFE / CAUTION / RISKY verdict.</p>
+              <div class="tag-row"><span class="tag premium">premium</span><span class="tag">token</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">consensus-signal</span>
-            <span class="endpoint-price">$0.005</span>
-          </div>
-          <p class="endpoint-desc">What tokens and wallets agents are querying right now. Proprietary data derived from SolEnrich's own request stream, not market volume. Pass an address for rank/percentile/trend; omit it for top-N. Windows: 1h, 6h, 24h.</p>
-          <div class="tag-row"><span class="tag">proprietary</span><span class="tag">signal</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">enrich-token-light</span>
+                <span class="endpoint-price">$0.002</span>
+              </div>
+              <p class="endpoint-desc">Price, market cap, liquidity assessment, holder concentration, risk flags.</p>
+              <div class="tag-row"><span class="tag">core</span><span class="tag">token</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">attention-momentum</span>
-            <span class="endpoint-price">$0.02</span>
-          </div>
-          <p class="endpoint-desc">Tokens ranked by <em>acceleration</em> of agent attention, cross-referenced with price over the same window. early_signal = attention up while price is flat (agents researching before the market moves); distribution_risk = attention cooling while price pumps. Windows: 1h, 6h, 24h.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">proprietary</span><span class="tag">signal</span><span class="tag">divergence</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">enrich-token-full</span>
+                <span class="endpoint-price">$0.004</span>
+              </div>
+              <p class="endpoint-desc">Full token analysis with top 20 holders, concentration metrics (top 1/5/10%), and rug-pull detection.</p>
+              <div class="tag-row"><span class="tag">core</span><span class="tag">token</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">portfolio-history</span>
-            <span class="endpoint-price">$0.006</span>
-          </div>
-          <p class="endpoint-desc">Full portfolio time-series for a wallet. Daily snapshots of value, SOL balance, holdings, risk score over 7/14/30 days, plus summary stats: peak, trough, max drawdown, average value, change vs period start. Today's live point appended automatically.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">temporal</span><span class="tag">PnL</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">enrich-wallet-light</span>
+                <span class="endpoint-price">$0.002</span>
+              </div>
+              <p class="endpoint-desc">SOL balance, token holdings, NFT breakdown (collected vs airdropped vs spam), behavioral labels (automated activity detection), risk score with risk level.</p>
+              <div class="tag-row"><span class="tag">core</span><span class="tag">wallet</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">check-alerts</span>
-            <span class="endpoint-price">$0.008</span>
-          </div>
-          <p class="endpoint-desc">Poll-based event detection. Pass a watchlist (up to 10 tokens + 10 wallets) and a <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">since</code> timestamp; get graded alerts (price spike/drop, risk change, whale flow, concentration shift, portfolio swing, position add/remove) since that moment. Stateless — caller owns the cursor.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">alerts</span><span class="tag">poll</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">enrich-wallet-full</span>
+                <span class="endpoint-price">$0.005</span>
+              </div>
+              <p class="endpoint-desc">Full profile with DeFi positions, connected wallets, transaction history, per-collection NFT breakdown, and risk level.</p>
+              <div class="tag-row"><span class="tag">core</span><span class="tag">wallet</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">gacha-ev-scan</span>
-            <span class="endpoint-price">$0.02</span>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">parse-transaction</span>
+                <span class="endpoint-price">$0.001</span>
+              </div>
+              <p class="endpoint-desc">Type detection, protocol identification, transfer details, fee breakdown.</p>
+              <div class="tag-row"><span class="tag">core</span><span class="tag">transaction</span></div>
+            </div>
           </div>
-          <p class="endpoint-desc">Jupiter Gacha (Collector Crypt) pack EV scan. Per machine: gross insured EV vs the guaranteed instant-buyback floor (85&ndash;93%, &le;72h) vs a marketplace sale (&minus;2% fee, fill-risk). Returns a POSITIVE_EV / HOUSE_EDGE / NEGATIVE_EV verdict &mdash; the realizable EV the platform hides behind its gross-EV headline.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">gacha</span><span class="tag">RWA</span></div>
-        </div>
+        </details>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">runner-scan</span>
-            <span class="endpoint-price">$0.04</span>
-          </div>
-          <p class="endpoint-desc">Which fresh launches are <em>accelerating</em> right now &mdash; not the lagging fact that price already moved. Buy-rate acceleration (5m vs 1h, 1h vs 6h), buy pressure, volume and price velocity, holder growth, liquidity trend. Stages RUNNING / IGNITING / PARABOLIC_LATE / FADING with a 0&ndash;1 score. Flags already-ran tokens as entry risk and LP pulls as rugs instead of dressing them up as momentum.</p>
-          <div class="tag-row"><span class="tag">trenches</span><span class="tag">momentum</span></div>
-        </div>
+        <details class="suite" id="suite-discovery" open>
+          <summary class="suite-summary">
+            <h3 class="suite-title">Discovery, signals, and alerts</h3>
+            <span class="suite-meta">7 calls</span>
+          </summary>
+          <p class="suite-blurb">What is worth attention right now, what other agents are querying, and event alerts against a watchlist.</p>
+          <div class="endpoint-grid">
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">query</span>
+                <span class="endpoint-price">$0.003</span>
+              </div>
+              <p class="endpoint-desc">Plain-English questions routed to one or more enrichers. Single intent ("is X safe?", "whales for X") or compound chains in parallel ("should I buy X?" runs DD + trend + whales; "wallet deep dive on X" runs profile + history + perps; "what's trending?" calls trending-signals).</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">upgraded</span><span class="tag">NL</span><span class="tag">orchestration</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">trenches-scan</span>
-            <span class="endpoint-price">$0.08</span>
-          </div>
-          <p class="endpoint-desc">The full pre-entry scan in one call. Three independent signals &mdash; on-chain velocity (runner detection), proven-winner wallet buys (smart money), and agent attention (our proprietary query stream) &mdash; composited into a ranked list with confluence counts, per-token reasoning, and HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL verdicts. Confluence across independent signals is the edge.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">trenches</span><span class="tag">orchestration</span><span class="tag">flagship</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">trending-signals</span>
+                <span class="endpoint-price">$0.050</span>
+              </div>
+              <p class="endpoint-desc">Ranks trending Solana tokens by composite signal: liquidity, holder concentration, whale flow, risk. Composed across new-tokens + due-diligence + whale-watch in one call. Returns ranked list with per-token reasoning + overall sentiment.</p>
+              <div class="tag-row"><span class="tag">orchestration</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">trenches-check</span>
-            <span class="endpoint-price">$0.03</span>
-          </div>
-          <p class="endpoint-desc">Before you enter, run the check. The trenches suite pointed at <em>one token</em>: pass a mint &mdash; from a discovery, a Telegram call, anywhere &mdash; and get a HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL / NO_SIGNAL verdict with reasoning. On-chain velocity, proven-winner buys, and agent attention, targeted at your candidate. Re-check 5+ minutes later and liquidity/holder trends fill in.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">trenches</span><span class="tag">vetting</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">new-tokens</span>
+                <span class="endpoint-price">$0.012</span>
+              </div>
+              <p class="endpoint-desc">Discover recently launched Solana tokens. Scans DexScreener listings, runs risk scoring on each, filters by liquidity and risk. Safest first.</p>
+              <div class="tag-row"><span class="tag">discovery</span><span class="tag">token</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">exit-signal</span>
-            <span class="endpoint-price">$0.04</span>
-          </div>
-          <p class="endpoint-desc">Every other endpoint answers &ldquo;should I enter.&rdquo; This one answers &ldquo;I hold it &mdash; should I get out?&rdquo; Pass a mint and get an EXIT / DERISK / HOLD verdict with a 0&ndash;1 exit score: sell pressure, buy-rate deceleration, volume fade, distribution into strength, top-holder flow (whales distributing vs accumulating), liquidity trend, holder churn. Rug triggers &mdash; LP pull, active dump &mdash; override everything else. Works on tokens of any age, and an optional entry price adds unrealized-PnL context.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">trenches</span><span class="tag">sell-side</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">consensus-signal</span>
+                <span class="endpoint-price">$0.005</span>
+              </div>
+              <p class="endpoint-desc">What tokens and wallets agents are querying right now. Proprietary data derived from SolEnrich's own request stream, not market volume. Pass an address for rank/percentile/trend; omit it for top-N. Windows: 1h, 6h, 24h.</p>
+              <div class="tag-row"><span class="tag">proprietary</span><span class="tag">signal</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">stonk-reward-risk</span>
-            <span class="endpoint-price">$0.005</span>
-          </div>
-          <p class="endpoint-desc">StonkFun reward coins pay holders a transfer tax in the quote asset &mdash; NVDAX, SPYX, ZEC, whatever the coin is paired to. Holders either get paid or they don&rsquo;t, and this answers which: PAYING, STALE, NEVER, or NOT_REWARD, with hours since the last payout. Then the trading cost (a 300 bps tax is 6% per round trip before slippage) and a health score read from the chain: rate, cap, who can withdraw it, whether it can change, distributions, holders, concentration, age.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">reward coins</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">feed-latest</span>
+                <span class="endpoint-price">$0.005</span>
+              </div>
+              <p class="endpoint-desc">Daily SolEnrich intelligence brief — pre-computed ranking of trending Solana tokens with composite-signal scoring. 24h cache, recurring-poll model. Pass <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">since</code> (ISO 8601) to short-circuit on no-change polls.</p>
+              <div class="tag-row"><span class="tag">feed</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">stonk-yield</span>
-            <span class="endpoint-price">$0.005</span>
-          </div>
-          <p class="endpoint-desc">What does holding this coin actually pay? Trailing 7d / 30d / lifetime yield: rewards distributed in the quote asset, priced in USD, over average market cap. Annualized only with an explicit caution flag when the window is under seven days. Spells out the exposure &mdash; a holder is long the coin <em>and</em> its quote asset, and every reward accrues in that asset.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">holder yield</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">check-alerts</span>
+                <span class="endpoint-price">$0.008</span>
+              </div>
+              <p class="endpoint-desc">Poll-based event detection. Pass a watchlist (up to 10 tokens + 10 wallets) and a <code style="font-family:'JetBrains Mono',monospace;font-size:13px;">since</code> timestamp; get graded alerts (price spike/drop, risk change, whale flow, concentration shift, portfolio swing, position add/remove) since that moment. Stateless — caller owns the cursor.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">alerts</span><span class="tag">poll</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">stonk-screener</span>
-            <span class="endpoint-price">$0.01</span>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">protocol-profile</span>
+                <span class="endpoint-price">$0.008</span>
+              </div>
+              <p class="endpoint-desc">DeFi protocol analytics: TVL, yield pools, on-chain activity, health signals. Automated activity detection — what % of volume is bot-driven?</p>
+              <div class="tag-row"><span class="tag">protocol</span></div>
+            </div>
           </div>
-          <p class="endpoint-desc">&ldquo;Which coins on NVDAX paid holders today?&rdquo; in one call. Every StonkFun reward coin, ingested every ten minutes and served from memory. Each row carries its payout status, a live flag (traded <em>and</em> paid in the last 24h), and the round-trip tax cost. Filter by quote, category, holders, age, volume, market cap, paying-only, live-only; sort by volume, last payout, holders, 24h change, or yield. Answers in milliseconds.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">screener</span></div>
-        </div>
+        </details>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">stonk-gems</span>
-            <span class="endpoint-price">$0.03</span>
-          </div>
-          <p class="endpoint-desc">&ldquo;What should I look at on StonkFun right now?&rdquo; Ranks every reward coin 0&ndash;100 on what makes a gem: a holder payout in the last hours (the flywheel is real, not promised), holders who found it before everyone did, a market cap with room to move, real turnover, momentum that has not gone parabolic yet, and a quote asset traders actually use. GEM / WATCH / NOISE with plain reasons and warnings per coin, and the round-trip tax cost the trade must clear. Answers in milliseconds.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">gems</span></div>
-        </div>
+        <details class="suite" id="suite-temporal" open>
+          <summary class="suite-summary">
+            <h3 class="suite-title">Temporal (what changed)</h3>
+            <span class="suite-meta">3 calls</span>
+          </summary>
+          <p class="suite-blurb">Daily snapshots with direction per metric.</p>
+          <div class="endpoint-grid">
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">token-trend</span>
+                <span class="endpoint-price">$0.006</span>
+              </div>
+              <p class="endpoint-desc">"What changed?" — price, liquidity, concentration, and risk changes over 7/14/30 days. Direction indicators per metric. Snapshots accumulate automatically.</p>
+              <div class="tag-row"><span class="tag">temporal</span><span class="tag">token</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">stonk-launch-intel</span>
-            <span class="endpoint-price">$0.02</span>
-          </div>
-          <p class="endpoint-desc">What to launch, and against what. Per quote asset: how many coins launched this week, how many still trade, how many paid holders today, survival past day three, median holders, 100 vs 300 bps tax mix with trading and paying rates for each, crowding, and a demand score. Measured 2026-09-06: quote choice moves the odds more than anything else &mdash; 87% of ZEC-paired coins traded today against 25% for the most-launched xStock quote. Plain recommendations on top.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">launch</span></div>
-        </div>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">wallet-history</span>
+                <span class="endpoint-price">$0.006</span>
+              </div>
+              <p class="endpoint-desc">"What changed?" — portfolio value, SOL balance, risk score, and position changes over 7/14/30 days. Tracks added and removed holdings.</p>
+              <div class="tag-row"><span class="tag">temporal</span><span class="tag">wallet</span></div>
+            </div>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">stonk-quote</span>
-            <span class="endpoint-price">$0.005</span>
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">portfolio-history</span>
+                <span class="endpoint-price">$0.006</span>
+              </div>
+              <p class="endpoint-desc">Full portfolio time-series for a wallet. Daily snapshots of value, SOL balance, holdings, risk score over 7/14/30 days, plus summary stats: peak, trough, max drawdown, average value, change vs period start. Today's live point appended automatically.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">temporal</span><span class="tag">PnL</span></div>
+            </div>
           </div>
-          <p class="endpoint-desc">What does this trade cost, and does the coin pay it back? One size in, one answer out: entry and exit cost with the transfer tax and price impact at that size, the round trip and the price move that breaks even, your share of every payout with a dust warning, and the payout you can expect over the hold from real yield history. PAYS, MARGINAL, or COSTS, with how many days of payouts cover the trip. No swap.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">trade cost</span></div>
-        </div>
+        </details>
 
-        <div class="endpoint-card reveal">
-          <div class="endpoint-header">
-            <span class="endpoint-name">stonk-launch-preflight</span>
-            <span class="endpoint-price">$0.25</span>
+        <details class="suite" id="suite-composition" open>
+          <summary class="suite-summary">
+            <h3 class="suite-title">Batch, comparison, and graph</h3>
+            <span class="suite-meta">4 calls</span>
+          </summary>
+          <p class="suite-blurb">Many addresses in one call, side-by-side rankings, wallet connection maps.</p>
+          <div class="endpoint-grid">
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">batch-enrich</span>
+                <span class="endpoint-price">$0.015</span>
+              </div>
+              <p class="endpoint-desc">Enrich multiple wallets or tokens in a single parallel request.</p>
+              <div class="tag-row"><span class="tag premium">premium</span><span class="tag">batch</span></div>
+            </div>
+
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">compare-tokens</span>
+                <span class="endpoint-price">$0.006</span>
+              </div>
+              <p class="endpoint-desc">Side-by-side comparison of 2-3 tokens: price, liquidity, volatility, HHI concentration, risk flags. Rankings + summary picks.</p>
+              <div class="tag-row"><span class="tag">comparison</span><span class="tag">token</span></div>
+            </div>
+
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">compare-wallets</span>
+                <span class="endpoint-price">$0.006</span>
+              </div>
+              <p class="endpoint-desc">Side-by-side comparison of 2-3 wallets: portfolio value, activity, risk score, labels, holdings. Rankings + summary picks.</p>
+              <div class="tag-row"><span class="tag">comparison</span><span class="tag">wallet</span></div>
+            </div>
+
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">wallet-graph</span>
+                <span class="endpoint-price">$0.010</span>
+              </div>
+              <p class="endpoint-desc">Map transaction connections. Detect suspicious wallet clusters.</p>
+              <div class="tag-row"><span class="tag premium">premium</span><span class="tag">wallet</span></div>
+            </div>
           </div>
-          <p class="endpoint-desc">For agents that launch coins through StonkFun by building the Raydium LaunchLab transaction themselves. A pool is adopted only if every curve parameter matches exactly; one typo and the tax goes to nobody. Pass the unsigned transaction and get a diff against the published shape: GlobalConfig, platform id per mode, curve, supply, raise, 6-decimal Token-2022 mint, curve-rule account last, and the transfer fee &mdash; including Raydium&rsquo;s <code>transferFeeBasePoints</code> / <code>maxinumFee</code> spelling. Each mismatch comes with a fix. <code>stonk-pairs</code> (free) lists what you can pair against.</p>
-          <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">stonkfun</span><span class="tag">launch</span></div>
-        </div>
+        </details>
+
+        <details class="suite" id="suite-collectibles" open>
+          <summary class="suite-summary">
+            <h3 class="suite-title">Collectibles</h3>
+            <span class="suite-meta">1 call</span>
+          </summary>
+          <p class="suite-blurb">Jupiter Gacha pack expected value.</p>
+          <div class="endpoint-grid">
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">gacha-ev-scan</span>
+                <span class="endpoint-price">$0.02</span>
+              </div>
+              <p class="endpoint-desc">Jupiter Gacha (Collector Crypt) pack EV scan. Per machine: gross insured EV vs the guaranteed instant-buyback floor (85&ndash;93%, &le;72h) vs a marketplace sale (&minus;2% fee, fill-risk). Returns a POSITIVE_EV / HOUSE_EDGE / NEGATIVE_EV verdict &mdash; the realizable EV the platform hides behind its gross-EV headline.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">gacha</span><span class="tag">RWA</span></div>
+            </div>
+          </div>
+        </details>
       </div>
+      <script>
+        // Phone: the first suite stays open, the rest start closed. A #suite-… link opens its suite.
+        (function () {
+          var suites = document.querySelectorAll('.suite');
+          if (window.matchMedia('(max-width: 768px)').matches) {
+            suites.forEach(function (s, i) { if (i > 0) s.removeAttribute('open'); });
+          }
+          var target = location.hash.indexOf('#suite-') === 0 && document.getElementById(location.hash.slice(1));
+          if (target) target.setAttribute('open', '');
+        })();
+      </script>
     </div>
   </section>
 

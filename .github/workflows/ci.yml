@@ -45,3 +45,5 @@ jobs:
       - run: bun test test/llms-order.test.ts
       # Mobile layout guard (2026-09-20): every landing page uses /site.css + /site.js, one nav, inputs >= 16px.
       - run: bun test test/mobile-layout.test.ts
+      # Home page suites (2026-09-21): cards follow src/lib/suites.ts, every endpoint has a card, prices equal PRICING.
+      - run: bun test test/landing-suites.test.ts
