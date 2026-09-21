@@ -12,7 +12,8 @@ import { readFileSync, readdirSync } from 'node:fs';
 const DIR = 'landing';
 // og-image.html is the source for the social card screenshot, not a served page.
 const PAGES = readdirSync(DIR).filter((f) => f.endsWith('.html') && f !== 'og-image.html');
-const read = (f: string) => readFileSync(`${DIR}/${f}`, 'utf8');
+// Line endings are normalized: on Windows, git checks some files out with CRLF and leaves others LF.
+const read = (f: string) => readFileSync(`${DIR}/${f}`, 'utf8').replace(/\r\n/g, '\n');
 
 function nav(html: string): string {
   const m = html.match(/<nav class="site-nav"[\s\S]*?<\/nav>/);
