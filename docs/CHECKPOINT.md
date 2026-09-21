@@ -3,6 +3,30 @@
 ## Last session date
 2026-09-20
 
+## ▶️ RESUME HERE (2026-09-20 NIGHT) — mobile audit done + fixed on production · one open decision (endpoint suites on a phone)
+
+**Mobile audit (B8, added 2026-09-20 night).** Report: `docs/mobile-audit-2026-09-20.md` (19 findings, method, fix plan).
+Shipped and verified on production (`98c4091`, `ebcaffd`, + the agent-card link fix):
+- `landing/site.css` + `landing/site.js` = shared tokens, reset, nav, scroll reveal, focus, reduced-motion. Every page
+  links them before its own `<style>`. One nav on all four pages (six links, menu button under 1024px, 44px rows,
+  `aria-expanded`, Escape closes; without script the links wrap under the logo). `/` had NO navigation on a phone before.
+- Overflow fixed at the source; `overflow-x: hidden/clip` removed from html/body on all pages. Inputs 16px on a phone.
+  Text floor 12px. Tap targets 44px. Hover rules inside `@media (hover: hover)`. Breakpoints: 768px and 1024px only.
+- `/docs` contents list behind one button under 1024px. `/stonkfun` step number above the title on a phone.
+- Found on the way: the two code samples on `/` lost their line breaks at EVERY width (no `white-space`); agent-card
+  meta still said 28 endpoints and pointed at the apex host — fixed, page added to the copy-count guard.
+- Guards in CI: `test/mobile-layout.test.ts` (shared files, identical nav, breakpoints, no overflow hiding, hover guards,
+  input size). Rendered check: `test/mobile-audit.browser.js` — paste into a console on a same-origin page
+  (`/robots.txt`), `await mobileAudit()`. Production result: over 0, taps 0, fonts 0, inputs 0 on all four pages at
+  320/375/430/768; the only "wider" elements are code blocks and the quote table, which scroll inside their box.
+- **Not done:** (1) home page endpoints section is ~12,500px tall on a phone (42 cards, one column) — proposal: group by
+  suite (`src/lib/suites.ts` order), first suite open, others in `<details>` under 768px. **Needs Sardius's OK on a
+  preview before it ships.** (2) buttons / code-block / footer styles are still per page, not in `site.css` — do it
+  with B5, which needs them shared anyway. (3) 79 inline `style=""` attributes in `index.html` (now fewer by two).
+  (4) Font request still loads 11 weights. (5) No real-device check yet — **Sardius: open the four pages on a phone.**
+- Local preview: `bunx serve -l 4173 landing` (cleanUrls on; `/agent-card` cannot load its data locally — the
+  `/.well-known/agent.json` rewrite exists only on Vercel).
+
 ## ▶️ RESUME HERE (2026-09-20 END OF DAY) — Block A closed · B1–B4 live · next = B5 (per-endpoint pages) or C1 (payout alerts)
 
 **Everything is committed and pushed (last: `c59ee9c` + this checkpoint). No background work is running.

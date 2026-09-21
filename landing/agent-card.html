@@ -141,6 +141,10 @@
     .info-pill-value.green { color: var(--sol-green); }
     .info-pill-value a { color: var(--sol-blue); text-decoration: none; }
     @media (hover: hover) { .info-pill-value a:hover { text-decoration: underline; } }
+    @media (max-width: 1024px) {
+      /* A link that is the whole value of a pill is a touch target: 44px tall. */
+      .info-pill-value a { display: inline-flex; align-items: center; min-height: 44px; }
+    }
 
     /* ===== SKILLS LIST ===== */
     .skill {
