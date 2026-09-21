@@ -1,0 +1,221 @@
+/* Shared styles for every page on www.solenrich.com.
+   Each page links this file BEFORE its own <style> block, so a page rule wins on equal specificity.
+   Breakpoints: 1024px (nav collapses to a menu) and 768px (single-column layouts). No others. */
+
+:root {
+  --sol-green: #00FFA3;
+  --sol-purple: #9945FF;
+  --sol-blue: #14F195;
+  --bg-void: #06060A;
+  --bg-panel: #0C0C14;
+  --bg-card: #111119;
+  --bg-card-hover: #16161F;
+  --border-dim: #1A1A2E;
+  --border-glow: #2A2A4A;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --text-primary: #E8E8F0;
+  --text-secondary: #8888A8;
+  --text-muted: #555570;
+  --accent-warm: #FF6B35;
+  --glow-green: rgba(0, 255, 163, 0.12);
+  --glow-purple: rgba(153, 69, 255, 0.12);
+  --nav-height: 64px;
+  --page-max: 1200px;
+}
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--nav-height) + 16px);
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background: var(--bg-void);
+  color: var(--text-primary);
+  line-height: 1.6;
+}
+
+.mono { font-family: 'JetBrains Mono', monospace; }
+
+/* ==================== NAV ==================== */
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(6, 6, 10, 0.85);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border-dim);
+  padding-top: env(safe-area-inset-top);
+}
+
+.site-nav .container {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 max(24px, env(safe-area-inset-right)) 0 max(24px, env(safe-area-inset-left));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: var(--nav-height);
+}
+
+.nav-logo {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  font-size: 18px;
+  color: var(--sol-green);
+  text-decoration: none;
+  letter-spacing: -0.5px;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+
+.nav-logo span { color: var(--text-muted); font-weight: 400; }
+
+.nav-links { display: flex; gap: 32px; align-items: center; }
+
+.nav-links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-decoration: none;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.nav-links a[aria-current="page"] { color: var(--sol-green); }
+
+.nav-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--sol-green);
+  white-space: nowrap;
+}
+
+.nav-status .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--sol-green);
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--sol-green); }
+  50% { opacity: 0.5; box-shadow: 0 0 8px var(--sol-green); }
+}
+
+.nav-toggle {
+  display: none;
+  width: 44px;
+  height: 44px;
+  margin-right: -10px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.nav-toggle span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--text-primary);
+  transition: transform 0.2s, opacity 0.2s;
+}
+
+.site-nav.open .nav-toggle span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.site-nav.open .nav-toggle span:nth-child(2) { opacity: 0; }
+.site-nav.open .nav-toggle span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 1024px) {
+  .nav-status { display: none; }
+
+  .nav-links a {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 13px;
+  }
+
+  /* With script: the links sit in a panel under the bar, opened by the menu button. */
+  html.js .nav-toggle { display: inline-flex; }
+
+  html.js .nav-links {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 8px max(24px, env(safe-area-inset-right)) 16px max(24px, env(safe-area-inset-left));
+    max-height: calc(100vh - var(--nav-height));
+    max-height: calc(100dvh - var(--nav-height));
+    overflow-y: auto;
+    background: var(--bg-panel);
+    border-bottom: 1px solid var(--border-dim);
+  }
+
+  html.js .site-nav.open .nav-links { display: flex; }
+
+  html.js .nav-links a + a { border-top: 1px solid var(--border-subtle); }
+
+  /* Without script: no button, the links wrap under the logo. */
+  html:not(.js) .site-nav .container { flex-wrap: wrap; gap: 0 24px; padding-bottom: 8px; }
+  html:not(.js) .nav-links { flex-wrap: wrap; gap: 0 24px; width: 100%; }
+}
+
+/* ==================== SCROLL REVEAL ====================
+   Content is visible by default. It starts hidden only when script is running,
+   and the page script adds .visible as each element enters the viewport. */
+html.js .reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.16, 1, 0.3, 1), transform 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html.js .reveal.visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* ==================== INTERACTION ==================== */
+@media (hover: hover) {
+  .nav-links a:hover { color: var(--sol-green); }
+  .nav-toggle:hover { background: var(--bg-card); }
+}
+
+:focus-visible {
+  outline: 2px solid var(--sol-green);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  html.js .reveal { opacity: 1; transform: none; }
+}

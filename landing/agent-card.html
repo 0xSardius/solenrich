@@ -23,68 +23,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
 
+  <script>document.documentElement.className = 'js';</script>
+  <link rel="stylesheet" href="/site.css">
+  <script src="/site.js" defer></script>
   <style>
-    :root {
-      --sol-green: #00FFA3;
-      --sol-purple: #9945FF;
-      --sol-blue: #14F195;
-      --bg-void: #06060A;
-      --bg-panel: #0C0C14;
-      --bg-card: #111119;
-      --bg-card-hover: #16161F;
-      --border-subtle: rgba(255,255,255,0.06);
-      --text-primary: #E8E8F0;
-      --text-secondary: #8888A8;
-      --text-muted: #555570;
-      --accent-warm: #FF6B35;
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; overflow-x: clip; }
-    body {
-      font-family: 'DM Sans', system-ui, sans-serif;
-      background: var(--bg-void);
-      color: var(--text-primary);
-      line-height: 1.6;
-      overflow-x: clip;
-      max-width: 100vw;
-    }
-    .mono { font-family: 'JetBrains Mono', monospace; }
-
-    /* ===== NAV ===== */
-    nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(6,6,10,0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border-subtle);
-      padding: 16px 0;
-    }
-    nav .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 0 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-    .nav-logo {
-      font-family: 'Space Grotesk', sans-serif;
-      font-weight: 700;
-      font-size: 20px;
-      color: var(--sol-green);
-      text-decoration: none;
-    }
-    .nav-logo span { color: var(--text-muted); font-weight: 400; }
-    .nav-links { display: flex; gap: 28px; }
-    .nav-links a {
-      color: var(--text-secondary);
-      text-decoration: none;
-      font-size: 14px;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover, .nav-links a.active { color: var(--sol-green); }
+    /* Tokens, reset, nav, scroll reveal and focus styles live in /site.css. */
+    html, body { overflow-x: clip; }
+    body { max-width: 100vw; }
 
     /* ===== LAYOUT ===== */
     .container-main {
@@ -331,15 +276,20 @@
 </head>
 <body>
 
-  <nav>
+  <!-- Shared nav: the same markup on every page; only aria-current differs. test/mobile-layout.test.ts checks it. -->
+  <nav class="site-nav" aria-label="Main">
     <div class="container">
       <a href="/" class="nav-logo">SolEnrich<span>.agent</span></a>
-      <div class="nav-links">
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Menu"><span></span><span></span><span></span></button>
+      <div class="nav-links" id="nav-links">
         <a href="/#demo">Try It</a>
         <a href="/#endpoints">Endpoints</a>
+        <a href="/#how-it-works">How it works</a>
+        <a href="/stonkfun">StonkFun</a>
         <a href="/docs">Docs</a>
-        <a href="/agent-card" class="active">Agent Card</a>
+        <a href="/agent-card" aria-current="page">Agent Card</a>
       </div>
+      <div class="nav-status"><div class="dot"></div>LIVE ON MAINNET</div>
     </div>
   </nav>
 

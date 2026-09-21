@@ -66,36 +66,12 @@
   }
   </script>
 
+  <script>document.documentElement.className = 'js';</script>
+  <link rel="stylesheet" href="/site.css">
+  <script src="/site.js" defer></script>
   <style>
-    :root {
-      --sol-green: #00FFA3;
-      --sol-purple: #9945FF;
-      --sol-blue: #14F195;
-      --bg-void: #06060A;
-      --bg-panel: #0C0C14;
-      --bg-card: #111119;
-      --bg-card-hover: #16161F;
-      --border-dim: #1A1A2E;
-      --border-glow: #2A2A4A;
-      --text-primary: #E8E8F0;
-      --text-secondary: #8888A8;
-      --text-muted: #555570;
-      --accent-warm: #FF6B35;
-      --glow-green: rgba(0, 255, 163, 0.12);
-      --glow-purple: rgba(153, 69, 255, 0.12);
-    }
-
-    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg-void);
-      color: var(--text-primary);
-      overflow-x: hidden;
-      line-height: 1.6;
-    }
+    /* Tokens, reset, nav, scroll reveal and focus styles live in /site.css. */
+    body { overflow-x: hidden; }
 
     /* Scanline overlay */
     body::after {
@@ -124,7 +100,6 @@
       z-index: 9998;
     }
 
-    .mono { font-family: 'JetBrains Mono', monospace; }
     .heading { font-family: 'Space Grotesk', sans-serif; }
 
     /* Layout */
@@ -136,76 +111,13 @@
 
     section { padding: 100px 0; }
 
-    /* ==================== NAV ==================== */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      background: rgba(6, 6, 10, 0.85);
-      backdrop-filter: blur(20px);
-      border-bottom: 1px solid var(--border-dim);
-    }
-
-    nav .container {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 64px;
-    }
-
-    .nav-logo {
-      font-family: 'JetBrains Mono', monospace;
-      font-weight: 700;
-      font-size: 18px;
-      color: var(--sol-green);
-      text-decoration: none;
-      letter-spacing: -0.5px;
-    }
-
-    .nav-logo span { color: var(--text-muted); font-weight: 400; }
-
-    .nav-links { display: flex; gap: 32px; align-items: center; }
-
-    .nav-links a {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 12px;
-      color: var(--text-secondary);
-      text-decoration: none;
-      text-transform: uppercase;
-      letter-spacing: 1.5px;
-      transition: color 0.2s;
-    }
-
-    .nav-links a:hover { color: var(--sol-green); }
-
-    .nav-status {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      color: var(--sol-green);
-    }
-
-    .nav-status .dot {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--sol-green);
-      animation: pulse-dot 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse-dot {
-      0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--sol-green); }
-      50% { opacity: 0.5; box-shadow: 0 0 8px var(--sol-green); }
-    }
-
     /* ==================== HERO ==================== */
     .hero {
-      min-height: 100vh;
+      min-height: calc(100vh - var(--nav-height));
+      min-height: calc(100dvh - var(--nav-height));
       display: flex;
       align-items: center;
       position: relative;
-      padding-top: 64px;
     }
 
     .hero-bg {
@@ -1408,20 +1320,10 @@
 
     @media (max-width: 768px) {
       .demo-search { flex-direction: column; }
+      /* 16px stops iOS Safari from zooming the page when the input takes focus. */
+      .demo-search input { font-size: 16px; }
       .demo-search button { padding: 14px; }
       .demo-examples { flex-direction: column; }
-    }
-
-    /* ==================== ANIMATIONS ==================== */
-    .reveal {
-      opacity: 0;
-      transform: translateY(24px);
-      transition: all 0.7s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-
-    .reveal.visible {
-      opacity: 1;
-      transform: translateY(0);
     }
 
     /* ==================== RESPONSIVE ==================== */
@@ -1440,7 +1342,6 @@
       .endpoint-grid { grid-template-columns: 1fr; }
       .source-grid { grid-template-columns: repeat(2, 1fr); }
       .value-grid { grid-template-columns: 1fr; }
-      .nav-links { display: none; }
       .footer-inner { flex-direction: column; gap: 24px; text-align: center; }
       .hero-actions { flex-direction: column; }
       .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
@@ -1450,21 +1351,20 @@
 <body>
 
   <!-- ===== NAV ===== -->
-  <nav>
+  <!-- Shared nav: the same markup on every page; only aria-current differs. test/mobile-layout.test.ts checks it. -->
+  <nav class="site-nav" aria-label="Main">
     <div class="container">
-      <a href="#" class="nav-logo">SolEnrich<span>.agent</span></a>
-      <div class="nav-links">
-        <a href="#demo">Try It</a>
-        <a href="#endpoints">Endpoints</a>
-        <a href="#how-it-works">How it works</a>
+      <a href="/" class="nav-logo">SolEnrich<span>.agent</span></a>
+      <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="Menu"><span></span><span></span><span></span></button>
+      <div class="nav-links" id="nav-links">
+        <a href="/#demo">Try It</a>
+        <a href="/#endpoints">Endpoints</a>
+        <a href="/#how-it-works">How it works</a>
         <a href="/stonkfun">StonkFun</a>
         <a href="/docs">Docs</a>
         <a href="/agent-card">Agent Card</a>
       </div>
-      <div class="nav-status">
-        <div class="dot"></div>
-        LIVE ON MAINNET
-      </div>
+      <div class="nav-status"><div class="dot"></div>LIVE ON MAINNET</div>
     </div>
   </nav>
 

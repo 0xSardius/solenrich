@@ -43,3 +43,5 @@ jobs:
       - run: bun test test/discovery-surfaces.test.ts
       # B3 (2026-09-20): suite map covers every endpoint once; llms.txt / llms-full.txt order.
       - run: bun test test/llms-order.test.ts
+      # Mobile layout guard (2026-09-20): every landing page uses /site.css + /site.js, one nav, inputs >= 16px.
+      - run: bun test test/mobile-layout.test.ts

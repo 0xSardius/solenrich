@@ -74,7 +74,7 @@
    `:focus-visible` outline. `100dvh`. `theme-color`. Safe-area padding on the nav.
 9. Guard: `test/mobile-layout.test.ts` — static checks that every landing page links `site.css`, has the
    viewport tag, has no `<input>` style under 16 px and no `overflow-x: hidden` on `body`. The rendered check
-   (the script used in this audit) goes in `local/scripts/mobile-audit.js` for re-runs before a deploy.
+   (the script used in this audit) goes in `test/mobile-audit.browser.js` for re-runs before a deploy.
 
 Size: about one day. Verification: re-run the audit script on production at 320 / 375 / 430 / 768 px; the
 target is zero elements past the edge, zero tap targets under 40 px outside running text, zero inputs under
