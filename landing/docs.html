@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#06060A">
   <title>SolEnrich — API Documentation</title>
   <meta name="description" content="SolEnrich API documentation. 45 paid endpoints plus 1 free for Solana onchain intelligence. Pay-per-call USDC via x402 on Solana or Base, fiat via MPP/Stripe. JSON for agents, natural language briefings for LLMs.">
 
@@ -32,8 +33,6 @@
   <script src="/site.js" defer></script>
   <style>
     /* Tokens, reset, nav, scroll reveal and focus styles live in /site.css. */
-    html, body { overflow-x: clip; }
-    body { max-width: 100vw; }
 
     /* ===== LAYOUT ===== */
     .docs-layout {
@@ -55,6 +54,7 @@
       top: 96px;
       height: fit-content;
       max-height: calc(100vh - 120px);
+      max-height: calc(100dvh - 120px);
       overflow-y: auto;
       padding-right: 12px;
       scrollbar-gutter: stable;
@@ -65,7 +65,7 @@
       background: rgba(255,255,255,0.08);
       border-radius: 3px;
     }
-    .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); }
+    @media (hover: hover) { .sidebar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.18); } }
     .sidebar-section { margin-top: 20px; }
     .sidebar-section:first-child { margin-top: 0; }
     .sidebar-toggle {
@@ -78,13 +78,13 @@
       cursor: pointer;
       padding: 6px 0;
       font-family: 'Space Grotesk', sans-serif;
-      font-size: 11px;
+      font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--text-muted);
       transition: color 0.15s;
     }
-    .sidebar-toggle:hover { color: var(--text-secondary); }
+    @media (hover: hover) { .sidebar-toggle:hover { color: var(--text-secondary); } }
     .sidebar-toggle .chevron {
       display: inline-block;
       width: 10px;
@@ -99,7 +99,7 @@
     .sidebar-section.collapsed .chevron { transform: rotate(-45deg); margin-bottom: 0; margin-top: 3px; }
     .sidebar-section .count {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
+      font-size: 12px;
       color: var(--text-muted);
       margin-left: 6px;
       text-transform: none;
@@ -128,7 +128,7 @@
       border-radius: 4px;
       transition: color 0.15s, background 0.15s;
     }
-    .sidebar a:hover { color: var(--sol-green); background: rgba(0,255,163,0.05); }
+    @media (hover: hover) { .sidebar a:hover { color: var(--sol-green); background: rgba(0,255,163,0.05); } }
     .sidebar a.active {
       color: var(--sol-green);
       background: rgba(0,255,163,0.08);
@@ -145,27 +145,26 @@
       border: 1px solid var(--border-subtle);
       color: var(--text-muted);
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
+      font-size: 12px;
       padding: 4px 10px;
       border-radius: 4px;
       cursor: pointer;
       transition: color 0.15s, border-color 0.15s;
     }
-    .sidebar-controls button:hover {
-      color: var(--text-secondary);
-      border-color: rgba(255,255,255,0.15);
-    }
+    @media (hover: hover) { .sidebar-controls button:hover { color: var(--text-secondary); border-color: rgba(255,255,255,0.15); } }
 
     /* ===== MOBILE ===== */
     /* Placed after the sidebar rules so these overrides win the cascade. On
        mobile the nav drops into normal document flow (stacked above the content)
        — never sticky/floating. Resets every property that gives it its desktop
        sticky-rail behavior, so it can't detach and ghost over the text. */
-    @media (max-width: 900px) {
+    .sidebar-open { display: none; }
+
+    @media (max-width: 1024px) {
       .docs-layout {
         grid-template-columns: minmax(0, 1fr);
-        padding: 32px 20px;
-        gap: 28px;
+        padding: 24px 20px 32px;
+        gap: 24px;
       }
       .sidebar {
         position: static;
@@ -174,9 +173,45 @@
         overflow: visible;
         padding-right: 0;
         scrollbar-gutter: auto;
-        padding-bottom: 20px;
+        padding-bottom: 12px;
         border-bottom: 1px solid var(--border-subtle);
       }
+      /* With script, the contents list sits behind one button so the page starts with the text.
+         Without script the button stays hidden and the list shows in full. */
+      html.js .sidebar-open {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+        min-height: 44px;
+        padding: 0 14px;
+        background: var(--bg-card);
+        border: 1px solid var(--border-subtle);
+        border-radius: 8px;
+        color: var(--text-primary);
+        font-family: 'Space Grotesk', sans-serif;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .sidebar-open .chevron {
+        width: 9px;
+        height: 9px;
+        border-right: 1.5px solid currentColor;
+        border-bottom: 1.5px solid currentColor;
+        transform: rotate(45deg);
+        transition: transform 0.2s ease;
+        margin-bottom: 3px;
+      }
+      .sidebar.open .sidebar-open .chevron { transform: rotate(-135deg); margin-bottom: -3px; }
+      html.js .sidebar-panel { display: none; padding-top: 12px; }
+      html.js .sidebar.open .sidebar-panel { display: block; }
+
+      /* 44px rows for touch. */
+      .sidebar li { margin: 0; }
+      .sidebar a { display: flex; align-items: center; min-height: 44px; padding: 0 8px; font-size: 14px; }
+      .sidebar-toggle { min-height: 44px; }
+      .sidebar-controls button { min-height: 44px; padding: 0 14px; }
     }
 
     /* ===== MAIN ===== */
@@ -259,7 +294,7 @@
       max-width: 100%;
       overflow: hidden;
     }
-    .endpoint:hover { border-color: rgba(0,255,163,0.2); }
+    @media (hover: hover) { .endpoint:hover { border-color: rgba(0,255,163,0.2); } }
     .endpoint-header {
       display: flex;
       align-items: center;
@@ -347,7 +382,7 @@
       padding: 12px 16px;
     }
     .info-pill-label {
-      font-size: 11px;
+      font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.08em;
       color: var(--text-muted);
@@ -386,7 +421,7 @@
       font-size: 13px;
     }
     footer a { color: var(--sol-green); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
+    @media (hover: hover) { footer a:hover { text-decoration: underline; } }
   </style>
 </head>
 <body>
@@ -411,6 +446,8 @@
   <div class="docs-layout">
 
     <aside class="sidebar">
+      <button class="sidebar-open" type="button" aria-expanded="false" aria-controls="sidebar-panel">Contents<span class="chevron"></span></button>
+      <div class="sidebar-panel" id="sidebar-panel">
       <div class="sidebar-controls">
         <button id="toggle-all" type="button" title="Expand or collapse all sections">collapse all</button>
       </div>
@@ -469,6 +506,7 @@
             <li><a href="https://api.solenrich.com/mcp" target="_blank">MCP server</a></li>
           </ul>
         </div>
+      </div>
       </div>
     </aside>
 
@@ -799,6 +837,18 @@
       updateToggleAllLabel();
     });
     updateToggleAllLabel();
+
+    // Phone layout: the contents list opens from one button and closes when a section link is chosen.
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarOpenBtn = document.querySelector('.sidebar-open');
+    function setSidebarOpen(open) {
+      sidebar.classList.toggle('open', open);
+      sidebarOpenBtn.setAttribute('aria-expanded', String(open));
+    }
+    sidebarOpenBtn.addEventListener('click', () => setSidebarOpen(!sidebar.classList.contains('open')));
+    document.getElementById('sidebar-panel').addEventListener('click', (e) => {
+      if (e.target.closest('a[href^="#"]')) setSidebarOpen(false);
+    });
 
     // Scrollspy: highlight active section as the user scrolls
     function setupScrollspy() {

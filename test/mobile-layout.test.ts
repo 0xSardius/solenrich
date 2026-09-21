@@ -84,9 +84,31 @@ describe('landing pages: shared mobile layout', () => {
     }
   });
 
-  test('site.css uses only the two agreed breakpoints', () => {
-    const css = readFileSync(`${DIR}/site.css`, 'utf8');
-    const widths = [...css.matchAll(/@media[^{]*\b(?:max|min)-width:\s*(\d+)px/g)].map((m) => Number(m[1]));
-    for (const w of widths) expect([768, 1024]).toContain(w);
+  test('site.css and every page use only the two agreed breakpoints (768px, 1024px)', () => {
+    const sources = [readFileSync(`${DIR}/site.css`, 'utf8'), ...PAGES.map(read)];
+    for (const source of sources) {
+      const widths = [...source.matchAll(/@media[^{]*\b(?:max|min)-width:\s*(\d+)px/g)].map((m) => Number(m[1]));
+      for (const w of widths) expect([768, 1024]).toContain(w);
+    }
+  });
+
+  test('no page hides sideways overflow on html or body (fix the element that overflows instead)', () => {
+    for (const page of PAGES) {
+      const style = read(page).slice(read(page).indexOf('<style>'), read(page).indexOf('</style>'));
+      const rootRules = [...style.matchAll(/(?:^|\})\s*((?:html|body)(?:\s*,\s*(?:html|body))*)\s*\{([^}]*)\}/g)];
+      for (const [, selector, body] of rootRules) {
+        expect({ page, selector, hides: /overflow(-x)?\s*:\s*(hidden|clip)/.test(body) }).toEqual({ page, selector, hides: false });
+      }
+    }
+  });
+
+  test('every :hover rule sits inside @media (hover: hover), so it does not stick after a tap', () => {
+    for (const page of PAGES) {
+      const html = read(page);
+      const style = html.slice(html.indexOf('<style>'), html.indexOf('</style>'));
+      const hovers = (style.match(/:hover/g) || []).length;
+      const guarded = (style.match(/@media \(hover: hover\) \{[^{}]*:hover/g) || []).length;
+      expect({ page, unguarded: hovers - guarded }).toEqual({ page, unguarded: 0 });
+    }
   });
 });

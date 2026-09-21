@@ -19,7 +19,7 @@ const TOTAL = PAID + FREE;
 const TOOLS = MCP_TOOLS.length;
 
 // mcp/README.md states no counts, so it is not listed; add it if it ever does.
-const FILES = ['landing/index.html', 'landing/docs.html', 'landing/stonkfun.html', 'README.md'];
+const FILES = ['landing/index.html', 'landing/docs.html', 'landing/stonkfun.html', 'landing/agent-card.html', 'README.md'];
 
 // "45 endpoints", "45 paid endpoints", "45 onchain intelligence endpoints", "46 endpoints (45 paid + 1 free)",
 // "44 tools", "44 MCP tools", "38 pay-per-call endpoints". Up to three words between the number and the noun.

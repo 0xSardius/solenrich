@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#06060A">
   <title>SolEnrich — Onchain Intelligence for Solana Agents</title>
   <meta name="description" content="Onchain intelligence API for Solana agents and LLMs. 45 endpoints: wallet profiling and risk scoring, token due diligence with holder concentration and slippage, whale and smart-money tracking, cross-venue perps market structure (Jupiter, Adrena, Flash, Hyperliquid, dYdX), event alerts, portfolio time-series, agent-attention signals, a fresh-launch trade-lifecycle suite, and StonkFun reward-coin intelligence (gem finder, payout status, yield, screener, launch intel, launch preflight). Deterministic scoring, JSON or LLM-ready briefings. Pay per call with USDC on Solana or Base via x402, or by card via Stripe. No API keys.">
 
@@ -71,7 +72,6 @@
   <script src="/site.js" defer></script>
   <style>
     /* Tokens, reset, nav, scroll reveal and focus styles live in /site.css. */
-    body { overflow-x: hidden; }
 
     /* Scanline overlay */
     body::after {
@@ -185,7 +185,7 @@
       border: 1px solid var(--border-glow);
       border-radius: 100px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-secondary);
       margin-bottom: 32px;
       background: rgba(153, 69, 255, 0.05);
@@ -246,11 +246,7 @@
       letter-spacing: 0.5px;
     }
 
-    .btn-primary:hover {
-      background: #33FFB8;
-      transform: translateY(-1px);
-      box-shadow: 0 8px 30px rgba(0, 255, 163, 0.2);
-    }
+    @media (hover: hover) { .btn-primary:hover { background: #33FFB8; transform: translateY(-1px); box-shadow: 0 8px 30px rgba(0, 255, 163, 0.2); } }
 
     .btn-secondary {
       display: inline-flex;
@@ -269,10 +265,7 @@
       letter-spacing: 0.5px;
     }
 
-    .btn-secondary:hover {
-      border-color: var(--sol-purple);
-      background: rgba(153, 69, 255, 0.05);
-    }
+    @media (hover: hover) { .btn-secondary:hover { border-color: var(--sol-purple); background: rgba(153, 69, 255, 0.05); } }
 
     /* Terminal preview */
     .hero-terminal {
@@ -307,7 +300,7 @@
 
     .terminal-title {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-muted);
       margin-left: 8px;
     }
@@ -339,7 +332,7 @@
 
     .section-label {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      font-size: 12px;
       color: var(--sol-purple);
       text-transform: uppercase;
       letter-spacing: 3px;
@@ -387,13 +380,9 @@
       transition: opacity 0.25s;
     }
 
-    .endpoint-card:hover {
-      background: var(--bg-card-hover);
-      border-color: var(--border-glow);
-      transform: translateY(-2px);
-    }
+    @media (hover: hover) { .endpoint-card:hover { background: var(--bg-card-hover); border-color: var(--border-glow); transform: translateY(-2px); } }
 
-    .endpoint-card:hover::before { opacity: 1; }
+    @media (hover: hover) { .endpoint-card:hover::before { opacity: 1; } }
 
     .endpoint-header {
       display: flex;
@@ -435,7 +424,7 @@
 
     .tag {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
+      font-size: 12px;
       padding: 3px 8px;
       border-radius: 4px;
       background: rgba(153, 69, 255, 0.08);
@@ -526,7 +515,7 @@
     .step-code {
       margin-top: 16px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-muted);
       background: var(--bg-panel);
       padding: 10px 14px;
@@ -554,10 +543,7 @@
       transition: all 0.25s;
     }
 
-    .source-card:hover {
-      border-color: var(--border-glow);
-      transform: translateY(-2px);
-    }
+    @media (hover: hover) { .source-card:hover { border-color: var(--border-glow); transform: translateY(-2px); } }
 
     .source-icon {
       font-size: 32px;
@@ -574,7 +560,7 @@
 
     .source-detail {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-muted);
     }
 
@@ -613,7 +599,7 @@
 
     .update-tag {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 2px;
@@ -665,7 +651,7 @@
       align-items: center;
       gap: 8px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 2px;
@@ -704,10 +690,7 @@
       border-bottom: 1px dotted rgba(255, 255, 255, 0.25);
       transition: color 0.15s, border-color 0.15s;
     }
-    .proof-item a:hover {
-      color: var(--sol-green);
-      border-bottom-color: var(--sol-green);
-    }
+    @media (hover: hover) { .proof-item a:hover { color: var(--sol-green); border-bottom-color: var(--sol-green); } }
     .proof-divider {
       color: var(--border-dim);
       font-size: 14px;
@@ -715,7 +698,9 @@
     }
     @media (max-width: 768px) {
       .proof-strip .container { flex-direction: column; align-items: flex-start; gap: 10px; }
-      .proof-items { gap: 8px; }
+      .proof-items { flex-direction: column; align-items: flex-start; gap: 0; }
+      .proof-item { white-space: normal; }
+      .proof-item a { display: inline-flex; align-items: center; min-height: 44px; }
       .proof-divider { display: none; }
     }
 
@@ -727,9 +712,7 @@
       transition: all 0.25s;
     }
 
-    .value-card:hover {
-      border-color: var(--border-glow);
-    }
+    @media (hover: hover) { .value-card:hover { border-color: var(--border-glow); } }
 
     .value-icon {
       font-family: 'JetBrains Mono', monospace;
@@ -780,7 +763,7 @@
       border-right: none;
     }
 
-    .format-tab:hover { color: var(--text-secondary); }
+    @media (hover: hover) { .format-tab:hover { color: var(--text-secondary); } }
 
     .format-tab.active {
       color: var(--sol-green);
@@ -827,7 +810,7 @@
 
     .format-code-label {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-muted);
     }
 
@@ -838,6 +821,9 @@
       line-height: 1.8;
       color: var(--text-secondary);
       overflow-x: auto;
+      /* The samples are written with real line breaks. pre-wrap keeps them and still wraps a long line on a phone. */
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
     /* ==================== COMPARE ==================== */
@@ -861,8 +847,8 @@
       border: 1px solid rgba(20, 241, 149, 0.4);
       box-shadow: 0 0 24px rgba(20, 241, 149, 0.08);
     }
-    .compare-card-us:hover { border-color: rgba(20, 241, 149, 0.6); }
-    .compare-card:not(.compare-card-us):hover { border-color: var(--border-glow); }
+    @media (hover: hover) { .compare-card-us:hover { border-color: rgba(20, 241, 149, 0.6); } }
+    @media (hover: hover) { .compare-card:not(.compare-card-us):hover { border-color: var(--border-glow); } }
     .compare-name {
       font-family: 'Space Grotesk', sans-serif;
       font-size: 20px;
@@ -894,7 +880,7 @@
     }
     .compare-dim {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
+      font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 1.5px;
       color: var(--text-muted);
@@ -906,7 +892,7 @@
       margin-top: 24px;
       font-style: italic;
     }
-    @media (max-width: 900px) {
+    @media (max-width: 1024px) {
       .compare-grid { grid-template-columns: 1fr; }
     }
 
@@ -924,7 +910,7 @@
       padding: 32px;
       transition: border-color 0.25s;
     }
-    .persona-card:hover { border-color: var(--border-glow); }
+    @media (hover: hover) { .persona-card:hover { border-color: var(--border-glow); } }
     .persona-tag {
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
@@ -970,7 +956,7 @@
       border-radius: 4px;
       margin-right: 6px;
     }
-    @media (max-width: 900px) {
+    @media (max-width: 1024px) {
       .personas-grid { grid-template-columns: 1fr; }
     }
 
@@ -1008,7 +994,7 @@
 
     .mcp-tool-tag {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      font-size: 12px;
       padding: 4px 10px;
       background: rgba(0, 255, 163, 0.06);
       border: 1px solid rgba(0, 255, 163, 0.12);
@@ -1025,6 +1011,7 @@
       text-align: center;
       padding: 120px 0;
       position: relative;
+      overflow: hidden; /* the 600px glow below is decoration; keep it inside the section on a phone */
     }
 
     .cta-section::before {
@@ -1081,7 +1068,7 @@
       text-decoration: none;
     }
 
-    .footer-brand a:hover { color: var(--sol-green); }
+    @media (hover: hover) { .footer-brand a:hover { color: var(--sol-green); } }
 
     .footer-links {
       display: flex;
@@ -1096,7 +1083,7 @@
       transition: color 0.2s;
     }
 
-    .footer-links a:hover { color: var(--text-secondary); }
+    @media (hover: hover) { .footer-links a:hover { color: var(--text-secondary); } }
 
     /* ==================== DEMO ==================== */
     .demo-section { background: var(--bg-void); position: relative; }
@@ -1140,7 +1127,7 @@
       white-space: nowrap;
     }
 
-    .demo-search button:hover { background: var(--sol-blue); }
+    @media (hover: hover) { .demo-search button:hover { background: var(--sol-blue); } }
     .demo-search button:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .demo-examples {
@@ -1154,15 +1141,33 @@
 
     .demo-examples-label {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-muted);
       text-transform: uppercase;
       letter-spacing: 1px;
     }
 
+    .demo-mode-btn {
+      min-height: 44px;
+      padding: 6px 16px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: transparent;
+      color: rgba(255, 255, 255, 0.5);
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+    }
+
+    .demo-mode-btn.active {
+      background: rgba(255, 255, 255, 0.08);
+      color: #fff;
+    }
+
     .demo-example-btn {
+      min-height: 44px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-secondary);
       background: var(--bg-card);
       border: 1px solid var(--border-dim);
@@ -1172,16 +1177,12 @@
       transition: all 0.2s;
     }
 
-    .demo-example-btn:hover {
-      border-color: var(--sol-green);
-      color: var(--sol-green);
-      box-shadow: 0 0 12px var(--glow-green);
-    }
+    @media (hover: hover) { .demo-example-btn:hover { border-color: var(--sol-green); color: var(--sol-green); box-shadow: 0 0 12px var(--glow-green); } }
 
     .demo-counter {
       text-align: center;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-muted);
       margin-bottom: 24px;
     }
@@ -1227,7 +1228,7 @@
 
     .demo-result-type {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
+      font-size: 12px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 2px;
@@ -1243,7 +1244,7 @@
 
     .demo-tab {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-muted);
       background: none;
       border: 1px solid var(--border-dim);
@@ -1290,7 +1291,7 @@
     .demo-json {
       padding: 24px;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
+      font-size: 12px;
       line-height: 1.6;
       color: var(--text-secondary);
       overflow-x: auto;
@@ -1342,7 +1343,9 @@
       .endpoint-grid { grid-template-columns: 1fr; }
       .source-grid { grid-template-columns: repeat(2, 1fr); }
       .value-grid { grid-template-columns: 1fr; }
-      .footer-inner { flex-direction: column; gap: 24px; text-align: center; }
+      .footer-inner { flex-direction: column; gap: 16px; text-align: center; }
+      .footer-links { flex-wrap: wrap; justify-content: center; gap: 0 24px; }
+      .footer-links a, .footer-brand a { display: inline-flex; align-items: center; min-height: 44px; }
       .hero-actions { flex-direction: column; }
       .btn-primary, .btn-secondary { width: 100%; justify-content: center; }
     }
@@ -1534,8 +1537,8 @@
 
       <div class="reveal">
         <div class="demo-mode-toggle" style="display:flex; justify-content:center; gap:8px; margin-bottom:16px;">
-          <button class="demo-mode-btn active" id="mode-enrich" style="padding:6px 16px; border-radius:6px; border:1px solid rgba(255,255,255,0.15); background:rgba(255,255,255,0.08); color:#fff; cursor:pointer; font-size:14px;">Enrich</button>
-          <button class="demo-mode-btn" id="mode-compare" style="padding:6px 16px; border-radius:6px; border:1px solid rgba(255,255,255,0.15); background:transparent; color:rgba(255,255,255,0.5); cursor:pointer; font-size:14px;">Compare Tokens</button>
+          <button class="demo-mode-btn active" id="mode-enrich" type="button" aria-pressed="true">Enrich</button>
+          <button class="demo-mode-btn" id="mode-compare" type="button" aria-pressed="false">Compare Tokens</button>
         </div>
 
         <div id="demo-enrich-mode">
@@ -2140,8 +2143,8 @@
           <div class="format-code-header">
             <span class="format-code-label">format: "llm" — due diligence briefing</span>
           </div>
-          <div class="format-code-body">
-<span style="color: var(--sol-green);">DUE DILIGENCE: JUP (Jupiter)</span>
+          <!-- white-space: pre-wrap: the tags hug the text so no blank line opens or closes the sample. -->
+          <div class="format-code-body"><span style="color: var(--sol-green);">DUE DILIGENCE: JUP (Jupiter)</span>
 <span style="color: var(--text-muted);">═══════════════════════════════</span>
 
 <span style="color: var(--accent-warm);">Price:</span> $0.29 (median of 3 sources)
@@ -2158,8 +2161,7 @@
 
 <span style="color: var(--accent-warm);">Verdict:</span> <span style="color: var(--sol-green);">SAFE</span> (23/100, MODERATE)
 <span style="color: var(--text-muted);">Verified. No active authorities.
-Well-distributed supply.</span>
-          </div>
+Well-distributed supply.</span></div>
         </div>
       </div>
     </div>
@@ -2301,16 +2303,14 @@ Well-distributed supply.</span>
           <div class="format-code-header">
             <span class="format-code-label">claude_desktop_config.json</span>
           </div>
-          <div class="format-code-body">
-<span class="dim">{</span>
+          <div class="format-code-body"><span class="dim">{</span>
   <span class="key">"mcpServers"</span>: {
     <span class="key">"solenrich"</span>: {
       <span class="key">"type"</span>: <span class="str">"streamable-http"</span>,
       <span class="key">"url"</span>: <span class="str">"https://api.solenrich.com/mcp"</span>
     }
   }
-<span class="dim">}</span>
-          </div>
+<span class="dim">}</span></div>
         </div>
       </div>
     </div>
@@ -2615,27 +2615,18 @@ Well-distributed supply.</span>
     var modeEnrichBtn = document.getElementById('mode-enrich');
     var modeCompareBtn = document.getElementById('mode-compare');
 
-    modeEnrichBtn.addEventListener('click', function() {
-      enrichMode.style.display = 'block';
-      compareMode.style.display = 'none';
-      modeEnrichBtn.style.background = 'rgba(255,255,255,0.08)';
-      modeEnrichBtn.style.color = '#fff';
-      modeEnrichBtn.classList.add('active');
-      modeCompareBtn.style.background = 'transparent';
-      modeCompareBtn.style.color = 'rgba(255,255,255,0.5)';
-      modeCompareBtn.classList.remove('active');
-    });
+    // The .active class carries the look (see .demo-mode-btn in the stylesheet).
+    function setMode(compare) {
+      enrichMode.style.display = compare ? 'none' : 'block';
+      compareMode.style.display = compare ? 'block' : 'none';
+      modeEnrichBtn.classList.toggle('active', !compare);
+      modeCompareBtn.classList.toggle('active', compare);
+      modeEnrichBtn.setAttribute('aria-pressed', String(!compare));
+      modeCompareBtn.setAttribute('aria-pressed', String(compare));
+    }
 
-    modeCompareBtn.addEventListener('click', function() {
-      enrichMode.style.display = 'none';
-      compareMode.style.display = 'block';
-      modeCompareBtn.style.background = 'rgba(255,255,255,0.08)';
-      modeCompareBtn.style.color = '#fff';
-      modeCompareBtn.classList.add('active');
-      modeEnrichBtn.style.background = 'transparent';
-      modeEnrichBtn.style.color = 'rgba(255,255,255,0.5)';
-      modeEnrichBtn.classList.remove('active');
-    });
+    modeEnrichBtn.addEventListener('click', function() { setMode(false); });
+    modeCompareBtn.addEventListener('click', function() { setMode(true); });
 
     // --- Event wiring ---
     els.submit.addEventListener('click', function() { enrich(els.input.value.trim()); });

@@ -3,21 +3,23 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#06060A">
   <title>SolEnrich — Agent Card</title>
   <meta name="description" content="SolEnrich Agent Card. A2A protocol identity, capabilities, and skill manifest for autonomous agents discovering SolEnrich.">
 
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://solenrich.com/agent-card">
+  <link rel="canonical" href="https://www.solenrich.com/agent-card">
+  <meta property="og:url" content="https://www.solenrich.com/agent-card">
   <meta property="og:title" content="SolEnrich Agent Card">
-  <meta property="og:description" content="A2A protocol identity and skill manifest for SolEnrich. 28 paid endpoints, machine-discoverable.">
-  <meta property="og:image" content="https://solenrich.com/og-image.png">
+  <meta property="og:description" content="A2A protocol identity and skill manifest for SolEnrich. 45 paid endpoints plus 1 free, machine-discoverable.">
+  <meta property="og:image" content="https://www.solenrich.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SolEnrich — Agent Card">
-  <meta name="twitter:description" content="A2A protocol identity and skill manifest. 28 endpoints, machine-discoverable.">
-  <meta name="twitter:image" content="https://solenrich.com/og-image.png">
+  <meta name="twitter:description" content="A2A protocol identity and skill manifest. 45 paid endpoints plus 1 free, machine-discoverable.">
+  <meta name="twitter:image" content="https://www.solenrich.com/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -28,8 +30,6 @@
   <script src="/site.js" defer></script>
   <style>
     /* Tokens, reset, nav, scroll reveal and focus styles live in /site.css. */
-    html, body { overflow-x: clip; }
-    body { max-width: 100vw; }
 
     /* ===== LAYOUT ===== */
     .container-main {
@@ -38,7 +38,7 @@
       padding: 48px 32px;
       min-width: 0;
     }
-    @media (max-width: 700px) {
+    @media (max-width: 768px) {
       .container-main { padding: 32px 20px; }
     }
 
@@ -115,7 +115,7 @@
     /* ===== INFO PILLS ===== */
     .info-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
       gap: 12px;
     }
     .info-pill {
@@ -127,7 +127,7 @@
       overflow-wrap: anywhere;
     }
     .info-pill-label {
-      font-size: 10px;
+      font-size: 12px;
       text-transform: uppercase;
       letter-spacing: 0.1em;
       color: var(--text-muted);
@@ -140,7 +140,7 @@
     }
     .info-pill-value.green { color: var(--sol-green); }
     .info-pill-value a { color: var(--sol-blue); text-decoration: none; }
-    .info-pill-value a:hover { text-decoration: underline; }
+    @media (hover: hover) { .info-pill-value a:hover { text-decoration: underline; } }
 
     /* ===== SKILLS LIST ===== */
     .skill {
@@ -153,7 +153,7 @@
       min-width: 0;
       overflow: hidden;
     }
-    .skill:hover { border-color: rgba(0,255,163,0.2); }
+    @media (hover: hover) { .skill:hover { border-color: rgba(0,255,163,0.2); } }
     .skill-header {
       display: flex;
       align-items: center;
@@ -175,7 +175,7 @@
     }
     .skill-mode-tag {
       font-family: 'JetBrains Mono', monospace;
-      font-size: 10px;
+      font-size: 12px;
       padding: 2px 6px;
       border-radius: 3px;
       background: rgba(153,69,255,0.08);
@@ -201,7 +201,7 @@
     }
     .skill-schema .field { color: var(--sol-purple); }
     .skill-schema .type { color: var(--text-muted); }
-    .skill-schema .req { color: var(--accent-warm); font-size: 10px; margin-left: 4px; }
+    .skill-schema .req { color: var(--accent-warm); font-size: 12px; margin-left: 4px; }
 
     /* ===== RAW JSON VIEWER ===== */
     .raw-toggle {
@@ -213,15 +213,13 @@
       color: var(--text-secondary);
       font-family: 'JetBrains Mono', monospace;
       font-size: 12px;
+      min-height: 44px;
       padding: 8px 14px;
       border-radius: 6px;
       cursor: pointer;
       transition: color 0.15s, border-color 0.15s;
     }
-    .raw-toggle:hover {
-      color: var(--sol-green);
-      border-color: rgba(0,255,163,0.2);
-    }
+    @media (hover: hover) { .raw-toggle:hover { color: var(--sol-green); border-color: rgba(0,255,163,0.2); } }
     .raw-actions {
       display: flex;
       gap: 8px;
@@ -271,7 +269,7 @@
       font-size: 13px;
     }
     footer a { color: var(--sol-green); text-decoration: none; }
-    footer a:hover { text-decoration: underline; }
+    @media (hover: hover) { footer a:hover { text-decoration: underline; } }
   </style>
 </head>
 <body>

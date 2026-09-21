@@ -5,7 +5,7 @@
 // It loads each page in an iframe at each width (media queries respond to the iframe width) and reports:
 //   over     elements whose box passes the viewport edge and are not inside a scroll/clip container
 //   wider    elements whose content is wider than their box (scrollWidth > clientWidth)
-//   taps     links/buttons/inputs under 40px on either side (links inside running text are excluded)
+//   taps     links/buttons/inputs under 40px tall or under 24px wide (links inside running text are excluded)
 //   fonts    text styles under 12px
 //   inputs   form inputs under 16px (iOS Safari zooms the page on focus)
 // Target: over 0, inputs 0, taps 0, and `wider` only on elements with overflow-x auto (code blocks, tables).
@@ -67,7 +67,8 @@ window.mobileAudit = async function (pages, widths) {
         const cs = w.getComputedStyle(el);
         if (!r.width || !r.height || cs.visibility === 'hidden') continue;
         if (cs.display === 'inline' && el.closest('p, li, td, dd, footer')) continue;
-        if (r.height < 40 || r.width < 40) taps.push(name(el) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
+        // 40px tall is the target; a short word ("X", "Docs") can be narrower, down to the WCAG 2.2 minimum of 24px.
+        if (r.height < 40 || r.width < 24) taps.push(name(el) + ' ' + Math.round(r.width) + 'x' + Math.round(r.height));
       }
 
       const fonts = {};
