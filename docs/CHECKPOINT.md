@@ -12,6 +12,15 @@ one page over the 15s timeout failed the whole walk, and the 10-minute timer was
 in a row failed. Fix `83fc406`: retry a timed-out page once, keep a partial walk (top pages), retry after 60s,
 `/status.stonk_index.partial`. **Verified live 00:57 UTC:** status ok, 18,199 rows, partial null, 402 on 45/45
 paid routes, free stonk-pairs 200, paid stonk-gems returned 3 GEMs ($0.03), 0 settlement failures.
+**Re-checked 01:46 UTC:** status ok, 20,969 rows, refresh 2 min old and PARTIAL 193/200 pages (page 194 timed out
+after its retry) — the fix working as designed; paid stonk-screener 200 in 2.2s with real rows. Page timeouts
+are NOT rare tonight: if `partial` becomes the normal state, walk fewer pages (measure 24h volume at page 100/150
+first). **Traffic 9/21–22: the 9/12 buyer `2otm6W…1wJz` is BACK** — 88 + 175 `stonk-yield`, 7 + 17
+`stonk-screener` (same screener→yield-per-coin shape); Base buyer `0x4c29…9494` on 9/21; `34CMQ3…5v2z` daily.
+Screener calls inside the outage window returned 0 rows and were charged; the count is unknown (daily counters).
+`stonk-yield` reads StonkFun live per coin and was NOT affected. 197 paid calls by 01:46 UTC.
+**Do not push while the buyer is active** — each push restarts the API (A5 open). This checkpoint is committed
+locally and pushed after A5 is set.
 Open: the same restart-then-empty window recurs on EVERY push until Railway watch paths are set (A5, Sardius).
 Also: the 9/20 census counted index rows, so "19,916 coins" on /stonkfun may be the 200-page cap, not the total —
 check before the next census.
