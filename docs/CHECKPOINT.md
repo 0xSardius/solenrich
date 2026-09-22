@@ -3,6 +3,33 @@
 ## Last session date
 2026-09-20
 
+## ▶️ RESUME HERE (2026-09-22 night) — stonk index read the WRONG coins; fix `088f741` · Railway watch paths + healthcheck SET
+
+**Root cause found:** `stonk-index.ts` sent `sort=volume24h`. StonkFun ignores unknown sort values WITHOUT an
+error and sorts by market cap. Only `sort=volume` sorts by 24h volume (tested: volume24h / volume24hUsd / vol all
+return market-cap order). So the index has always held the top 200 pages by MARKET CAP, not by volume.
+Measured 23:00 UTC: 85,585 reward coins (856 pages), ~11,500 with 24h volume, all within the first 116 pages
+by volume. The 9/20 census ("19,916 coins, 15.6% traded") counted the market-cap slice — **re-run the census
+after the deploy and fix `/stonkfun` + CLAUDE.md numbers.**
+**Second finding:** StonkFun latency is random — ~1 in 4 pages takes 4–20s, some hang > 60s, spacing requests
+does not help, the 7.7 MB rewards ledger in parallel is NOT the cause (tested). The 9/21 fix ended the walk at
+the first failed page → production read 176/200.
+**Fix `088f741`:** `sort=volume` (`STONK_VOLUME_SORT`), stop at the first page ending on a $0 coin, skip a failed
+page and continue (end only after 5 failures in a row), 8s page timeout (was 15s), carried rows capped at the
+volume floor (last coin read before the first skip, or $0) so a coin that stopped trading no longer reads as live.
+6 new tests (65 pass). Live refresh, memory-only cache: 10,932 rows, 10,876 with 24h volume, 195 GEM / 799 WATCH.
+A second live run ended after a failure cluster at page 60 (hence 5, not 3).
+**Railway (Sardius, 23:55 UTC):** watch paths `src/**`, `package.json`, `bun.lock`, `Dockerfile` + healthcheck
+`/health` — deployed alone on the old code first; new container healthy, 402 sweep 48/48. **A5 = DONE.**
+Docs/landing pushes should no longer restart the API — confirm on the next docs-only push.
+**Buyers 9/21–22:** 9/22 = 489 paid 200s (best day). `2otm6W…1wJz` 479 payments / $2.60 (screener → yield per
+coin); **new `8LZj73…wyza`** 155 × `new-tokens` / $1.86, groups of 1–3 calls every 10–20 min; `34CMQ3` daily;
+Base `0x4c29…9494` on stonk-yield. $5.05 settled on Solana over 2 days. Deploys are timed right after an
+`8LZj73` group: `local/scripts/watch-buyer.ts <prefix> <afterIso>` (gitignored) exits when a group ends.
+**Settle-fail 9/22:** one, `key=new-tokens payer=x402:8LZj73… reason="unknown"`. Hypothesis (unverified):
+cold `new-tokens` (5-min cache, he calls every 10–20 min) outlasting the blockhash. If it repeats, add
+`new-tokens` to `SETTLE_FIRST_ENDPOINTS`. `/metrics` has no per-endpoint latency — worth adding.
+
 ## ▶️ RESUME HERE (2026-09-22) — stonk index outage fixed (`83fc406`) · B5 built but NOT committed · held API edits to review
 
 **Outage (2026-09-21 22:48 → 00:47 UTC, ~2h):** after the docs-push restart, the stonk index stayed at 0 rows;
