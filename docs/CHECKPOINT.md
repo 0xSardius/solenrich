@@ -3,6 +3,37 @@
 ## Last session date
 2026-09-20
 
+## ▶️ RESUME HERE (2026-09-22) — stonk index outage fixed (`83fc406`) · B5 built but NOT committed · held API edits to review
+
+**Outage (2026-09-21 22:48 → 00:47 UTC, ~2h):** after the docs-push restart, the stonk index stayed at 0 rows;
+`stonk-gems` / `stonk-screener` / `stonk-launch-intel` answered paying callers with empty results. Cause: StonkFun's
+reward list grew to 784 pages (≈78,000 coins; we index the top 200 pages = ~18,000–20,000 by 24h volume, unchanged);
+one page over the 15s timeout failed the whole walk, and the 10-minute timer was the only retry — nine refreshes
+in a row failed. Fix `83fc406`: retry a timed-out page once, keep a partial walk (top pages), retry after 60s,
+`/status.stonk_index.partial`. **Verified live 00:57 UTC:** status ok, 18,199 rows, partial null, 402 on 45/45
+paid routes, free stonk-pairs 200, paid stonk-gems returned 3 GEMs ($0.03), 0 settlement failures.
+Open: the same restart-then-empty window recurs on EVERY push until Railway watch paths are set (A5, Sardius).
+Also: the 9/20 census counted index rows, so "19,916 coins" on /stonkfun may be the 200-page cap, not the total —
+check before the next census.
+
+**Held for review (uncommitted on disk, NOT deployed):** A4 (one line in `agent.ts`: skip metrics writes when
+payments are off), the example-inputs table moved from `agent.ts` to `src/lib/input-examples.ts` (same values),
+the `check-alerts` example corrected (old one returned 400), `stress.ts` comments, CLAUDE.md item 9,
+`package.json` scripts `build:pages` / `capture:examples`. Sardius decides tomorrow; ship as one deploy at a quiet
+hour with the same three checks.
+
+**B5 (built, uncommitted):** `scripts/lib/endpoint-pages.ts` (renderer) + `endpoint-pages-data.ts` + `build-endpoint-pages.ts`;
+`scripts/capture-endpoint-examples.ts` (local free capture, `CAPTURE_PAID=1` for named keys on prod);
+`data/endpoint-examples/*.json` (46/46 captured); `landing/endpoints/*.html` (46) + `landing/endpoints.html` (hub)
++ `landing/sitemap.xml`; `/stonkfun` styles moved into `site.css` under `.page` (site.css `CONTENT PAGES`);
+`test/endpoint-pages.test.ts` (drift guard) + mobile guard extended to `endpoints/`. The generator imports
+`src/lib/input-examples.ts`, which is one of the held files — for a website-only deploy, either commit that new file
+(it is not imported by `agent.ts` on main, so it changes nothing at runtime) or copy the table into `scripts/lib/`.
+Remaining: 14 hand-written copy sections (`content/endpoint-copy/{key}.html`), links from the home page and
+`/stonkfun` cards to `/endpoints/{key}`, production audit on a sample, CI line for the drift test. Preview:
+`bunx serve -l 4173 landing`. Sardius: "website-only deploy, endpoints unaffected" — set A5 first so the push does
+not restart the API.
+
 ## ▶️ RESUME HERE (2026-09-21) — mobile audit done + fixed on production · endpoint suites shipped · next = B5 or C1
 
 **Mobile audit (B8, added 2026-09-20 night).** Report: `docs/mobile-audit-2026-09-20.md` (19 findings, method, fix plan).
