@@ -24,6 +24,8 @@ export interface StatusInputs {
   index_rows: number;
   index_last_refresh_at: number | null;
   index_last_error: string | null;
+  /** "12/200 pages" while the rows come from a partial walk; null after a full refresh. */
+  index_partial?: string | null;
 }
 
 export interface StatusVerdict {
@@ -76,6 +78,9 @@ export function computeStatus(i: StatusInputs): StatusVerdict {
     degraded = true;
     const min = Math.round((i.now - i.index_last_refresh_at) / 60_000);
     reasons.push(`stonk index stale: last refresh ${min} min ago${i.index_last_error ? ` (${i.index_last_error})` : ''}`);
+  } else if (i.index_partial) {
+    // Serving the top pages by volume; a retry is scheduled. A note, not degraded: callers get real rows.
+    reasons.push(`stonk index partial: ${i.index_partial}`);
   }
   if (i.payments_enabled && i.facilitator === 'unknown') {
     reasons.push('facilitator check timed out — payments state unknown');

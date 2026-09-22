@@ -75,6 +75,12 @@ describe('computeStatus', () => {
     expect(stuck.reasons[0]).toContain('stonkfun 503');
   });
 
+  test('partial index is ok with a note (callers get the top pages; a retry is scheduled)', () => {
+    const v = computeStatus(healthy({ index_partial: '120/200 pages' }));
+    expect(v.verdict).toBe('ok');
+    expect(v.reasons).toEqual(['stonk index partial: 120/200 pages']);
+  });
+
   test('stale index (older than 30 min) is degraded with the age in minutes', () => {
     const v = computeStatus(healthy({ index_last_refresh_at: NOW - INDEX_STALE_MS - 5 * 60_000 }));
     expect(v.verdict).toBe('degraded');

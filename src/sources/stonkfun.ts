@@ -349,6 +349,17 @@ export class StonkFunClient {
         throw new StonkFunError(res.status, 'bad_envelope', `unexpected response shape for ${path}`);
       }
       return body.data;
+    } catch (err) {
+      // A timeout or a dropped connection is not an answer from the API. The index walk reads 200 pages in a
+      // row; one aborted page used to fail the whole refresh, and after a restart that left the index-backed
+      // endpoints empty (production, 2026-09-21: nine refreshes in a row). One retry after a second. An HTTP
+      // error IS an answer and is not retried.
+      if (!(err instanceof StonkFunError) && attempt === 0) {
+        clearTimeout(timer);
+        await new Promise((r) => setTimeout(r, 1000));
+        return this.request<T>(path, timeoutMs, 1);
+      }
+      throw err;
     } finally {
       clearTimeout(timer);
     }

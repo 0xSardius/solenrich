@@ -24,6 +24,7 @@ const SNAPSHOT_CHUNK = 1500;
 const PAGE_SIZE = 100;
 const PAGE_GAP_MS = 60;
 const MAX_PAGES = 200;
+const RETRY_DELAY_MS = 60 * 1000;
 const MIN_WINDOW_MS = 60 * 60 * 1000;
 
 /** Normalized quote category. StonkFun's raw label is kept alongside. */
@@ -136,6 +137,8 @@ export interface StonkIndexStatus {
   lastRefreshMs: number | null;
   lastError: string | null;
   refreshing: boolean;
+  /** Non-null while the rows come from a partial page walk (the top pages by volume). */
+  partial: { pages: number; totalPages: number; reason: string } | null;
   seriesCoins: number;
   seriesDays: number;
   oldestPointAt: string | null;
@@ -197,6 +200,9 @@ export class StonkIndex {
   private refreshing = false;
   private quoteStatsMemo: { at: number; rows: number; stats: QuoteStats[] } | null = null;
   private timer: ReturnType<typeof setInterval> | null = null;
+  private retryTimer: ReturnType<typeof setTimeout> | null = null;
+  /** Set when the last refresh kept a partial walk; null after a full one. */
+  private partial: { pages: number; totalPages: number; reason: string } | null = null;
   private loaded = false;
 
   constructor(
@@ -218,7 +224,9 @@ export class StonkIndex {
 
   stop(): void {
     if (this.timer) clearInterval(this.timer);
+    if (this.retryTimer) clearTimeout(this.retryTimer);
     this.timer = null;
+    this.retryTimer = null;
   }
 
   status(): StonkIndexStatus {
@@ -236,6 +244,7 @@ export class StonkIndex {
       lastRefreshMs: this.lastRefreshMs,
       lastError: this.lastError,
       refreshing: this.refreshing,
+      partial: this.partial,
       seriesCoins: this.series.size,
       seriesDays: days.size,
       oldestPointAt: oldest != null ? new Date(oldest).toISOString() : null,
@@ -381,11 +390,11 @@ export class StonkIndex {
     this.refreshing = true;
     const started = this.now();
     try {
-      const [ledger, tokens] = await Promise.all([this.client.getRewardsLedger(), this.fetchAllRewardTokens()]);
+      const [ledger, walk] = await Promise.all([this.client.getRewardsLedger(), this.fetchAllRewardTokens()]);
       const ledgerByMint = new Map<string, StonkRewardsLedgerEntry>(ledger.map((l) => [l.mint, l]));
 
       const next = new Map<string, StonkIndexRow>();
-      for (const t of tokens) {
+      for (const t of walk.tokens) {
         const l = ledgerByMint.get(t.mint);
         next.set(t.mint, toRow(t, l));
       }
@@ -402,27 +411,54 @@ export class StonkIndex {
       this.lastRefreshAt = this.now();
       this.lastRefreshMs = this.lastRefreshAt - started;
       this.lastError = null;
-      console.log(`[stonk-index] refreshed ${this.rows.size} reward coins, ${this.series.size} with series, ${this.quotePrices.size} quote prices in ${this.lastRefreshMs}ms`);
+      this.partial = walk.partial ? { pages: walk.pages, totalPages: walk.totalPages, reason: walk.partial } : null;
+      console.log(`[stonk-index] refreshed ${this.rows.size} reward coins, ${this.series.size} with series, ${this.quotePrices.size} quote prices in ${this.lastRefreshMs}ms${walk.partial ? ` (PARTIAL: ${walk.pages}/${walk.totalPages} pages, ${walk.partial})` : ''}`);
+      if (walk.partial) this.scheduleRetry();
     } catch (err) {
       this.lastError = err instanceof Error ? err.message : String(err);
       console.warn(`[stonk-index] refresh failed: ${this.lastError}`);
+      this.scheduleRetry();
     } finally {
       this.refreshing = false;
     }
   }
 
-  private async fetchAllRewardTokens(): Promise<StonkToken[]> {
+  /**
+   * After a failed or partial refresh, try again in RETRY_DELAY_MS instead of waiting for the 10-minute timer.
+   * Production sat empty for 1.6 h on 2026-09-21 with the timer as the only retry. One retry at a time.
+   */
+  private scheduleRetry(): void {
+    if (this.retryTimer || !this.timer) return;
+    this.retryTimer = setTimeout(() => {
+      this.retryTimer = null;
+      void this.refresh();
+    }, RETRY_DELAY_MS);
+    (this.retryTimer as { unref?: () => void }).unref?.();
+  }
+
+  /**
+   * Walks the reward-coin list, sorted by 24h volume, top pages first. A page that fails after its retry ends
+   * the walk and the pages already read are returned as a partial result: the top coins by volume are the
+   * ones every caller wants, and a partial index beats an empty one. The first page failing is still an error.
+   */
+  private async fetchAllRewardTokens(): Promise<{ tokens: StonkToken[]; pages: number; totalPages: number; partial: string | null }> {
     const all: StonkToken[] = [];
     let page = 1;
     let totalPages = 1;
     do {
-      const res = await this.client.getTokens({ mode: 'reward', page, pageSize: PAGE_SIZE, sort: 'volume24h' });
-      all.push(...res.tokens);
-      totalPages = Math.min(res.pagination.totalPages ?? 1, MAX_PAGES);
+      try {
+        const res = await this.client.getTokens({ mode: 'reward', page, pageSize: PAGE_SIZE, sort: 'volume24h' });
+        all.push(...res.tokens);
+        totalPages = Math.min(res.pagination.totalPages ?? 1, MAX_PAGES);
+      } catch (err) {
+        if (page === 1) throw err;
+        const reason = err instanceof Error ? err.message : String(err);
+        return { tokens: all, pages: page - 1, totalPages, partial: `page ${page} of ${totalPages}: ${reason}` };
+      }
       page++;
       if (page <= totalPages) await new Promise((r) => setTimeout(r, PAGE_GAP_MS));
     } while (page <= totalPages);
-    return all;
+    return { tokens: all, pages: totalPages, totalPages, partial: null };
   }
 
   private async refreshQuotePrices(): Promise<void> {

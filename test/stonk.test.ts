@@ -421,6 +421,94 @@ describe('index: screener over injected rows', () => {
     expect(normalizeCategory('tessera')).toBe('xstock');
     expect(normalizeCategory('weird')).toBe('custom');
   });
+
+  // 2026-09-21: production served 0 rows for 1.6 h after a restart because one timed-out page failed the whole
+  // 200-page walk, and the only retry was the 10-minute timer.
+  describe('partial walk and retry', () => {
+    const page = fixture<{ data: { tokens: StonkToken[] } }>('tokens-reward-page.json').data.tokens;
+    const ledger = fixture<{ data: { launches: any[] } }>('rewards-ledger.json').data.launches;
+    const fakePrices = async (mints: string[]) => Object.fromEntries(mints.map((m) => [m, { id: m, price: 100, mintSymbol: '', vsToken: '', vsTokenSymbol: 'USDC' }]));
+    const jupiter = { getPrice: fakePrices, getPriceUncached: fakePrices } as any;
+    // Three pages of the same fixture with distinct mints; `failAt` throws like an aborted fetch.
+    const pagedClient = (failAt: number | null) => ({
+      getTokens: async ({ page: n }: { page: number }) => {
+        if (n === failAt) throw new Error('The operation was aborted.');
+        return { tokens: page.map((t) => ({ ...t, mint: `${t.mint.slice(0, 40)}p${n}` })), pagination: { page: n, pageSize: 25, total: 75, totalPages: 3 } };
+      },
+      getRewardsLedger: async () => ledger,
+    }) as unknown as StonkFunClient;
+
+    test('a page that fails after page 1 keeps the pages already read and marks the index partial', async () => {
+      const idx = new StonkIndex(pagedClient(3), jupiter, new Cache(), () => NOW);
+      await idx.refresh();
+      const st = idx.status();
+      expect(st.rows).toBe(50);
+      expect(st.lastError).toBeNull();
+      expect(st.partial).toEqual({ pages: 2, totalPages: 3, reason: 'page 3 of 3: The operation was aborted.' });
+      expect(idx.screen({ limit: 100 }).rows.length).toBe(50);
+    });
+
+    test('a full walk clears the partial mark', async () => {
+      const idx = new StonkIndex(pagedClient(null), jupiter, new Cache(), () => NOW);
+      await idx.refresh();
+      expect(idx.status().rows).toBe(75);
+      expect(idx.status().partial).toBeNull();
+    });
+
+    test('page 1 failing is still a failed refresh, and the previous rows stay', async () => {
+      const idx = new StonkIndex(pagedClient(null), jupiter, new Cache(), () => NOW);
+      await idx.refresh();
+      const broken = new StonkIndex(pagedClient(1), jupiter, new Cache(), () => NOW);
+      await broken.refresh();
+      expect(broken.status().rows).toBe(0);
+      expect(broken.status().lastError).toBe('The operation was aborted.');
+      // Same instance: a later failure keeps the rows from the good refresh.
+      (idx as any).client = pagedClient(1);
+      await idx.refresh();
+      expect(idx.status().rows).toBe(75);
+      expect(idx.status().lastError).toBe('The operation was aborted.');
+    });
+
+    test('the client retries a timed-out request once, and an HTTP error not at all', async () => {
+      // Bun.serve on a random port: the first request to /pairs hangs past the timeout, the second answers.
+      let calls = 0;
+      const server = Bun.serve({
+        port: 0,
+        fetch: async (req) => {
+          const url = new URL(req.url);
+          if (url.pathname === '/pairs') {
+            calls++;
+            if (calls === 1) await new Promise((r) => setTimeout(r, 400));
+            return Response.json({ data: { pairs: [{ mint: 'm', symbol: 'S', category: 'xstock' }] } });
+          }
+          calls++;
+          return Response.json({ error: { code: 'nope', message: 'no' } }, { status: 503 });
+        },
+      });
+      try {
+        const client = new StonkFunClient(new Cache(), `http://127.0.0.1:${server.port}`);
+        const pairs = await (client as any).request('/pairs', 100);
+        expect(pairs.pairs.length).toBe(1);
+        expect(calls).toBe(2);
+        calls = 0;
+        await expect((client as any).request('/stats', 100)).rejects.toThrow('stonkfun 503');
+        expect(calls).toBe(1);
+      } finally {
+        server.stop(true);
+      }
+    });
+
+    test('a failed refresh schedules one retry after RETRY_DELAY_MS, only while started', async () => {
+      const idx = new StonkIndex(pagedClient(1), jupiter, new Cache(), () => NOW);
+      await idx.refresh(); // not started: no timer, no retry
+      expect((idx as any).retryTimer).toBeNull();
+      await idx.start(60 * 60 * 1000);
+      await new Promise((r) => setTimeout(r, 20)); // let the start() refresh fail
+      expect((idx as any).retryTimer).not.toBeNull();
+      idx.stop();
+      expect((idx as any).retryTimer).toBeNull();
+    });
+  });
 });
 
 // ---------------------------------------------------------------------------

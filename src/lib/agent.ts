@@ -1522,6 +1522,7 @@ app.get('/status', async (c) => {
     index_rows: idx.rows,
     index_last_refresh_at: indexLastRefreshAt,
     index_last_error: idx.lastError,
+    index_partial: idx.partial ? `${idx.partial.pages}/${idx.partial.totalPages} pages` : null,
   });
   const warm = warmer.stats(now);
   return c.json({
@@ -1546,6 +1547,7 @@ app.get('/status', async (c) => {
       age_min: indexLastRefreshAt ? Math.round((now - indexLastRefreshAt) / 60_000) : null,
       refreshing: idx.refreshing,
       last_error: idx.lastError,
+      partial: idx.partial,
     },
     process: {
       uptime_hours: Math.round(process.uptime() / 36) / 100,
