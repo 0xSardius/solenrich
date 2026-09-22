@@ -25,7 +25,7 @@ import { StonkFunClient, type StonkLaunchLabPricing, type StonkToken, type Stonk
 import { scoreRewardRisk, STONKFUN_WITHDRAW_AUTHORITY } from '../src/enrichers/stonk-reward-risk';
 import { computeYield } from '../src/enrichers/stonk-yield';
 import { diffLaunchAgainstPricing, lintLaunchParamNames } from '../src/enrichers/stonk-preflight';
-import { StonkIndex, trailingYield, normalizeCategory, type DayPoint } from '../src/enrichers/stonk-index';
+import { StonkIndex, trailingYield, normalizeCategory, STONK_VOLUME_SORT, type DayPoint } from '../src/enrichers/stonk-index';
 import { buildPairsResult } from '../src/entrypoints/stonk';
 import { formatStonkRewardRiskBriefing, formatStonkYieldBriefing, formatStonkPreflightBriefing, formatStonkPairsBriefing } from '../src/formatters/llm-stonk';
 import { Cache } from '../src/cache';
@@ -444,8 +444,34 @@ describe('index: screener over injected rows', () => {
       const st = idx.status();
       expect(st.rows).toBe(50);
       expect(st.lastError).toBeNull();
-      expect(st.partial).toEqual({ pages: 2, totalPages: 3, reason: 'page 3 of 3: The operation was aborted.' });
+      expect(st.partial).toEqual({ pages: 2, totalPages: 3, reason: 'skipped page 3 of 3: The operation was aborted.' });
       expect(idx.screen({ limit: 100 }).rows.length).toBe(50);
+    });
+
+    // 2026-09-22: ending the walk at the first failed page lost every page after it (production: 176 of 200).
+    test('a failed page in the middle is skipped and the walk continues', async () => {
+      const idx = new StonkIndex(pagedClient(2), jupiter, new Cache(), () => NOW);
+      await idx.refresh();
+      const st = idx.status();
+      expect(st.rows).toBe(50); // pages 1 and 3
+      expect(st.partial).toEqual({ pages: 2, totalPages: 3, reason: 'skipped page 2 of 3: The operation was aborted.' });
+    });
+
+    test('five failed pages in a row end the walk (upstream down)', async () => {
+      const client = {
+        getTokens: async ({ page: n }: { page: number }) => {
+          if (n >= 2) throw new Error('The operation was aborted.');
+          return { tokens: page.map((t) => ({ ...t, mint: `${t.mint.slice(0, 40)}p${n}` })), pagination: { page: n, pageSize: 25, total: 250, totalPages: 10 } };
+        },
+        getRewardsLedger: async () => ledger,
+      } as unknown as StonkFunClient;
+      const calls: number[] = [];
+      const spy = { ...client, getTokens: async (q: { page: number }) => { calls.push(q.page); return (client as any).getTokens(q); } } as unknown as StonkFunClient;
+      const idx = new StonkIndex(spy, jupiter, new Cache(), () => NOW);
+      await idx.refresh();
+      expect(calls).toEqual([1, 2, 3, 4, 5, 6]);
+      expect(idx.status().rows).toBe(25);
+      expect(idx.status().partial?.reason).toBe('ended at page 6 after 5 failures in a row of 6: The operation was aborted.');
     });
 
     test('a full walk clears the partial mark', async () => {
@@ -507,6 +533,71 @@ describe('index: screener over injected rows', () => {
       expect((idx as any).retryTimer).not.toBeNull();
       idx.stop();
       expect((idx as any).retryTimer).toBeNull();
+    });
+  });
+
+  // 2026-09-22: `sort=volume24h` is not a StonkFun sort value; the API fell back to market cap without an error,
+  // and the index walked the top 200 pages by market cap instead of the ~116 pages of coins that trade.
+  describe('volume-sorted walk', () => {
+    const page = fixture<{ data: { tokens: StonkToken[] } }>('tokens-reward-page.json').data.tokens;
+    const ledger = fixture<{ data: { launches: any[] } }>('rewards-ledger.json').data.launches;
+    const fakePrices = async (mints: string[]) => Object.fromEntries(mints.map((m) => [m, { id: m, price: 100, mintSymbol: '', vsToken: '', vsTokenSymbol: 'USDC' }]));
+    const jupiter = { getPrice: fakePrices, getPriceUncached: fakePrices } as any;
+    const withVol = (t: StonkToken, v: number, n: number, tag = 'p') => ({ ...t, mint: `${t.mint.slice(0, 40)}${tag}${n}`, market: { ...(t.market as any), volume24hUsd: v } });
+    // `vols[n-1]` = the 24h volume of every coin on page n; `failAt` throws like an aborted fetch;
+    // `tag` changes the mints, so a second walk can return different coins on the same page.
+    const client = (vols: number[], failAt: number | null, sorts: unknown[], tag = 'p') => ({
+      getTokens: async (q: { page: number; sort?: string }) => {
+        sorts.push(q.sort);
+        if (q.page === failAt) throw new Error('The operation was aborted.');
+        return { tokens: page.map((t) => withVol(t, vols[q.page - 1], q.page, q.page === 1 ? 'p' : tag)), pagination: { page: q.page, pageSize: 25, total: 25 * vols.length, totalPages: vols.length } };
+      },
+      getRewardsLedger: async () => ledger,
+    }) as unknown as StonkFunClient;
+
+    test('asks for the volume sort, and the constant is the value StonkFun honors', async () => {
+      expect(STONK_VOLUME_SORT).toBe('volume');
+      const sorts: unknown[] = [];
+      await new StonkIndex(client([500, 400], null, sorts), jupiter, new Cache(), () => NOW).refresh();
+      expect(sorts.length).toBe(2);
+      expect(sorts.every((s) => s === 'volume')).toBe(true);
+    });
+
+    test('stops at the first page that ends on a $0 coin, as a complete walk', async () => {
+      const sorts: unknown[] = [];
+      const idx = new StonkIndex(client([500, 0, 0, 0], null, sorts), jupiter, new Cache(), () => NOW);
+      await idx.refresh();
+      expect(sorts.length).toBe(2);
+      expect(idx.status().rows).toBe(50);
+      expect(idx.status().partial).toBeNull();
+    });
+
+    test('a carried row that dropped out of a complete walk shows $0 volume, not its old volume', async () => {
+      const idx = new StonkIndex(client([500, 400], null, []), jupiter, new Cache(), () => NOW);
+      await idx.refresh();
+      const dropped = withVol(page[0], 0, 2).mint;
+      expect(idx.getRow(dropped)?.volume24hUsd).toBe(400);
+      // Page 2 now holds other coins at $0; the old page-2 coins are not returned at all.
+      (idx as any).client = client([500, 0, 0], null, [], 'q');
+      await idx.refresh();
+      expect(idx.status().partial).toBeNull();
+      expect(idx.getRow(dropped)?.volume24hUsd).toBe(0);
+      expect(idx.status().rows).toBe(75); // the row stays, so its history stays reachable
+    });
+
+    test('after a skipped page, a carried row is capped at the last volume read before the skip', async () => {
+      const idx = new StonkIndex(client([500, 400, 300], null, []), jupiter, new Cache(), () => NOW);
+      await idx.refresh();
+      const p2 = withVol(page[0], 0, 2).mint;
+      const p3 = withVol(page[0], 0, 3).mint;
+      (idx as any).client = client([500, 40, 30], 2, []); // page 2 skipped: floor = page 1's last coin (500)
+      await idx.refresh();
+      expect(idx.status().partial?.reason).toBe('skipped page 2 of 3: The operation was aborted.');
+      expect(idx.getRow(p2)?.volume24hUsd).toBe(400); // under the floor: unchanged
+      expect(idx.getRow(p3)?.volume24hUsd).toBe(30); // page 3 was read after the skip
+      (idx as any).client = client([100, 40, 30], 2, []);
+      await idx.refresh();
+      expect(idx.getRow(p2)?.volume24hUsd).toBe(100); // 400 > floor 100: capped
     });
   });
 });

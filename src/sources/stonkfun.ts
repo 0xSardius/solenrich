@@ -187,6 +187,7 @@ export interface StonkTokensPage {
 
 export interface StonkTokensQuery {
   q?: string;
+  /** Upstream ignores an unknown value and sorts by market cap. 24h volume = `volume` (see STONK_VOLUME_SORT). */
   sort?: string;
   mode?: StonkMode;
   status?: string;
@@ -233,13 +234,13 @@ export class StonkFunClient {
   }
 
   /** One page of tokens. Not cached — the index ingests these in bulk. */
-  async getTokens(query: StonkTokensQuery = {}): Promise<StonkTokensPage> {
+  async getTokens(query: StonkTokensQuery = {}, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<StonkTokensPage> {
     const params = new URLSearchParams();
     for (const [k, v] of Object.entries(query)) {
       if (v !== undefined && v !== null && v !== '') params.set(k, String(v));
     }
     const qs = params.toString();
-    const data = await this.request<StonkTokensPage>(`/tokens${qs ? `?${qs}` : ''}`);
+    const data = await this.request<StonkTokensPage>(`/tokens${qs ? `?${qs}` : ''}`, timeoutMs);
     return {
       tokens: Array.isArray(data.tokens) ? data.tokens : [],
       pagination: data.pagination ?? { page: query.page ?? 1, pageSize: data.tokens?.length ?? 0, total: data.tokens?.length ?? 0, totalPages: 1 },

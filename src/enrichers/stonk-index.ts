@@ -13,9 +13,10 @@ import { scoreGem, quoteStats, payoutStatus, hoursSince, type GemAssessment, typ
 // deltas. The series is persisted to Redis in daily chunks and reloaded on
 // boot; the rows are not (they are rebuilt by the first refresh).
 //
-// Budget (measured 2026-09-06): ~6,300 reward tokens → 64 pages + 1 ledger
-// call per refresh ≈ 65 upstream calls per 10 minutes, well under the
-// 300/min limit. Redis: ≤ ~5 writes per refresh, ~120 reads on boot.
+// Budget (measured 2026-09-22): 85,585 reward coins, ~11,500 with 24h volume.
+// The walk is sorted by volume and stops at the first $0 page → ~116 pages +
+// 1 ledger call per refresh, under the 300/min limit. Coins with no 24h
+// volume are not walked. Redis: ≤ ~5 writes per refresh, ~120 reads on boot.
 
 export const STONK_INGEST_INTERVAL_MS = 10 * 60 * 1000;
 const SERIES_DAYS = 31;
@@ -24,7 +25,18 @@ const SNAPSHOT_CHUNK = 1500;
 const PAGE_SIZE = 100;
 const PAGE_GAP_MS = 60;
 const MAX_PAGES = 200;
+/**
+ * Upstream sort value for "24h volume, highest first". StonkFun ignores an unknown sort value without an error
+ * and falls back to market cap: `volume24h` (sent until 2026-09-22) returned the top pages by MARKET CAP, so the
+ * index missed traded low-cap coins. Measured 2026-09-22: `volume` is the only value that sorts by volume;
+ * 85,585 reward coins, ~11,500 with 24h volume, all within the first 116 pages.
+ */
+export const STONK_VOLUME_SORT = 'volume';
 const RETRY_DELAY_MS = 60 * 1000;
+/** Per-page timeout for the walk. Fast pages answer in < 1s; a slow page is retried once, then skipped. */
+const PAGE_TIMEOUT_MS = 8_000;
+/** Failures come in clusters (a live walk on 2026-09-22 lost 3 pages in a row at page 60). 5 × ~17s ≈ 85s. */
+const MAX_CONSECUTIVE_FAILS = 5;
 const MIN_WINDOW_MS = 60 * 60 * 1000;
 
 /** Normalized quote category. StonkFun's raw label is kept alongside. */
@@ -398,9 +410,14 @@ export class StonkIndex {
         const l = ledgerByMint.get(t.mint);
         next.set(t.mint, toRow(t, l));
       }
-      // Reward coins the ledger knows but the token list did not return (pool
-      // gone, delisted) keep their previous row so history stays reachable.
-      for (const [mint, row] of this.rows) if (!next.has(mint)) next.set(mint, row);
+      // Coins an earlier walk returned but this one did not keep their row, so their history stays reachable.
+      // The walk is sorted by 24h volume, so a missing coin sits on a skipped page or below the $0 cutoff; either
+      // way its volume is at or below `walk.volumeFloor`. Cap the carried volume there, or a coin that stopped
+      // trading keeps its old volume and reads as live.
+      for (const [mint, row] of this.rows) {
+        if (next.has(mint)) continue;
+        next.set(mint, row.volume24hUsd > walk.volumeFloor ? { ...row, volume24hUsd: walk.volumeFloor } : row);
+      }
       this.rows = next;
 
       await this.refreshQuotePrices();
@@ -437,28 +454,51 @@ export class StonkIndex {
   }
 
   /**
-   * Walks the reward-coin list, sorted by 24h volume, top pages first. A page that fails after its retry ends
-   * the walk and the pages already read are returned as a partial result: the top coins by volume are the
-   * ones every caller wants, and a partial index beats an empty one. The first page failing is still an error.
+   * Walks the reward-coin list, sorted by 24h volume, top pages first, and stops at the first page that ends on
+   * a coin with no 24h volume: every coin after it has none either.
+   *
+   * StonkFun answers most pages in ~0.3s, but ~1 in 4 takes 4–20s and some hang past 60s, at random (measured
+   * 2026-09-22; spacing the requests does not help). A page that fails after its retry is SKIPPED and the walk
+   * continues; ending the walk there (the 2026-09-21 fix) lost every page after the first slow one. The walk
+   * ends early only after MAX_CONSECUTIVE_FAILS failures in a row (upstream down). The first page failing is
+   * still an error. `volumeFloor` = the 24h volume every unread coin is at or below: the last coin read before
+   * the first skipped page, or 0 after a walk that reached a $0 page with nothing skipped.
    */
-  private async fetchAllRewardTokens(): Promise<{ tokens: StonkToken[]; pages: number; totalPages: number; partial: string | null }> {
+  private async fetchAllRewardTokens(): Promise<{ tokens: StonkToken[]; pages: number; totalPages: number; partial: string | null; volumeFloor: number }> {
     const all: StonkToken[] = [];
+    const skipped: number[] = [];
+    let skipReason = '';
+    let floorAtFirstSkip: number | null = null;
     let page = 1;
     let totalPages = 1;
+    let reachedZero = false;
+    let endedEarly = false;
+    const lastVolume = () => (all.length ? Math.max(0, Number(all[all.length - 1].market?.volume24hUsd ?? 0)) : 0);
     do {
       try {
-        const res = await this.client.getTokens({ mode: 'reward', page, pageSize: PAGE_SIZE, sort: 'volume24h' });
+        const res = await this.client.getTokens({ mode: 'reward', page, pageSize: PAGE_SIZE, sort: STONK_VOLUME_SORT }, PAGE_TIMEOUT_MS);
         all.push(...res.tokens);
         totalPages = Math.min(res.pagination.totalPages ?? 1, MAX_PAGES);
+        if (lastVolume() === 0) reachedZero = true;
       } catch (err) {
         if (page === 1) throw err;
-        const reason = err instanceof Error ? err.message : String(err);
-        return { tokens: all, pages: page - 1, totalPages, partial: `page ${page} of ${totalPages}: ${reason}` };
+        skipReason = err instanceof Error ? err.message : String(err);
+        if (floorAtFirstSkip === null) floorAtFirstSkip = lastVolume();
+        skipped.push(page);
+        const tail = skipped.slice(-MAX_CONSECUTIVE_FAILS);
+        if (tail.length === MAX_CONSECUTIVE_FAILS && tail[0] === page - MAX_CONSECUTIVE_FAILS + 1) endedEarly = true;
       }
+      if (reachedZero || endedEarly) break;
       page++;
       if (page <= totalPages) await new Promise((r) => setTimeout(r, PAGE_GAP_MS));
     } while (page <= totalPages);
-    return { tokens: all, pages: totalPages, totalPages, partial: null };
+    const walked = Math.min(page, totalPages);
+    const read = walked - skipped.length;
+    const partial = skipped.length
+      ? `${endedEarly ? `ended at page ${page} after ${MAX_CONSECUTIVE_FAILS} failures in a row` : `skipped page${skipped.length > 1 ? 's' : ''} ${skipped.join(', ')}`} of ${walked}: ${skipReason}`
+      : null;
+    const volumeFloor = floorAtFirstSkip ?? (reachedZero ? 0 : lastVolume());
+    return { tokens: all, pages: read, totalPages: walked, partial, volumeFloor };
   }
 
   private async refreshQuotePrices(): Promise<void> {
