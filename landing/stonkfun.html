@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#06060A">
   <title>StonkFun API for Agents — SolEnrich</title>
-  <meta name="description" content="StonkFun reward-coin intelligence for AI agents: a gem finder, payout status and tax cost per coin, a screener with live and paying filters, the cost and payback of one trade at your size, launch intel per quote asset, and a launch preflight. 19,916 reward coins indexed every ten minutes. Pay per call in USDC via x402, no API key.">
+  <meta name="description" content="StonkFun reward-coin intelligence for AI agents: a gem finder, payout status and tax cost per coin, a screener with live and paying filters, the cost and payback of one trade at your size, launch intel per quote asset, and a launch preflight. Every StonkFun reward coin that trades, indexed every ten minutes. Pay per call in USDC via x402, no API key.">
 
   <link rel="canonical" href="https://www.solenrich.com/stonkfun">
   <link rel="icon" type="image/png" href="/logo.png">
@@ -14,14 +14,14 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.solenrich.com/stonkfun">
   <meta property="og:title" content="Find the StonkFun coins that pay, before you buy one">
-  <meta property="og:description" content="19,916 StonkFun reward coins indexed every ten minutes. One call ranks the gems, one prices your trade net of the transfer tax, one tells you when to leave. For agents: pay per call in USDC, no API key.">
+  <meta property="og:description" content="Every StonkFun reward coin that trades, indexed every ten minutes. One call ranks the gems, one prices your trade net of the transfer tax, one tells you when to leave. For agents: pay per call in USDC, no API key.">
   <meta property="og:image" content="https://www.solenrich.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Find the StonkFun coins that pay, before you buy one">
-  <meta name="twitter:description" content="19,916 StonkFun reward coins indexed every ten minutes. One call ranks the gems, one prices your trade net of the transfer tax, one tells you when to leave. Pay per call in USDC, no API key.">
+  <meta name="twitter:description" content="Every StonkFun reward coin that trades, indexed every ten minutes. One call ranks the gems, one prices your trade net of the transfer tax, one tells you when to leave. Pay per call in USDC, no API key.">
   <meta name="twitter:image" content="https://www.solenrich.com/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -39,7 +39,7 @@
         "name": "StonkFun API for Agents — SolEnrich",
         "description": "StonkFun reward-coin intelligence for AI agents: gem finder, payout status, trade cost and payback, launch intel. Pay per call in USDC via x402.",
         "isPartOf": { "@id": "https://www.solenrich.com/#website" },
-        "dateModified": "2026-09-20"
+        "dateModified": "2026-09-23"
       },
       {
         "@type": "FAQPage",
@@ -57,7 +57,7 @@
           {
             "@type": "Question",
             "name": "Which StonkFun coins are worth looking at right now?",
-            "acceptedAnswer": { "@type": "Answer", "text": "stonk-gems scores every reward coin 0 to 100 from a ten-minute index: recent payout, holders, market cap headroom, turnover, age, momentum, and quote strength. Stages are GEM, WATCH, NOISE, and DEAD, each with plain reasons and warnings. $0.03 per call." }
+            "acceptedAnswer": { "@type": "Answer", "text": "stonk-gems scores every reward coin that traded in the last 24 hours 0 to 100 from a ten-minute index: recent payout, holders, market cap headroom, turnover, age, momentum, and quote strength. Stages are GEM, WATCH, NOISE, and DEAD, each with plain reasons and warnings. $0.03 per call." }
           },
           {
             "@type": "Question",
@@ -72,7 +72,7 @@
           {
             "@type": "Question",
             "name": "How fresh is the data?",
-            "acceptedAnswer": { "@type": "Answer", "text": "The StonkFun index refreshes every ten minutes from the StonkFun API and on-chain mint data, and stonk-gems, stonk-screener, and stonk-launch-intel answer from it in milliseconds. Per-coin calls read the chain and DEX data live. Daily snapshots build the trailing 7-day and 30-day yield windows." }
+            "acceptedAnswer": { "@type": "Answer", "text": "The StonkFun index holds every reward coin that traded in the last 24 hours and refreshes every ten minutes from the StonkFun API and on-chain mint data; stonk-gems and stonk-screener answer from it in milliseconds. stonk-launch-intel answers from a full walk of every reward coin, repeated every six hours. Per-coin calls read the chain and DEX data live. Daily snapshots build the trailing 7-day and 30-day yield windows." }
           }
         ]
       }
@@ -199,23 +199,23 @@
       <div class="section-label">StonkFun reward coins · for agents</div>
       <h1>Find the StonkFun coins that <em>pay</em>, before you buy one.</h1>
       <p class="lede">
-        <strong>19,916 reward coins</strong> are in the index today. <strong>3,099</strong> traded in the last 24 hours.
-        <strong>1,718</strong> paid their holders. One call ranks them, one prices your trade net of the transfer tax,
-        one tells you when to leave. Your agent pays per call in USDC. No account, no API key.
+        StonkFun lists <strong>87,891 reward coins</strong>. About <strong>one in ten</strong> traded in the last
+        24 hours, and <strong>one in twenty-five</strong> paid its holders. One call ranks the live ones, one prices your
+        trade net of the transfer tax, one tells you when to leave. Your agent pays per call in USDC. No account, no API key.
       </p>
       <div class="cta-row">
         <a href="#loop" class="btn-primary">See the loop with real output</a>
         <a href="https://api.solenrich.com/llms-full.txt" class="btn-secondary">Full reference for LLMs</a>
         <a href="/docs" class="btn-secondary">API docs</a>
       </div>
-      <div class="asof">Census as of 2026-09-20, one refresh of the ten-minute index</div>
+      <div class="asof">Census as of 2026-09-23 14:37 UTC, a full walk of the reward-coin list (82,735 coins read)</div>
       <div class="stats">
-        <div class="stat"><div class="stat-value">19,916</div><div class="stat-label">reward coins indexed</div></div>
-        <div class="stat"><div class="stat-value">1,046</div><div class="stat-label">launched in the last 24h</div></div>
-        <div class="stat"><div class="stat-value">15.6%</div><div class="stat-label">traded in the last 24h</div></div>
-        <div class="stat"><div class="stat-value">8.6%</div><div class="stat-label">paid holders in the last 24h</div></div>
-        <div class="stat"><div class="stat-value">9.0%</div><div class="stat-label">of coins over 3 days old still trade</div></div>
-        <div class="stat"><div class="stat-value">76</div><div class="stat-label">coins staged GEM right now</div></div>
+        <div class="stat"><div class="stat-value">87,891</div><div class="stat-label">reward coins on StonkFun</div></div>
+        <div class="stat"><div class="stat-value">5,887</div><div class="stat-label">launched in the last 24h</div></div>
+        <div class="stat"><div class="stat-value">10.4%</div><div class="stat-label">traded in the last 24h</div></div>
+        <div class="stat"><div class="stat-value">3.9%</div><div class="stat-label">paid holders in the last 24h</div></div>
+        <div class="stat"><div class="stat-value">3.0%</div><div class="stat-label">of coins over 3 days old still trade</div></div>
+        <div class="stat"><div class="stat-value">74</div><div class="stat-label">coins staged GEM (14:02 UTC)</div></div>
       </div>
     </header>
 
@@ -230,10 +230,9 @@
         are long the coin, long the quote, and earning the quote if the coin keeps trading.
       </p>
       <p>
-        Most coins do not keep trading. Two weeks ago, 45% of reward coins had traded in the last day. Today it is 15.6%,
-        because the shelf grew from 8,000 coins to nearly 20,000 in the same two weeks. Among the coins that did trade
-        today, the median one has 34 holders; 585 coins have more than 500. A holder cares about one thing:
-        <strong>did the payout land</strong>. Nobody buys after a config audit. So the job is finding the coins that are
+        Most coins do not keep trading. On 2026-09-06, 45% of about 8,000 reward coins had traded in the last day. Today
+        it is 10.4% of nearly 88,000: about 5,900 coins launch every day, and only 3.0% of coins older than three days
+        still trade. A holder cares about one thing: <strong>did the payout land</strong>. Nobody buys after a config audit. So the job is finding the coins that are
         live and paying, fast, and knowing what a trade in one of them costs.
       </p>
     </section>
@@ -245,7 +244,7 @@
       <div class="jobs">
         <div class="job">
           <h3>Find what is live and paying</h3>
-          <p>Every reward coin scored 0 to 100 from a ten-minute index: recent payout, holders, market cap headroom,
+          <p>Every reward coin that traded today, scored 0 to 100 from a ten-minute index: recent payout, holders, market cap headroom,
             turnover, age, momentum, quote strength. GEM, WATCH, NOISE, DEAD, with reasons.</p>
           <p class="ep">stonk-gems · stonk-screener · stonk-reward-risk</p>
         </div>
@@ -332,7 +331,7 @@
         </div>
         <div class="endpoint">
           <div class="endpoint-header"><span class="endpoint-name">stonk-gems</span><span class="price">$0.03</span></div>
-          <p class="endpoint-desc">Every reward coin scored 0 to 100 and staged GEM, WATCH, NOISE, or DEAD, with reasons, warnings, and the round-trip tax. Milliseconds, from the index.</p>
+          <p class="endpoint-desc">Every reward coin that traded today, scored 0 to 100 and staged GEM, WATCH, NOISE, or DEAD, with reasons, warnings, and the round-trip tax. Milliseconds, from the index.</p>
           <div class="endpoint-input">quote_mint?, category?, max_age_days?, min_holders?, max_market_cap_usd?, limit?</div>
         </div>
         <div class="endpoint">
@@ -373,29 +372,31 @@
       <div class="section-label">What to launch against</div>
       <h2>The quote decides more than the tax does.</h2>
       <p>
-        From the 2026-09-20 census, the eight quote assets with the most 24-hour volume. Two weeks earlier ZEC was the best
-        shelf on the platform: 505 coins, 87% traded. It now has 2,614 coins and 7% traded. The demand score in
+        From the 2026-09-23 census, the eight quote assets with the most 24-hour volume. On 2026-09-06 ZEC was the best
+        shelf on the platform: 505 coins, 87% traded. It now has 5,139 coins and 8.8% traded. Volume follows the big
+        shelves, but the traders per coin are on the small new ones: GP, APE and CRACKER. The demand score in
         <code>stonk-launch-intel</code> is what catches that shift: traders per launch, survival up, crowding down.
       </p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Quote</th><th>Coins</th><th>Traded today</th><th>Paid holders today</th><th>24h volume</th><th>Launches, 7d</th><th>Demand</th></tr></thead>
           <tbody>
-            <tr><td>DOGE</td><td class="num">85</td><td class="num good">61%</td><td class="num good">44%</td><td class="num">$1.42M</td><td class="num">37</td><td class="num good">54</td></tr>
-            <tr><td>XMR</td><td class="num">87</td><td class="num good">62%</td><td class="num good">49%</td><td class="num">$1.81M</td><td class="num">46</td><td class="num good">47</td></tr>
-            <tr><td>WBTC</td><td class="num">181</td><td class="num">36%</td><td class="num">24%</td><td class="num">$1.91M</td><td class="num">40</td><td class="num">30</td></tr>
-            <tr><td>PEPE</td><td class="num">375</td><td class="num">36%</td><td class="num">27%</td><td class="num">$4.66M</td><td class="num">375</td><td class="num">23</td></tr>
-            <tr><td>GLDX</td><td class="num">160</td><td class="num">29%</td><td class="num">17%</td><td class="num">$2.05M</td><td class="num">42</td><td class="num">22</td></tr>
-            <tr><td>Fartcoin</td><td class="num">244</td><td class="num">16%</td><td class="num">9%</td><td class="num">$1.72M</td><td class="num">58</td><td class="num">12</td></tr>
-            <tr><td>ZEC</td><td class="num">2,614</td><td class="num bad">7%</td><td class="num bad">3%</td><td class="num">$1.62M</td><td class="num">472</td><td class="num bad">3</td></tr>
-            <tr><td>STONK</td><td class="num">2,173</td><td class="num bad">11%</td><td class="num bad">5%</td><td class="num">$2.25M</td><td class="num">1,375</td><td class="num bad">0</td></tr>
+            <tr><td>GP</td><td class="num">419</td><td class="num good">76%</td><td class="num good">53%</td><td class="num">$3.85M</td><td class="num">419</td><td class="num good">65</td></tr>
+            <tr><td>NVDAX</td><td class="num">2,996</td><td class="num">14%</td><td class="num">5%</td><td class="num">$3.43M</td><td class="num">1,129</td><td class="num bad">3</td></tr>
+            <tr><td>ZEC</td><td class="num">5,139</td><td class="num bad">9%</td><td class="num bad">4%</td><td class="num">$3.18M</td><td class="num">2,730</td><td class="num bad">0</td></tr>
+            <tr><td>SPCXX</td><td class="num">3,262</td><td class="num bad">9%</td><td class="num bad">3%</td><td class="num">$2.85M</td><td class="num">1,595</td><td class="num bad">0</td></tr>
+            <tr><td>APE</td><td class="num">568</td><td class="num good">95%</td><td class="num good">32%</td><td class="num">$2.85M</td><td class="num">568</td><td class="num good">64</td></tr>
+            <tr><td>STONK</td><td class="num">3,874</td><td class="num">11%</td><td class="num bad">3%</td><td class="num">$2.05M</td><td class="num">1,833</td><td class="num bad">0</td></tr>
+            <tr><td>GLDX</td><td class="num">1,057</td><td class="num">11%</td><td class="num">4%</td><td class="num">$1.99M</td><td class="num">406</td><td class="num bad">0</td></tr>
+            <tr><td>CRACKER</td><td class="num">128</td><td class="num good">99%</td><td class="num good">30%</td><td class="num">$1.93M</td><td class="num">128</td><td class="num good">65</td></tr>
           </tbody>
         </table>
       </div>
       <p>
-        Demand is 0 to 100. The live call returns every quote, the tax mix per quote, and recommendations in plain language.
-        The tax matters less than the quote, but it matters: in the same census, 300 bps coins paid holders at nearly twice the
-        rate of 100 bps coins, 12.0% against 6.5%, and traded more often, 20.1% against 12.9%.
+        Demand is 0 to 100. APE and CRACKER launched this week, so they have no three-day survival yet and their demand is
+        capped at 80. The live call returns every quote, the tax mix per quote, and recommendations in plain language.
+        The tax matters less than the quote, but it matters: in the same census, 300 bps coins paid holders at twice the
+        rate of 100 bps coins, 6.1% against 3.0%, and traded a little more often, 11.8% against 9.8%.
       </p>
     </section>
 
@@ -413,7 +414,7 @@
       </details>
       <details>
         <summary>Which StonkFun coins are worth looking at right now?</summary>
-        <p><code>stonk-gems</code>. Every reward coin scored 0 to 100 from the ten-minute index and staged GEM, WATCH, NOISE, or DEAD with reasons and warnings. Filter by quote, category, age, holders, or market cap. $0.03.</p>
+        <p><code>stonk-gems</code>. Every reward coin that traded today, scored 0 to 100 from the ten-minute index and staged GEM, WATCH, NOISE, or DEAD with reasons and warnings. Filter by quote, category, age, holders, or market cap. $0.03.</p>
       </details>
       <details>
         <summary>Which quote asset should I launch against?</summary>
@@ -425,7 +426,7 @@
       </details>
       <details>
         <summary>How fresh is the data?</summary>
-        <p>The index refreshes every ten minutes from the StonkFun API and on-chain mint data; <code>stonk-gems</code>, <code>stonk-screener</code>, and <code>stonk-launch-intel</code> answer from it in milliseconds. Per-coin calls read the chain and DEX data live. Daily snapshots build the trailing yield windows, and every window says how many real days it covers.</p>
+        <p>The index holds every reward coin that traded in the last 24 hours and refreshes every ten minutes from the StonkFun API and on-chain mint data; <code>stonk-gems</code> and <code>stonk-screener</code> answer from it in milliseconds. <code>stonk-launch-intel</code> answers from a full walk of every reward coin, repeated every six hours. Per-coin calls read the chain and DEX data live. Daily snapshots build the trailing yield windows, and every window says how many real days it covers.</p>
       </details>
       <details>
         <summary>Is any of this financial advice?</summary>

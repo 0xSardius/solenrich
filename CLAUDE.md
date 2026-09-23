@@ -716,11 +716,14 @@ initialize codec: decoder for legacy/v0 txs + encoder for fixtures), `src/enrich
 `src/formatters/llm-stonk.ts`, `src/schemas/stonk.ts`. Tests: `test/stonk.test.ts` (37 fixture
 tests in CI; `STONK_LIVE=1` adds live smoke), fixtures in `test/fixtures/stonk/`.
 
-**Re-census 2026-09-20 (`local/scripts/census-stonk.ts`, one index refresh ≈ 107s): 19,916 reward coins
-(2.5× the 9/6 count), 1,046 launches/day, 15.6% traded / 8.6% paid in 24h (was 45.5% / 12.7%), 9.0% of
->3d coins still trade, 585 coins ≥500 holders, 300 bps coins pay 12.0% vs 6.5% for 100 bps. Quote shelf
-shifted: ZEC 2,614 coins / 7% traded (was 505 / 87%); DOGE and XMR now highest paying share and demand.
-The 9/6 numbers below are the design baseline, not current state; `/stonkfun` quotes the 9/20 ones.**
+**Census 2026-09-23 (full population, from the `stonk:population:v1` summary; `local/scripts/census-from-population.ts`):
+87,891 reward coins on StonkFun (82,735 read), 5,887 launches in 24h (~5,300/day over 7d), 10.4% traded /
+3.9% paid in 24h, 3.0% of >3d coins still trade; 300 bps coins pay 6.1% vs 3.0% at 100 bps. ZEC 5,139 coins /
+9% traded (was 505 / 87% on 9/6); busiest per coin = small new shelves (GP 76%, APE 95%, CRACKER 99%).
+The 9/20 "re-census" (19,916 coins, 15.6% traded) was WRONG: it counted the index, which then held the top
+200 pages by MARKET CAP (StonkFun ignores unknown sort values). Since `088f741` the index holds only coins that
+traded in 24h (~11,500); shelf stats come from the 6-hourly population job (`9b5fde8`). The 9/6 numbers below
+are the design baseline, not current state; `/stonkfun` quotes the 9/23 ones.**
 
 **Facts measured 2026-09-06 (design drivers):**
 - **Liveness census (PM, 8,000 reward coins via a one-off ingest):** 45.5% traded in 24h, 12.7%
