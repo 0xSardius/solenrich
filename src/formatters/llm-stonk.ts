@@ -1,5 +1,6 @@
 import type { RewardRiskResult } from '../enrichers/stonk-reward-risk';
 import type { StonkYieldResult, StonkYieldBatchResult, YieldWindow } from '../enrichers/stonk-yield';
+import type { StonkAlertsResult } from '../enrichers/stonk-alerts';
 import type { StonkPreflightResult } from '../enrichers/stonk-preflight';
 import type { StonkQuoteResult } from '../enrichers/stonk-quote';
 import type { StonkPairsResult, StonkScreenerResult, StonkGemsResult, StonkLaunchIntelResult } from '../entrypoints/stonk';
@@ -69,6 +70,29 @@ function windowLine(label: string, w: YieldWindow): string {
   if (w.annualized_pct != null) parts.push(`≈ ${w.annualized_pct.toFixed(1)}% annualized${w.caution ? ' ⚠️' : ''}`);
   const line = `- ${label}: ${parts.join(' | ')}`;
   return w.caution && w.caution_reason ? `${line} (${w.caution_reason})` : line;
+}
+
+/** Alerts first (most severe first), then one status line per coin. */
+export function formatStonkAlertsBriefing(d: StonkAlertsResult): string {
+  const lines: string[] = [];
+  const n = d.alerts.length;
+  lines.push(`## StonkFun Alerts — ${n} event${n === 1 ? '' : 's'} across ${d.coins.length} coin${d.coins.length === 1 ? '' : 's'} since ${d.since}`);
+  lines.push('');
+  const icon: Record<string, string> = { high: '🔴', medium: '🟠', low: '🟢' };
+  if (n) for (const a of d.alerts) lines.push(`- ${icon[a.severity] ?? ''} **${a.type}** — ${a.summary}`);
+  else lines.push('No events in the window.');
+  if (d.coins.length) {
+    lines.push('');
+    lines.push('### Now');
+    for (const c of d.coins) {
+      lines.push(`- $${c.symbol ?? shortenAddress(c.mint)} (${c.quote_symbol}): ${c.payout_status}${c.hours_since_last_payout != null ? `, last payout ${c.hours_since_last_payout}h ago` : ''} | 24h vol ${formatUsd(c.volume_24h_usd)} | ${c.holder_count} holders | mcap ${formatUsd(c.market_cap_usd)}`);
+    }
+  }
+  if (d.not_found.length) lines.push(`\nNot in the index: ${d.not_found.map((m) => shortenAddress(m)).join(', ')}`);
+  if (d.caveats.length) lines.push(`\nNotes: ${d.caveats.join(' · ')}`);
+  lines.push('');
+  lines.push(`Next: ${d.next_steps.join(' ')} (checked_at ${d.checked_at})`);
+  return lines.join('\n');
 }
 
 /** A compact table: one row per coin, so 25 coins fit a context window. */

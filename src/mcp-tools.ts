@@ -630,6 +630,24 @@ export const MCP_TOOLS: McpToolDef[] = [
     handler: async (args) => invoke('stonk-yield', { mint: args.mint, format: 'llm' }),
   },
   {
+    name: 'stonk_alerts',
+    title: 'StonkFun Watchlist Alerts',
+    description: 'What changed for up to 25 StonkFun reward coins since your last check: payout landed, payout went stale (no payout for 24h+), stopped trading (no 24h volume), holders moved 10%+, and rewards paid to holders since then in the quote asset and USD. Also the current payout status of each coin. Pass the previous checked_at as `since` on each poll. Use for "did my reward coins pay today?" or to watch a stonk portfolio.',
+    inputSchema: {
+      mints: z.array(z.string()).min(1).max(25).describe('Reward coin mints to watch (up to 25)'),
+      since: z.string().describe('ISO time of your last check, e.g. 2026-09-23T00:00:00Z'),
+      min_holders_change_pct: z.number().min(1).max(1000).default(10).describe('holders_change threshold in %'),
+      stale_after_hours: z.number().min(1).max(168).default(24).describe('Hours without a payout that count as stale'),
+    },
+    handler: async (args) => invoke('stonk-alerts', {
+      mints: args.mints,
+      since: args.since,
+      min_holders_change_pct: args.min_holders_change_pct ?? 10,
+      stale_after_hours: args.stale_after_hours ?? 24,
+      format: 'llm',
+    }),
+  },
+  {
     name: 'stonk_yield_batch',
     title: 'StonkFun Holder Yield — Batch',
     description: 'stonk_yield for up to 25 StonkFun reward coins in one call: 7d / 30d / lifetime holder yield per coin, annualized with caution flags, plus reward asset, market cap, holders and last payout. Pass `mints` (up to 25), or the screener filters (quote mint, category, holders, age, volume, market cap, paying_only, live_only, sort) to pick the coins. Use for "what do the paying NVDAX coins yield?" or to compare yields across a shortlist, instead of calling stonk_yield once per coin.',

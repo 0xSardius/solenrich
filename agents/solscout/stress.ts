@@ -669,6 +669,21 @@ export const ENDPOINTS: Array<{
     ],
   },
   {
+    // ZCAT (high-volume ZEC coin) over the last 24h. From the in-memory index: after a boot ZCAT may still be in
+    // not_found, so the checks accept either a status row or a not_found entry.
+    key: 'stonk-alerts',
+    input: { mints: ['HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR'], since: new Date(Date.now() - 86_400_000).toISOString(), format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'has alerts array', test: (d) => Array.isArray(d.alerts), detail: (d) => `alerts=${d.alerts?.length} types=${Object.keys(d.counts_by_type ?? {}).join(',')}` },
+      { name: 'coin reported (status or not_found)', test: (d) => (d.coins?.length ?? 0) + (d.not_found?.length ?? 0) === 1 },
+      { name: 'status row has payout status', test: (d) => (d.coins ?? []).every((c: any) => ['PAYING', 'STALE', 'NEVER', 'NOT_REWARD'].includes(c.payout_status)) },
+      { name: 'alert types known', test: (d) => d.alerts.every((a: any) => ['payout_landed', 'payout_stale', 'stopped_trading', 'holders_change', 'rewards_since'].includes(a.type)) },
+      { name: 'has checked_at for the next poll', test: (d) => typeof d.checked_at === 'string' },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('StonkFun Alerts') },
+    ],
+  },
+  {
     // Served from the in-memory index; right after a boot it can be warming up (0 coins), so the coin checks
     // tolerate an empty list but demand the index status block. Filters select paying coins, up to 10.
     key: 'stonk-yield-batch',

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Cache } from '../cache';
-import { StonkPairsInput, StonkRewardRiskInput, StonkYieldInput, StonkYieldBatchInput, StonkScreenerInput, StonkPreflightInput, StonkGemsInput, StonkLaunchIntelInput, StonkQuoteInput } from '../schemas/stonk';
+import { StonkPairsInput, StonkRewardRiskInput, StonkYieldInput, StonkYieldBatchInput, StonkAlertsInput, StonkScreenerInput, StonkPreflightInput, StonkGemsInput, StonkLaunchIntelInput, StonkQuoteInput } from '../schemas/stonk';
 import type { StonkFunClient, StonkPair } from '../sources/stonkfun';
 import { normalizeCategory, type StonkIndex, type StonkCategory, type StonkIndexStatus, type StonkScreenerRow } from '../enrichers/stonk-index';
 import type { GemStage, PayoutStatus, QuoteStats } from '../enrichers/stonk-gems';
@@ -9,12 +9,14 @@ import type { StonkRewardRiskAnalyzer } from '../enrichers/stonk-reward-risk';
 import type { StonkYieldAnalyzer } from '../enrichers/stonk-yield';
 import type { StonkPreflightAnalyzer } from '../enrichers/stonk-preflight';
 import type { StonkQuoteAnalyzer } from '../enrichers/stonk-quote';
+import { StonkAlertChecker } from '../enrichers/stonk-alerts';
 import { formatResponse } from '../formatters';
 import {
   formatStonkPairsBriefing,
   formatStonkRewardRiskBriefing,
   formatStonkYieldBriefing,
   formatStonkYieldBatchBriefing,
+  formatStonkAlertsBriefing,
   formatStonkScreenerBriefing,
   formatStonkPreflightBriefing,
   formatStonkGemsBriefing,
@@ -224,6 +226,22 @@ export function registerStonkEntrypoints(
         },
       });
       return { output: formatResponse(data, input.format, formatStonkYieldBatchBriefing) };
+    },
+  });
+
+  // --- stonk-alerts ------------------------------------------------------------
+  // What changed for a holder's coins since the last check, from the index: made to be polled (pass checked_at
+  // back as since). Stateless — the caller keeps `since`, so there is no subscription to manage.
+  const alertChecker = new StonkAlertChecker(deps.index);
+  addEntrypoint({
+    key: 'stonk-alerts',
+    description:
+      'What changed for your StonkFun reward coins since your last check, for up to 25 coins: payout_landed (a payout reached holders), payout_stale (no payout for 24h+, went stale inside the window), stopped_trading (no 24h volume: no tax, no payouts), holders_change (±10% default), and rewards_since (quote + USD paid to holders since the snapshot nearest to `since`). Plus current payout status per coin. From the 10-minute index in milliseconds; poll it and pass checked_at back as since.',
+    input: StonkAlertsInput,
+    handler: async (ctx: { input: z.infer<typeof StonkAlertsInput> }) => {
+      const input = ctx.input;
+      const data = alertChecker.check(input.mints, input.since, { minHoldersChangePct: input.min_holders_change_pct, staleAfterHours: input.stale_after_hours });
+      return { output: formatResponse(data, input.format, formatStonkAlertsBriefing) };
     },
   });
 

@@ -376,6 +376,14 @@ check('coins carry three windows', (syb.body?.output?.coins ?? []).every((c: any
 check('has llm_summary', typeof syb.body?.output?.llm_summary === 'string' && syb.body.output.llm_summary.includes('Holder Yield'));
 console.log(`  ⏱ ${syb.ms}ms\n`);
 
+console.log('━━━ 20c3. stonk-alerts ━━━');
+const sal = await invoke('stonk-alerts', { mints: [STONK_MINT], since: new Date(Date.now() - 86_400_000).toISOString(), format: 'both' }, 30000);
+check('returns 200', sal.status === 200, `got ${sal.status}`);
+check('has alerts + checked_at', Array.isArray(sal.body?.output?.alerts) && typeof sal.body?.output?.checked_at === 'string');
+check('coin reported (status or not_found)', (sal.body?.output?.coins?.length ?? 0) + (sal.body?.output?.not_found?.length ?? 0) === 1);
+check('has llm_summary', typeof sal.body?.output?.llm_summary === 'string' && sal.body.output.llm_summary.includes('StonkFun Alerts'));
+console.log(`  ⏱ ${sal.ms}ms\n`);
+
 console.log('━━━ 20d. stonk-screener ━━━');
 const ss = await invoke('stonk-screener', { sort: 'volume24h', limit: 5, format: 'both' }, 30000);
 check('returns 200', ss.status === 200, `got ${ss.status}`);

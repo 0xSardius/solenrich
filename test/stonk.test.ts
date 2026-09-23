@@ -651,8 +651,58 @@ import { formatStonkGemsBriefing, formatStonkLaunchIntelBriefing } from '../src/
 import { toRow, type StonkIndexRow } from '../src/enrichers/stonk-index';
 import { POPULATION_CACHE_KEY, buildPopulation, populationStatus, walkAllRewardTokens } from '../src/enrichers/stonk-population';
 import { StonkYieldAnalyzer } from '../src/enrichers/stonk-yield';
-import { StonkYieldBatchInput } from '../src/schemas/stonk';
-import { formatStonkYieldBatchBriefing } from '../src/formatters/llm-stonk';
+import { StonkYieldBatchInput, StonkAlertsInput } from '../src/schemas/stonk';
+import { formatStonkYieldBatchBriefing, formatStonkAlertsBriefing } from '../src/formatters/llm-stonk';
+import { StonkAlertChecker, detectStonkAlerts, baselinePoint, DEFAULT_STONK_ALERT_CRITERIA } from '../src/enrichers/stonk-alerts';
+
+describe('stonk-alerts: detectors', () => {
+  const C = DEFAULT_STONK_ALERT_CRITERIA;
+  // Runs at registration, before the H/D/iso consts further down exist; test bodies run later and may use them.
+  const since = NOW - 6 * 3_600_000;
+  const types = (xs: { type: string }[]) => xs.map((a) => a.type).sort();
+
+  test('payout inside the window → payout_landed; no stale; trading', () => {
+    const r = row({ lastPayoutAt: iso(NOW - 1 * H), volume24hUsd: 5_000 });
+    expect(types(detectStonkAlerts(r, [], 100, since, NOW, C))).toEqual(['payout_landed']);
+  });
+
+  test('stale boundary inside the window → payout_stale (high); outside → nothing', () => {
+    const wentStale = row({ lastPayoutAt: iso(NOW - 26 * H), volume24hUsd: 5_000 }); // boundary = NOW - 2h, inside
+    const a = detectStonkAlerts(wentStale, [], 100, since, NOW, C);
+    expect(types(a)).toEqual(['payout_stale']);
+    expect(a[0].severity).toBe('high');
+    const longStale = row({ lastPayoutAt: iso(NOW - 40 * H), volume24hUsd: 5_000 }); // boundary = NOW - 16h, before since
+    expect(detectStonkAlerts(longStale, [], 100, since, NOW, C)).toEqual([]);
+  });
+
+  test('no 24h volume → stopped_trading', () => {
+    const r = row({ lastPayoutAt: iso(NOW - 40 * H), volume24hUsd: 0 });
+    expect(types(detectStonkAlerts(r, [], 100, since, NOW, C))).toEqual(['stopped_trading']);
+  });
+
+  test('holders_change against the snapshot nearest to since; rewards_since in quote + USD', () => {
+    const series = [
+      { t: NOW - 2 * D, dist: 10, marketCapUsd: 1e6, holders: 100 },
+      { t: NOW - 1 * D, dist: 40, marketCapUsd: 1e6, holders: 200 }, // latest at or before since (NOW - 6h)
+    ];
+    const r = row({ lastPayoutAt: iso(NOW - 40 * H), volume24hUsd: 5_000, holderCount: 150, distributedTokens: 55 });
+    const a = detectStonkAlerts(r, series, 2, since, NOW, C);
+    expect(types(a)).toEqual(['holders_change', 'rewards_since']);
+    const h = a.find((x) => x.type === 'holders_change')!;
+    expect(h.data).toMatchObject({ from: 200, to: 150, change_pct: -25 });
+    expect(h.severity).toBe('medium');
+    const rw = a.find((x) => x.type === 'rewards_since')!;
+    expect(rw.data).toMatchObject({ rewards_quote: 15, rewards_usd: 30, approximate: true });
+  });
+
+  test('baselinePoint: latest at or before since, else the earliest after', () => {
+    const s = [{ t: 10, dist: 0, marketCapUsd: 0, holders: 1 }, { t: 20, dist: 0, marketCapUsd: 0, holders: 2 }];
+    expect(baselinePoint(s, 15)!.t).toBe(10);
+    expect(baselinePoint(s, 5)!.t).toBe(10);
+    expect(baselinePoint(s, 25)!.t).toBe(20);
+    expect(baselinePoint([], 5)).toBeNull();
+  });
+});
 
 const H = 3_600_000;
 const D = 86_400_000;
@@ -896,6 +946,27 @@ describe('population: summary, freshness, and what the index does with it', () =
     expect(StonkYieldBatchInput.safeParse({ mints: Array(26).fill(m) }).success).toBe(false);
     expect(StonkYieldBatchInput.safeParse({ limit: 26 }).success).toBe(false);
     expect(StonkYieldBatchInput.parse({}).limit).toBe(25);
+  });
+
+  test('stonk-alerts: watchlist against the index — status rows, not_found, since clamp', async () => {
+    const idx = new StonkIndex(client, jupiter, new Cache(), () => NOW);
+    await idx.refresh();
+    const checker = new StonkAlertChecker(idx);
+    const known = page[0].mint;
+    const unknown = 'So11111111111111111111111111111111111111112';
+    const r = checker.check([known, unknown], iso(NOW - 40 * D), {}, NOW);
+    expect(r.since_clamped_from).toBe(iso(NOW - 40 * D));
+    expect(r.since).toBe(iso(NOW - 31 * D));
+    expect(r.coins.map((c) => c.mint)).toEqual([known]);
+    expect(r.not_found).toEqual([unknown]);
+    expect(['PAYING', 'STALE', 'NEVER', 'NOT_REWARD']).toContain(r.coins[0].payout_status);
+    expect(r.checked_at).toBe(iso(NOW));
+    const order = { high: 0, medium: 1, low: 2 } as const;
+    for (let i = 1; i < r.alerts.length; i++) expect(order[r.alerts[i - 1].severity]).toBeLessThanOrEqual(order[r.alerts[i].severity]);
+    expect(formatStonkAlertsBriefing(r)).toContain('StonkFun Alerts');
+    expect(StonkAlertsInput.safeParse({ mints: [known], since: '2026-09-23T00:00:00Z' }).success).toBe(true);
+    expect(StonkAlertsInput.safeParse({ mints: [], since: '2026-09-23T00:00:00Z' }).success).toBe(false);
+    expect(StonkAlertsInput.safeParse({ mints: [known] }).success).toBe(false);
   });
 
   test('walkAllRewardTokens: skips a failed page after one retry pass, counts coverage', async () => {

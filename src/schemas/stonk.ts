@@ -55,6 +55,17 @@ export const StonkYieldBatchInput = StonkScreenerInput.omit({ limit: true, forma
 });
 export type StonkYieldBatchInput = z.infer<typeof StonkYieldBatchInput>;
 
+// Required `mints` + `since` → BAZAAR_INPUT_EXAMPLES entry in agent.ts (checklist item 9).
+export const StonkAlertsInput = z.object({
+  mints: z.array(SolanaAddressSchema).min(1).max(STONK_YIELD_BATCH_MAX),
+  /** ISO time of the last check. Older than 31 days is clamped (the snapshot history), not rejected. */
+  since: z.string().datetime(),
+  min_holders_change_pct: z.number().min(1).max(1000).default(10),
+  stale_after_hours: z.number().min(1).max(168).default(24),
+  format: FormatSchema,
+});
+export type StonkAlertsInput = z.infer<typeof StonkAlertsInput>;
+
 export const StonkPreflightInput = z.object({
   /** Base64 unsigned transaction (legacy or v0) carrying the LaunchLab initialize. */
   unsigned_transaction: z.string().min(64).max(6000),

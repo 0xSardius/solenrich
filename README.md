@@ -15,7 +15,7 @@ curl https://api.solenrich.com/health
 # Agent card (A2A discovery)
 curl https://api.solenrich.com/.well-known/agent.json
 
-# List all 46 endpoints (45 paid + 1 free)
+# List all 48 endpoints (47 paid + 1 free)
 curl https://api.solenrich.com/entrypoints
 
 # Full API documentation (agent-readable JSON)
@@ -118,6 +118,7 @@ Coins launched on [stonkfun.xyz](https://www.stonkfun.xyz) are priced against a 
 | `stonk-pairs` | free | `category`, `launchable_only`, `format` | Quote assets a launch can be paired against, normalized categories, `is_agent_launchable` flag (launchable + LaunchLab-ready + allowed category). Call first: a launch `quoteMint` must be one of these |
 | `stonk-reward-risk` | $0.005 | `mint`, `format` | Payout status — `PAYING` (holders paid in the last 24h), `STALE`, `NEVER`, `NOT_REWARD` — plus `trading_cost` (tax bps, round-trip %) and a 0–100 health score read from the chain: fee bps + cap, withdraw authority (must be StonkFun's distributor), fee mutability, distributions + recency, flywheel, holders + concentration, quote category, age |
 | `stonk-yield-batch` | $0.05 | `mints` (up to 25) or screener filters, `limit` (≤25), `format` | `stonk-yield` for up to 25 coins in one call, from the index in milliseconds: 7d / 30d / lifetime yield per coin with reward asset, market cap, holders, last payout. Cheaper than `stonk-screener` + one `stonk-yield` per coin |
+| `stonk-alerts` | $0.005 | `mints` (1–25), `since`, `min_holders_change_pct`, `stale_after_hours`, `format` | What changed for your reward coins since your last check: payout landed, payout went stale, stopped trading, holders moved, rewards paid since. Plus current payout status per coin. From the index in milliseconds; poll it and pass `checked_at` back as `since` |
 | `stonk-yield` | $0.005 | `mint`, `format` | Trailing 7d / 30d / lifetime holder yield — rewards in the quote asset, priced in USD, over average market cap; annualized with a caution flag under 7 days. Plus quote exposure: the holder is long the coin *and* its quote asset |
 | `stonk-screener` | $0.01 | `quote_mint`, `category`, `min_holders`, `min_age_days`, `max_age_days`, `min_volume_24h_usd`, `max_market_cap_usd`, `paying_only`, `live_only`, `sort`, `limit`, `format` | Every reward coin from a 10-minute ingest, served from memory. Per row: `payout_status`, hours since last payout, `live` (traded AND paid in 24h), `round_trip_pct` tax cost, holders, yields, volume, mcap. Sort by `volume24h` (default), `lastPayout`, `holders`, `priceChange24h`, `yield7d`, `yield30d`, `rewardsUsd` |
 | `stonk-gems` | $0.03 | `quote_mint`, `category`, `max_age_days`, `min_holders`, `max_market_cap_usd`, `limit`, `format` | Gem finder: ranks reward coins 0–100 on recent holder payout, holders, mcap headroom, 24h turnover, age, momentum, quote strength, flywheel. Stages `GEM` / `WATCH` / `NOISE` / `DEAD` with reasons and warnings per coin. "What should I look at on StonkFun right now?" |
@@ -250,7 +251,7 @@ SolEnrich exposes an MCP endpoint for Claude Desktop, Claude Code, and Cursor. *
 }
 ```
 
-45 tools — every endpoint is exposed as an MCP tool (wallet/token light+full variants fold into `depth`/`include_holders` toggles). Highlights: `enrich_wallet`, `enrich_token`, `due_diligence`, `whale_watch`, `perps_cross_venue_funding`, `trending_signals`, `smart_money_flow`, `check_alerts`.
+46 tools — every endpoint is exposed as an MCP tool (wallet/token light+full variants fold into `depth`/`include_holders` toggles). Highlights: `enrich_wallet`, `enrich_token`, `due_diligence`, `whale_watch`, `perps_cross_venue_funding`, `trending_signals`, `smart_money_flow`, `check_alerts`.
 
 ## Free Demo
 

@@ -575,6 +575,21 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'stonk-alerts': {
+    summary: 'What changed for your StonkFun reward coins since your last check',
+    description: 'Watchlist alerts for up to 25 reward coins since `since`: payout_landed, payout_stale (no payout for 24h+), stopped_trading (no 24h volume), holders_change (±10% default), and rewards_since (paid to holders, quote + USD). Plus current payout status per coin. From the 10-minute index in milliseconds; poll it and pass checked_at back as since.',
+    schema: {
+      type: 'object',
+      required: ['mints', 'since'],
+      properties: {
+        mints: { type: 'array', items: { type: 'string', minLength: 32, maxLength: 44 }, minItems: 1, maxItems: 25, description: 'Reward coin mints to watch' },
+        since: { type: 'string', format: 'date-time', description: 'ISO time of your last check; older than 31 days is clamped' },
+        min_holders_change_pct: { type: 'number', minimum: 1, maximum: 1000, default: 10 },
+        stale_after_hours: { type: 'number', minimum: 1, maximum: 168, default: 24 },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'stonk-screener': {
     summary: 'Screen every StonkFun reward coin: payout status, live flag, tax cost',
     description: 'Screen every StonkFun reward coin from a 10-minute index. Per row: payout status (PAYING / STALE / NEVER), hours since last payout, live flag (traded AND paid in 24h), round-trip transfer-tax cost, holders, rewards USD, yields, volume, mcap, 24h change. Filters: quote_mint, category, holders, age, volume, market cap, paying_only, live_only. Sort by volume24h (default), lastPayout, holders, priceChange24h, or yield. "Which coins on NVDAX paid holders today?" is one call.',

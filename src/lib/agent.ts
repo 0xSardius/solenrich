@@ -443,6 +443,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'stonk-reward-risk': ['solana', 'stonkfun', 'reward-coin', 'transfer-tax', 'token-risk'],
     'stonk-yield': ['solana', 'stonkfun', 'holder-yield', 'reward-coin', 'xstocks'],
     'stonk-yield-batch': ['solana', 'stonkfun', 'holder-yield', 'reward-coin', 'batch', 'xstocks'],
+    'stonk-alerts': ['solana', 'stonkfun', 'alerts', 'reward-coin', 'holder-yield', 'watchlist'],
     'stonk-screener': ['solana', 'stonkfun', 'screener', 'holder-yield', 'xstocks'],
     'stonk-launch-preflight': ['solana', 'stonkfun', 'launchlab', 'launch-preflight', 'token-2022'],
     'stonk-gems': ['solana', 'stonkfun', 'gems', 'reward-coin', 'screener', 'xstocks'],
@@ -489,11 +490,14 @@ if (PAYMENTS_ENABLED && resourceServer) {
     // hyperliquid
     'hyperliquid-trader-profile': { address: '0xd21d931890d27b6e7e2e668f27931e17698e90f1' },
     // alerts
-    'check-alerts': { since: '2026-06-01T00:00:00Z' },
+    // The refine() needs at least one token or wallet: `since` alone returned 400 (found 2026-09-21).
+    'check-alerts': { tokens: ['DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263'], since: '2026-06-01T00:00:00Z' },
     // stonkfun (ZCAT = live reward coin on ZEC; preflight example is a deterministic correct launch)
     'stonk-reward-risk': { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR' },
     'stonk-yield': { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR' },
     'stonk-quote': { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR', size_usd: 100, hold_days: 7 },
+    // A fixed `since` stays valid: older than 31 days is clamped, not rejected.
+    'stonk-alerts': { mints: ['HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR'], since: '2026-09-23T00:00:00Z' },
     'stonk-launch-preflight': { unsigned_transaction: buildExampleLaunchTransaction(), quote_mint: EXAMPLE_LAUNCH.quoteMint, mode: EXAMPLE_LAUNCH.mode },
   };
 
@@ -1309,6 +1313,11 @@ function buildDocs() {
         price: '0.05',
         input: { mints: 'string[] (optional, up to 25) — when given, the filters are ignored', quote_mint: 'string (optional)', category: 'xstock | prestock | currency | leverage | solana | collectible | custom (optional)', min_holders: 'number (optional)', min_age_days: 'number (optional)', max_age_days: 'number (optional)', min_volume_24h_usd: 'number (optional)', max_market_cap_usd: 'number (optional)', paying_only: 'boolean (default false)', live_only: 'boolean (default false)', sort: 'volume24h | lastPayout | holders | priceChange24h | yield7d | yield30d | rewardsUsd (default volume24h)', limit: 'number 1-25 (default 25)', format: 'json | llm | both' },
         description: 'stonk-yield for up to 25 reward coins in one call, flat price. Per coin: the same object as stonk-yield (7d / 30d / lifetime windows with rewards in the quote asset and USD, average market cap, yield %, annualized % with caution flags; reward asset, quote exposure, payouts, holders, last payout) plus rank. Select by mints (up to 25) or by the stonk-screener filters and sort. Computed from the 10-minute index and its daily snapshots: no per-coin upstream reads, answers in milliseconds. Mints not in the index (no trade in 24h) come back in not_found. The index has no launch market cap, so a coin younger than a window may differ slightly from stonk-yield. Cheaper than stonk-screener + stonk-yield per coin at any size up to 25.',
+      },
+      'stonk-alerts': {
+        price: '0.005',
+        input: { mints: 'string[] (required, 1-25) — reward coin mints to watch', since: 'ISO datetime (required) — your last check; older than 31 days is clamped', min_holders_change_pct: 'number (default 10)', stale_after_hours: 'number 1-168 (default 24)', format: 'json | llm | both' },
+        description: 'What changed for up to 25 StonkFun reward coins since `since`, from the 10-minute index in milliseconds. Events: payout_landed (last payout after since; low), payout_stale (the coin crossed stale_after_hours without a payout inside the window, PAYING → STALE; high), stopped_trading (no 24h volume: no tax, no payouts; high), holders_change (holders moved ≥ min_holders_change_pct since the daily snapshot nearest to since; medium when down, low when up), rewards_since (quote tokens and USD distributed to holders since that snapshot; approximate: true when the snapshot is more than an hour from since). Plus coins[]: current payout status, hours since last payout, 24h volume, holders, market cap; not_found[] for mints outside the index. Stateless: pass checked_at back as since on the next poll.',
       },
       'stonk-screener': {
         price: '0.01',
