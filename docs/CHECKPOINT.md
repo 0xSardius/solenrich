@@ -27,7 +27,12 @@ baseline 2026-09-23 13:50 UTC (before the deploy): RSS 349–459 MB (varies betw
 13.8h ≈ 22,600/day. Check daily: `/status` (rss, commands_today, population age), Actions run history
 (`gh run list --workflow stonk-population.yml`), Railway usage, launch-intel + gems paid calls.
 **Buyers today:** `8LZj73` slowed to ~hourly (12:47, 13:52); `2otm6W` quiet since 06:53; `34CMQ3` 00:00 only.
-**Next:** `/stonkfun` census rewrite (numbers below; site-only push), then the strategy session.
+**`/stonkfun` census rewrite DONE (15:13 UTC, verified live, no API restart):** numbers from the population summary
+(87,891 coins, 10.4% traded / 3.9% paid, 5,887 launches 24h, 3.0% survival, new 8-quote table), median-holders claim
+removed, gems copy = "coins that traded today", FAQ says launch-intel reads the 6-hourly full walk. CLAUDE.md census
+paragraph corrected. Script: `local/scripts/census-from-population.ts`.
+**Next:** the strategy session (buyer data since 9/12 → rank growth paths → Colosseum entry, deadline 2026-10-12).
+Open, not blocking: ~5,000 coins (6%) missing from the newest-first walk with only 3 failed pages — cause unknown.
 
 ## ▶️ (DONE — see above) 2026-09-23 AM — quote stats are inflated since `088f741` (paid output wrong)
 
