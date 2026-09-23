@@ -442,6 +442,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'gacha-ev-scan': ['solana', 'jupiter-gacha', 'expected-value', 'trading-cards', 'rwa'],
     'stonk-reward-risk': ['solana', 'stonkfun', 'reward-coin', 'transfer-tax', 'token-risk'],
     'stonk-yield': ['solana', 'stonkfun', 'holder-yield', 'reward-coin', 'xstocks'],
+    'stonk-yield-batch': ['solana', 'stonkfun', 'holder-yield', 'reward-coin', 'batch', 'xstocks'],
     'stonk-screener': ['solana', 'stonkfun', 'screener', 'holder-yield', 'xstocks'],
     'stonk-launch-preflight': ['solana', 'stonkfun', 'launchlab', 'launch-preflight', 'token-2022'],
     'stonk-gems': ['solana', 'stonkfun', 'gems', 'reward-coin', 'screener', 'xstocks'],
@@ -1303,6 +1304,11 @@ function buildDocs() {
         price: '0.005',
         input: { mint: 'string (required) — StonkFun reward coin mint', format: 'json | llm | both' },
         description: 'Trailing 7d, 30d, and lifetime holder yield: rewards distributed in the quote asset (from /rewards), priced in USD via Jupiter, divided by average market cap over the window (daily snapshots from the 10-minute ingest). Annualized figure carries an explicit caution flag when the window is under 7 days or partial. Returns quote_exposure — what a holder is economically long (the coin + the quote asset) and the reward asset symbol.',
+      },
+      'stonk-yield-batch': {
+        price: '0.05',
+        input: { mints: 'string[] (optional, up to 25) — when given, the filters are ignored', quote_mint: 'string (optional)', category: 'xstock | prestock | currency | leverage | solana | collectible | custom (optional)', min_holders: 'number (optional)', min_age_days: 'number (optional)', max_age_days: 'number (optional)', min_volume_24h_usd: 'number (optional)', max_market_cap_usd: 'number (optional)', paying_only: 'boolean (default false)', live_only: 'boolean (default false)', sort: 'volume24h | lastPayout | holders | priceChange24h | yield7d | yield30d | rewardsUsd (default volume24h)', limit: 'number 1-25 (default 25)', format: 'json | llm | both' },
+        description: 'stonk-yield for up to 25 reward coins in one call, flat price. Per coin: the same object as stonk-yield (7d / 30d / lifetime windows with rewards in the quote asset and USD, average market cap, yield %, annualized % with caution flags; reward asset, quote exposure, payouts, holders, last payout) plus rank. Select by mints (up to 25) or by the stonk-screener filters and sort. Computed from the 10-minute index and its daily snapshots: no per-coin upstream reads, answers in milliseconds. Mints not in the index (no trade in 24h) come back in not_found. The index has no launch market cap, so a coin younger than a window may differ slightly from stonk-yield. Cheaper than stonk-screener + stonk-yield per coin at any size up to 25.',
       },
       'stonk-screener': {
         price: '0.01',

@@ -81,6 +81,8 @@ export const PRICING = {
   'stonk-gems': '0.03',
   'stonk-launch-intel': '0.02',
   'stonk-quote': '0.005',
+  // Up to 25 coins per call, from the index (no per-coin upstream reads). Cheaper than screener + N × stonk-yield.
+  'stonk-yield-batch': '0.05',
 } as const;
 
 /** Entrypoints served without a paywall. Kept out of PRICING so x402/MPP never gate them. */

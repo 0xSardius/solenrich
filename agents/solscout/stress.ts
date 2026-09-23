@@ -669,6 +669,22 @@ export const ENDPOINTS: Array<{
     ],
   },
   {
+    // Served from the in-memory index; right after a boot it can be warming up (0 coins), so the coin checks
+    // tolerate an empty list but demand the index status block. Filters select paying coins, up to 10.
+    key: 'stonk-yield-batch',
+    input: { paying_only: true, sort: 'volume24h', limit: 10, format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'has coins array', test: (d) => Array.isArray(d.coins), detail: (d) => `coins=${d.coins?.length} index=${d.index?.rows}` },
+      { name: 'has index status', test: (d) => d.index != null && typeof d.index.rows === 'number' },
+      { name: 'coins ≤ limit', test: (d) => d.coins.length <= 10 },
+      { name: 'selection by filters', test: (d) => d.selection?.mode === 'filters' && d.selection?.limit === 10 },
+      { name: 'each coin has three windows + rank', test: (d) => d.coins.every((c: any, i: number) => c.rank === i + 1 && c.lifetime && c.trailing_7d?.window_days === 7 && c.trailing_30d?.window_days === 30) },
+      { name: 'reward asset per coin', test: (d) => d.coins.every((c: any) => typeof c.reward_asset?.symbol === 'string') },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Holder Yield') },
+    ],
+  },
+  {
     // Screener is served from the in-memory ingest; right after a boot it can
     // be warming up (rows=0), so the row check tolerates an empty index but
     // demands the index status block.

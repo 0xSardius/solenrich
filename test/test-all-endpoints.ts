@@ -367,6 +367,15 @@ check('quote exposure', sy.body?.output?.quote_exposure?.long?.length === 2);
 check('has llm_summary', typeof sy.body?.output?.llm_summary === 'string' && sy.body.output.llm_summary.includes('Holder Yield'));
 console.log(`  ⏱ ${sy.ms}ms\n`);
 
+console.log('━━━ 20c2. stonk-yield-batch ━━━');
+const syb = await invoke('stonk-yield-batch', { mints: [STONK_MINT], format: 'both' }, 30000);
+check('returns 200', syb.status === 200, `got ${syb.status}`);
+check('selection by mints', syb.body?.output?.selection?.mode === 'mints');
+check('coin found or listed as not_found', (syb.body?.output?.coins?.length ?? 0) + (syb.body?.output?.not_found?.length ?? 0) === 1, `coins=${syb.body?.output?.coins?.length} not_found=${syb.body?.output?.not_found?.length}`);
+check('coins carry three windows', (syb.body?.output?.coins ?? []).every((c: any) => c.trailing_7d && c.trailing_30d && c.lifetime));
+check('has llm_summary', typeof syb.body?.output?.llm_summary === 'string' && syb.body.output.llm_summary.includes('Holder Yield'));
+console.log(`  ⏱ ${syb.ms}ms\n`);
+
 console.log('━━━ 20d. stonk-screener ━━━');
 const ss = await invoke('stonk-screener', { sort: 'volume24h', limit: 5, format: 'both' }, 30000);
 check('returns 200', ss.status === 200, `got ${ss.status}`);

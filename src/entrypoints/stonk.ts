@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Cache } from '../cache';
-import { StonkPairsInput, StonkRewardRiskInput, StonkYieldInput, StonkScreenerInput, StonkPreflightInput, StonkGemsInput, StonkLaunchIntelInput, StonkQuoteInput } from '../schemas/stonk';
+import { StonkPairsInput, StonkRewardRiskInput, StonkYieldInput, StonkYieldBatchInput, StonkScreenerInput, StonkPreflightInput, StonkGemsInput, StonkLaunchIntelInput, StonkQuoteInput } from '../schemas/stonk';
 import type { StonkFunClient, StonkPair } from '../sources/stonkfun';
 import { normalizeCategory, type StonkIndex, type StonkCategory, type StonkIndexStatus, type StonkScreenerRow } from '../enrichers/stonk-index';
 import type { GemStage, PayoutStatus, QuoteStats } from '../enrichers/stonk-gems';
@@ -14,6 +14,7 @@ import {
   formatStonkPairsBriefing,
   formatStonkRewardRiskBriefing,
   formatStonkYieldBriefing,
+  formatStonkYieldBatchBriefing,
   formatStonkScreenerBriefing,
   formatStonkPreflightBriefing,
   formatStonkGemsBriefing,
@@ -193,6 +194,36 @@ export function registerStonkEntrypoints(
       const input = ctx.input;
       const data = await deps.yieldAnalyzer.analyze(input.mint);
       return { output: formatResponse(data, input.format, formatStonkYieldBriefing) };
+    },
+  });
+
+  // --- stonk-yield-batch -------------------------------------------------------
+  // Built for the buyer loop seen in production (2026-09): one screener call, then stonk-yield per coin. One call
+  // here returns the full yield object for up to 25 coins, from memory, for less than screener + 10 × stonk-yield.
+  addEntrypoint({
+    key: 'stonk-yield-batch',
+    description:
+      'stonk-yield for up to 25 StonkFun reward coins in one call: trailing 7d / 30d / lifetime holder yield per coin (rewards in the quote asset, priced in USD, over average market cap, annualized, with caution flags) plus quote exposure, payouts and holders. Select coins by `mints` (up to 25) or by the stonk-screener filters (quote, category, holders, age, volume, market cap, paying_only, live_only, sort). Computed from the 10-minute index in milliseconds. Cheaper than a screener call plus stonk-yield per coin.',
+    input: StonkYieldBatchInput,
+    handler: async (ctx: { input: z.infer<typeof StonkYieldBatchInput> }) => {
+      const input = ctx.input;
+      const data = deps.yieldAnalyzer.batch({
+        mints: input.mints,
+        filters: {
+          quoteMint: input.quote_mint,
+          category: input.category,
+          minHolders: input.min_holders,
+          minAgeDays: input.min_age_days,
+          maxAgeDays: input.max_age_days,
+          minVolume24hUsd: input.min_volume_24h_usd,
+          maxMarketCapUsd: input.max_market_cap_usd,
+          payingOnly: input.paying_only,
+          liveOnly: input.live_only,
+          sort: input.sort,
+          limit: input.limit,
+        },
+      });
+      return { output: formatResponse(data, input.format, formatStonkYieldBatchBriefing) };
     },
   });
 

@@ -1,5 +1,5 @@
 import type { RewardRiskResult } from '../enrichers/stonk-reward-risk';
-import type { StonkYieldResult, YieldWindow } from '../enrichers/stonk-yield';
+import type { StonkYieldResult, StonkYieldBatchResult, YieldWindow } from '../enrichers/stonk-yield';
 import type { StonkPreflightResult } from '../enrichers/stonk-preflight';
 import type { StonkQuoteResult } from '../enrichers/stonk-quote';
 import type { StonkPairsResult, StonkScreenerResult, StonkGemsResult, StonkLaunchIntelResult } from '../entrypoints/stonk';
@@ -69,6 +69,32 @@ function windowLine(label: string, w: YieldWindow): string {
   if (w.annualized_pct != null) parts.push(`≈ ${w.annualized_pct.toFixed(1)}% annualized${w.caution ? ' ⚠️' : ''}`);
   const line = `- ${label}: ${parts.join(' | ')}`;
   return w.caution && w.caution_reason ? `${line} (${w.caution_reason})` : line;
+}
+
+/** A compact table: one row per coin, so 25 coins fit a context window. */
+export function formatStonkYieldBatchBriefing(d: StonkYieldBatchResult): string {
+  const lines: string[] = [];
+  const how = d.selection.mode === 'mints' ? `${d.coins.length} of ${d.selection.requested} requested mints` : `top ${d.coins.length} of ${d.selection.matched} matching coins`;
+  lines.push(`## StonkFun Holder Yield — ${how} (index: ${d.index.rows} coins)`);
+  lines.push('');
+  const pct = (x: number | null, dp = 3) => (x == null ? 'n/a' : `${x.toFixed(dp)}%`);
+  const ann = (w: YieldWindow) => (w.annualized_pct == null ? 'n/a' : `${w.annualized_pct.toFixed(1)}%${w.caution ? '⚠️' : ''}`);
+  lines.push('| # | Coin | Pays in | 7d yield | 7d annualized | 30d yield | Lifetime | Mcap | Holders | Last payout |');
+  lines.push('|---|---|---|---|---|---|---|---|---|---|');
+  for (const c of d.coins) {
+    lines.push(`| ${c.rank} | $${c.symbol ?? shortenAddress(c.mint)} (${shortenAddress(c.mint)}) | ${c.reward_asset.symbol ?? '?'} | ${pct(c.trailing_7d.yield_pct)} | ${ann(c.trailing_7d)} | ${pct(c.trailing_30d.yield_pct)} | ${pct(c.lifetime.yield_pct)} | ${c.market_cap_usd != null ? formatUsd(c.market_cap_usd) : 'n/a'} | ${c.holder_count ?? 'n/a'} | ${c.last_payout_at ? c.last_payout_at.slice(0, 16).replace('T', ' ') : 'never'} |`);
+  }
+  if (!d.coins.length) lines.push('| – | no coins matched | | | | | | | | |');
+  lines.push('');
+  lines.push('⚠️ = window under 7 days or partial history: the annualized figure is a projection, not a track record.');
+  if (d.not_found.length) lines.push(`Not in the index: ${d.not_found.map((m) => shortenAddress(m)).join(', ')} — use stonk-yield for these.`);
+  if (d.caveats.length) {
+    lines.push('');
+    lines.push(`Notes: ${d.caveats.join(' · ')}`);
+  }
+  lines.push('');
+  lines.push(`Next: ${d.next_steps.join(' ')}`);
+  return lines.join('\n');
 }
 
 export function formatStonkYieldBriefing(d: StonkYieldResult): string {

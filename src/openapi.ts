@@ -553,6 +553,28 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'stonk-yield-batch': {
+    summary: 'Holder yield for up to 25 StonkFun reward coins in one call',
+    description: 'stonk-yield for up to 25 reward coins in one call: 7d, 30d and lifetime holder yield per coin (rewards in the quote asset, priced in USD, over average market cap), annualized with caution flags, plus reward asset, market cap, holders and last payout. Pick coins by mints or by the stonk-screener filters. From the 10-minute index, in milliseconds.',
+    schema: {
+      type: 'object',
+      properties: {
+        mints: { type: 'array', items: { type: 'string', minLength: 32, maxLength: 44 }, minItems: 1, maxItems: 25, description: 'Up to 25 reward coin mints; when given, the filters are ignored' },
+        quote_mint: { type: 'string', minLength: 32, maxLength: 44 },
+        category: { type: 'string', enum: ['xstock', 'prestock', 'currency', 'leverage', 'solana', 'collectible', 'custom'] },
+        min_holders: { type: 'integer', minimum: 0 },
+        min_age_days: { type: 'number', minimum: 0 },
+        max_age_days: { type: 'number', minimum: 0 },
+        min_volume_24h_usd: { type: 'number', minimum: 0 },
+        max_market_cap_usd: { type: 'number', minimum: 0 },
+        paying_only: { type: 'boolean', default: false, description: 'Only coins that paid holders in the last 24h' },
+        live_only: { type: 'boolean', default: false, description: 'Only coins that traded AND paid in the last 24h' },
+        sort: { type: 'string', enum: ['yield7d', 'yield30d', 'rewardsUsd', 'volume24h', 'lastPayout', 'holders', 'priceChange24h'], default: 'volume24h' },
+        limit: { type: 'integer', minimum: 1, maximum: 25, default: 25 },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'stonk-screener': {
     summary: 'Screen every StonkFun reward coin: payout status, live flag, tax cost',
     description: 'Screen every StonkFun reward coin from a 10-minute index. Per row: payout status (PAYING / STALE / NEVER), hours since last payout, live flag (traded AND paid in 24h), round-trip transfer-tax cost, holders, rewards USD, yields, volume, mcap, 24h change. Filters: quote_mint, category, holders, age, volume, market cap, paying_only, live_only. Sort by volume24h (default), lastPayout, holders, priceChange24h, or yield. "Which coins on NVDAX paid holders today?" is one call.',

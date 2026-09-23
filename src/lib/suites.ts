@@ -21,7 +21,7 @@ export const ENDPOINT_SUITES: EndpointSuite[] = [
     id: 'stonkfun',
     title: 'StonkFun reward coins',
     blurb: 'Token-2022 coins paired to xStocks, pre-stocks, ZEC and other quote assets; a transfer tax pays holders in the quote. Find, cost, and time a stonk trade, or decide what to launch.',
-    keys: ['stonk-pairs', 'stonk-gems', 'stonk-screener', 'stonk-reward-risk', 'stonk-yield', 'stonk-quote', 'stonk-launch-intel', 'stonk-launch-preflight'],
+    keys: ['stonk-pairs', 'stonk-gems', 'stonk-screener', 'stonk-reward-risk', 'stonk-yield', 'stonk-yield-batch', 'stonk-quote', 'stonk-launch-intel', 'stonk-launch-preflight'],
   },
   {
     id: 'trenches',

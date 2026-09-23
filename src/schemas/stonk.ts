@@ -43,6 +43,18 @@ export const StonkScreenerInput = z.object({
 });
 export type StonkScreenerInput = z.infer<typeof StonkScreenerInput>;
 
+/** Max coins per stonk-yield-batch call; the flat price covers up to this many. */
+export const STONK_YIELD_BATCH_MAX = 25;
+
+// No required input (select by mints OR screener filters) → no BAZAAR_INPUT_EXAMPLES entry needed.
+export const StonkYieldBatchInput = StonkScreenerInput.omit({ limit: true, format: true }).extend({
+  /** Explicit coins. When given, the screener filters are ignored. */
+  mints: z.array(SolanaAddressSchema).min(1).max(STONK_YIELD_BATCH_MAX).optional(),
+  limit: z.number().int().min(1).max(STONK_YIELD_BATCH_MAX).default(STONK_YIELD_BATCH_MAX),
+  format: FormatSchema,
+});
+export type StonkYieldBatchInput = z.infer<typeof StonkYieldBatchInput>;
+
 export const StonkPreflightInput = z.object({
   /** Base64 unsigned transaction (legacy or v0) carrying the LaunchLab initialize. */
   unsigned_transaction: z.string().min(64).max(6000),

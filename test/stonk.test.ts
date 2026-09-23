@@ -650,6 +650,9 @@ import { buildLaunchIntel, toScreenerRowOut } from '../src/entrypoints/stonk';
 import { formatStonkGemsBriefing, formatStonkLaunchIntelBriefing } from '../src/formatters/llm-stonk';
 import { toRow, type StonkIndexRow } from '../src/enrichers/stonk-index';
 import { POPULATION_CACHE_KEY, buildPopulation, populationStatus, walkAllRewardTokens } from '../src/enrichers/stonk-population';
+import { StonkYieldAnalyzer } from '../src/enrichers/stonk-yield';
+import { StonkYieldBatchInput } from '../src/schemas/stonk';
+import { formatStonkYieldBatchBriefing } from '../src/formatters/llm-stonk';
 
 const H = 3_600_000;
 const D = 86_400_000;
@@ -856,6 +859,43 @@ describe('population: summary, freshness, and what the index does with it', () =
     await idx.refresh();
     expect(idx.shelfStats().source).toBe('index');
     expect(idx.populationStatus()!.fresh).toBe(false);
+  });
+
+  // stonk-yield-batch: the buyer loop seen in production was screener → stonk-yield per coin.
+  test('yield batch: by mints (found + not_found) and by filters, same math as the single-coin path', async () => {
+    const idx = new StonkIndex(client, jupiter, new Cache(), () => NOW);
+    await idx.refresh();
+    const analyzer = new StonkYieldAnalyzer(client, idx, jupiter, new Cache());
+    const known = page[0].mint;
+    const unknown = 'So11111111111111111111111111111111111111112';
+    const byMints = analyzer.batch({ mints: [known, unknown, known], filters: {} }, NOW);
+    expect(byMints.selection).toEqual({ mode: 'mints', requested: 3, matched: 1, limit: 3 });
+    expect(byMints.coins.map((c) => c.mint)).toEqual([known]); // duplicates collapse
+    expect(byMints.not_found).toEqual([unknown]);
+    expect(byMints.caveats.some((c) => c.includes('not in the index'))).toBe(true);
+    const single = analyzer.fromIndexRow(idx.getRow(known)!, NOW);
+    expect(byMints.coins[0]).toEqual({ ...single, rank: 1 });
+
+    const byFilters = analyzer.batch({ filters: { sort: 'volume24h', limit: 5 } }, NOW);
+    expect(byFilters.selection.mode).toBe('filters');
+    expect(byFilters.coins.length).toBe(5);
+    expect(byFilters.coins.map((c) => c.rank)).toEqual([1, 2, 3, 4, 5]);
+    for (const c of byFilters.coins) {
+      expect(c.trailing_7d.window_days).toBe(7);
+      expect(c.trailing_30d.window_days).toBe(30);
+      expect(typeof c.reward_asset.symbol).toBe('string');
+    }
+    const brief = formatStonkYieldBatchBriefing({ ...byFilters });
+    expect(brief).toContain('Holder Yield');
+    expect(brief.split('\n').filter((l) => l.startsWith('| ') && !l.startsWith('| #')).length).toBe(5);
+  });
+
+  test('yield batch input: at most 25 mints, limit capped at 25', () => {
+    const m = page[0].mint;
+    expect(StonkYieldBatchInput.safeParse({ mints: Array(25).fill(m) }).success).toBe(true);
+    expect(StonkYieldBatchInput.safeParse({ mints: Array(26).fill(m) }).success).toBe(false);
+    expect(StonkYieldBatchInput.safeParse({ limit: 26 }).success).toBe(false);
+    expect(StonkYieldBatchInput.parse({}).limit).toBe(25);
   });
 
   test('walkAllRewardTokens: skips a failed page after one retry pass, counts coverage', async () => {

@@ -2,7 +2,7 @@ import { CACHE_TTL } from '../config';
 import type { Cache } from '../cache';
 import type { JupiterClient } from '../sources/jupiter';
 import type { StonkFunClient } from '../sources/stonkfun';
-import { trailingYield, normalizeCategory, type DayPoint, type StonkIndex, type StonkCategory } from './stonk-index';
+import { trailingYield, normalizeCategory, type DayPoint, type StonkIndex, type StonkCategory, type StonkIndexRow, type StonkScreenerFilters } from './stonk-index';
 
 // Holder yield for a StonkFun reward coin: rewards distributed in the quote
 // asset over a trailing window, priced in USD, divided by the average market
@@ -175,6 +175,28 @@ export function computeYield(input: YieldInputs): Omit<StonkYieldResult, 'next_s
   };
 }
 
+/**
+ * Launch market cap by launchpad, for the batch path (the token list has none; only /tokens/{mint} does). Every
+ * launch starts at the same bonding-curve point, so it is near-constant: measured 2026-09-23 on 6 LaunchLab coins
+ * across quotes and days = $3,210–3,310; one Raydium (older API launch) = $5,093. Without it the lifetime and
+ * young-coin windows overstate the average market cap and understate yield by up to a third.
+ */
+export const LAUNCH_MARKET_CAP_ESTIMATE_USD: Record<string, number> = { launchlab: 3_250, raydium: 5_100 };
+const LAUNCH_MARKET_CAP_DEFAULT_USD = 3_250;
+
+/** One coin in a stonk-yield-batch result: the stonk-yield object (same math) plus its rank in the selection. */
+export type StonkYieldBatchCoin = Omit<StonkYieldResult, 'next_steps'> & { rank: number };
+
+export interface StonkYieldBatchResult {
+  coins: StonkYieldBatchCoin[];
+  /** Requested mints that are not in the index (no trade in the last 24h) — use stonk-yield for those. */
+  not_found: string[];
+  selection: { mode: 'mints' | 'filters'; requested: number | null; matched: number | null; limit: number };
+  index: { rows: number; last_refresh_at: string | null; series_days: number; oldest_point_at: string | null };
+  caveats: string[];
+  next_steps: string[];
+}
+
 export class StonkYieldAnalyzer {
   constructor(
     private readonly client: StonkFunClient,
@@ -246,5 +268,73 @@ export class StonkYieldAnalyzer {
     if (computed.mode && computed.mode !== 'reward') result.caveats.unshift(`mode is ${computed.mode} — standard launches pay the creator, not holders`);
     await this.cache.set(cacheKey, result, CACHE_TTL.stonkYield);
     return result;
+  }
+
+  /**
+   * Yield for one coin from the index alone: no StonkFun read, same computeYield() math as analyze(). The index
+   * has no launch market cap, so the launch point uses LAUNCH_MARKET_CAP_ESTIMATE_USD for the coin's launchpad.
+   */
+  fromIndexRow(row: StonkIndexRow, now: number): Omit<StonkYieldResult, 'next_steps'> {
+    const computed = computeYield({
+      mint: row.mint,
+      symbol: row.symbol,
+      name: row.name,
+      mode: row.mode,
+      createdAt: row.createdAt,
+      launchMarketCapUsd: LAUNCH_MARKET_CAP_ESTIMATE_USD[row.launchpad] ?? LAUNCH_MARKET_CAP_DEFAULT_USD,
+      marketCapUsd: row.marketCapUsd,
+      distributedTokens: row.distributedTokens,
+      payoutCount: row.payoutCount,
+      holderCount: row.holderCount,
+      lastPayoutAt: row.lastPayoutAt,
+      quote: { mint: row.quoteMint, symbol: row.quoteSymbol, decimals: row.quoteDecimals, categoryRaw: row.quoteCategoryRaw },
+      quoteUsd: this.index.getQuoteUsd(row.quoteMint),
+      series: this.index.getSeries(row.mint),
+      now,
+    });
+    if (computed.mode && computed.mode !== 'reward') computed.caveats.unshift(`mode is ${computed.mode} — standard launches pay the creator, not holders`);
+    return computed;
+  }
+
+  /**
+   * stonk-yield for up to STONK_YIELD_BATCH_MAX coins in one call: explicit mints, or the coins a screener query
+   * selects. Everything comes from memory (index rows + daily snapshots + quote prices), so it answers in
+   * milliseconds and makes no upstream calls.
+   */
+  batch(select: { mints?: string[]; filters: StonkScreenerFilters }, now = Date.now()): StonkYieldBatchResult {
+    const status = this.index.status();
+    const rows: StonkIndexRow[] = [];
+    const notFound: string[] = [];
+    let selection: StonkYieldBatchResult['selection'];
+    if (select.mints?.length) {
+      for (const mint of [...new Set(select.mints)]) {
+        const row = this.index.getRow(mint);
+        if (row) rows.push(row);
+        else notFound.push(mint);
+      }
+      selection = { mode: 'mints', requested: select.mints.length, matched: rows.length, limit: select.mints.length };
+    } else {
+      const screened = this.index.screen(select.filters);
+      rows.push(...screened.rows);
+      selection = { mode: 'filters', requested: null, matched: screened.matched, limit: select.filters.limit ?? rows.length };
+    }
+    const caveats = [
+      'Same math as stonk-yield, computed from the index: rewards priced at the CURRENT quote price, not the price at each payout.',
+      'Market caps are from the last index refresh (up to 10 minutes old) and the launch market cap is estimated from the bonding-curve start (≈$3,250 LaunchLab, ≈$5,100 Raydium). Measured against stonk-yield on 2026-09-23: within ~1–6% on coins older than a week; coins younger than a week move with their market cap minute to minute and carry the caution flag.',
+    ];
+    if (status.rows === 0) caveats.unshift('index is warming up after a restart — rows fill in within a minute');
+    if (status.seriesDays < 7) caveats.push(`yield windows are partial: ${status.seriesDays} day(s) of snapshots so far`);
+    if (notFound.length) caveats.push(`${notFound.length} mint(s) are not in the index (no trade in the last 24h, or not a reward coin) — see not_found; stonk-yield reads StonkFun directly for those.`);
+    return {
+      coins: rows.map((row, i) => ({ ...this.fromIndexRow(row, now), rank: i + 1 })),
+      not_found: notFound,
+      selection,
+      index: { rows: status.rows, last_refresh_at: status.lastRefreshAt, series_days: status.seriesDays, oldest_point_at: status.oldestPointAt },
+      caveats,
+      next_steps: [
+        'stonk-quote on a coin you would buy: entry and exit cost at your size, and whether the payout covers the round trip.',
+        'stonk-reward-risk to confirm the tax actually reaches holders before trusting a yield.',
+      ],
+    };
   }
 }
