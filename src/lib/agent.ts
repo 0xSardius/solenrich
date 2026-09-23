@@ -532,6 +532,9 @@ if (PAYMENTS_ENABLED && resourceServer) {
       // Bazaar ranking fields (@x402 2.17+): serviceName + per-endpoint tags are the
       // dedicated SEARCH fields the bazaar/agentic.market rank on.
       serviceName: "SolEnrich",
+      // The stylized SE mark (1024², black background baked in, so it reads on light and dark pages). Unset until
+      // 2026-09-23; curated bazaar/agentic.market entries (e.g. Exa) carry one.
+      iconUrl: "https://www.solenrich.com/logo.png",
       tags: BAZAAR_TAGS[key] ?? DEFAULT_TAGS,
       description: meta?.description ?? "SolEnrich enrichment endpoint",
       mimeType: "application/json",
