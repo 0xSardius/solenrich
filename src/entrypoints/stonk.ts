@@ -4,6 +4,7 @@ import { StonkPairsInput, StonkRewardRiskInput, StonkYieldInput, StonkScreenerIn
 import type { StonkFunClient, StonkPair } from '../sources/stonkfun';
 import { normalizeCategory, type StonkIndex, type StonkCategory, type StonkIndexStatus, type StonkScreenerRow } from '../enrichers/stonk-index';
 import type { GemStage, PayoutStatus, QuoteStats } from '../enrichers/stonk-gems';
+import type { PopulationStatus } from '../enrichers/stonk-population';
 import type { StonkRewardRiskAnalyzer } from '../enrichers/stonk-reward-risk';
 import type { StonkYieldAnalyzer } from '../enrichers/stonk-yield';
 import type { StonkPreflightAnalyzer } from '../enrichers/stonk-preflight';
@@ -273,6 +274,9 @@ export function registerStonkEntrypoints(
         'round_trip_pct is the transfer tax on a buy plus a sell (2 × bps), before slippage — the hurdle a trade must clear.',
       ];
       if (status.rows === 0) caveats.unshift('index is warming up after a restart — rows fill in within a minute');
+      if (deps.index.shelfStats().source !== 'population') {
+        caveats.push('Quote strength is not scored right now (no fresh full-population shelf data): gem scores top out at 90, not 100.');
+      }
       const data: StonkGemsResult = {
         gems: found.gems.map((r, i) => ({
           rank: i + 1,
@@ -336,8 +340,8 @@ export function registerStonkEntrypoints(
     handler: async (ctx: { input: z.infer<typeof StonkLaunchIntelInput> }) => {
       const input = ctx.input;
       const status: StonkIndexStatus = deps.index.status();
-      const all = deps.index.quoteStats();
-      const data = buildLaunchIntel(all, { category: input.category, minCoins: input.min_coins, sort: input.sort, limit: input.limit }, status);
+      const shelf = deps.index.shelfStats();
+      const data = buildLaunchIntel(shelf.stats, { category: input.category, minCoins: input.min_coins, sort: input.sort, limit: input.limit }, status, { source: shelf.source, population: shelf.population });
       return { output: formatResponse(data, input.format, formatStonkLaunchIntelBriefing) };
     },
   });
@@ -477,6 +481,11 @@ export interface StonkLaunchIntelResult {
   recommendations: string[];
   filters: { category: StonkCategory | null; min_coins: number; sort: LaunchIntelSort; limit: number };
   index: { rows: number; last_refresh_at: string | null; series_days: number; oldest_point_at: string | null };
+  /**
+   * Where the per-quote stats come from. `population` = every reward coin, from the scheduled walk (as_of).
+   * `index` = only coins that traded in the last 24h: shares, survival, launches and crowding are unreliable.
+   */
+  shelf: { source: 'population' | 'index'; as_of: string | null; coins: number | null; pages_read: number | null; pages_total: number | null };
   caveats: string[];
   next_steps: string[];
 }
@@ -486,6 +495,7 @@ export function buildLaunchIntel(
   all: QuoteStats[],
   filters: { category?: StonkCategory; minCoins: number; sort: LaunchIntelSort; limit: number },
   status: StonkIndexStatus,
+  shelfInfo: { source: 'population' | 'index'; population: PopulationStatus | null } = { source: 'index', population: null },
 ): StonkLaunchIntelResult {
   const pct = (x: number | null) => (x == null ? 'n/a' : `${(x * 100).toFixed(0)}%`);
 
@@ -566,8 +576,18 @@ export function buildLaunchIntel(
     recommendations: recs,
     filters: { category: filters.category ?? null, min_coins: filters.minCoins, sort: filters.sort, limit: filters.limit },
     index: { rows: status.rows, last_refresh_at: status.lastRefreshAt, series_days: status.seriesDays, oldest_point_at: status.oldestPointAt },
+    shelf: {
+      source: shelfInfo.source,
+      as_of: shelfInfo.source === 'population' ? shelfInfo.population?.generatedAt ?? null : status.lastRefreshAt,
+      coins: shelfInfo.source === 'population' ? shelfInfo.population?.coins ?? null : status.rows,
+      pages_read: shelfInfo.source === 'population' ? shelfInfo.population?.pagesRead ?? null : null,
+      pages_total: shelfInfo.source === 'population' ? shelfInfo.population?.pagesTotal ?? null : null,
+    },
     caveats: [
-      'Survival and demand are 24h/3d activity measures on the index, not returns. A quote can be busy and still lose money for launchers.',
+      shelfInfo.source === 'population' && shelfInfo.population
+        ? `Shelf stats cover ${shelfInfo.population.coins} reward coins as of ${shelfInfo.population.generatedAt} (full walk, ${shelfInfo.population.pagesRead}/${shelfInfo.population.pagesTotal} pages; refreshed every 6 hours).`
+        : 'LIMITED: no fresh full-population data (older than 48h or missing). These shelf stats cover only coins that traded in the last 24h, so traded and paying shares and survival are overstated, and launches are undercounted. Use them to compare quotes, not as absolute rates.',
+      'Survival and demand are 24h/3d activity measures, not returns. A quote can be busy and still lose money for launchers.',
       'Launches attributed to a quote include coins whose pool has since gone quiet; traded/paying shares are the honest denominator.',
       status.rows === 0 ? 'index is warming up after a restart — rows fill in within a minute' : `index: ${status.rows} reward coins${status.lastRefreshAt ? `, refreshed ${status.lastRefreshAt}` : ''}`,
     ],

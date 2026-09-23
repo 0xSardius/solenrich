@@ -2,6 +2,7 @@ import type { Cache } from '../cache';
 import type { JupiterClient } from '../sources/jupiter';
 import type { StonkFunClient, StonkToken, StonkRewardsLedgerEntry } from '../sources/stonkfun';
 import { scoreGem, quoteStats, payoutStatus, hoursSince, type GemAssessment, type QuoteStats, type QuoteContext, type PayoutStatus } from './stonk-gems';
+import { POPULATION_CACHE_KEY, populationStatus, type PopulationStatus, type StonkPopulation } from './stonk-population';
 
 // StonkFun reward-coin index. A scheduled ingest (every 10 minutes) pulls
 // every reward-mode token (market data, paginated at 100/page) plus the
@@ -216,6 +217,8 @@ export class StonkIndex {
   /** Set when the last refresh kept a partial walk; null after a full one. */
   private partial: { pages: number; totalPages: number; reason: string } | null = null;
   private loaded = false;
+  /** Per-quote stats over the whole population, written by the scheduled job (stonk-population.ts). */
+  private population: StonkPopulation | null = null;
 
   constructor(
     private readonly client: StonkFunClient,
@@ -276,7 +279,10 @@ export class StonkIndex {
     return this.quotePrices.get(quoteMint) ?? null;
   }
 
-  /** Per-quote aggregates over the current rows. Memoized per refresh. */
+  /**
+   * Per-quote aggregates over the current rows. Memoized per refresh. The rows are TRADED coins only, so the
+   * shares are overstated (see stonk-population.ts): use shelfStats(), which prefers the population summary.
+   */
   quoteStats(): QuoteStats[] {
     const now = this.now();
     const m = this.quoteStatsMemo;
@@ -286,10 +292,35 @@ export class StonkIndex {
     return stats;
   }
 
+  /** The population summary's status, or null when none was loaded. */
+  populationStatus(): PopulationStatus | null {
+    return populationStatus(this.population, this.now());
+  }
+
+  /** Per-quote shelf stats: the fresh population summary when there is one, else the index rows (limited). */
+  shelfStats(): { stats: QuoteStats[]; source: 'population' | 'index'; population: PopulationStatus | null } {
+    const population = this.populationStatus();
+    if (population?.fresh && this.population) return { stats: this.population.quotes, source: 'population', population };
+    return { stats: this.quoteStats(), source: 'index', population };
+  }
+
+  /** Quote context for the gem score — only from a fresh population summary. None → the quote factor is skipped. */
   private quoteContexts(): Map<string, QuoteContext> {
     const out = new Map<string, QuoteContext>();
-    for (const q of this.quoteStats()) out.set(q.quote_mint, { tradedShare24h: q.traded_share_24h, coins: q.coins });
+    const shelf = this.shelfStats();
+    if (shelf.source !== 'population') return out;
+    for (const q of shelf.stats) out.set(q.quote_mint, { tradedShare24h: q.traded_share_24h, coins: q.coins });
     return out;
+  }
+
+  /** Reads the population summary the scheduled job writes. One Redis read per refresh; failures keep the last one. */
+  private async loadPopulation(): Promise<void> {
+    try {
+      const p = await this.cache.get<StonkPopulation>(POPULATION_CACHE_KEY);
+      if (p && populationStatus(p, this.now())) this.population = p;
+    } catch (err) {
+      console.warn(`[stonk-index] population load failed: ${err instanceof Error ? err.message : String(err)}`);
+    }
   }
 
   /** Gem finder: score every row that passes the filters, rank by gem score. No I/O. */
@@ -401,6 +432,7 @@ export class StonkIndex {
     if (this.refreshing) return;
     this.refreshing = true;
     const started = this.now();
+    await this.loadPopulation();
     try {
       const [ledger, walk] = await Promise.all([this.client.getRewardsLedger(), this.fetchAllRewardTokens()]);
       const ledgerByMint = new Map<string, StonkRewardsLedgerEntry>(ledger.map((l) => [l.mint, l]));
@@ -577,7 +609,8 @@ export class StonkIndex {
   }
 }
 
-function toRow(t: StonkToken, l: StonkRewardsLedgerEntry | undefined): StonkIndexRow {
+/** Exported for the population job, so its rows match the index rows field for field. */
+export function toRow(t: StonkToken, l: StonkRewardsLedgerEntry | undefined): StonkIndexRow {
   return {
     mint: t.mint,
     symbol: t.symbol,

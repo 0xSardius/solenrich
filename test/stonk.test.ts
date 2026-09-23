@@ -648,7 +648,8 @@ import { scoreGem, quoteStats, payoutStatus, hoursSince } from '../src/enrichers
 import { describeTransferTax, netPnlAfterExitTaxPct } from '../src/sources/token-2022';
 import { buildLaunchIntel, toScreenerRowOut } from '../src/entrypoints/stonk';
 import { formatStonkGemsBriefing, formatStonkLaunchIntelBriefing } from '../src/formatters/llm-stonk';
-import type { StonkIndexRow } from '../src/enrichers/stonk-index';
+import { toRow, type StonkIndexRow } from '../src/enrichers/stonk-index';
+import { POPULATION_CACHE_KEY, buildPopulation, populationStatus, walkAllRewardTokens } from '../src/enrichers/stonk-population';
 
 const H = 3_600_000;
 const D = 86_400_000;
@@ -784,6 +785,95 @@ describe('launch intel: quoteStats + buildLaunchIntel', () => {
     const brief = formatStonkLaunchIntelBriefing(r);
     expect(brief).toContain('Launch Intel');
     expect(brief).toContain('ZEC');
+  });
+
+  // 2026-09-23: the index holds only traded coins, so shelf stats over it are overstated. Without fresh
+  // population data, launch-intel says so first; with it, it names the source and the page coverage.
+  test('buildLaunchIntel: index source leads with the LIMITED caveat; population source names its coverage', () => {
+    const status = { rows: rows.length, lastRefreshAt: iso(NOW), lastRefreshMs: 1, lastError: null, refreshing: false, seriesCoins: 0, seriesDays: 0, oldestPointAt: null, quotePrices: 2 };
+    const limited = buildLaunchIntel(quoteStats(rows, NOW), { minCoins: 1, sort: 'demand', limit: 10 }, status);
+    expect(limited.shelf.source).toBe('index');
+    expect(limited.caveats[0]).toStartWith('LIMITED:');
+    const population = populationStatus(buildPopulation(rows, NOW - 2 * H, { upstreamTotal: 12, pagesRead: 9, pagesTotal: 10 }), NOW)!;
+    const full = buildLaunchIntel(quoteStats(rows, NOW), { minCoins: 1, sort: 'demand', limit: 10 }, status, { source: 'population', population });
+    expect(full.shelf).toEqual({ source: 'population', as_of: iso(NOW - 2 * H), coins: 10, pages_read: 9, pages_total: 10 });
+    expect(full.caveats[0]).toContain('10 reward coins');
+    expect(full.caveats.some((c) => c.startsWith('LIMITED'))).toBe(false);
+  });
+});
+
+describe('population: summary, freshness, and what the index does with it', () => {
+  const page = fixture<{ data: { tokens: StonkToken[] } }>('tokens-reward-page.json').data.tokens;
+  const ledger = fixture<{ data: { launches: any[] } }>('rewards-ledger.json').data.launches;
+  const fakePrices = async (mints: string[]) => Object.fromEntries(mints.map((m) => [m, { id: m, price: 100, mintSymbol: '', vsToken: '', vsTokenSymbol: 'USDC' }]));
+  const jupiter = { getPrice: fakePrices, getPriceUncached: fakePrices } as any;
+  const client = {
+    getTokens: async () => ({ tokens: page, pagination: { page: 1, pageSize: 25, total: page.length, totalPages: 1 } }),
+    getRewardsLedger: async () => ledger,
+  } as unknown as StonkFunClient;
+  // Population where every quote has half its coins traded → the quote factor adds points.
+  const popRows = (): StonkIndexRow[] => {
+    const ledgerByMint = new Map(ledger.map((l: any) => [l.mint, l]));
+    const traded = page.map((t) => toRow(t, ledgerByMint.get(t.mint) as any));
+    const idle = traded.map((r) => ({ ...r, mint: `${r.mint.slice(0, 40)}idle`, volume24hUsd: 0 }));
+    return [...traded, ...idle];
+  };
+
+  test('populationStatus: fresh up to 48h, stale after, null for junk', () => {
+    const p = buildPopulation(popRows(), NOW, { upstreamTotal: 50, pagesRead: 1, pagesTotal: 1 });
+    expect(p.coins).toBe(50);
+    expect(populationStatus(p, NOW + 47 * H)!.fresh).toBe(true);
+    expect(populationStatus(p, NOW + 49 * H)!.fresh).toBe(false);
+    expect(populationStatus(null, NOW)).toBeNull();
+    expect(populationStatus({ version: 2 } as any, NOW)).toBeNull();
+  });
+
+  test('no population: gems skip the quote factor, shelf source is the index', async () => {
+    const idx = new StonkIndex(client, jupiter, new Cache(), () => NOW);
+    await idx.refresh();
+    expect(idx.shelfStats().source).toBe('index');
+    const g = idx.gems({ maxAgeDays: 3650, minHolders: 0, maxMarketCapUsd: 1e15, limit: 50 });
+    expect(g.gems.length).toBeGreaterThan(0);
+    expect(g.gems.every((r) => r.gem.reasons.concat(r.gem.warnings).every((s) => !s.includes(' quote: ')))).toBe(true);
+  });
+
+  test('fresh population in the cache: loaded on refresh, used for shelf stats and the gem quote factor', async () => {
+    const cache = new Cache();
+    await cache.set(POPULATION_CACHE_KEY, buildPopulation(popRows(), NOW - H, { upstreamTotal: 50, pagesRead: 1, pagesTotal: 1 }), 3600);
+    const idx = new StonkIndex(client, jupiter, cache, () => NOW);
+    await idx.refresh();
+    const shelf = idx.shelfStats();
+    expect(shelf.source).toBe('population');
+    expect(shelf.stats.reduce((s, q) => s + q.coins, 0)).toBe(50);
+    const g = idx.gems({ maxAgeDays: 3650, minHolders: 0, maxMarketCapUsd: 1e15, limit: 50 });
+    expect(g.gems.some((r) => r.gem.reasons.concat(r.gem.warnings).some((s) => s.includes(' quote: ')))).toBe(true);
+  });
+
+  test('stale population (> 48h): falls back to the index', async () => {
+    const cache = new Cache();
+    await cache.set(POPULATION_CACHE_KEY, buildPopulation(popRows(), NOW - 50 * H, { upstreamTotal: 50, pagesRead: 1, pagesTotal: 1 }), 3600);
+    const idx = new StonkIndex(client, jupiter, cache, () => NOW);
+    await idx.refresh();
+    expect(idx.shelfStats().source).toBe('index');
+    expect(idx.populationStatus()!.fresh).toBe(false);
+  });
+
+  test('walkAllRewardTokens: skips a failed page after one retry pass, counts coverage', async () => {
+    let calls = 0;
+    const flaky = {
+      getTokens: async ({ page: n }: { page: number }) => {
+        calls++;
+        if (n === 3) throw new Error('The operation was aborted.');
+        return { tokens: page.slice(0, 2).map((t) => ({ ...t, mint: `${t.mint.slice(0, 40)}w${n}` })), pagination: { page: n, pageSize: 2, total: 8, totalPages: 4 } };
+      },
+    } as unknown as StonkFunClient;
+    const w = await walkAllRewardTokens(flaky, { concurrency: 2, timeoutMs: 100 });
+    expect(w.pagesTotal).toBe(4);
+    expect(w.pagesRead).toBe(3);
+    expect(w.failedPages).toEqual([3]);
+    expect(w.tokens.length).toBe(6);
+    expect(w.upstreamTotal).toBe(8);
+    expect(calls).toBe(5); // pages 1, 2, 3, 4 + one retry of 3
   });
 });
 

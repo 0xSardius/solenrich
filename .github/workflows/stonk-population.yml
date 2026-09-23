@@ -1,0 +1,27 @@
+name: stonk-population
+
+# Walks every StonkFun reward-coin page and writes per-quote shelf stats to Redis for stonk-launch-intel and the
+# stonk-gems quote factor. Runs outside the API on purpose: no API RAM, no Railway cost, and its StonkFun
+# requests come from GitHub's IP, not the API's. See src/enrichers/stonk-population.ts.
+
+on:
+  schedule:
+    - cron: '17 */6 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: stonk-population
+  cancel-in-progress: false
+
+jobs:
+  population:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+      - run: bun install --frozen-lockfile
+      - run: bun run scripts/stonk-population.ts
+        env:
+          UPSTASH_REDIS_REST_URL: ${{ secrets.UPSTASH_REDIS_REST_URL }}
+          UPSTASH_REDIS_REST_TOKEN: ${{ secrets.UPSTASH_REDIS_REST_TOKEN }}

@@ -1548,6 +1548,11 @@ app.get('/status', async (c) => {
       refreshing: idx.refreshing,
       last_error: idx.lastError,
       partial: idx.partial,
+      // Written by the GitHub Actions job every 6h (stonk-population.ts). Stale (> 48h) → launch-intel says LIMITED.
+      population: (() => {
+        const p = stonkIndex.populationStatus();
+        return p ? { generated_at: p.generatedAt, age_hours: p.ageHours, fresh: p.fresh, coins: p.coins, pages: `${p.pagesRead}/${p.pagesTotal}` } : null;
+      })(),
     },
     process: {
       uptime_hours: Math.round(process.uptime() / 36) / 100,
