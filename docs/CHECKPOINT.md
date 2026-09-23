@@ -57,7 +57,18 @@ snapshot, GROK holders 736 → 6,246. Counts: 47 paid + 1 free, 46 MCP tools.
 Check `gh run list --workflow stonk-population.yml` next session; if schedules never fire, adjust the trigger.
 TODO checklist item 10 for BOTH new endpoints: skill registries (`../sendai-skills`, `../clawpump-skills`) + pay.sh
 snapshot on #176. Watch `2otm6W` for a switch to the batch; watch for any stonk-alerts caller.
-**Next:** path 2 (distribution) — agentic.market entry (was "unenriched"), listings for the stonk suite.
+**Path 2 started — agentic.market (2026-09-23 19:00):** entry `api-solenrich-com` lists all 47 endpoints (both new ones
+within minutes) with public 30-day stats (stonk-yield 1,553 calls / 3 payers, new-tokens 241, stonk-screener 75), but
+is still `enriched: false`: name = domain, category/description/icon/providerUrl empty. Only 74 of 2,865 services are
+enriched (manual Coinbase curation; no provider form — FAQ: listing is automatic via x402). Enriched Data peers:
+CoinMarketCap, CoinGecko, Messari, Allium, Nansen, Otto AI.
+- **`iconUrl` SHIPPED (`1b…` see git log, 19:18 UTC):** every x402 resource now sends `iconUrl:
+  https://www.solenrich.com/logo.png` (the SE mark, 1024², black bg baked in). Verified in live 402s on 3 routes; sweep
+  50/50. Bazaar rows pick it up on each endpoint's next settlement. Optional: a tighter-cropped icon reads better at 32 px.
+- **Enrichment request drafted** (in session log; name SolEnrich, category Data, description "StonkFun reward-coin data
+  and Solana onchain intelligence for agents", provider URL, icon, 30-day stats). **Sardius sends it** — channel TBD
+  (July Base-activation contact, or CDP Discord x402).
+**Next:** check agentic.market shows the icon; other listings for the stonk suite; checklist item 10 (skill registries).
 Open, not blocking: ~5,000 coins (6%) missing from the newest-first walk with only 3 failed pages — cause unknown.
 
 ## ▶️ (DONE — see above) 2026-09-23 AM — quote stats are inflated since `088f741` (paid output wrong)
