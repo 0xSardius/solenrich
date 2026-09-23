@@ -31,7 +31,21 @@ baseline 2026-09-23 13:50 UTC (before the deploy): RSS 349–459 MB (varies betw
 (87,891 coins, 10.4% traded / 3.9% paid, 5,887 launches 24h, 3.0% survival, new 8-quote table), median-holders claim
 removed, gems copy = "coins that traded today", FAQ says launch-intel reads the 6-hourly full walk. CLAUDE.md census
 paragraph corrected. Script: `local/scripts/census-from-population.ts`.
-**Next:** the strategy session (buyer data since 9/12 → rank growth paths → Colosseum entry, deadline 2026-10-12).
+**Strategy session DONE (2026-09-23):** buyer report since 9/12 (`local/scripts/buyer-report.ts`, log in `local/scripts/`):
+4 external wallets, 1,844 Solana payments, $11.77 in 12 days; `2otm6W` = 70% (screener → yield per coin, ~10 coins per
+screener call); `8LZj73` = new-tokens only; `34CMQ3` samples the catalog; premium endpoints have no repeat buyer.
+Decision (memory `project_strategy_2026_09_23_stonk_focus.md`): focus stonk/RWA; 1) serve proven buyers,
+2) distribution, 3) Colosseum + Moneta (profitability + stonk swarm). pay.sh: #176 still open; the Foundation has merged
+NO outside provider PR since 7/10 (160 open) — treat as a bonus, Sardius is deciding whether to contact the maintainers.
+**`stonk-yield-batch` SHIPPED (`962242b`, 17:30 UTC, $0.05, up to 25 coins):** full stonk-yield object per coin from the
+index + snapshots, by `mints` or screener filters; `not_found` for mints outside the index. Launch market cap estimated
+per launchpad (LaunchLab $3,250, Raydium $5,100; measured $3,210–3,310 on 6 LaunchLab coins). Against live stonk-yield:
+within ~1–6% on coins older than a week; younger coins move with market cap (caution flag). Verified live: 402 sweep
+49/49, paid call 200 in 2.3s 7/7 checks, `/openapi.json` + `llms.txt` list it, home page card live (suite "9 calls",
+"46 paid endpoints and 1 free"). Counts now 46 paid + 1 free, 45 MCP tools.
+**TODO for the batch (checklist item 10):** update `resources/endpoints.md` + decision table in `../sendai-skills` and
+`../clawpump-skills`, and refresh the pay.sh snapshot on #176. Watch whether `2otm6W` switches to the batch.
+**Next (path 1):** payout alerts (C1) on check-alerts. Then path 2 (distribution).
 Open, not blocking: ~5,000 coins (6%) missing from the newest-first walk with only 3 failed pages — cause unknown.
 
 ## ▶️ (DONE — see above) 2026-09-23 AM — quote stats are inflated since `088f741` (paid output wrong)
