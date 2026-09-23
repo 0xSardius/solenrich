@@ -3,6 +3,30 @@
 ## Last session date
 2026-09-20
 
+## ▶️ RESUME HERE (2026-09-23 AM) — FIRST TASK: quote stats are inflated since `088f741` (paid output wrong)
+
+**Regression from last night's fix (live since 00:22 UTC 9/23):** `quoteStats()` divides by the coins in the index.
+The index now holds only TRADED coins → every quote shows ~100% "traded today". Effects:
+- `stonk-gems`: every coin gets the +10 quote-strength points and a FALSE reason line ("ZEC quote: 99% of its
+  coins traded today" — real: 11%). `src/enrichers/stonk-gems.ts:122`, context from `stonk-index.ts:291`.
+- `stonk-launch-intel`: traded share, demand score, recommendations inflated (`src/entrypoints/stonk.ts:339`).
+- NOT affected: `stonk-screener`, `stonk-yield`, `stonk-quote` (no quote stats). Paid use 9/22: gems 2, launch-intel 2.
+- Ship before ~12:00 UTC: `34CMQ3` calls launch-intel on a 12h schedule (~00:00 / ~12:00 UTC).
+**Planned fix (not started):** per-quote TOTAL coin count from StonkFun (`/tokens?mode=reward&quoteMint=X&pageSize=1`
+→ `pagination.total`; VERIFY the filter returns correct totals first), cached ~1h; traded share = index traded
+coins ÷ total; paying share = full-ledger coins paid in 24h ÷ total; drop "launches 7d" from demand (no launch
+dates without a full walk) and say so in the response. Tests, local live check, deploy between `8LZj73` groups
+(`local/scripts/watch-buyer.ts 8LZj73 <afterIso>`).
+**Second task: rewrite the `/stonkfun` census section** (website only — no API restart now). Full-population census
+2026-09-23 (`local/scripts/census-full.ts`, log `local/scripts/census-2026-09-23.log`, 88% page coverage):
+85,839 reward coins (`/stats`); ~11,500 traded 24h (13.4%); ~3,100 paid 24h (3.6–4.1%); ever paid 32%;
+~6,800 launches last 24h, ~4,900/day 7d avg; >3d-old coins still trading 4.3%; 300 bps vs 100 bps paid 24h
+6.2% vs 3.2%, traded 17.3% vs 12.4%; 753 coins ≥500 holders (holder counts exist only for ledger coins — drop
+the "median holders" claim); ZEC 5,015 coins / 11% traded, SOL 3,802 / 6%, STONK 3,494 / 17%; top quote by
+24h volume STONK $3.7M, ZEC $2.7M, SPCXX $2.6M; small shelves trade far better (APE 95%, IONQ 99%). Also fix
+the numbers in CLAUDE.md "StonkFun product line" (the 9/20 re-census paragraph) and the meta descriptions.
+**Watch paths VERIFIED:** docs-only push at 00:28:50 → no restart (uptime kept counting).
+
 ## ▶️ RESUME HERE (2026-09-22 night) — stonk index read the WRONG coins; fix `088f741` · Railway watch paths + healthcheck SET
 
 **Root cause found:** `stonk-index.ts` sent `sort=volume24h`. StonkFun ignores unknown sort values WITHOUT an
