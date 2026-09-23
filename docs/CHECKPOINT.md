@@ -45,7 +45,19 @@ within ~1–6% on coins older than a week; younger coins move with market cap (c
 "46 paid endpoints and 1 free"). Counts now 46 paid + 1 free, 45 MCP tools.
 **TODO for the batch (checklist item 10):** update `resources/endpoints.md` + decision table in `../sendai-skills` and
 `../clawpump-skills`, and refresh the pay.sh snapshot on #176. Watch whether `2otm6W` switches to the batch.
-**Next (path 1):** payout alerts (C1) on check-alerts. Then path 2 (distribution).
+**Paid sweep 2026-09-23 ~18:00: 49/49** (feed-latest first failed on a transient Helius 429 in SolScout's payment
+build; passed on retry). Log: `local/scripts/paid-sweep-2026-09-23.log`.
+**`stonk-alerts` SHIPPED (`71c42d2`, 18:27 UTC, $0.005, up to 25 coins)** — C1 as its own endpoint (Sardius chose B over
+folding into check-alerts: ms from the index vs ~15s, 25 coins vs 10, stonk bazaar search). Events: payout_landed,
+payout_stale, stopped_trading, holders_change, rewards_since; coins[] status; not_found; since > 31d clamped (fixed
+bazaar example stays valid). Same commit fixed the check-alerts bazaar example (had `since` only → 400).
+Verified live: 402 sweep 50/50; paid SolScout 200 6/6; real 24h call: ZCAT paid 266.77 ZEC (≈$406K) since the 9/22
+snapshot, GROK holders 736 → 6,246. Counts: 47 paid + 1 free, 46 MCP tools.
+**Open:** the 18:17 scheduled population run had not started by 18:34 (GitHub cron delay, or first schedule skipped).
+Check `gh run list --workflow stonk-population.yml` next session; if schedules never fire, adjust the trigger.
+TODO checklist item 10 for BOTH new endpoints: skill registries (`../sendai-skills`, `../clawpump-skills`) + pay.sh
+snapshot on #176. Watch `2otm6W` for a switch to the batch; watch for any stonk-alerts caller.
+**Next:** path 2 (distribution) — agentic.market entry (was "unenriched"), listings for the stonk suite.
 Open, not blocking: ~5,000 coins (6%) missing from the newest-first walk with only 3 failed pages — cause unknown.
 
 ## ▶️ (DONE — see above) 2026-09-23 AM — quote stats are inflated since `088f741` (paid output wrong)
