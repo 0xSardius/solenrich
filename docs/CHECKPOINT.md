@@ -19,6 +19,16 @@ page and continue (end only after 5 failures in a row), 8s page timeout (was 15s
 volume floor (last coin read before the first skip, or $0) so a coin that stopped trading no longer reads as live.
 6 new tests (65 pass). Live refresh, memory-only cache: 10,932 rows, 10,876 with 24h volume, 195 GEM / 799 WATCH.
 A second live run ended after a failure cluster at page 60 (hence 5, not 3).
+**DEPLOYED + VERIFIED 2026-09-23 00:14–00:28 UTC** (pushed right after an `8LZj73` group): new container
+00:14:45; first refresh 00:22:22 = **7.5 min after boot**, 9,816 rows, walk reached the $0 cutoff at page 115,
+15 pages skipped; retry walk 00:27:42 = **11,500 rows** (matches upstream's ~11,500 traded coins), 5 skipped.
+402 sweep 48/48; paid `stonk-gems` 200 in 1.9s, 7/7 checks, settled $0.03; `34CMQ3` paid 00:00; `8LZj73` paid
+00:12 (after the settings restart) and 00:27 (after the fix restart). Stonk endpoints are EMPTY for the first
+~7.5 min after every API restart → candidate follow-up: persist rows to Redis and load them on boot.
+Next: re-run the census (`local/scripts/census-stonk.ts`) and correct the `/stonkfun` + CLAUDE.md numbers.
+Parked on local branch `wip/endpoint-pages` (`ff1deb1`, not pushed): B5 pages, style move, held API edits —
+cherry-pick only A4 + the `check-alerts` example fix to main later; B5 is decided in the strategy session.
+**Colosseum hackathon:** Sardius plans to enter; submissions close 2026-10-12 (check rules on existing projects).
 **Railway (Sardius, 23:55 UTC):** watch paths `src/**`, `package.json`, `bun.lock`, `Dockerfile` + healthcheck
 `/health` — deployed alone on the old code first; new container healthy, 402 sweep 48/48. **A5 = DONE.**
 Docs/landing pushes should no longer restart the API — confirm on the next docs-only push.
