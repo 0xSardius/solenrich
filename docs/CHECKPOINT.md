@@ -62,7 +62,7 @@ within minutes) with public 30-day stats (stonk-yield 1,553 calls / 3 payers, ne
 is still `enriched: false`: name = domain, category/description/icon/providerUrl empty. Only 74 of 2,865 services are
 enriched (manual Coinbase curation; no provider form — FAQ: listing is automatic via x402). Enriched Data peers:
 CoinMarketCap, CoinGecko, Messari, Allium, Nansen, Otto AI.
-- **`iconUrl` SHIPPED (`1b…` see git log, 19:18 UTC):** every x402 resource now sends `iconUrl:
+- **`iconUrl` SHIPPED (`83c7b84`, 19:18 UTC):** every x402 resource now sends `iconUrl:
   https://www.solenrich.com/logo.png` (the SE mark, 1024², black bg baked in). Verified in live 402s on 3 routes; sweep
   50/50. Bazaar rows pick it up on each endpoint's next settlement. Optional: a tighter-cropped icon reads better at 32 px.
 - **Enrichment request drafted** (in session log; name SolEnrich, category Data, description "StonkFun reward-coin data
