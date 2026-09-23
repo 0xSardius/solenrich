@@ -74,10 +74,17 @@ export function populationStatus(p: StonkPopulation | null, now: number): Popula
   };
 }
 
+/** Launch date, newest first. Measured 2026-09-23: the only stable order (market cap reshuffles during a walk). */
+export const POPULATION_SORT = 'newest';
+
 /**
- * Walks every reward-coin page (default sort) with a few requests in flight, a short timeout, and one retry
- * pass over the pages that failed. StonkFun is slow at random (~1 in 4 pages takes 4–20s), so a failed page is
- * skipped, not fatal. Page 1 is retried up to 5 times; it carries the page count.
+ * Walks every reward-coin page, newest launch first, with a few requests in flight, a short timeout, and one
+ * retry pass over the pages that failed. StonkFun is slow at random (~1 in 4 pages takes 4–20s), so a failed page
+ * is skipped, not fatal. Page 1 is retried up to 5 times; it carries the page count.
+ *
+ * Why `newest`: in the default market-cap order, coins change pages while a 15-minute walk runs; the first GitHub
+ * run read 875/878 pages but only 83% of the unique coins. With newest-first, a launch during the walk pushes older
+ * coins back one position: a coin can be read twice (deduplicated by mint), never skipped.
  */
 export async function walkAllRewardTokens(
   client: Pick<StonkFunClient, 'getTokens'>,
@@ -87,7 +94,7 @@ export async function walkAllRewardTokens(
   const timeoutMs = opts.timeoutMs ?? 8_000;
   let first: Awaited<ReturnType<StonkFunClient['getTokens']>> | null = null;
   for (let i = 0; i < 5 && !first; i++) {
-    first = await client.getTokens({ mode: 'reward', page: 1, pageSize: 100 }, timeoutMs).catch(() => null);
+    first = await client.getTokens({ mode: 'reward', page: 1, pageSize: 100, sort: POPULATION_SORT }, timeoutMs).catch(() => null);
   }
   if (!first) throw new Error('page 1 failed 5 times');
   const pagesTotal = Math.max(1, first.pagination.totalPages ?? 1);
@@ -98,7 +105,7 @@ export async function walkAllRewardTokens(
     const worker = async () => {
       for (let p = queue.shift(); p !== undefined; p = queue.shift()) {
         try {
-          const res = await client.getTokens({ mode: 'reward', page: p, pageSize: 100 }, timeoutMs);
+          const res = await client.getTokens({ mode: 'reward', page: p, pageSize: 100, sort: POPULATION_SORT }, timeoutMs);
           for (const t of res.tokens) byMint.set(t.mint, t);
         } catch {
           failed.push(p);

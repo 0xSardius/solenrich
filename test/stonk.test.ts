@@ -860,9 +860,11 @@ describe('population: summary, freshness, and what the index does with it', () =
 
   test('walkAllRewardTokens: skips a failed page after one retry pass, counts coverage', async () => {
     let calls = 0;
+    const sorts = new Set<unknown>();
     const flaky = {
-      getTokens: async ({ page: n }: { page: number }) => {
+      getTokens: async ({ page: n, sort }: { page: number; sort?: string }) => {
         calls++;
+        sorts.add(sort);
         if (n === 3) throw new Error('The operation was aborted.');
         return { tokens: page.slice(0, 2).map((t) => ({ ...t, mint: `${t.mint.slice(0, 40)}w${n}` })), pagination: { page: n, pageSize: 2, total: 8, totalPages: 4 } };
       },
@@ -874,6 +876,7 @@ describe('population: summary, freshness, and what the index does with it', () =
     expect(w.tokens.length).toBe(6);
     expect(w.upstreamTotal).toBe(8);
     expect(calls).toBe(5); // pages 1, 2, 3, 4 + one retry of 3
+    expect([...sorts]).toEqual(['newest']); // the stable order: market cap reshuffles during a walk
   });
 });
 

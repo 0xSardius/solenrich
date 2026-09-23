@@ -3,7 +3,33 @@
 ## Last session date
 2026-09-20
 
-## ▶️ RESUME HERE (2026-09-23 AM) — FIRST TASK: quote stats are inflated since `088f741` (paid output wrong)
+## ▶️ RESUME HERE (2026-09-23 PM) — quote-stats regression FIXED (`9b5fde8`) · population job on GitHub Actions · 1-week monitor
+
+**Fix `9b5fde8`, deployed 14:00 UTC, verified live:** per-quote shelf stats now come from a full-population summary
+(`stonk:population:v1` in Redis) written by `scripts/stonk-population.ts` via `.github/workflows/stonk-population.yml`
+(cron `17 */6 * * *` + manual dispatch; repo secrets `UPSTASH_REDIS_REST_URL/TOKEN` added by Sardius 13:53). Runs
+OUTSIDE the API (Sardius's call: no API RAM, no Railway cost, separate StonkFun budget). The API loads the summary
+once per index refresh; fresh = ≤ 48h. Stale/missing → `stonk-gems` skips the quote factor (caveat), launch-intel
+leads with a LIMITED caveat. `/status.stonk_index.population` shows age/coins/pages. Job keeps the last good
+summary when coverage < 70%.
+- Local seed run 13:59: 878/878 pages, 77,746 coins of 87,745 upstream (the market-cap order shifts during the
+  9.5-min walk, so ~11% of coins are missed/duplicated — shares stay valid, the response states the count),
+  483 quotes, 263 KB.
+- Live checks: 402 sweep 48/48; paid launch-intel 200, `shelf.source=population`, overall 10.4% traded / 3.9% paying /
+  3.1% survival / 5,341 launches 24h (was ~100% traded per quote); paid gems 200, 74 GEM / 432 WATCH (inflated: 195 GEM),
+  reason lines true ("GP quote: 75% of its coins traded today"). Index filled in 10s after boot this time.
+- First GitHub Actions run (dispatch, 14:00→14:15): success, 875/878 pages, but only 72,662 of 87,800 coins (83%) —
+  market-cap order reshuffles during the walk. Fix: walk with `sort=newest` (tested: the only stable order; launches
+  push older coins back, so a coin can be read twice, never skipped).
+- Known, pre-existing: launch-intel ranks tiny shelves first (REX, 5 coins) — default `min_coins` is low. Tune later.
+**1-week monitor (until 2026-09-30) — Sardius wants proof it does not raise RAM or costs:**
+baseline 2026-09-23 13:50 UTC (before the deploy): RSS 349–459 MB (varies between reads), Redis 13,020 commands in
+13.8h ≈ 22,600/day. Check daily: `/status` (rss, commands_today, population age), Actions run history
+(`gh run list --workflow stonk-population.yml`), Railway usage, launch-intel + gems paid calls.
+**Buyers today:** `8LZj73` slowed to ~hourly (12:47, 13:52); `2otm6W` quiet since 06:53; `34CMQ3` 00:00 only.
+**Next:** `/stonkfun` census rewrite (numbers below; site-only push), then the strategy session.
+
+## ▶️ (DONE — see above) 2026-09-23 AM — quote stats are inflated since `088f741` (paid output wrong)
 
 **Regression from last night's fix (live since 00:22 UTC 9/23):** `quoteStats()` divides by the coins in the index.
 The index now holds only TRADED coins → every quote shows ~100% "traded today". Effects:
