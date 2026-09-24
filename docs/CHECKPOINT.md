@@ -89,7 +89,22 @@ free, StonkFun first, stonk-yield-batch + stonk-alerts, watchlist example). Inst
 `skills/solenrich/resources/endpoints.md`. The skill routes data calls through paid x402; MCP returns payment details,
 not data (verified in `src/mcp-tools.ts`). Checklist item 10 now = keep `skills/solenrich/` current (the forks are
 secondary).
-**Next:** check agentic.market icon + skills.sh install count; add the install line to llms.txt (backend deploy).
+**llms.txt + llms-full.txt carry the skill install line** (deployed 01:30 UTC 9/24, verified on api + www; sweep 50/50).
+**Moneta — step 0 = yield backtest, IN PROGRESS (not finished when the session ended):**
+`bun --env-file=.env local/scripts/backtest-yield.ts` (read-only: ~100 Redis reads of `stonk:snap:*`, one StonkFun walk,
+Jupiter quote prices; ~20 min). Snapshots exist 9/6 and 9/9 → today (daily, up to ~50K coins/day, tuple
+`[mint, t, dist, mcap, holders]`). Entry = paid in the prior day, mcap ≥ $50K, ≥ 50 holders, non-stale row; 3d and 7d
+holds; net after the coin's tax (+ a 1%-slippage variant); stale/missing exit = dead (shown separately, −90% in the
+pessimistic total); rewards at today's quote price. Also a top-20-by-trailing-yield portfolio per entry day.
+Output → `local/scripts/backtest-yield-<date>.log`. Then: interpret → swarm design brief → D1 (Moneta stonk plugin on
+the Eris harness, paper, runs outside the API; pays via x402 so the tape is receipted).
+Architecture explained to Sardius: L1 SolEnrich API → L2 Eris harness (policy, paper book, x402, outcome sampler,
+tape) → L3 strategies (Eris trenches, Moneta yield, Moneta trading). Build order: backtest → D1 → 2-week paper tape →
+public tape card → outcome loop → live with a published cap.
+**Sardius this weekend:** Colosseum groundwork (rules, tracks, materials; deadline 10/12). Send the agentic.market
+enrichment message.
+**Next session:** finish the backtest; passive checks (agentic.market icon, skills.sh count, 6-hourly population runs,
+2otm6W batch switch — still on per-coin stonk-yield at 01:08 9/24).
 Open, not blocking: ~5,000 coins (6%) missing from the newest-first walk with only 3 failed pages — cause unknown.
 
 ## ▶️ (DONE — see above) 2026-09-23 AM — quote stats are inflated since `088f741` (paid output wrong)
