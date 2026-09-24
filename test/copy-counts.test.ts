@@ -19,7 +19,9 @@ const TOTAL = PAID + FREE;
 const TOOLS = MCP_TOOLS.length;
 
 // mcp/README.md states no counts, so it is not listed; add it if it ever does.
-const FILES = ['landing/index.html', 'landing/docs.html', 'landing/stonkfun.html', 'landing/agent-card.html', 'README.md'];
+// landing/agent-metadata.json = the Metaplex 014 identity metadata (said "33 paid endpoints" for 2 months; found 2026-09-23).
+// landing/agent-registration.json = the 8004-solana registration file (setAgentUri points here since 2026-09-23).
+const FILES = ['landing/index.html', 'landing/docs.html', 'landing/stonkfun.html', 'landing/agent-card.html', 'README.md', 'landing/agent-metadata.json', 'landing/agent-registration.json'];
 
 // "45 endpoints", "45 paid endpoints", "45 onchain intelligence endpoints", "46 endpoints (45 paid + 1 free)",
 // "44 tools", "44 MCP tools", "38 pay-per-call endpoints". Up to three words between the number and the noun.
@@ -60,4 +62,10 @@ describe('public copy states the real endpoint and tool counts', () => {
       ).toEqual([]);
     });
   }
+
+  test('landing/agent-metadata.json: the "endpoints" attribute is the paid count', () => {
+    const meta = JSON.parse(readFileSync('landing/agent-metadata.json', 'utf8'));
+    const attr = meta.attributes.find((a: { trait_type: string }) => a.trait_type === 'endpoints');
+    expect(Number(attr.value)).toBe(PAID);
+  });
 });
