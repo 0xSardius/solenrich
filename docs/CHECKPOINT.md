@@ -89,6 +89,14 @@ free, StonkFun first, stonk-yield-batch + stonk-alerts, watchlist example). Inst
 `skills/solenrich/resources/endpoints.md`. The skill routes data calls through paid x402; MCP returns payment details,
 not data (verified in `src/mcp-tools.ts`). Checklist item 10 now = keep `skills/solenrich/` current (the forks are
 secondary).
+**2026-09-24 evening:** population job runs on schedule (4 successes 9/24, starts 3–5h late; latest 94,216 coins,
+972/972 pages — newest-first fixed coverage; the 9/23 21:30 failure = StonkFun page 1 down, last good summary kept).
+agentic.market now shows our icon (its Cloudinary copy); still unenriched. skills.sh page counts 0 installs so far.
+Buyers 9/24: 289 payments / $1.78; `2otm6W` 251 per-coin stonk-yield (NOT the batch); `8LZj73` fell 86 → 7 new-tokens
+calls (calls still succeed — watch 2–3 days); `34CMQ3` tried stonk-yield-batch once (first outside call).
+**`9e9e32d` deployed 23:42 (quiet gap):** stonk-screener + stonk-yield `next_steps` name stonk-yield-batch first. Verified:
+sweep 50/50, paid screener shows the hint. Watch whether 2otm6W switches.
+**Backtest re-run with compact memory** (Float64Array per coin, lean walk) after the first run was killed for low RAM.
 **llms.txt + llms-full.txt carry the skill install line** (deployed 01:30 UTC 9/24, verified on api + www; sweep 50/50).
 **Moneta — step 0 = yield backtest, IN PROGRESS (not finished when the session ended):**
 `bun --env-file=.env local/scripts/backtest-yield.ts` (read-only: ~100 Redis reads of `stonk:snap:*`, one StonkFun walk,
