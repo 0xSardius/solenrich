@@ -78,7 +78,18 @@ CoinMarketCap, CoinGecko, Messari, Allium, Nansen, Otto AI.
   json_uri = the www file. The on-chain NAME stays "Agent": update authority is the registry (`BXnjUb…`), which only
   exposes setAgentUri. Both JSON files are in the copy-count guard.
 - ERC-8004 on Base: deferred (Colosseum work).
-**Next:** check agentic.market shows the icon; other listings for the stonk suite; checklist item 10 (skill registries).
+**Skill in our own repo — LIVE on skills.sh (`a9ea172`, 2026-09-24):** registry PRs have had zero maintainer response
+(SendAI #107, ClawPump #10: 0 comments/reviews; SendAI's last outside merge 4/30, ClawPump's 6/25). skills.sh lists a
+repo on its first CLI install (telemetry, on by default) — our repo was already listed via `.claude/skills`
+(solana-dev, lucid-agent-creator, 1 install each). Now `skills/solenrich/` (from the SendAI fork, updated: 47 paid + 1
+free, StonkFun first, stonk-yield-batch + stonk-alerts, watchlist example). Install:
+`npx skills add 0xSardius/solenrich --skill solenrich`. One real install (scratchpad) → page
+`skills.sh/0xsardius/solenrich/solenrich` live (install count "–" at first; re-check). Install line in README + /docs;
+`llms.txt` gets it with the next backend deploy. CI guards: skill endpoint count + every PRICING key in
+`skills/solenrich/resources/endpoints.md`. The skill routes data calls through paid x402; MCP returns payment details,
+not data (verified in `src/mcp-tools.ts`). Checklist item 10 now = keep `skills/solenrich/` current (the forks are
+secondary).
+**Next:** check agentic.market icon + skills.sh install count; add the install line to llms.txt (backend deploy).
 Open, not blocking: ~5,000 coins (6%) missing from the newest-first walk with only 3 failed pages — cause unknown.
 
 ## ▶️ (DONE — see above) 2026-09-23 AM — quote stats are inflated since `088f741` (paid output wrong)
