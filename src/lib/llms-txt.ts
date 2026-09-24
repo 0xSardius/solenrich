@@ -37,6 +37,7 @@ export function buildLlmsTxt(i: LlmsTxtInput): string {
 - Payment: x402 (USDC on Solana${i.baseAccepts ? ' or Base' : ''}) or MPP/Stripe (fiat cards). A 402 lists price, networks, and every endpoint.
 - Discovery: GET /.well-known/x402, GET /openapi.json, GET /docs, GET /llms-full.txt (every input + methodology), GET /status (live health)
 - MCP: ${BASE}/mcp
+- Agent skill (Claude Code, Cursor, Codex): \`npx skills add 0xSardius/solenrich --skill solenrich\` — https://skills.sh/0xsardius/solenrich/solenrich
 - Provider: @0xSardius (https://x.com/0xSardius)
 
 ## Start here

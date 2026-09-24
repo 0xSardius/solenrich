@@ -146,6 +146,7 @@ export function buildLlmsFull(i: LlmsFullInput): string {
     `- OpenAPI: ${base}/openapi.json`,
     `- x402 discovery: ${base}/.well-known/x402`,
     `- MCP: ${base}/mcp`,
+    '- Agent skill (Claude Code, Cursor, Codex): `npx skills add 0xSardius/solenrich --skill solenrich` — https://skills.sh/0xsardius/solenrich/solenrich',
     `- Live status: ${base}/status`,
     `- Provider: @0xSardius (https://x.com/0xSardius)`,
     '',
