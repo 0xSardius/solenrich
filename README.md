@@ -236,6 +236,19 @@ Wallet enrichment returns `nft_summary` with three buckets that sum to `nft_coun
 
 Spam detection is pattern matching on names and descriptions, applied to compressed assets only. Treat it as a signal, not a verdict — a legitimate compressed drop with promotional wording can be flagged. The `nft_collector` label requires 10 or more `collected` NFTs, so it no longer fires on airdrop volume.
 
+## Agent Skill
+
+One line installs the SolEnrich skill into Claude Code, Cursor, Codex and other agents that read Agent
+Skills. It teaches the agent which endpoint answers which question, how to pay per call over x402, and
+the trade and StonkFun workflows:
+
+```bash
+npx skills add 0xSardius/solenrich --skill solenrich
+```
+
+Source: [`skills/solenrich/`](skills/solenrich/). Listed on [skills.sh](https://skills.sh/0xsardius/solenrich).
+Data calls are paid (x402, USDC on Solana or Base); the agent needs a wallet with USDC.
+
 ## MCP Server
 
 SolEnrich exposes an MCP endpoint for Claude Desktop, Claude Code, and Cursor. **No install required:**
