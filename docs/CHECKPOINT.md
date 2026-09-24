@@ -68,6 +68,16 @@ CoinMarketCap, CoinGecko, Messari, Allium, Nansen, Otto AI.
 - **Enrichment request drafted** (in session log; name SolEnrich, category Data, description "StonkFun reward-coin data
   and Solana onchain intelligence for agents", provider URL, icon, 30-day stats). **Sardius sends it** — channel TBD
   (July Base-activation contact, or CDP Discord x402).
+**Agent identities refreshed (2026-09-23/24):**
+- Metaplex 014 (`BjJG…`): `landing/agent-metadata.json` said "33 paid endpoints", no StonkFun → now current (47 paid +
+  1 free, StonkFun first, www URLs). URI already pointed there; no transaction.
+- 8004-solana (`5rsdgY…`): the March IPFS file listed only A2A on the old Railway host and encoded the Solana wallet as
+  `eip155:1:66Qv…`. New `landing/agent-registration.json` (ERC-8004 registration-v1: web, A2A, MCP, agentWallet as
+  `solana:5eykt…:66Qv…`). `identity/update-uri.ts` (dry run by default, `--send`) → setAgentUri sent, Sardius approved:
+  sig `5sGx6Jq3zbphGvqUZXcRNLdRFXEYFskt2XCsEmcSLqgBNboAES4hEQWU5XiZDkfREpBzfPRC3gg9HPACWs2hWaD7`, confirmed; DAS
+  json_uri = the www file. The on-chain NAME stays "Agent": update authority is the registry (`BXnjUb…`), which only
+  exposes setAgentUri. Both JSON files are in the copy-count guard.
+- ERC-8004 on Base: deferred (Colosseum work).
 **Next:** check agentic.market shows the icon; other listings for the stonk suite; checklist item 10 (skill registries).
 Open, not blocking: ~5,000 coins (6%) missing from the newest-first walk with only 3 failed pages — cause unknown.
 
