@@ -292,6 +292,8 @@ export function registerStonkEntrypoints(
         index: { rows: status.rows, last_refresh_at: status.lastRefreshAt, series_days: status.seriesDays, oldest_point_at: status.oldestPointAt },
         caveats,
         next_steps: [
+          // First: the loop buyers run in production is screener → stonk-yield per row (2026-09); this is one call.
+          'stonk-yield-batch returns 7d / 30d / lifetime yield for up to 25 of these coins in one call ($0.05) — pass the same filters, or `mints`.',
           'stonk-gems ranks the young, paying, still-small coins in this set — the "find" call.',
           'stonk-reward-risk on a candidate gives payout status and the on-chain tax config.',
           'trenches-check / exit-signal for the trade itself; both now price the transfer tax.',

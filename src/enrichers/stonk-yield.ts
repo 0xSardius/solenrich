@@ -261,6 +261,7 @@ export class StonkYieldAnalyzer {
     const result: StonkYieldResult = {
       ...computed,
       next_steps: [
+        'stonk-yield-batch for several coins: the same yield object for up to 25 coins in one call ($0.05), by `mints` or screener filters.',
         'stonk-reward-risk to confirm the tax actually reaches holders before trusting the yield.',
         'stonk-screener to compare this coin against every other reward coin on the same quote.',
       ],
