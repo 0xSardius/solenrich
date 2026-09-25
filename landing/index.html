@@ -223,6 +223,15 @@
       animation: fadeUp 0.8s ease-out 0.2s both;
     }
 
+    .hero-install {
+      margin-top: 20px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      overflow-wrap: anywhere;
+      animation: fadeUp 0.8s ease-out 0.4s both;
+    }
+    .hero-install code { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--sol-blue); }
+
     .hero-actions {
       display: flex;
       gap: 16px;
@@ -1454,23 +1463,24 @@
           <span>Ground truth agents pay for before they act</span>
         </div>
         <h1>
-          Onchain intelligence<br>
-          <span class="gradient-text">for Solana agents</span>
+          Know which coins pay<br>
+          <span class="gradient-text">before your agent trades</span>
         </h1>
         <p class="hero-sub">
-          Wallet risk, token due diligence, whale and smart-money flows, cross-venue perps structure,
-          and agent-attention signals. 47 endpoints, one API, deterministic scoring, returned as JSON or
-          as briefings sized for an LLM context window. Pay per call with USDC on Solana or Base (x402),
-          or by card (Stripe). No keys, no subscription.
+          Agents pay SolEnrich per call to watch the StonkFun coins they hold, find the ones still paying holders,
+          and price a trade after the transfer tax. The same API covers wallet risk, token due diligence,
+          smart-money flows and cross-venue perps: 47 endpoints, deterministic scoring, JSON or an LLM briefing.
+          Pay per call with USDC on Solana or Base. No keys, no subscription.
         </p>
         <div class="hero-actions">
-          <a href="/docs" class="btn-primary">
-            Read the docs &rarr;
+          <a href="/stonkfun" class="btn-primary">
+            StonkFun for agents &rarr;
           </a>
-          <a href="https://github.com/0xSardius/solenrich" class="btn-secondary" target="_blank">
-            View Source
+          <a href="/docs" class="btn-secondary">
+            Read the docs
           </a>
         </div>
+        <p class="hero-install">Claude Code, Cursor, Codex: <code>npx skills add 0xSardius/solenrich --skill solenrich</code></p>
       </div>
 
       <div class="hero-terminal">
@@ -1478,24 +1488,22 @@
           <div class="terminal-dot r"></div>
           <div class="terminal-dot y"></div>
           <div class="terminal-dot g"></div>
-          <span class="terminal-title">ground truth, three calls</span>
+          <span class="terminal-title">watch, find, price &middot; real values, trimmed</span>
         </div>
         <div class="terminal-body">
-<span class="dim">$</span> <span class="url">enrich-token-full</span> <span class="dim">BONK · $0.004</span><br>
-<span class="dim">{</span> <span class="key">"holder_count"</span>: <span class="val">1010231</span>,<br>
-&nbsp;&nbsp;<span class="key">"top10_pct"</span>: <span class="val">38.5</span>, <span class="key">"hhi"</span>: <span class="val">207</span>,<br>
-&nbsp;&nbsp;<span class="key">"volatility"</span>: <span class="str">"MODERATE"</span>,<br>
-&nbsp;&nbsp;<span class="key">"mint_authority"</span>: <span class="val">null</span> <span class="dim">}</span><br>
+<span class="dim">$</span> <span class="url">stonk-alerts</span> <span class="dim">my coins · $0.02</span><br>
+<span class="dim">{</span> <span class="key">"type"</span>: <span class="str">"payout_landed"</span>,<br>
+&nbsp;&nbsp;<span class="key">"summary"</span>: <span class="str">"$ZCAT paid holders 16.2h ago, in ZEC"</span>,<br>
+&nbsp;&nbsp;<span class="key">"payout_status"</span>: <span class="str">"PAYING"</span> <span class="dim">}</span><br>
 <br>
-<span class="dim">$</span> <span class="url">enrich-wallet-full</span> <span class="dim">8% holder · $0.005</span><br>
-<span class="dim">{</span> <span class="key">"labels"</span>: [<span class="str">"whale"</span>, <span class="str">"new_wallet"</span>],<br>
-&nbsp;&nbsp;<span class="key">"portfolio_value_usd"</span>: <span class="val">1459344956</span>,<br>
-&nbsp;&nbsp;<span class="key">"risk_level"</span>: <span class="str">"MODERATE"</span>,<br>
-&nbsp;&nbsp;<span class="key">"risk_factors"</span>: [<span class="str">"Wallet < 7 days old"</span>] <span class="dim">}</span><br>
+<span class="dim">$</span> <span class="url">stonk-yield-batch</span> <span class="dim">up to 25 coins · $0.05</span><br>
+<span class="dim">{</span> <span class="key">"symbol"</span>: <span class="str">"ZCAT"</span>, <span class="key">"reward_asset"</span>: <span class="str">"ZEC"</span>,<br>
+&nbsp;&nbsp;<span class="key">"trailing_7d"</span>: { <span class="key">"yield_pct"</span>: <span class="val">1.19</span> },<br>
+&nbsp;&nbsp;<span class="key">"lifetime"</span>: { <span class="key">"yield_pct"</span>: <span class="val">12.3</span> } <span class="dim">}</span><br>
 <br>
-<span class="dim">$</span> <span class="url">compare-tokens</span> <span class="dim">BONK vs WIF · $0.006</span><br>
-<span class="dim">{</span> <span class="key">"safest"</span>: <span class="str">"BONK"</span>,<br>
-&nbsp;&nbsp;<span class="key">"most_liquid"</span>: <span class="str">"WIF"</span> <span class="dim">}</span>
+<span class="dim">$</span> <span class="url">stonk-gems</span> <span class="dim">what to look at · $0.03</span><br>
+<span class="dim">{</span> <span class="key">"symbol"</span>: <span class="str">"Shiba"</span>, <span class="key">"stage"</span>: <span class="str">"GEM"</span>, <span class="key">"score"</span>: <span class="val">94</span>,<br>
+&nbsp;&nbsp;<span class="key">"reasons"</span>: [<span class="str">"paid holders 5.3h ago"</span>] <span class="dim">}</span>
         </div>
       </div>
     </div>
