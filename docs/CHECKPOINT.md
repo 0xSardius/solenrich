@@ -27,8 +27,8 @@ then index refill; screener/gems partial meanwhile) and time it in a quiet buyer
 3. `[ ]` **Public reference agent** — open-source minimal "StonkFun holder monitor" (stonk-alerts + batch) others fork.
 4. `[x]` **Homepage hero around the stonk job — `1918950`, live 23:07 UTC 9/25.** "Know which coins pay before your
    agent trades"; one sentence for the rest; primary button → /stonkfun; skill install line; terminal of real trimmed
-   responses (stonk-alerts, stonk-yield-batch, stonk-gems). "View Source" button dropped. Open: badge text (proposed
-   "x402 · Paid per call by trading agents, every day").
+   responses (stonk-alerts, stonk-yield-batch, stonk-gems). "View Source" button dropped. Badge now "x402 · Paid per call by trading agents,
+   every day" (live 23:08 UTC; no number, so it cannot go stale — change it if daily paid traffic ever stops).
 5. `[ ]` **agentic.market curation** — Sardius sends the drafted enrichment request.
 6. `[ ]` **x402scan refresh** — still shows the old tagline; check resources, request refresh.
 **B. Serve current buyers**
