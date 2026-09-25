@@ -19,11 +19,16 @@ then index refill; screener/gems partial meanwhile) and time it in a quiet buyer
    tags within minutes. agentic.market had NOT re-imported by 15:52 — re-check.
    The 1 failure: `stonk-launch-preflight` reference launch is stale (SPYX price moved ~11%; raise 1,164,789,044 vs
    1,312,085,511 → mismatch) — the endpoint is right, the fixture is stale; also makes its output example `ok:false`.
-1b. `[ ]` Build the preflight reference launch's raise from live StonkFun pricing (no more fixed number); recapture its
-   example. Small backend change.
-2. `[ ]` **Machine-funnel metric** — unpaid 402s vs paid calls per endpoint (where agents drop out).
+1b. `[x]` **Preflight reference launch fixed — `f261246`, deployed 23:04 UTC 9/25.** Better than "raise from live
+   pricing": a SOL-quoted reference launch (`EXAMPLE_LAUNCH_SOL`): StonkFun sizes every raise like 85 SOL, so on the
+   SOL quote the raise is exactly 85 SOL and never drifts (no network call at boot). SPYX stays the unit-test example.
+   Verified: live paid preflight 5/5, sweep 50/50; bazaar example now `ok: true`.
+2. `[?]` Machine-funnel metric — Sardius unsure (2026-09-25); parked. Lighter option: count 402s per endpoint only.
 3. `[ ]` **Public reference agent** — open-source minimal "StonkFun holder monitor" (stonk-alerts + batch) others fork.
-4. `[ ]` **Homepage hero around the stonk job** (website only), not "47 endpoints".
+4. `[x]` **Homepage hero around the stonk job — `1918950`, live 23:07 UTC 9/25.** "Know which coins pay before your
+   agent trades"; one sentence for the rest; primary button → /stonkfun; skill install line; terminal of real trimmed
+   responses (stonk-alerts, stonk-yield-batch, stonk-gems). "View Source" button dropped. Open: badge text (proposed
+   "x402 · Paid per call by trading agents, every day").
 5. `[ ]` **agentic.market curation** — Sardius sends the drafted enrichment request.
 6. `[ ]` **x402scan refresh** — still shows the old tagline; check resources, request refresh.
 **B. Serve current buyers**
