@@ -66,7 +66,32 @@ said "Eight calls"; now "Ten"). Sweep 50/50.
 **Open (Sardius):** monthly infra costs (Railway, Helius, Upstash) → real margin in the next review.
 **Next:** long-term growth and expansion beyond the single buyer.
 
-## ⏸ PARKED (2026-09-25) — Moneta D1, waiting on 3 decisions from Sardius (weekend)
+## ▶️ MONETA D1 BUILT (2026-09-26) — waiting on Sardius: fund wallet + create Railway service
+
+Decisions taken (Sardius, 9/26): code in the Eris repo · small Railway service · new dedicated hot wallet (paper
+phase), CDP Server Wallet before real trading money. Gate to live = results, not days: ≥200 labeled verdicts + ≥40
+closed paper trades + GEM beats the rest at +24h after tax + positive paper P&L (≈7–10 days); build live execution
+(Jupiter swaps, Token-2022 fees) DURING the paper run; optional $25–50 live plumbing test after ~5 days.
+**Eris repo (private) `ec0f5d4`, pushed:** harness v0.3 (`9f86e25`: tax in paper fills, per-strategy vet limit,
+StonkFun price fallback, stonk PRICES) · `stonk` strategy (`9948068` + tune `0575da7`: stop on the PRICE move, net
+profit targets; scout limit 50) · wallet `--out .env.moneta` + `.env.*` ignored (`e0ff90a`) · Dockerfile (`ec0f5d4`).
+34 tests pass. Smoke run vs production (SolScout wallet, temp DB, $0.08): 25 vetted, 3 paper entries, watch + tape OK.
+**Moneta wallet:** `5x2U2bCCpnAUoHz8WKyM324jiVGzvSSrJvWvdgcyeZ26` — key in `eris/.env.moneta` (gitignored, never printed).
+**Sardius steps:** fund ~$30 USDC + 0.02 SOL from Phantom → Railway: new service from 0xSardius/eris, volume at
+/data, env (below) → add the Moneta address to SolEnrich `DOGFOOD_WALLETS` (redeploys the API — do it in a buyer gap).
+Env: ERIS_STRATEGY=stonk · ERIS_TARGET=production · ERIS_MODE=paper · ERIS_WALLET_ADDRESS=5x2U2b… · ERIS_PRIVATE_KEY
+(secret, from .env.moneta) · HELIUS_API_KEY (secret) · DB_PATH=/data/moneta.db · TAPE_DIR=/data/tape ·
+DAILY_BUDGET_USD=4 · PAPER_BANKROLL_USD=1000 · MAX_POSITION_USD=50 · MAX_OPEN_POSITIONS=3 · MAX_DAILY_LOSS_USD=100 ·
+PAPER_SLIPPAGE_PCT=1 · MAX_HOLD_HOURS=24 · SCOUT_INTERVAL_MIN=30 · WATCH_INTERVAL_MIN=15 · OUTCOME_INTERVAL_MIN=5.
+Docker Desktop was not running locally, so the image build is first verified on Railway.
+**CDP Server Wallet research (subagent, 9/25):** Solana supported (`@coinbase/cdp-sdk`), keys in AWS Nitro enclaves,
+partial signing works; FIRST-PARTY x402 adapter `cdpSolanaAccountToSvmSigner` (needs `@x402/svm` ≥ 2.25; we pin 2.17).
+Pricing $0.005/operation, 5,000 free/month (a policy-checked signature ≈ 2 ops). Policies: program / address / mint /
+amount PER TRANSACTION — **no daily or USD cap on Solana** (Privy has rolling-window caps; Turnkey $0.05–0.10/sig).
+UNVERIFIED: Token-2022 TransferCheckedWithFee parsing and Jupiter lookup-table programs in the allowlist → test on
+devnet before live. Plan: keep a persistent daily cap in our own code, fund in small tranches.
+
+## ⏸ (superseded above) 2026-09-25 — Moneta D1, waiting on 3 decisions from Sardius (weekend)
 
 Brief: `../moneta/docs/D1-brief.md` (commit `b66bf34` in 0xSardius/moneta, private). Moneta v1 = paper TRADING book
 for StonkFun coins on the Eris harness (not a yield book — backtest). Harness read in full (Eris v0.2, ~1,300 lines;
