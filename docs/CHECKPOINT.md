@@ -9,11 +9,18 @@ Rule (Sardius): before any change that deploys the API, state the endpoint downt
 then index refill; screener/gems partial meanwhile) and time it in a quiet buyer gap.
 
 **A. Where agents find and choose us** (from the Grok review, verified 2026-09-25)
-1. `[~]` **Discovery metadata pass** — real output example per endpoint (bazaar `info.output` is one generic placeholder
-   for all: `{"output":{"briefing":"string (llm format) or object (json format)"}}`, shown as the sample on
-   agentic.market); required + described parameters (agentic.market shows `stonk-yield.mint` as required:false, no
-   description); specific tags first (drop generic `solana` lead). Reuse captured responses (`data/endpoint-examples/`
-   on branch `wip/endpoint-pages`).
+1. `[x]` **Discovery metadata pass — SHIPPED `69bc3c9` (deployed 15:40 UTC 9/25, quiet gap).** Finding: agentic.market
+   builds each endpoint's parameter list ONLY from the input-example keys (schema ignored); every 402 sent one
+   placeholder output. Now: input examples for all 47 (`src/lib/input-examples.ts`), real trimmed output examples
+   (`src/lib/output-examples.json` ← `scripts/build-output-examples.ts` ← `data/endpoint-examples/`), standard param
+   descriptions (`src/lib/discovery-meta.ts` describeSchema), specific tags first (rankTags; stonk tags rewritten).
+   CI: `test/discovery-examples.test.ts` (schema-valid examples, ≤1,000-char outputs, header < 8 KB; live 4.2–6.6 KB).
+   Paid sweep 49/50 (log `local/scripts/paid-sweep-2026-09-25.log`) → CDP bazaar showed the new inputs, outputs and
+   tags within minutes. agentic.market had NOT re-imported by 15:52 — re-check.
+   The 1 failure: `stonk-launch-preflight` reference launch is stale (SPYX price moved ~11%; raise 1,164,789,044 vs
+   1,312,085,511 → mismatch) — the endpoint is right, the fixture is stale; also makes its output example `ok:false`.
+1b. `[ ]` Build the preflight reference launch's raise from live StonkFun pricing (no more fixed number); recapture its
+   example. Small backend change.
 2. `[ ]` **Machine-funnel metric** — unpaid 402s vs paid calls per endpoint (where agents drop out).
 3. `[ ]` **Public reference agent** — open-source minimal "StonkFun holder monitor" (stonk-alerts + batch) others fork.
 4. `[ ]` **Homepage hero around the stonk job** (website only), not "47 endpoints".
