@@ -3,6 +3,21 @@
 ## Last session date
 2026-09-20
 
+## ⏸ PARKED (2026-09-25) — Moneta D1, waiting on 3 decisions from Sardius (weekend)
+
+Brief: `../moneta/docs/D1-brief.md` (commit `b66bf34` in 0xSardius/moneta, private). Moneta v1 = paper TRADING book
+for StonkFun coins on the Eris harness (not a yield book — backtest). Harness read in full (Eris v0.2, ~1,300 lines;
+only one tape ever written, 9/4). DexScreener prices graduated StonkFun coins (15/15; 98 of top-100 by volume are
+graduated) — StonkFun price as fallback.
+**Open decisions (resume here):**
+1. Code location: (A) `stonk` strategy inside the Eris repo, deployed as its own service "Moneta"
+   (`ERIS_STRATEGY=stonk`, own wallet/DB/tape) — RECOMMENDED; or (B) Moneta repo with a copy of the harness.
+2. Hosting: small Railway service (~$5/mo, RECOMMENDED) or Sardius's computer first.
+3. Wallet: new Moneta wallet, ~$30 USDC + ~0.02 SOL (Claude generates, Sardius funds).
+Sardius's goals for Moneta (2026-09-25): a separate income source, building experience, proprietary data for SolEnrich,
+and more x402 volume (self-calls labeled; reported separately from organic).
+Then: build D1 (1–1½ sessions) → paid `--once` → deploy → 2-week paper tape → GEM vs WATCH/SKIP at +6h/+24h.
+
 ## ▶️ RESUME HERE (2026-09-23 PM) — quote-stats regression FIXED (`9b5fde8`) · population job on GitHub Actions · 1-week monitor
 
 **Fix `9b5fde8`, deployed 14:00 UTC, verified live:** per-quote shelf stats now come from a full-population summary
