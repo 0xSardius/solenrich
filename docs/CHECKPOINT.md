@@ -3,6 +3,43 @@
 ## Last session date
 2026-09-20
 
+## 📋 ACTIVE PLAN (agreed 2026-09-25) — where agents find us first; buyers; growth; proof; payments
+
+Rule (Sardius): before any change that deploys the API, state the endpoint downtime (restart ≈ 1 min connection errors,
+then index refill; screener/gems partial meanwhile) and time it in a quiet buyer gap.
+
+**A. Where agents find and choose us** (from the Grok review, verified 2026-09-25)
+1. `[~]` **Discovery metadata pass** — real output example per endpoint (bazaar `info.output` is one generic placeholder
+   for all: `{"output":{"briefing":"string (llm format) or object (json format)"}}`, shown as the sample on
+   agentic.market); required + described parameters (agentic.market shows `stonk-yield.mint` as required:false, no
+   description); specific tags first (drop generic `solana` lead). Reuse captured responses (`data/endpoint-examples/`
+   on branch `wip/endpoint-pages`).
+2. `[ ]` **Machine-funnel metric** — unpaid 402s vs paid calls per endpoint (where agents drop out).
+3. `[ ]` **Public reference agent** — open-source minimal "StonkFun holder monitor" (stonk-alerts + batch) others fork.
+4. `[ ]` **Homepage hero around the stonk job** (website only), not "47 endpoints".
+5. `[ ]` **agentic.market curation** — Sardius sends the drafted enrichment request.
+6. `[ ]` **x402scan refresh** — still shows the old tagline; check resources, request refresh.
+**B. Serve current buyers**
+7. `[ ]` Watch `2otm6W` (hint moved) and any stonk-alerts adoption at $0.02 (passive).
+8. `[ ]` Payout history per coin / wallet (Stonk Ledger plan) — after its future is decided.
+9. `[ ]` Price-risk line in `stonk-quote` (backtest: price moves ≈ 5× payouts).
+**C. Growth beyond one buyer**
+10. `[ ]` Sardius: StonkFun partnership conversation (docs link, co-marketing).
+11. `[ ]` Framework integrations: Coinbase AgentKit action provider, Solana Agent Kit plugin, `@solenrich/client` SDK.
+12. `[ ]` Weekly StonkFun payout report (automated from snapshots; X + /stonkfun; paid endpoint later).
+13. `[ ]` Widen reward-coin intelligence beyond StonkFun (Token-2022 fee coins, fee-share launchpads) — later.
+**D. Proof and data**
+14. `[⏸]` Moneta D1 — 3 decisions (see PARKED below).
+15. `[ ]` Sardius: Colosseum entry (deadline 10/12); items 3 + 4 feed it.
+**E. Infrastructure and payments**
+16. `[ ]` PayAI research spike (read-only, ~1h): fees, public listing of settled resources, compatibility with
+    @x402/core 2.17 on one endpoint, uptime. Only on a clear gain: PayAI for Solana ONLY, behind a flag, one test
+    endpoint first, CDP stays for Base, NO automatic failover. (`x402ResourceServer` accepts a facilitator list.)
+17. `[ ]` Sardius: monthly infra costs (Railway, Helius, Upstash) → real margins.
+18. `[ ]` Cleanups: local-only `/docs` unit-test failure on Windows; parked B5 branch (simpler after item 1).
+Declined from the Grok review: "interview the 37 users" (anonymous wallets; adapt: contact line in 402/llms.txt),
+prepaid packs, splitting the $0.25 preflight, renaming routes, $SE revival, query-stream attention index (3 callers).
+
 ## ▶️ 2026-09-25 — product strategy pass: main buyer = a portfolio MONITOR; stonk-alerts repriced
 
 **Finding:** `2otm6W` (70% of revenue) watches ~14–15 StonkFun coins, each queried ~20–30×/day (≈hourly), ~70% the
