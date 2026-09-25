@@ -83,8 +83,9 @@ export const PRICING = {
   'stonk-quote': '0.005',
   // Up to 25 coins per call, from the index (no per-coin upstream reads). Cheaper than screener + N × stonk-yield.
   'stonk-yield-batch': '0.05',
-  // Watchlist of up to 25 coins, from the index; priced for hourly polling by holder agents.
-  'stonk-alerts': '0.005',
+  // Watchlist of up to 25 coins, from the index. $0.02 (was $0.005 at launch, 2026-09-23): it replaces 14–25
+  // per-coin stonk-yield polls ($0.005 each) for a holder agent, so it is priced against what it replaces.
+  'stonk-alerts': '0.02',
 } as const;
 
 /** Entrypoints served without a paywall. Kept out of PRICING so x402/MPP never gate them. */

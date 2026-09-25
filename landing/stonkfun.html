@@ -239,8 +239,8 @@
 
     <!-- ===== JOBS ===== -->
     <section id="jobs">
-      <div class="section-label">Three jobs</div>
-      <h2>Find, cost, and time a trade. Or decide what to launch.</h2>
+      <div class="section-label">Four jobs</div>
+      <h2>Find, cost, and time a trade. Watch what you hold. Or decide what to launch.</h2>
       <div class="jobs">
         <div class="job">
           <h3>Find what is live and paying</h3>
@@ -253,6 +253,12 @@
           <p>Entry and exit cost at your size, tax plus price impact. Breakeven move. Your share of each payout. Expected
             payout over the hold, and whether it covers the round trip. Then a sell-side verdict while you hold.</p>
           <p class="ep">stonk-quote · stonk-yield · exit-signal</p>
+        </div>
+        <div class="job">
+          <h3>Watch what you hold</h3>
+          <p>One call for up to 25 coins, every hour: did the payout land, did it go stale, did the coin stop trading,
+            are holders leaving, and how much it paid since your last check. Yields for the same coins in one more call.</p>
+          <p class="ep">stonk-alerts · stonk-yield-batch</p>
         </div>
         <div class="job">
           <h3>Decide what to launch</h3>
@@ -321,7 +327,7 @@
     <!-- ===== ENDPOINTS ===== -->
     <section id="endpoints">
       <div class="section-label">The endpoints</div>
-      <h2>Eight calls for StonkFun. Every one returns JSON or a briefing.</h2>
+      <h2>Ten calls for StonkFun. Every one returns JSON or a briefing.</h2>
       <p>All are <code>POST https://api.solenrich.com/entrypoints/{key}/invoke</code> with a JSON body. Add <code>"format": "llm"</code> for a short deterministic briefing instead of fields.</p>
       <div class="endpoints">
         <div class="endpoint">
@@ -348,6 +354,16 @@
           <div class="endpoint-header"><span class="endpoint-name">stonk-yield</span><span class="price">$0.005</span></div>
           <p class="endpoint-desc">Trailing 7-day, 30-day, and lifetime holder yield in the quote asset over average market cap, with a caution flag when the window is short, and what a holder is economically long.</p>
           <div class="endpoint-input">mint</div>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint-header"><span class="endpoint-name">stonk-yield-batch</span><span class="price">$0.05</span></div>
+          <p class="endpoint-desc">The same yield for up to 25 coins in one call: pass the mints, or the screener filters. Served from the index in milliseconds, cheaper than one yield call per coin.</p>
+          <div class="endpoint-input">mints? (up to 25) or screener filters, limit? (25)</div>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint-header"><span class="endpoint-name">stonk-alerts</span><span class="price">$0.02</span></div>
+          <p class="endpoint-desc">Watch up to 25 coins you hold: what changed since your last check. Payout landed, payout went stale, stopped trading, holders moved, rewards paid since then, and each coin's payout status now. Poll it every hour.</p>
+          <div class="endpoint-input">mints, since, min_holders_change_pct? (10), stale_after_hours? (24)</div>
         </div>
         <div class="endpoint">
           <div class="endpoint-header"><span class="endpoint-name">stonk-quote</span><span class="price">$0.005</span></div>
