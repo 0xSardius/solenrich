@@ -3,6 +3,20 @@
 ## Last session date
 2026-09-20
 
+## ▶️ 2026-09-25 — product strategy pass: main buyer = a portfolio MONITOR; stonk-alerts repriced
+
+**Finding:** `2otm6W` (70% of revenue) watches ~14–15 StonkFun coins, each queried ~20–30×/day (≈hourly), ~70% the
+same coins day to day; 8 coins on all of 9/21–9/24 (incl. ZCAT, GP, RAYCAT). Script `local/scripts/token-demand.ts`
+(read-only scan of `metrics:tokens:*:{date}`). His job = "monitor my StonkFun positions". Our new endpoints could cut
+his spend up to 90% (per-coin $1.82/day → batch $1.30 → alerts at $0.005 $0.13). CDP fee $0.001/settlement = 20% of a
+$0.005 call, 2% of $0.05 — per-coin calls carry the worst margin.
+**Shipped `b6ffef8` (13:51 UTC, verified 13:58):** `stonk-alerts` $0.005 → **$0.02** (no outside callers yet; 402 shows
+20000 base units on both networks); batch hint REMOVED from the per-coin `stonk-yield` response (kept on the screener);
+llms.txt "start here" holder line; `/stonkfun` 4th job "Watch what you hold" + the two missing endpoint cards (the page
+said "Eight calls"; now "Ten"). Sweep 50/50.
+**Open (Sardius):** monthly infra costs (Railway, Helius, Upstash) → real margin in the next review.
+**Next:** long-term growth and expansion beyond the single buyer.
+
 ## ⏸ PARKED (2026-09-25) — Moneta D1, waiting on 3 decisions from Sardius (weekend)
 
 Brief: `../moneta/docs/D1-brief.md` (commit `b66bf34` in 0xSardius/moneta, private). Moneta v1 = paper TRADING book
