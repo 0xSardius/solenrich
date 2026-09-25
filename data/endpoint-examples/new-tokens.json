@@ -1,0 +1,20 @@
+{
+  "key": "new-tokens",
+  "captured_at": "2026-09-22T00:10:18.442Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 60,
+  "output": {
+    "tokens": [],
+    "total_scanned": 0,
+    "total_passed": 0,
+    "filters": {
+      "min_liquidity_usd": 1000,
+      "max_risk_score": 0.8,
+      "limit": 10
+    },
+    "last_updated": "2026-09-22T00:10:18.446Z",
+    "llm_summary": "## New Token Discovery\n\nScanned 0 recently listed tokens. 0 passed filters (min liquidity: $1,000.00, max risk: 80%).\n\nNo tokens matched the criteria. Try lowering the min_liquidity_usd or raising max_risk_score.\n\nData as of: 2026-09-22T00:10:18.446Z"
+  }
+}

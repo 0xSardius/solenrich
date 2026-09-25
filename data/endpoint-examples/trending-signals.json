@@ -1,0 +1,21 @@
+{
+  "key": "trending-signals",
+  "captured_at": "2026-09-22T00:10:18.381Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 115,
+  "output": {
+    "tokens": [],
+    "total_scanned": 0,
+    "filters": {
+      "min_liquidity_usd": 10000,
+      "max_risk_score": 0.7,
+      "limit": 10,
+      "include_whale_watch": true
+    },
+    "overall_sentiment": "mixed",
+    "last_updated": "2026-09-22T00:10:18.359Z",
+    "llm_summary": "## Trending Signals — What's Worth Paying Attention To\n\nNo tokens passed the current filters.\nScanned 0 candidates from DexScreener trending. Try loosening filters (lower min_liquidity_usd, raise max_risk_score).\n\nData as of: 2026-09-22T00:10:18.359Z"
+  }
+}

@@ -1,0 +1,142 @@
+{
+  "key": "trenches-scan",
+  "captured_at": "2026-09-22T00:09:19.845Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 23761,
+  "output": {
+    "picks": [
+      {
+        "mint": "7AUzu756Pp3Cg3NByuKfcRSAFFt31kjC6U6R1npkiA1Q",
+        "symbol": "MAJOR",
+        "name": "Free Major",
+        "age_hours": 0.7,
+        "composite_score": 0.34,
+        "confluence": 2,
+        "verdict": "MODERATE",
+        "runner": {
+          "stage": "IGNITING",
+          "runner_score": 0.427,
+          "volume_h1_usd": 501336,
+          "price_change_h1_pct": -51.79,
+          "buys_h1": 5122,
+          "sells_h1": 4463,
+          "flags": [
+            "accelerating_1h",
+            "volume_surge",
+            "thin_history",
+            "… 1 more (4 total)"
+          ]
+        },
+        "smart_money": {
+          "smart_buyers": 1,
+          "conviction_holder_buyers": 0,
+          "total_spent_usd": 996.07,
+          "most_recent_buy_minutes_ago": 37
+        },
+        "attention": null,
+        "liquidity_usd": 12395,
+        "market_cap_usd": 23710,
+        "price_usd": 0.00002371,
+        "reasoning": "Double confluence: 1 proven-winner wallet bought, latest 37m ago; on-chain IGNITING (runner score 0.427); flags: accelerating_1h, volume_surge, thin_history, low_liquidity."
+      },
+      {
+        "mint": "5Zu9yk7VVMm5r2LULyB1qhqxuFQDwMxV2hG8q99jpump",
+        "symbol": "FOMOCATE",
+        "name": "Fomo Cate",
+        "age_hours": 0,
+        "composite_score": 0.43,
+        "confluence": 1,
+        "verdict": "SINGLE_SIGNAL",
+        "runner": {
+          "stage": "RUNNING",
+          "runner_score": 0.959,
+          "volume_h1_usd": 3391,
+          "price_change_h1_pct": 8.8,
+          "buys_h1": 82,
+          "sells_h1": 33,
+          "flags": [
+            "accelerating_5m",
+            "accelerating_1h",
+            "volume_surge",
+            "… 3 more (6 total)"
+          ]
+        },
+        "smart_money": null,
+        "attention": null,
+        "liquidity_usd": 19027,
+        "market_cap_usd": 53370,
+        "price_usd": 0.00005336,
+        "reasoning": "on-chain RUNNING (runner score 0.959); flags: accelerating_5m, accelerating_1h, volume_surge, strong_buy_pressure, price_accelerating, thin_history."
+      },
+      {
+        "mint": "DfbhY8XtNc317jpSEJDQejLD83QUMHtBzyn9EjgSTWGW",
+        "symbol": "BITCOINU",
+        "name": "bitcoinu",
+        "age_hours": 0.2,
+        "composite_score": 0.36,
+        "confluence": 1,
+        "verdict": "SINGLE_SIGNAL",
+        "runner": {
+          "stage": "RUNNING",
+          "runner_score": 0.81,
+          "volume_h1_usd": 187990,
+          "price_change_h1_pct": 95.56,
+          "buys_h1": 1951,
+          "sells_h1": 1420,
+          "flags": [
+            "accelerating_5m",
+            "accelerating_1h",
+            "volume_surge",
+            "… 2 more (5 total)"
+          ]
+        },
+        "smart_money": null,
+        "attention": null,
+        "liquidity_usd": 28911,
+        "market_cap_usd": 96786,
+        "price_usd": 0.00009678,
+        "reasoning": "on-chain RUNNING (runner score 0.81); flags: accelerating_5m, accelerating_1h, volume_surge, price_accelerating, thin_history."
+      },
+      "… 7 more (10 total)"
+    ],
+    "confluence_counts": {
+      "triple": 0,
+      "double": 1,
+      "single": 17
+    },
+    "legs": {
+      "runner": {
+        "ok": true,
+        "candidates_scanned": 43,
+        "passed_filters": 15,
+        "error": null
+      },
+      "smart_money": {
+        "ok": true,
+        "seeds_scanned": 104,
+        "total_recent_buys": 57,
+        "error": null
+      },
+      "attention": {
+        "ok": true,
+        "total_queries": 98,
+        "sample_quality": "ok",
+        "error": null
+      }
+    },
+    "filters": {
+      "max_token_age_hours": 24,
+      "min_liquidity_usd": 5000,
+      "limit": 10
+    },
+    "caveats": [
+      "Composite ranking, not a buy list. Fresh memecoin outcomes are binary — most candidates still fail; the edge is confluence and avoiding obvious dumps. Not financial advice.",
+      "Runner stage PARABOLIC_LATE or FADING on a pick means the move may already be over — confluence there describes what happened, not what is next.",
+      "Attention leg is derived from SolEnrich's own agent query stream; it is sparse at current traffic and contributes at most 10% of the composite."
+    ],
+    "last_updated": "2026-09-22T00:09:19.787Z",
+    "llm_summary": "## Trenches Scan — three-signal memecoin confluence\n\nUniverse: 43 runner candidates scanned (15 passed filters), 104 proven-winner seeds checked (57 recent buys), agent-attention sample: ok. Confluence: 0 triple / 1 double / 17 single.\n\n| # | Token | Age | Score | Signals | Liquidity | Verdict |\n|---|-------|-----|-------|---------|-----------|---------|\n| 1 | $MAJOR (7AUz...A1Q) | 0.7h | 0.34 | 👛 1 smart + ⚡ IGNITING | $12,395.00 | MODERATE |\n| 2 | $FOMOCATE (5Zu9...ump) | 0h | 0.43 | ⚡ RUNNING | $19,027.00 | SINGLE_SIGNAL |\n| 3 | $BITCOINU (Dfbh...WGW) | 0.2h | 0.36 | ⚡ RUNNING | $28,911.00 | SINGLE_SIGNAL |\n| 4 | $MOON (BxjH...oon) | 0.7h | 0.23 | ⚡ RUNNING | $13,591.00 | SINGLE_SIGNAL |\n| 5 | $JEANCAT (GvTa...ump) | 1.2h | 0.19 | ⚡ PARABOLIC_LATE | $39,967.00 | SINGLE_SIGNAL |\n| 6 | $PRESTIGE (E4AG...Ttq) | 1.8h | 0.15 | 👛 1 smart | $13,283.12 | SINGLE_SIGNAL |\n| 7 | $pMoney (FErL...XcG) | 4.6h | 0.15 | 👛 1 smart | $6,227.06 | SINGLE_SIGNAL |\n| 8 | $QUILL (2cko...4eM) | 7.2h | 0.15 | 👛 1 smart | $6,147.24 | SINGLE_SIGNAL |\n| 9 | $kirkinu (EkEq...gvh) | 1.3h | 0.12 | ⚡ RUNNING | $18,861.00 | SINGLE_SIGNAL |\n| 10 | $bub (FZix...pPq) | 10.5h | 0.1 | ⚡ QUIET | $29,385.00 | SINGLE_SIGNAL |\n\n### Reasoning\n- **$MAJOR (7AUz...A1Q)**: Double confluence: 1 proven-winner wallet bought, latest 37m ago; on-chain IGNITING (runner score 0.427); flags: accelerating_1h, volume_surge, thin_history, low_liquidity.\n- **$FOMOCATE (5Zu9...ump)**: on-chain RUNNING (runner score 0.959); flags: accelerating_5m, accelerating_1h, volume_surge, strong_buy_pressure, price_accelerating, thin_history.\n- **$BITCOINU (Dfbh...WGW)**: on-chain RUNNING (runner score 0.81); flags: accelerating_5m, accelerating_1h, volume_surge, price_accelerating, thin_history.\n- **$MOON (BxjH...oon)**: on-chain RUNNING (runner score 0.501); flags: accelerating_1h, volume_surge, strong_buy_pressure, thin_history, low_liquidity.\n- **$JEANCAT (GvTa...ump)**: on-chain PARABOLIC_LATE (runner score 0.432); flags: accelerating_1h, volume_surge, strong_buy_pressure, price_accelerating, up_big_24h, already_ran.\n\n_Composite ranking, not a buy list. Fresh memecoin outcomes are binary — most candidates still fail; the edge is confluence and avoiding obvious dumps. Not financial advice._\n_Runner stage PARABOLIC_LATE or FADING on a pick means the move may already be over — confluence there describes what happened, n… (2563 characters)"
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "key": "smart-money-flow",
+  "captured_at": "2026-09-22T00:10:03.249Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 39283,
+  "output": {
+    "seed_wallets_considered": 49,
+    "seed_source": "derived",
+    "qualifying_smart_wallets": [
+      {
+        "address": "4nBuvPXns3FofHt8G1nApNegcMtC1C4BdWDEYbc3dQzy",
+        "win_rate": 0.76,
+        "total_pnl_usd": 352.27,
+        "trades_analyzed": 325,
+        "sharpe_ratio": 0.12,
+        "consistency_score": 0.94,
+        "labels": [
+          "high_frequency",
+          "consistent_trader",
+          "strong_edge"
+        ]
+      }
+    ],
+    "accumulated_tokens": [],
+    "clusters": [],
+    "filters": {
+      "lookback_days": 14,
+      "min_win_rate": 0.55,
+      "top_n_tokens": 10,
+      "include_graph": true,
+      "user_provided_wallets": false
+    },
+    "last_updated": "2026-09-22T00:10:03.227Z",
+    "llm_summary": "## Smart Money Flow — Where High-Performing Wallets Are Moving\n\n_Seeds: programmatically derived from current trending-token whale activity (49 candidates, refreshed weekly)._\n\nScanned 49 seed wallets over 14 days. **1 qualifying smart wallets** (win rate ≥ 55%, ≥ 5 trades).\n\n### Top Smart Wallets\n| Wallet | Win Rate | Trades | Total PnL | Sharpe | Labels |\n|--------|----------|--------|-----------|--------|--------|\n| 4nBu...Qzy | 76% | 325 | $352.27 | 0.12 | high_frequency, consistent_trader, strong_edge |\n\n_No single token had 2+ smart wallets accumulating — no consensus signal this cycle._\n\n### Interpretation\nSmart wallets are identified purely by trading performance — no insider labels. Consensus accumulation (2+ smart wallets buying the same token) is a stronger signal than any single wallet. Clusters can indicate coordinated trading, shared strategy providers, or multi-wallet setups — treat the `suspicious_pattern` flag as the distinguishing marker.\n\nData as of: 2026-09-22T00:10:03.227Z"
+  }
+}

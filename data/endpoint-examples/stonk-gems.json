@@ -1,0 +1,150 @@
+{
+  "key": "stonk-gems",
+  "captured_at": "2026-09-22T00:48:55.168Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 1904,
+  "output": {
+    "gems": [
+      {
+        "rank": 1,
+        "mint": "3xPfXX2RrEAD3dWx7YYYTuQ2AXS4S1xBu4GVHxiFoAwQ",
+        "symbol": "Shiba",
+        "name": "Wandering Shiba",
+        "quote_mint": "HTmQz7My6MehV7bjhJ6jde8nDND1yvsz68d24LP7YgUQ",
+        "quote_symbol": "GP",
+        "quote_category": "custom",
+        "gem_score": 94,
+        "stage": "GEM",
+        "reasons": [
+          "paid holders 5.3h ago",
+          "489 holders",
+          "mcap $47.6K — early",
+          "… 3 more (6 total)"
+        ],
+        "warnings": [],
+        "payout_status": "PAYING",
+        "hours_since_last_payout": 5.3,
+        "payout_count": 1415,
+        "transfer_fee_bps": 100,
+        "round_trip_pct": 2,
+        "holder_count": 489,
+        "age_days": 1.22,
+        "price_usd": 0.0000476085543538237,
+        "market_cap_usd": 47608.5543538237,
+        "volume_24h_usd": 77124.52390369169,
+        "turnover_24h_pct": 162,
+        "price_change_24h_pct": 71.42007461963016,
+        "flywheel_active": false,
+        "rewards_usd": 3992.09,
+        "yield_7d_pct": 12.9935,
+        "launchpad": "launchlab",
+        "status": "graduated"
+      },
+      {
+        "rank": 2,
+        "mint": "8f9E3iCyYff8QVienqkc8CsAzPuAPP7AWyxGVu6cy91n",
+        "symbol": "BOND",
+        "name": "Runescape Bond",
+        "quote_mint": "HTmQz7My6MehV7bjhJ6jde8nDND1yvsz68d24LP7YgUQ",
+        "quote_symbol": "GP",
+        "quote_category": "custom",
+        "gem_score": 94,
+        "stage": "GEM",
+        "reasons": [
+          "paid holders 4.7h ago",
+          "405 holders",
+          "mcap $62.0K — early",
+          "… 3 more (6 total)"
+        ],
+        "warnings": [],
+        "payout_status": "PAYING",
+        "hours_since_last_payout": 4.7,
+        "payout_count": 2776,
+        "transfer_fee_bps": 300,
+        "round_trip_pct": 6,
+        "holder_count": 405,
+        "age_days": 3.9,
+        "price_usd": 0.00006195071932583212,
+        "market_cap_usd": 61950.71932583213,
+        "volume_24h_usd": 75961.77699126836,
+        "turnover_24h_pct": 122.6,
+        "price_change_24h_pct": 65.20828312254152,
+        "flywheel_active": false,
+        "rewards_usd": 6855.35,
+        "yield_7d_pct": 24.4307,
+        "launchpad": "launchlab",
+        "status": "graduated"
+      },
+      {
+        "rank": 3,
+        "mint": "ADwZDpksXiV3jq9UJ7BWCYcttzNezHJMhC1i1YqkiKZW",
+        "symbol": "AMD",
+        "name": "A MEME DOG",
+        "quote_mint": "AMD8XwJXgQ9WV45Wyj9yFLejxzf2J6VM1PJY8bJEjeES",
+        "quote_symbol": "AMD",
+        "quote_category": "prestock",
+        "gem_score": 94,
+        "stage": "GEM",
+        "reasons": [
+          "paid holders 5.4h ago",
+          "518 holders",
+          "mcap $25.0K — early",
+          "… 3 more (6 total)"
+        ],
+        "warnings": [],
+        "payout_status": "PAYING",
+        "hours_since_last_payout": 5.4,
+        "payout_count": 1648,
+        "transfer_fee_bps": 100,
+        "round_trip_pct": 2,
+        "holder_count": 518,
+        "age_days": 5.4,
+        "price_usd": 0.00002503562429490661,
+        "market_cap_usd": 25035.62429490661,
+        "volume_24h_usd": 56468.787523318024,
+        "turnover_24h_pct": 225.6,
+        "price_change_24h_pct": 61.58670574768195,
+        "flywheel_active": false,
+        "rewards_usd": 6321.15,
+        "yield_7d_pct": 17.0148,
+        "launchpad": "launchlab",
+        "status": "graduated"
+      },
+      "… 12 more (15 total)"
+    ],
+    "scanned": 18199,
+    "passed_filters": 1274,
+    "stage_counts": {
+      "GEM": 99,
+      "WATCH": 550,
+      "NOISE": 625,
+      "DEAD": 0
+    },
+    "filters": {
+      "quote_mint": null,
+      "category": null,
+      "max_age_days": 14,
+      "min_holders": 25,
+      "max_market_cap_usd": 5000000,
+      "limit": 15
+    },
+    "index": {
+      "rows": 18199,
+      "last_refresh_at": "2026-09-22T00:42:35.459Z",
+      "series_days": 15,
+      "oldest_point_at": "2026-09-06T12:00:00.000Z"
+    },
+    "caveats": [
+      "A ranking of what looks early and real on the tape, not a safety verdict and not a price prediction. Thresholds come from a 2026-09-06 measurement over 8,000 reward coins (45% traded in 24h, 13% paid in 24h, median holders 2). NFA.",
+      "round_trip_pct is the transfer tax on a buy plus a sell (2 × bps), before slippage — the hurdle a trade must clear."
+    ],
+    "next_steps": [
+      "trenches-check on a GEM for velocity + smart-money + attention confluence (tax-aware).",
+      "stonk-reward-risk for payout status and the on-chain fee config before sizing.",
+      "exit-signal while you hold it — reports net PnL after the sell-side tax."
+    ],
+    "llm_summary": "## StonkFun Gems — 15 of 1274 candidates (18199 reward coins scanned)\n\nStages: 99 GEM · 550 WATCH · 625 noise | ≤14d old, ≥25 holders, mcap ≤ $5,000,000.00 | refreshed 2026-09-22T00:42:35.459Z\n\n| # | Coin | Quote | Score | Payout | Holders | Mcap | Turnover | 24h | RT cost |\n|---|------|-------|-------|--------|---------|------|----------|-----|---------|\n| 1 | $Shiba | GP | 💎 GEM 94 | 5.3h ago | 489 | $47,608.55 | 162% | +71% | 2% |\n| 2 | $BOND | GP | 💎 GEM 94 | 4.7h ago | 405 | $61,950.72 | 122.6% | +65% | 6% |\n| 3 | $AMD | AMD | 💎 GEM 94 | 5.4h ago | 518 | $25,035.62 | 225.6% | +62% | 2% |\n| 4 | $HMASK | GP | 💎 GEM 94 | 5.7h ago | 299 | $86,333.10 | 54.9% | +83% | 6% |\n| 5 | $GHOSTI | PSOL | 💎 GEM 94 | 4.2h ago | 450 | $35,197.85 | 78.4% | +68% | 2% |\n| 6 | $TIX | RBLX | 💎 GEM 91 | 5.2h ago | 148 | $24,404.22 | 98.9% | +69% | 6% |\n| 7 | $LOCKINU | GMEX | 💎 GEM 89 | 4.2h ago | 840 | $83,015.27 | 202.6% | +82% | 6% |\n| 8 | $HYPEBEAST | HYPE | 💎 GEM 89 | 5.4h ago | 711 | $69,490.88 | 81.5% | +60% | 6% |\n| 9 | $KERMIT | PEPE | 💎 GEM 89 | 5h ago | 922 | $93,767.23 | 54.4% | +2% | 6% |\n| 10 | $RSI | GOOGLX | 💎 GEM 89 | 4.6h ago | 757 | $57,116.80 | 77.9% | +48% | 6% |\n| 11 | $TROLLIONS | TROLL | 💎 GEM 89 | 4.7h ago | 377 | $66,788.00 | 64% | +24% | 6% |\n| 12 | $LIHUA | wXRP | 💎 GEM 89 | 5h ago | 318 | $4,678.12 | 686.7% | +83% | 6% |\n| 13 | $Exaflopcat | WBTC | 💎 GEM 89 | 4.2h ago | 784 | $9,797.73 | 264.3% | +27% | 2% |\n| 14 | $chinese | BABA | 💎 GEM 89 | 4.9h ago | 337 | $19,306.52 | 24.5% | +14% | 2% |\n| 15 | $LACAT | BROS | 💎 GEM 89 | 5h ago | 463 | $12,540.98 | 36.6% | +10% | 6% |\n\n### $Shiba — 💎 GEM 94/100\n`3xPfXX2RrEAD3dWx7YYYTuQ2AXS4S1xBu4GVHxiFoAwQ`\n+ paid holders 5.3h ago · 489 holders · mcap $47.6K — early · 24h turnover 162% of mcap · 1.2d old · GP quote: 71% of its coins traded today\n\n### $BOND — 💎 GEM 94/100\n`8f9E3iCyYff8QVienqkc8CsAzPuAPP7AWyxGVu6cy91n`\n+ paid holders 4.7h ago · 405 holders · mcap $62.0K — early · 24h turnover 123% of mcap · 3.9d old · GP quote: 71% of its coins traded today\n\n### $AMD — 💎 GEM 94/100\n`ADwZDpksXiV3jq9UJ7BWCYcttzNezHJMhC1i1YqkiKZW`\n+ paid holders 5.4h ago · 518 holders · mcap $25.0K — early · 24h turnover 226% of mcap · 5.4d old · AMD quote: 79% of its coins traded today\n\n### $HMASK — 💎 GEM 94/100\n`EPJQWq9AUPsAEnT9ZU1vdj7mk1woAHt4QwaYdZLoPprb`\n+ paid holders 5.7h ago · 299 holders · mcap $86.3K — … (3893 characters)"
+  }
+}

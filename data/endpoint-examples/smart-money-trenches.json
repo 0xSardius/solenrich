@@ -1,0 +1,137 @@
+{
+  "key": "smart-money-trenches",
+  "captured_at": "2026-09-22T00:08:32.001Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 26495,
+  "output": {
+    "signals": [
+      {
+        "mint": "7AUzu756Pp3Cg3NByuKfcRSAFFt31kjC6U6R1npkiA1Q",
+        "symbol": "MAJOR",
+        "token_age_hours": 0.7,
+        "smart_buyers": 1,
+        "conviction_holder_buyers": 0,
+        "total_spent_usd": 996.07,
+        "most_recent_buy_minutes_ago": 36,
+        "liquidity_usd": 12178.71,
+        "market_cap_usd": 23008,
+        "price_usd": 0.000023,
+        "buys": [
+          {
+            "wallet": "DdvAwhPFBAcFuEuMdFgBbek1Spme5ztKQ67f4gA9NHvp",
+            "wallet_type": "active_trader",
+            "seed_win_rate": 0,
+            "seed_realized_1w_usd": 74105,
+            "spent_usd": 0.57,
+            "minutes_ago": 36,
+            "elevated_cadence": false
+          },
+          {
+            "wallet": "DdvAwhPFBAcFuEuMdFgBbek1Spme5ztKQ67f4gA9NHvp",
+            "wallet_type": "active_trader",
+            "seed_win_rate": 0,
+            "seed_realized_1w_usd": 74105,
+            "spent_usd": 995.5,
+            "minutes_ago": 36,
+            "elevated_cadence": false
+          }
+        ]
+      },
+      {
+        "mint": "E4AGeNV5d4D3i7sty8X7wx5C5uq4VbvDNZym54P7pTtq",
+        "symbol": "PRESTIGE",
+        "token_age_hours": 1.8,
+        "smart_buyers": 1,
+        "conviction_holder_buyers": 0,
+        "total_spent_usd": 0.9,
+        "most_recent_buy_minutes_ago": 102,
+        "liquidity_usd": 13283.12,
+        "market_cap_usd": 20675,
+        "price_usd": 0.00002067,
+        "buys": [
+          {
+            "wallet": "DdvAwhPFBAcFuEuMdFgBbek1Spme5ztKQ67f4gA9NHvp",
+            "wallet_type": "active_trader",
+            "seed_win_rate": 0,
+            "seed_realized_1w_usd": 74105,
+            "spent_usd": 0.9,
+            "minutes_ago": 102,
+            "elevated_cadence": false
+          }
+        ]
+      },
+      {
+        "mint": "FgU8hVMmCss3biVXvmsgBiDNdYLaDHtEcXXMcCSVpump",
+        "symbol": "$",
+        "token_age_hours": 2.2,
+        "smart_buyers": 1,
+        "conviction_holder_buyers": 0,
+        "total_spent_usd": 436.13,
+        "most_recent_buy_minutes_ago": 108,
+        "liquidity_usd": 3446.91,
+        "market_cap_usd": 3323,
+        "price_usd": 0.0000035,
+        "buys": [
+          {
+            "wallet": "6DQAGJT7VZPVBsuG4kn3AvpyHCEi7B2RFFvMZdbqQqqP",
+            "wallet_type": "active_trader",
+            "seed_win_rate": 0,
+            "seed_realized_1w_usd": 86582,
+            "spent_usd": 108.79,
+            "minutes_ago": 108,
+            "elevated_cadence": false
+          },
+          {
+            "wallet": "6DQAGJT7VZPVBsuG4kn3AvpyHCEi7B2RFFvMZdbqQqqP",
+            "wallet_type": "active_trader",
+            "seed_win_rate": 0,
+            "seed_realized_1w_usd": 86582,
+            "spent_usd": 108.79,
+            "minutes_ago": 108,
+            "elevated_cadence": false
+          },
+          {
+            "wallet": "6DQAGJT7VZPVBsuG4kn3AvpyHCEi7B2RFFvMZdbqQqqP",
+            "wallet_type": "active_trader",
+            "seed_win_rate": 0,
+            "seed_realized_1w_usd": 86582,
+            "spent_usd": 218.55,
+            "minutes_ago": 112,
+            "elevated_cadence": false
+          }
+        ]
+      },
+      "… 2 more (5 total)"
+    ],
+    "seeds_scanned": 104,
+    "seeds_skipped_bot_cadence": [
+      "wae8YMC7PWjcPbM3mdx3CUDZEkkjaFAE4VxS5mF2YuN",
+      "6bQSN4d6anoTwnE6XDPGLA9RV8cqZPeNJro4iQUsWmso"
+    ],
+    "seeds_flagged_elevated_cadence": [
+      "FLnMeVLh5RPhSRnhLsaNWiGxJxmULViqEzrQtheAzhts",
+      "8ZXnRVHWzcqgy54q6WUQKfAqfk6fZTYfK9BV37XjNcAf",
+      "AcoNeFQsTPYs7ZrH8RMWaxxGJTTQJJ4H5aTXmptaz5UK",
+      "… 1 more (4 total)"
+    ],
+    "total_recent_buys": 58,
+    "buys_on_older_tokens": 49,
+    "buys_unknown_age": 0,
+    "filters": {
+      "hours_back": 12,
+      "max_token_age_hours": 6,
+      "min_buyers": 1,
+      "limit": 10
+    },
+    "seed_set": {
+      "derived_at": "2026-08-27",
+      "active_traders": 100,
+      "conviction_holders": 6,
+      "source": "birdeye-leaderboard-realized-pnl + known-runner-miners, vetted via cadence/bot-detection/copy-trade"
+    },
+    "last_updated": "2026-09-22T00:08:31.973Z",
+    "llm_summary": "## Smart Money in the Trenches — Proven Winners Buying Fresh Tokens\n\n_Seeds: 100 vetted realized-PnL winners + 6 conviction holders (derived 2026-08-27, bot-filtered). Window: buys in the last 12h on tokens younger than 6h._\n\n⚠ 2 seed(s) skipped this scan — live cadence at bot levels: wae8...YuN, 6bQS...mso.\n\n**5 fresh token(s)** bought by proven wallets (58 total recent buys across 104 seeds).\n\n| Token | Age | Smart Buyers | Spent | Last Buy | Liquidity | MCap |\n|-------|-----|--------------|-------|----------|-----------|------|\n| MAJOR | 0.7h | 1 | $996.07 | 36m ago | $12,178.71 | $23,008.00 |\n| PRESTIGE | 1.8h | 1 | $0.90 | 102m ago | $13,283.12 | $20,675.00 |\n| $ | 2.2h | 1 | $436.13 | 108m ago | $3,446.91 | $3,323.00 |\n| SUPER | 2.3h | 1 | $3.37 | 136m ago | $9,618.05 | $15,737.00 |\n| pMoney | 4.6h | 1 | $1.14 | 271m ago | $6,227.06 | $4,426.00 |\n\n### MAJOR — `7AUzu756Pp3Cg3NByuKfcRSAFFt31kjC6U6R1npkiA1Q`\n- DdvA...Hvp (0% win rate, $74,105.00 realized 1W at vetting) spent $0.57 — 36m ago\n- DdvA...Hvp (0% win rate, $74,105.00 realized 1W at vetting) spent $995.50 — 36m ago\n\n### PRESTIGE — `E4AGeNV5d4D3i7sty8X7wx5C5uq4VbvDNZym54P7pTtq`\n- DdvA...Hvp (0% win rate, $74,105.00 realized 1W at vetting) spent $0.90 — 102m ago\n\n### $ — `FgU8hVMmCss3biVXvmsgBiDNdYLaDHtEcXXMcCSVpump`\n- 6DQA...qqP (0% win rate, $86,582.00 realized 1W at vetting) spent $108.79 — 108m ago\n- 6DQA...qqP (0% win rate, $86,582.00 realized 1W at vetting) spent $108.79 — 108m ago\n- 6DQA...qqP (0% win rate, $86,582.00 realized 1W at vetting) spent $218.55 — 112m ago\n\n### SUPER — `9LYqtgmvv888zCX8wHZ25JeRBrjnaXHL1pDx4DSiov2b`\n- HWYp...WKR (0% win rate, $108,443.00 realized 1W at vetting) spent $3.37 — 136m ago\n\n### pMoney — `FErL7WQgfQDeac1MxE1jG6uG9USBCswZqvf32fYrzXcG`\n- DdvA...Hvp (0% win rate, $74,105.00 realized 1W at vetting) spent $0.57 — 271m ago\n- DdvA...Hvp (0% win rate, $74,105.00 realized 1W at vetting) spent $0.57 — 271m ago\n\n### Interpretation\nSeeds are proven-winner wallets (realized leaderboard PnL, vetted for human cadence), re-checked for bot behavior on every scan. Multiple distinct smart buyers on the same fresh token is the strongest form of this signal; a single buyer is attention, not consensus. Fresh tokens are high-risk by construction — this is an attention signal for further research (due-diligence, token-x-ray), not a buy recommendation.\n\nData as of: 2026-09-22T00:… (2410 characters)"
+  }
+}

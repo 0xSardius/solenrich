@@ -1,0 +1,35 @@
+{
+  "key": "parse-transaction",
+  "captured_at": "2026-09-22T00:10:18.264Z",
+  "input": {
+    "signature": "bqTH7u2PJ33gDQwZMy9BXVxABRpgUbY8xSuK6y9PpKYxucFKhiJyiD7JTrH1zxFvMEJGz4847tvotMoP1Ekavaa",
+    "format": "both"
+  },
+  "ms": 87,
+  "output": {
+    "signature": "bqTH7u2PJ33gDQwZMy9BXVxABRpgUbY8xSuK6y9PpKYxucFKhiJyiD7JTrH1zxFvMEJGz4847tvotMoP1Ekavaa",
+    "type": "TRANSFER",
+    "description": "E16prLnWTwfLUYgXRTELYgw4u8QUnN9CAcHceLrDTjN1 transferred 0.0001 SOL to vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg.",
+    "protocol": null,
+    "fee_sol": 0.00008,
+    "fee_payer": "E16prLnWTwfLUYgXRTELYgw4u8QUnN9CAcHceLrDTjN1",
+    "timestamp": "2026-05-31T09:20:05.000Z",
+    "success": true,
+    "native_transfers": [
+      {
+        "from": "E16prLnWTwfLUYgXRTELYgw4u8QUnN9CAcHceLrDTjN1",
+        "to": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+        "amount_sol": 0.0001
+      }
+    ],
+    "token_transfers": [],
+    "accounts_involved": [
+      "E16prLnWTwfLUYgXRTELYgw4u8QUnN9CAcHceLrDTjN1",
+      "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+      "11111111111111111111111111111111",
+      "… 1 more (4 total)"
+    ],
+    "last_updated": "2026-09-22T00:00:28.297Z",
+    "llm_summary": "## Transaction: bqTH...vaa\n\nType: TRANSFER. E16prLnWTwfLUYgXRTELYgw4u8QUnN9CAcHceLrDTjN1 transferred 0.0001 SOL to vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg..\nFee: 0.000080 SOL. Payer: E16p...jN1.\nStatus: Confirmed. Time: 2026-05-31T09:20:05.000Z.\n\nSOL transfers: E16p...jN1 → vine...PTg: 0.0001 SOL.\n\n4 accounts involved.\n\nData as of: 2026-09-22T00:00:28.297Z"
+  }
+}

@@ -89,7 +89,9 @@ import { StonkPreflightAnalyzer } from "../enrichers/stonk-preflight";
 import { StonkQuoteAnalyzer } from "../enrichers/stonk-quote";
 import { registerStonkEntrypoints } from "../entrypoints/stonk";
 import { formatStonkRewardRiskBriefing } from "../formatters/llm-stonk";
-import { buildExampleLaunchTransaction, EXAMPLE_LAUNCH } from "../sources/launchlab";
+import { INPUT_EXAMPLES } from "./input-examples";
+import OUTPUT_EXAMPLES from "./output-examples.json";
+import { describeSchema, rankTags } from "./discovery-meta";
 import { registerRunnerEntrypoint } from "../entrypoints/runner";
 import { registerFeedEntrypoint } from "../entrypoints/feed";
 import { FeedStore } from "../enrichers/feed-store";
@@ -440,70 +442,27 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'hyperliquid-trader-profile': ['hyperliquid', 'perps', 'trader-profile', 'trader-pnl', 'smart-money'],
     'hyperliquid-smart-money': ['hyperliquid', 'smart-money', 'perps', 'positioning', 'copy-trade'],
     'gacha-ev-scan': ['solana', 'jupiter-gacha', 'expected-value', 'trading-cards', 'rwa'],
-    'stonk-reward-risk': ['solana', 'stonkfun', 'reward-coin', 'transfer-tax', 'token-risk'],
-    'stonk-yield': ['solana', 'stonkfun', 'holder-yield', 'reward-coin', 'xstocks'],
-    'stonk-yield-batch': ['solana', 'stonkfun', 'holder-yield', 'reward-coin', 'batch', 'xstocks'],
-    'stonk-alerts': ['solana', 'stonkfun', 'alerts', 'reward-coin', 'holder-yield', 'watchlist'],
-    'stonk-screener': ['solana', 'stonkfun', 'screener', 'holder-yield', 'xstocks'],
-    'stonk-launch-preflight': ['solana', 'stonkfun', 'launchlab', 'launch-preflight', 'token-2022'],
-    'stonk-gems': ['solana', 'stonkfun', 'gems', 'reward-coin', 'screener', 'xstocks'],
-    'stonk-launch-intel': ['solana', 'stonkfun', 'launch', 'quote-assets', 'xstocks'],
-    'stonk-quote': ['solana', 'stonkfun', 'trade-cost', 'reward-coin', 'transfer-tax', 'holder-yield'],
+    // StonkFun: 5 specific terms each (the bazaar keeps 5; agents search "stonkfun yield", "payout status", …).
+    'stonk-reward-risk': ['stonkfun', 'payout-status', 'reward-coin', 'transfer-tax', 'token-risk'],
+    'stonk-yield': ['stonkfun', 'holder-yield', 'payout-status', 'reward-coin', 'xstocks'],
+    'stonk-yield-batch': ['stonkfun', 'holder-yield', 'batch', 'reward-coin', 'xstocks'],
+    'stonk-alerts': ['stonkfun', 'payout-alerts', 'watchlist', 'reward-coin', 'holder-yield'],
+    'stonk-screener': ['stonkfun', 'screener', 'payout-status', 'holder-yield', 'xstocks'],
+    'stonk-launch-preflight': ['stonkfun', 'launchlab', 'launch-preflight', 'token-2022', 'reward-coin'],
+    'stonk-gems': ['stonkfun', 'gems', 'reward-coin', 'payout-status', 'xstocks'],
+    'stonk-launch-intel': ['stonkfun', 'launch', 'quote-assets', 'xstocks', 'reward-coin'],
+    'stonk-quote': ['stonkfun', 'trade-cost', 'transfer-tax', 'holder-yield', 'reward-coin'],
   };
 
-  // --- Bazaar input examples (ROLLOUT 2026-06-28; canary CONFIRMED) ------------
-  // CDP's bazaar only catalogs endpoints it can demonstrate as callable. No-required-input
-  // endpoints catalog automatically; parameterized ones need a concrete `input` EXAMPLE
-  // (not just an inputSchema with required fields). Canary (3 endpoints) CONFIRMED this
-  // 2026-06-28 — they cataloged ~11min after re-seed-with-example, while the controls
-  // (settled fresh the prior day, no example) never did. Rolled out to all 23 parameterized
-  // endpoints to take discoverable surface 8 -> 31. Examples reuse SolScout test fixtures.
-  // Metadata-only; payment flow untouched.
-  const BAZAAR_INPUT_EXAMPLES: Record<string, Record<string, unknown>> = {
-    // wallet
-    'enrich-wallet-light': { address: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg' },
-    'enrich-wallet-full': { address: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg' },
-    'wallet-graph': { address: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg' },
-    'wallet-history': { address: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg' },
-    'portfolio-history': { address: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg' },
-    'copy-trade-signals': { address: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg' },
-    'compare-wallets': { addresses: ['vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg', 'BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu'] },
-    // token
-    'enrich-token-light': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
-    'enrich-token-full': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
-    'due-diligence': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
-    'trenches-check': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
-    'exit-signal': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
-    'whale-watch': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
-    'token-trend': { mint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263' },
-    'compare-tokens': { mints: ['DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN'] },
-    // tx / batch / query / protocol
-    'parse-transaction': { signature: 'bqTH7u2PJ33gDQwZMy9BXVxABRpgUbY8xSuK6y9PpKYxucFKhiJyiD7JTrH1zxFvMEJGz4847tvotMoP1Ekavaa' },
-    'batch-enrich': { addresses: ['vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg'], type: 'wallet' },
-    'query': { question: 'Is BONK a safe token to hold?' },
-    'protocol-profile': { protocol: 'jupiter' },
-    // perps
-    'perps-trader-profile': { address: 'BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu' },
-    'perps-cross-venue-funding': { market: 'SOL' },
-    'perps-venue-comparison': { market: 'SOL', size_usd: 5000 },
-    'perps-basis-signal': { asset: 'SOL' },
-    // hyperliquid
-    'hyperliquid-trader-profile': { address: '0xd21d931890d27b6e7e2e668f27931e17698e90f1' },
-    // alerts
-    // The refine() needs at least one token or wallet: `since` alone returned 400 (found 2026-09-21).
-    'check-alerts': { tokens: ['DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263'], since: '2026-06-01T00:00:00Z' },
-    // stonkfun (ZCAT = live reward coin on ZEC; preflight example is a deterministic correct launch)
-    'stonk-reward-risk': { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR' },
-    'stonk-yield': { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR' },
-    'stonk-quote': { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR', size_usd: 100, hold_days: 7 },
-    // A fixed `since` stays valid: older than 31 days is clamped, not rejected.
-    'stonk-alerts': { mints: ['HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR'], since: '2026-09-23T00:00:00Z' },
-    'stonk-launch-preflight': { unsigned_transaction: buildExampleLaunchTransaction(), quote_mint: EXAMPLE_LAUNCH.quoteMint, mode: EXAMPLE_LAUNCH.mode },
-  };
+  // --- Bazaar input + output examples: src/lib/input-examples.ts + src/lib/output-examples.json ---
+  // Input: CDP's bazaar catalogs a parameterized endpoint only with a concrete example (canary 2026-06-28), and
+  // agentic.market builds its parameter list ONLY from the example keys (2026-09-25) — so every endpoint has one.
+  // Output: one trimmed real response per endpoint (scripts/build-output-examples.ts), replacing the single
+  // placeholder every endpoint sent until 2026-09-25. Metadata only; the payment flow is untouched.
 
   const routeConfig = (key: string, price: string) => {
     const meta = ENDPOINT_META[key];
-    const inputSchema = meta?.schema ?? { type: 'object', properties: {} };
+    const inputSchema = describeSchema(meta?.schema ?? { type: 'object', properties: {} });
     return {
       // Solana USDC first (native chain for the data), Base USDC second when
       // enabled. The payer picks whichever network their wallet signs.
@@ -535,7 +494,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
       // The stylized SE mark (1024², black background baked in, so it reads on light and dark pages). Unset until
       // 2026-09-23; curated bazaar/agentic.market entries (e.g. Exa) carry one.
       iconUrl: "https://www.solenrich.com/logo.png",
-      tags: BAZAAR_TAGS[key] ?? DEFAULT_TAGS,
+      tags: rankTags(BAZAAR_TAGS[key] ?? DEFAULT_TAGS),
       description: meta?.description ?? "SolEnrich enrichment endpoint",
       mimeType: "application/json",
       // `declareDiscoveryExtension` already returns `{ bazaar: {...} }`, so assign it
@@ -545,15 +504,13 @@ if (PAYMENTS_ENABLED && resourceServer) {
       // This changes only discovery metadata; `accepts[]` and the payment flow are untouched.
       extensions: declareDiscoveryExtension({
         bodyType: 'json',
-        // CANARY: concrete example input for 3 parameterized endpoints (see BAZAAR_INPUT_EXAMPLES).
-        // undefined for all others = unchanged control behavior.
-        input: BAZAAR_INPUT_EXAMPLES[key],
+        input: INPUT_EXAMPLES[key],
         inputSchema: inputSchema as Record<string, unknown>,
         output: {
           example: {
             run_id: 'uuid',
             status: 'succeeded',
-            output: { briefing: 'string (llm format) or object (json format)' },
+            output: (OUTPUT_EXAMPLES as Record<string, unknown>)[key] ?? { briefing: 'string (llm format) or object (json format)' },
           },
         },
       }),

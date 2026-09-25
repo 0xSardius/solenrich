@@ -1,0 +1,93 @@
+{
+  "key": "perps-venue-comparison",
+  "captured_at": "2026-09-22T00:10:10.620Z",
+  "input": {
+    "market": "SOL",
+    "size_usd": 5000,
+    "format": "both"
+  },
+  "ms": 2425,
+  "output": {
+    "market": "SOL",
+    "size_usd": 5000,
+    "side": "long",
+    "spot_slippage_source": "jupiter-quote",
+    "spot_slippage_pct": 0,
+    "spot_slippage_tier_used": 10000,
+    "checked_at": 1790035810602,
+    "venues": [
+      {
+        "venue": "jupiter-perps",
+        "available": true,
+        "type": "solana-onchain",
+        "borrow_apr_long": 12.739010370055931,
+        "borrow_apr_short": 12.739010370055931,
+        "open_interest_usd": 38217996.196717,
+        "oi_cap_headroom_usd": 211719843.861005,
+        "estimated_slippage_pct": 0,
+        "fee_pct": 0.06,
+        "first_hour_borrow_pct": 0.0014542249280885765,
+        "total_entry_cost_pct": 0.06145422492808857,
+        "health": "TILTED",
+        "flags": []
+      },
+      {
+        "venue": "adrena",
+        "available": true,
+        "type": "solana-onchain",
+        "borrow_apr_long": 1.65,
+        "borrow_apr_short": 1.65,
+        "open_interest_usd": 3144.467026,
+        "oi_cap_headroom_usd": null,
+        "estimated_slippage_pct": 0,
+        "fee_pct": 0.06,
+        "first_hour_borrow_pct": 0.00018835616438356162,
+        "total_entry_cost_pct": 0.06018835616438356,
+        "health": "TILTED",
+        "flags": []
+      },
+      {
+        "venue": "flash",
+        "available": false,
+        "type": "solana-onchain",
+        "borrow_apr_long": null,
+        "borrow_apr_short": null,
+        "open_interest_usd": null,
+        "oi_cap_headroom_usd": null,
+        "estimated_slippage_pct": null,
+        "fee_pct": 0.06,
+        "first_hour_borrow_pct": null,
+        "total_entry_cost_pct": null,
+        "health": "unknown",
+        "flags": [],
+        "unavailable_reason": "SOL not available on Flash."
+      },
+      "… 2 more (5 total)"
+    ],
+    "rankings": {
+      "by_entry_cost": [
+        "hyperliquid",
+        "dydx-v4",
+        "adrena",
+        "… 1 more (4 total)"
+      ],
+      "by_borrow_apr": [
+        "dydx-v4",
+        "adrena",
+        "hyperliquid",
+        "… 1 more (4 total)"
+      ],
+      "by_headroom": [
+        "jupiter-perps"
+      ]
+    },
+    "recommendation": {
+      "venue": "adrena",
+      "reasoning": "adrena cheapest at 0.060% total entry cost (0.001pt below jupiter-perps at 0.061%) — health: TILTED.",
+      "warnings": [
+        "best_venue_tilted"
+      ]
+    },
+    "llm_summary": "## SOL-PERP Venue Comparison — $5,000.00 LONG\n\nSpot slippage at $5,000.00: 0.000%.\n\n### Venues\n- Jupiter Perps — entry cost 0.061% — borrow 12.74% APR — slip 0.000% — fee 0.060% — headroom $211,719,843.86 — health TILTED\n- Adrena — entry cost 0.060% — borrow 1.65% APR — slip 0.000% — fee 0.060% — health TILTED\n- flash: unavailable — SOL not available on Flash..\n- Hyperliquid — entry cost 0.026% — borrow 12.08% APR — slip 0.000% — fee 0.025% — health HEALTHY\n- dYdX v4 — entry cost 0.050% — borrow -1.01% APR — slip 0.000% — fee 0.050% — health HEALTHY\n\n### Rankings (Solana venues with data)\n- By entry cost: Hyperliquid → dYdX v4 → Adrena → Jupiter Perps\n- By borrow APR: dYdX v4 → Adrena → Hyperliquid → Jupiter Perps\n- By headroom: Jupiter Perps\n\n### Recommendation\n**Adrena** — adrena cheapest at 0.060% total entry cost (0.001pt below jupiter-perps at 0.061%) — health: TILTED.\n\n⚠ best_venue_tilted"
+  }
+}

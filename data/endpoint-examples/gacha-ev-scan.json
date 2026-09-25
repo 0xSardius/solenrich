@@ -1,0 +1,113 @@
+{
+  "key": "gacha-ev-scan",
+  "captured_at": "2026-09-22T00:10:30.022Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 226,
+  "output": {
+    "scanned_at": "2026-09-22T00:10:29.994Z",
+    "franchise": "all",
+    "exit_strategy": "both",
+    "min_edge_pct": null,
+    "machine_count": 33,
+    "machines": [
+      {
+        "code": "onepiece_50",
+        "name": "One Piece Ocean Blue Pack",
+        "franchise": "onepiece",
+        "price": 50,
+        "gross_ev": 55.02,
+        "gross_edge_pct": 10.04,
+        "buyback": {
+          "payout_pct": 85,
+          "net_ev": 46.76,
+          "edge_pct": -6.47,
+          "capped": false
+        },
+        "marketplace": {
+          "fee_pct": 2,
+          "net_ev": 53.92,
+          "edge_pct": 7.83
+        },
+        "verdict": "HOUSE_EDGE",
+        "high_tier_stock_share": 0.631,
+        "total_stock": 8569
+      },
+      {
+        "code": "pokemon_50",
+        "name": "Elite Pokémon Gacha Pack",
+        "franchise": "pokemon",
+        "price": 50,
+        "gross_ev": 55,
+        "gross_edge_pct": 9.99,
+        "buyback": {
+          "payout_pct": 85,
+          "net_ev": 46.75,
+          "edge_pct": -6.51,
+          "capped": false
+        },
+        "marketplace": {
+          "fee_pct": 2,
+          "net_ev": 53.9,
+          "edge_pct": 7.79
+        },
+        "verdict": "HOUSE_EDGE",
+        "high_tier_stock_share": 0.315,
+        "total_stock": 11495
+      },
+      {
+        "code": "pokemon_25",
+        "name": "Starter Pokémon Gacha Pack",
+        "franchise": "pokemon",
+        "price": 25,
+        "gross_ev": 27.49,
+        "gross_edge_pct": 9.97,
+        "buyback": {
+          "payout_pct": 85,
+          "net_ev": 23.37,
+          "edge_pct": -6.53,
+          "capped": false
+        },
+        "marketplace": {
+          "fee_pct": 2,
+          "net_ev": 26.94,
+          "edge_pct": 7.77
+        },
+        "verdict": "HOUSE_EDGE",
+        "high_tier_stock_share": 0.489,
+        "total_stock": 20584
+      },
+      "… 30 more (33 total)"
+    ],
+    "best": {
+      "code": "onepiece_50",
+      "name": "One Piece Ocean Blue Pack",
+      "franchise": "onepiece",
+      "price": 50,
+      "gross_ev": 55.02,
+      "gross_edge_pct": 10.04,
+      "buyback": {
+        "payout_pct": 85,
+        "net_ev": 46.76,
+        "edge_pct": -6.47,
+        "capped": false
+      },
+      "marketplace": {
+        "fee_pct": 2,
+        "net_ev": 53.92,
+        "edge_pct": 7.83
+      },
+      "verdict": "HOUSE_EDGE",
+      "high_tier_stock_share": 0.631,
+      "total_stock": 8569
+    },
+    "summary": {
+      "positive_ev_count": 0,
+      "house_edge_count": 25,
+      "negative_ev_count": 8,
+      "note": "Gross EV is expected INSURED value and overstates realizable EV. Instant-buyback (guaranteed, ≤72h) pays 85–93% of insured value — the true cash floor. Marketplace exit recovers ~insured value minus a 2% fee but is not guaranteed to fill. Most individual pulls land below pack price (gacha negative-skew); EV is an average. NFA."
+    },
+    "llm_summary": "## Jupiter Gacha — Pack EV Scan\nScanned 33 machines, ranked by both exit edge.\n\n**Best (both exit):** One Piece Ocean Blue Pack — +7.8% net edge, 🟡 HOUSE EDGE.\n\n**Read:** 0 positive-EV, 25 house-edge, 8 negative-EV.\n\n### Machines\n- **One Piece Ocean Blue Pack** (onepiece_50) — 🟡 HOUSE EDGE\n  price $50.00 · gross EV $55.02 (+10.0%)\n  guaranteed buyback @ 85% → $46.76 (-6.5%) · marketplace −2% → $53.92 (+7.8%)\n  rare+epic stock share 63.1%\n- **Elite Pokémon Gacha Pack** (pokemon_50) — 🟡 HOUSE EDGE\n  price $50.00 · gross EV $55.00 (+10.0%)\n  guaranteed buyback @ 85% → $46.75 (-6.5%) · marketplace −2% → $53.90 (+7.8%)\n  rare+epic stock share 31.5%\n- **Starter Pokémon Gacha Pack** (pokemon_25) — 🟡 HOUSE EDGE\n  price $25.00 · gross EV $27.49 (+10.0%)\n  guaranteed buyback @ 85% → $23.37 (-6.5%) · marketplace −2% → $26.94 (+7.8%)\n  rare+epic stock share 48.9%\n- **Anime Pop Culture Gacha** (anime_75) — 🟡 HOUSE EDGE\n  price $75.00 · gross EV $81.55 (+8.7%)\n  guaranteed buyback @ 85% → $69.32 (-7.6%) · marketplace −2% → $79.92 (+6.6%)\n  rare+epic stock share 39.8%\n- **Pokémon 30 Boss Battle Gacha** (pokemon_30) — 🟡 HOUSE EDGE\n  price $30.00 · gross EV $31.98 (+6.6%)\n  guaranteed buyback @ 85% → $27.19 (-9.4%) · marketplace −2% → $31.34 (+4.5%)\n  rare+epic stock share 34.0%\n- **Bronze Pokémon Gacha Pack** (pokemon_100) — 🟡 HOUSE EDGE\n  price $100.00 · gross EV $105.03 (+5.0%)\n  guaranteed buyback @ 90% → $94.53 (-5.5%) · marketplace −2% → $102.93 (+2.9%)\n  rare+epic stock share 37.9%\n- **Baseball 100 Gacha Pack** (baseball_100) — 🟡 HOUSE EDGE\n  price $100.00 · gross EV $105.03 (+5.0%)\n  guaranteed buyback @ 90% → $94.52 (-5.5%) · marketplace −2% → $102.93 (+2.9%)\n  rare+epic stock share 31.0%\n- **Basketball 100 Gacha Pack** (basketball_100) — 🟡 HOUSE EDGE\n  price $100.00 · gross EV $105.02 (+5.0%)\n  guaranteed buyback @ 90% → $94.52 (-5.5%) · marketplace −2% → $102.92 (+2.9%)\n  rare+epic stock share 48.3%\n- **Sports Gacha Pack** (sports_100) — 🟡 HOUSE EDGE\n  price $100.00 · gross EV $105.01 (+5.0%)\n  guaranteed buyback @ 90% → $94.50 (-5.5%) · marketplace −2% → $102.91 (+2.9%)\n  rare+epic stock share 33.7%\n- **Baseball 250 Gacha Pack** (baseball_250) — 🟡 HOUSE EDGE\n  price $250.00 · gross EV $262.53 (+5.0%)\n  guaranteed buyback @ 90% → $236.27 (-5.5%) · marketplace −2% → $257.28 (+2.9%)\n  rare+epic stock share 34.6%\n- **Soccer $50 Pack** (soccer_50) — 🟡 HOUS… (7586 characters)"
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "key": "due-diligence",
+  "captured_at": "2026-09-22T00:10:14.743Z",
+  "input": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "format": "both"
+  },
+  "ms": 3668,
+  "output": {
+    "token": {
+      "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "symbol": "Bonk",
+      "name": "Bonk",
+      "decimals": 5,
+      "supply": 87994397480606.05,
+      "holder_count": 20,
+      "price_usd": 0.000003376,
+      "market_cap": 297149393,
+      "volume_24h": 1096012.49,
+      "price_change_24h": 11.73,
+      "volatility": {
+        "daily_std_7d": 4.66,
+        "high_7d": 0.0000034,
+        "low_7d": 0.00000302,
+        "range_pct_7d": 12.4,
+        "classification": "MODERATE"
+      },
+      "top_holders": [
+        {
+          "address": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+          "balance": 7770515063166.431,
+          "pct_supply": 8.830692959604674
+        },
+        {
+          "address": "51yZyDSnec4xnUv7XLRVYcDyV4x3wUtzrDcRaYbmQU5j",
+          "balance": 5772593511837.953,
+          "pct_supply": 6.560183008367358
+        },
+        {
+          "address": "4xLpwxgYuPwPvtQjE94RLS4WZ4aD8NJYYKr2AJk99Qdg",
+          "balance": 3277887788443.162,
+          "pct_supply": 3.725109645947185
+        },
+        "… 17 more (20 total)"
+      ],
+      "concentration": {
+        "top1_pct": 8.83,
+        "top5_pct": 25.21,
+        "top10_pct": 38.58,
+        "herfindahl_index": 209
+      },
+      "holders_source": "rpc",
+      "slippage_estimates": [
+        {
+          "size_usd": 100,
+          "price_impact_pct": 0,
+          "output_amount": 2969430000000,
+          "input_amount": 100000000
+        },
+        {
+          "size_usd": 1000,
+          "price_impact_pct": 0.0008,
+          "output_amount": 29671670000000,
+          "input_amount": 1000000000
+        },
+        {
+          "size_usd": 10000,
+          "price_impact_pct": 0.0026,
+          "output_amount": 296182563520716,
+          "input_amount": 10000000000
+        },
+        "… 1 more (4 total)"
+      ],
+      "transfer_tax": {
+        "program": "spl-token",
+        "bps": 0,
+        "per_transfer_pct": 0,
+        "round_trip_pct": 0,
+        "fee_mutable_by": null,
+        "withdraw_authority": null
+      },
+      "liquidity": 329167.26,
+      "risk_flags": [
+        "unverified"
+      ],
+      "verified": false,
+      "mint_authority": null,
+      "freeze_authority": null,
+      "last_updated": "2026-09-22T00:10:13.631Z"
+    },
+    "whales": {
+      "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "threshold_usd": 10000,
+      "lookback_hours": 72,
+      "whales": [
+        {
+          "address": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+          "entity_label": "Binance Hot Wallet",
+          "entity_type": "cex",
+          "balance_usd": 26204892.299797595,
+          "pct_supply": 8.83,
+          "transaction_count": 0,
+          "total_volume_usd": 0,
+          "avg_transaction_usd": 0,
+          "buy_volume_usd": 0,
+          "sell_volume_usd": 0,
+          "flow_direction": "neutral",
+          "last_activity": "none"
+        },
+        {
+          "address": "51yZyDSnec4xnUv7XLRVYcDyV4x3wUtzrDcRaYbmQU5j",
+          "balance_usd": 19467202.629240178,
+          "pct_supply": 6.56,
+          "transaction_count": 0,
+          "total_volume_usd": 0,
+          "avg_transaction_usd": 0,
+          "buy_volume_usd": 0,
+          "sell_volume_usd": 0,
+          "flow_direction": "neutral",
+          "last_activity": "none"
+        },
+        {
+          "address": "4xLpwxgYuPwPvtQjE94RLS4WZ4aD8NJYYKr2AJk99Qdg",
+          "balance_usd": 11054183.122833107,
+          "pct_supply": 3.73,
+          "transaction_count": 6,
+          "total_volume_usd": 947432.5134729147,
+          "avg_transaction_usd": 157905.41891215244,
+          "buy_volume_usd": 176583.59855137792,
+          "sell_volume_usd": 770848.9149215368,
+          "flow_direction": "distributing",
+          "last_activity": "2026-09-21T18:04:06.000Z"
+        },
+        "… 7 more (10 total)"
+      ],
+      "total_whale_volume_usd": 1236236.8842501484,
+      "net_flow_direction": "distributing",
+      "whale_count": 10,
+      "holders_source": "rpc",
+      "last_updated": "2026-09-22T00:10:14.653Z"
+    },
+    "overall_risk_score": 0.33,
+    "risk_level": "MODERATE",
+    "risk_factors": [
+      "1 risk flag(s) identified",
+      "Not verified on Jupiter",
+      "Whale distribution activity detected"
+    ],
+    "recommendation": "CAUTION",
+    "last_updated": "2026-09-22T00:10:14.705Z",
+    "llm_summary": "## Due Diligence: Bonk (Bonk)\n\n### Token Overview\nBonk is trading at $0.00000338 (up 11.73% 24h). Market cap: $297,149,393.00. 24h volume: $1,096,012.49.\nLiquidity: $329,167.26.\n\n### Holder Concentration\nTop holder: 8.8% of supply. Top 5: 25.2%. Top 10: 38.6%.\nConcentration index (HHI): 209 — Well distributed.\nSupply is well-distributed across holders.\n\n### Security Assessment\nNot verified on Jupiter — exercise caution.\nRisk flags: unverified.\n\n### Whale Activity (72h)\n10 whale(s) tracked. Total volume: $1,236,236.88. Net flow: **distributing**.\n  - 9WzDXwBb...AWWM: holds 8.8% — no recent activity\n  - 51yZyDSn...QU5j: holds 6.6% — no recent activity\n  - 4xLpwxgY...9Qdg: holds 3.7% — distributing ($176,583.60 in, $770,848.91 out)\n\n### Verdict\nRisk score: 33/100 (MODERATE). Recommendation: **CAUTION**.\n\nKey risk factors:\n  - 1 risk flag(s) identified\n  - Not verified on Jupiter\n  - Whale distribution activity detected\n\nData as of: 2026-09-22T00:10:14.705Z"
+  }
+}

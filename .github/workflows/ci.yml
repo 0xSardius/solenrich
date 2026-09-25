@@ -47,3 +47,6 @@ jobs:
       - run: bun test test/mobile-layout.test.ts
       # Home page suites (2026-09-21): cards follow src/lib/suites.ts, every endpoint has a card, prices equal PRICING.
       - run: bun test test/landing-suites.test.ts
+      # Discovery metadata (2026-09-25): every paid endpoint has a schema-valid input example and a real, small output
+      # example for the bazaar; the payment-required header stays under ~8 KB.
+      - run: bun test test/discovery-examples.test.ts

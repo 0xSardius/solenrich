@@ -1,0 +1,75 @@
+{
+  "key": "attention-momentum",
+  "captured_at": "2026-09-22T00:09:23.964Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 218,
+  "output": {
+    "window": "6h",
+    "window_start": "2026-09-21T18:09:23.752Z",
+    "window_end": "2026-09-22T00:09:23.752Z",
+    "entries": [
+      {
+        "address": "4MMQY9bwkxxTtsK3W227Q5ABT6yFY8Pmn9Ze7wmAXKY8",
+        "symbol": "ALLINU",
+        "name": "ALLINU",
+        "queries": {
+          "prior2": 0,
+          "prior": 0,
+          "current": 9
+        },
+        "velocity": 9,
+        "acceleration": 9,
+        "attention": "accelerating",
+        "price_usd": 0.01854,
+        "price_change_pct": -28.49,
+        "liquidity_usd": 517911.7,
+        "divergence": "early_signal"
+      },
+      {
+        "address": "6UtY9iTZMQQ5QZVrbzFnNaJntV7oySm9k97mvwnuZcxr",
+        "symbol": "NEARKAT",
+        "name": "NearKat",
+        "queries": {
+          "prior2": 0,
+          "prior": 0,
+          "current": 9
+        },
+        "velocity": 9,
+        "acceleration": 9,
+        "attention": "accelerating",
+        "price_usd": 0.01206,
+        "price_change_pct": 4.07,
+        "liquidity_usd": 495760.48,
+        "divergence": "confirmed_momentum"
+      },
+      {
+        "address": "8RNUw4N655VSrZKuhGdywhbSMDTrheguFPfxbpE2NZHQ",
+        "symbol": "PURR",
+        "name": "Hypurr",
+        "queries": {
+          "prior2": 0,
+          "prior": 0,
+          "current": 9
+        },
+        "velocity": 9,
+        "acceleration": 9,
+        "attention": "accelerating",
+        "price_usd": 0.01236,
+        "price_change_pct": -14.07,
+        "liquidity_usd": 629570.19,
+        "divergence": "early_signal"
+      },
+      "… 7 more (10 total)"
+    ],
+    "aggregate": {
+      "total_unique_tokens": 15,
+      "total_queries_current_window": 98,
+      "sample_quality": "ok"
+    },
+    "note": "Derived from SolEnrich's own agent query stream — attention measured before it shows up in market volume. Signal density scales with platform traffic; treat low sample_quality as directional, not statistical.",
+    "generated_at": "2026-09-22T00:09:23.752Z",
+    "llm_summary": "## Attention Momentum — agent-attention acceleration (6h)\n\n15 token(s) in the query stream, 98 queries in the current window. Sample quality: **ok**.\n\n**Early signals** (attention up, price hasn't moved): $ALLINU (4MMQ...KY8), $PURR (8RNU...ZHQ), $KNOTS (8RVB...GkS), $RAYCAT (CFNR...pFL), $BTC (E4Ap...jHx), $GP (HTmQ...gUQ), $ZCAT (HcRL...eJR), $FEELSGOOD (Hgcx...YZT), $🎒 (ZesM...TNK)\n\n### Ranked by attention acceleration\n\n| # | Token | Queries (w-2→w-1→now) | Accel | Price Δ | Divergence |\n|---|-------|----------------------|-------|---------|------------|\n| 1 | $ALLINU (4MMQ...KY8) | 0→0→9 | +9 | -28.5% | 🟢 EARLY SIGNAL |\n| 2 | $NEARKAT (6UtY...cxr) | 0→0→9 | +9 | +4.1% | 🔵 confirmed momentum |\n| 3 | $PURR (8RNU...ZHQ) | 0→0→9 | +9 | -14.1% | 🟢 EARLY SIGNAL |\n| 4 | $KNOTS (8RVB...GkS) | 0→0→9 | +9 | -16.5% | 🟢 EARLY SIGNAL |\n| 5 | $RAYCAT (CFNR...pFL) | 0→0→9 | +9 | -5.3% | 🟢 EARLY SIGNAL |\n| 6 | $BTC (E4Ap...jHx) | 0→0→9 | +9 | -15.9% | 🟢 EARLY SIGNAL |\n| 7 | $GP (HTmQ...gUQ) | 0→0→9 | +9 | -20.6% | 🟢 EARLY SIGNAL |\n| 8 | $ZCAT (HcRL...eJR) | 0→0→9 | +9 | -10.2% | 🟢 EARLY SIGNAL |\n| 9 | $FEELSGOOD (Hgcx...YZT) | 0→0→9 | +9 | -36.5% | 🟢 EARLY SIGNAL |\n| 10 | $🎒 (ZesM...TNK) | 0→0→9 | +9 | -16.8% | 🟢 EARLY SIGNAL |\n\n- $ALLINU (4MMQ...KY8): $0.02 | liquidity $517,911.70 | attention accelerating\n- $NEARKAT (6UtY...cxr): $0.01 | liquidity $495,760.48 | attention accelerating\n- $PURR (8RNU...ZHQ): $0.01 | liquidity $629,570.19 | attention accelerating\n\n_Derived from SolEnrich's own agent query stream — attention measured before it shows up in market volume. Signal density scales with platform traffic; treat low sample_quality as directional, not statistical._"
+  }
+}

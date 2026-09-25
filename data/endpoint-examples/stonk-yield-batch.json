@@ -1,0 +1,175 @@
+{
+  "key": "stonk-yield-batch",
+  "captured_at": "2026-09-25T14:49:30.000Z",
+  "input": {
+    "mints": [
+      "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+      "6HU4CmRb15C2nQDx8Ld2f2W2wTdmog6aZiiXdrT5Pzi8"
+    ],
+    "format": "json"
+  },
+  "ms": 2348,
+  "output": {
+    "coins": [
+      {
+        "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+        "symbol": "ZCAT",
+        "name": "Anonymous Cat",
+        "mode": "reward",
+        "reward_asset": {
+          "mint": "A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+          "symbol": "ZEC",
+          "decimals": 8,
+          "category": "custom",
+          "usd_price": 1561.1724030069324
+        },
+        "lifetime": {
+          "window_days": 26,
+          "actual_days": 25.64,
+          "rewards_quote": 7172.2214463,
+          "rewards_usd": 11197074.19,
+          "avg_market_cap_usd": 90751581,
+          "yield_pct": 12.3382,
+          "annualized_pct": 175.64,
+          "caution": false,
+          "caution_reason": null
+        },
+        "trailing_7d": {
+          "window_days": 7,
+          "actual_days": 6.61,
+          "rewards_quote": 707.33649135,
+          "rewards_usd": 1104274.21,
+          "avg_market_cap_usd": 93119001,
+          "yield_pct": 1.1859,
+          "annualized_pct": 65.48,
+          "caution": true,
+          "caution_reason": "window under 7 days (6.61d) — annualized figure is a projection, not a track record"
+        },
+        "trailing_30d": {
+          "window_days": 30,
+          "actual_days": 25.64,
+          "rewards_quote": 7172.2214463,
+          "rewards_usd": 11197074.19,
+          "avg_market_cap_usd": 90751581,
+          "yield_pct": 12.3382,
+          "annualized_pct": 175.64,
+          "caution": true,
+          "caution_reason": "window starts at launch — coin is younger than the window"
+        },
+        "quote_exposure": {
+          "long": [
+            "ZCAT (the coin itself)",
+            "ZEC (custom)"
+          ],
+          "reward_asset": "ZEC",
+          "note": "ZCAT is priced and pays rewards in ZEC. A holder is long both: the coin's price in USD moves with ZEC, and every reward accrues in ZEC."
+        },
+        "distributed_tokens_total": 7172.2214463,
+        "payout_count": 1734464,
+        "holder_count": 35529,
+        "last_payout_at": "2026-09-24T22:35:47.842Z",
+        "market_cap_usd": 69574179.19684456,
+        "age_days": 25.64,
+        "history": {
+          "points": 18,
+          "oldest_at": "2026-09-06T12:00:00.000Z",
+          "index_started": true
+        },
+        "caveats": [
+          "rewards are priced at the CURRENT quote price, not the price at each payout"
+        ],
+        "rank": 1
+      },
+      {
+        "mint": "6HU4CmRb15C2nQDx8Ld2f2W2wTdmog6aZiiXdrT5Pzi8",
+        "symbol": "GROK",
+        "name": "Grokification",
+        "mode": "reward",
+        "reward_asset": {
+          "mint": "Xs3oZwbHvqis4NYcf4YKWmEia2eC84wSiVrcYcTqpH8",
+          "symbol": "SPCXX",
+          "decimals": 8,
+          "category": "xstock",
+          "usd_price": 146.52168499066605
+        },
+        "lifetime": {
+          "window_days": 4,
+          "actual_days": 3.83,
+          "rewards_quote": 2886.70866826,
+          "rewards_usd": 422965.42,
+          "avg_market_cap_usd": 2500646,
+          "yield_pct": 16.9142,
+          "annualized_pct": 1611.93,
+          "caution": true,
+          "caution_reason": "coin younger than 7 days"
+        },
+        "trailing_7d": {
+          "window_days": 7,
+          "actual_days": 3.83,
+          "rewards_quote": 2886.70866826,
+          "rewards_usd": 422965.42,
+          "avg_market_cap_usd": 2500646,
+          "yield_pct": 16.9142,
+          "annualized_pct": 1611.93,
+          "caution": true,
+          "caution_reason": "window starts at launch — coin is younger than the window"
+        },
+        "trailing_30d": {
+          "window_days": 30,
+          "actual_days": 3.83,
+          "rewards_quote": 2886.70866826,
+          "rewards_usd": 422965.42,
+          "avg_market_cap_usd": 2500646,
+          "yield_pct": 16.9142,
+          "annualized_pct": 1611.93,
+          "caution": true,
+          "caution_reason": "window starts at launch — coin is younger than the window"
+        },
+        "quote_exposure": {
+          "long": [
+            "GROK (the coin itself)",
+            "SPCXX (xstock)"
+          ],
+          "reward_asset": "SPCXX",
+          "note": "GROK is priced and pays rewards in SPCXX. A holder is long both: the coin's price in USD moves with SPCXX, and every reward accrues in SPCXX."
+        },
+        "distributed_tokens_total": 2886.70866826,
+        "payout_count": 576199,
+        "holder_count": 7774,
+        "last_payout_at": "2026-09-25T14:28:04.377Z",
+        "market_cap_usd": 4862826.505253562,
+        "age_days": 3.83,
+        "history": {
+          "points": 5,
+          "oldest_at": "2026-09-21T19:27:44.606Z",
+          "index_started": true
+        },
+        "caveats": [
+          "rewards are priced at the CURRENT quote price, not the price at each payout"
+        ],
+        "rank": 2
+      }
+    ],
+    "not_found": [],
+    "selection": {
+      "mode": "mints",
+      "requested": 2,
+      "matched": 2,
+      "limit": 2
+    },
+    "index": {
+      "rows": 8999,
+      "last_refresh_at": "2026-09-25T14:49:18.000Z",
+      "series_days": 18,
+      "oldest_point_at": "2026-09-06T12:00:00.000Z"
+    },
+    "caveats": [
+      "Same math as stonk-yield, computed from the index: rewards priced at the CURRENT quote price, not the price at each payout.",
+      "Market caps are from the last index refresh (up to 10 minutes old) and the launch market cap is estimated from the bonding-curve start (≈$3,250 LaunchLab, ≈$5,100 Raydium). Measured against stonk-yield on 2026-09-23: within ~1–6% on coins older than a week; coins younger than a week move with their market cap minute to minute and carry the caution flag."
+    ],
+    "next_steps": [
+      "stonk-quote on a coin you would buy: entry and exit cost at your size, and whether the payout covers the round trip.",
+      "stonk-reward-risk to confirm the tax actually reaches holders before trusting a yield."
+    ]
+  }
+}

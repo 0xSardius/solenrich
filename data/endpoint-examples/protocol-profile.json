@@ -1,0 +1,51 @@
+{
+  "key": "protocol-profile",
+  "captured_at": "2026-09-22T00:10:23.193Z",
+  "input": {
+    "protocol": "jupiter",
+    "format": "both"
+  },
+  "ms": 4442,
+  "output": {
+    "protocol": {
+      "name": "Jupiter",
+      "slug": "jupiter",
+      "program_id": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+      "category": "DEX Aggregator"
+    },
+    "tvl": {
+      "total_usd": 0,
+      "solana_usd": 0,
+      "chains": {},
+      "solana_dominance_pct": 100
+    },
+    "yields": {
+      "pool_count": 0,
+      "top_pools": [],
+      "avg_apy": 0,
+      "median_apy": 0,
+      "total_yield_tvl_usd": 0
+    },
+    "activity": {
+      "recent_tx_count": 200,
+      "unique_signers": 61,
+      "tx_types": {
+        "TRANSFER": 130,
+        "SWAP": 55,
+        "UNKNOWN": 11,
+        "CLOSE_ACCOUNT": 3,
+        "TOKEN_MINT": 1
+      },
+      "avg_tx_per_hour": 0,
+      "sample_window_minutes": 0,
+      "automated_activity_pct": 0
+    },
+    "health_signals": {
+      "tvl_tier": "micro",
+      "yield_attractiveness": "low",
+      "activity_level": "low"
+    },
+    "last_updated": "2026-09-22T00:10:23.178Z",
+    "llm_summary": "## Protocol Profile: Jupiter\n\n**Category:** DEX Aggregator | **TVL Tier:** micro\n**Program ID:** `JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4`\n\n### TVL\nTotal: $0.00 | Solana: $0.00 (100%)\n\n### Yield Pools (0 total)\nAvg APY: 0% | Median APY: 0% | Total TVL: $0.00\n\n### Recent On-Chain Activity\n200.00 transactions from 61.00 unique signers (last 0 min)\nRate: ~0.00 tx/hour | Activity level: **low**\nTypes: TRANSFER 65%, SWAP 28%, UNKNOWN 6%, CLOSE_ACCOUNT 2%, TOKEN_MINT 1%\nAutomated activity: ~0% of top signers show regular-interval or high-frequency tx patterns.\n\n### Health Signals\nTVL: micro-tier | Yield attractiveness: low | Activity: low\n\nData as of: 2026-09-22T00:10:23.178Z"
+  }
+}

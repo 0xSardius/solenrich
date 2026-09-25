@@ -1,0 +1,82 @@
+{
+  "key": "stonk-yield",
+  "captured_at": "2026-09-22T00:08:02.669Z",
+  "input": {
+    "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+    "format": "both"
+  },
+  "ms": 639,
+  "output": {
+    "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+    "symbol": "ZCAT",
+    "name": "Anonymous Cat",
+    "mode": "reward",
+    "reward_asset": {
+      "mint": "A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+      "symbol": "ZEC",
+      "decimals": 8,
+      "category": "custom",
+      "usd_price": 1475.6011171177295
+    },
+    "lifetime": {
+      "window_days": 23,
+      "actual_days": 22.03,
+      "rewards_quote": 6836.12355346,
+      "rewards_usd": 10087391.55,
+      "avg_market_cap_usd": 94276679,
+      "yield_pct": 10.6998,
+      "annualized_pct": 177.28,
+      "caution": false,
+      "caution_reason": null
+    },
+    "trailing_7d": {
+      "window_days": 7,
+      "actual_days": 7,
+      "rewards_quote": 1163.2784792499997,
+      "rewards_usd": 1716535.02,
+      "avg_market_cap_usd": 108606083,
+      "yield_pct": 1.5805,
+      "annualized_pct": 82.41,
+      "caution": false,
+      "caution_reason": null
+    },
+    "trailing_30d": {
+      "window_days": 30,
+      "actual_days": 22.03,
+      "rewards_quote": 6836.12355346,
+      "rewards_usd": 10087391.55,
+      "avg_market_cap_usd": 94276679,
+      "yield_pct": 10.6998,
+      "annualized_pct": 177.28,
+      "caution": true,
+      "caution_reason": "window starts at launch — coin is younger than the window"
+    },
+    "quote_exposure": {
+      "long": [
+        "ZCAT (the coin itself)",
+        "ZEC (custom)"
+      ],
+      "reward_asset": "ZEC",
+      "note": "ZCAT is priced and pays rewards in ZEC. A holder is long both: the coin's price in USD moves with ZEC, and every reward accrues in ZEC."
+    },
+    "distributed_tokens_total": 6836.12355346,
+    "payout_count": 1639143,
+    "holder_count": 34109,
+    "last_payout_at": "2026-09-21T22:06:50.462Z",
+    "market_cap_usd": 94164674.22841088,
+    "age_days": 22.03,
+    "history": {
+      "points": 15,
+      "oldest_at": "2026-09-06T12:00:00.000Z",
+      "index_started": true
+    },
+    "caveats": [
+      "rewards are priced at the CURRENT quote price, not the price at each payout"
+    ],
+    "next_steps": [
+      "stonk-reward-risk to confirm the tax actually reaches holders before trusting the yield.",
+      "stonk-screener to compare this coin against every other reward coin on the same quote."
+    ],
+    "llm_summary": "## StonkFun Holder Yield — $ZCAT (HcRL...eJR)\n\nRewards paid in **ZEC** (custom) at $1,475.60 | mcap $94,164,674.23 | age 22.0d\n\n### 📈 Yield (rewards USD ÷ average market cap)\n- 7d: 1.581% over 7d | $1,716,535.02 paid | avg mcap $108,606,083.00 | ≈ 82.4% annualized\n- 30d: 10.700% over 22.03d | $10,087,391.55 paid | avg mcap $94,276,679.00 | ≈ 177.3% annualized ⚠️ (window starts at launch — coin is younger than the window)\n- lifetime: 10.700% over 22.03d | $10,087,391.55 paid | avg mcap $94,276,679.00 | ≈ 177.3% annualized\n\n### 🧭 Exposure\nLong: ZCAT (the coin itself) + ZEC (custom). ZCAT is priced and pays rewards in ZEC. A holder is long both: the coin's price in USD moves with ZEC, and every reward accrues in ZEC.\n\nTotal distributed: 6,836.1236 ZEC over 1639143 payouts to 34109 holders, last 2026-09-21T22:06:50.462Z\nHistory: 15 daily points since 2026-09-06\n\n⚠️ rewards are priced at the CURRENT quote price, not the price at each payout\n\nNext: stonk-reward-risk to confirm the tax actually reaches holders before trusting the yield. stonk-screener to compare this coin against every other reward coin on the same quote."
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "key": "copy-trade-signals",
+  "captured_at": "2026-09-22T00:10:03.428Z",
+  "input": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "format": "both"
+  },
+  "ms": 179,
+  "output": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "lookback_days": 30,
+    "trades_analyzed": 0,
+    "win_rate": 0,
+    "total_pnl_usd": 0,
+    "avg_pnl_per_trade_usd": 0,
+    "avg_hold_time_days": 0,
+    "consistency_score": 0,
+    "trade_frequency_per_day": 0,
+    "top_performing_pairs": [],
+    "labels": [],
+    "last_updated": "2026-09-22T00:10:03.403Z",
+    "llm_summary": "## Copy Trade Analysis: vine...PTg\n\nNo closed trades found in the last 30 days.\n\nData as of: 2026-09-22T00:10:03.403Z"
+  }
+}

@@ -1,0 +1,178 @@
+{
+  "key": "wallet-history",
+  "captured_at": "2026-09-22T00:10:23.332Z",
+  "input": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "format": "both"
+  },
+  "ms": 69,
+  "output": {
+    "current": {
+      "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+      "sol_balance": 0.039869364,
+      "portfolio_value_usd": 4.729234645377018,
+      "token_count": 6,
+      "top_holdings": [
+        {
+          "mint": "FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8",
+          "symbol": "SMOG",
+          "balance": 29.621167,
+          "usd_value": 0.0015730646497528792
+        },
+        {
+          "mint": "Fxgdfsy1Z5Mvh53o69s2Ev6TGxtAJ1RQ5RJ5moCpKmQZ",
+          "symbol": "SI",
+          "balance": 50,
+          "usd_value": 0.001182099554533137
+        },
+        {
+          "mint": "55USDUivJLe4L1kY64XK1nDPAqbphG6nRpTjk2iZ5PwG",
+          "symbol": "FATCAT",
+          "balance": 115,
+          "usd_value": 0.0004556319143816978
+        },
+        "… 3 more (6 total)"
+      ],
+      "nft_count": 9,
+      "nft_summary": {
+        "total": 9,
+        "collected": 0,
+        "airdropped": 8,
+        "suspected_spam": 1,
+        "distinct_collections": 0
+      },
+      "nft_collections": [
+        {
+          "name": "Qualified #611",
+          "collection_mint": "7gCKeoTNBq8BvX5KQgeMiwbkBrtuxMcUN4JRMNfizTSK",
+          "count": 1,
+          "compressed": true,
+          "suspected_spam": false
+        },
+        {
+          "name": "Permit #152",
+          "collection_mint": "4VsTtAYVq8KszD6bi3zRdbH2jhoWXNfoyZtDGjEvU81G",
+          "count": 1,
+          "compressed": true,
+          "suspected_spam": false
+        },
+        {
+          "name": "JupReward #612",
+          "collection_mint": "4UDzwWwTvvvqEQPjD2fUk7EuZcadUBQLx4gfYU6Q9kRA",
+          "count": 1,
+          "compressed": true,
+          "suspected_spam": false
+        },
+        "… 6 more (9 total)"
+      ],
+      "defi_positions": [
+        {
+          "protocol": "Orca",
+          "type": "swap",
+          "value_usd": 0
+        },
+        {
+          "protocol": "Raydium",
+          "type": "swap",
+          "value_usd": 0
+        }
+      ],
+      "tx_count_30d": 0,
+      "first_tx_date": "2022-04-15T22:33:33.000Z",
+      "labels": [
+        "defi_user",
+        "dormant"
+      ],
+      "risk_score": 0,
+      "risk_level": "LOW",
+      "risk_factors": [],
+      "connected_wallets": [
+        {
+          "address": "E16prLnWTwfLUYgXRTELYgw4u8QUnN9CAcHceLrDTjN1"
+        },
+        {
+          "address": "54uJifihfpmTjCGperSxWaZmEHzGFpsaKKEiiGL1fmTs"
+        },
+        {
+          "address": "54u5q7Wto6vgyhAgh8xN1AxgkuKo2mPFzohSNu8vwsTs"
+        },
+        "… 17 more (20 total)"
+      ],
+      "last_updated": "2026-09-22T00:10:18.155Z"
+    },
+    "snapshots": [
+      {
+        "date": "2026-09-17",
+        "sol_balance": 0.039869364,
+        "portfolio_value_usd": 4.0217308320312375,
+        "token_count": 6,
+        "nft_count": 9,
+        "tx_count_30d": 0,
+        "risk_score": 0.15000000000000002,
+        "risk_level": "LOW",
+        "label_count": 1,
+        "defi_position_count": 0,
+        "top_holding_mints": [
+          "FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8",
+          "Fxgdfsy1Z5Mvh53o69s2Ev6TGxtAJ1RQ5RJ5moCpKmQZ",
+          "55USDUivJLe4L1kY64XK1nDPAqbphG6nRpTjk2iZ5PwG",
+          "… 2 more (5 total)"
+        ]
+      },
+      {
+        "date": "2026-09-22",
+        "sol_balance": 0.039869364,
+        "portfolio_value_usd": 4.740967268076912,
+        "token_count": 6,
+        "nft_count": 9,
+        "tx_count_30d": 0,
+        "risk_score": 0.15000000000000002,
+        "risk_level": "LOW",
+        "label_count": 1,
+        "defi_position_count": 0,
+        "top_holding_mints": [
+          "FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8",
+          "Fxgdfsy1Z5Mvh53o69s2Ev6TGxtAJ1RQ5RJ5moCpKmQZ",
+          "55USDUivJLe4L1kY64XK1nDPAqbphG6nRpTjk2iZ5PwG",
+          "… 2 more (5 total)"
+        ]
+      }
+    ],
+    "lookback_days": 7,
+    "data_points": 2,
+    "deltas": [
+      {
+        "metric": "portfolio_value",
+        "current": 4.729235,
+        "oldest": 4.021731,
+        "absolute_change": 0.707504,
+        "pct_change": 17.59,
+        "direction": "improving"
+      },
+      {
+        "metric": "sol_balance",
+        "current": 0.039869,
+        "oldest": 0.039869,
+        "absolute_change": 0,
+        "pct_change": 0,
+        "direction": "stable"
+      },
+      {
+        "metric": "token_count",
+        "current": 6,
+        "oldest": 6,
+        "absolute_change": 0,
+        "pct_change": 0,
+        "direction": "stable"
+      },
+      "… 2 more (5 total)"
+    ],
+    "position_changes": {
+      "added": [],
+      "removed": []
+    },
+    "overall_direction": "improving",
+    "last_updated": "2026-09-22T00:10:23.310Z",
+    "llm_summary": "## Wallet History: vine...PTg (7-day lookback)\n\nCurrent: $4.73 | 0.04 SOL | 6 tokens | Risk: 0.00 (LOW)\n\n### Changes (2 data points)\n- **portfolio value**: $4.02 → $4.73 ↑ +17.6% (improving)\n- **sol balance**: 0.04 SOL → 0.04 SOL → +0.0% (stable)\n- **token count**: 6 → 6 → +0.0% (stable)\n- **risk score**: 0.15 → 0.00 ↑ -100.0% (improving)\n- **activity 30d**: 0 → 0 → +0.0% (stable)\n\nOverall direction: **improving**\n\nData as of: 2026-09-22T00:10:23.310Z"
+  }
+}

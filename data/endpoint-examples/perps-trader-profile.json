@@ -1,0 +1,212 @@
+{
+  "key": "perps-trader-profile",
+  "captured_at": "2026-09-22T00:10:11.073Z",
+  "input": {
+    "address": "BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu",
+    "format": "both"
+  },
+  "ms": 239,
+  "output": {
+    "address": "BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu",
+    "has_positions": true,
+    "profile": "position_trader",
+    "directional_bias": "long",
+    "positions": [
+      {
+        "pool": "5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq",
+        "custody": "7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz",
+        "market_symbol": "SOL",
+        "side": "long",
+        "size_usd": 3052.657431,
+        "collateral_usd": 618.977397,
+        "leverage": 4.9317752890417745,
+        "entry_price_usd": 88.547381,
+        "mark_price_usd": 118.57235783,
+        "unrealized_pnl_usd": 1035.1064887588523,
+        "unrealized_pnl_pct": 167.22847938805305,
+        "realized_pnl_usd": 0,
+        "open_time": 1784902092,
+        "update_time": 1789978621,
+        "age_hours": 1426.0330555555556,
+        "flags": {
+          "high_leverage": false,
+          "extreme_leverage": false,
+          "losing_collateral": false,
+          "approaching_liquidation": false,
+          "stale_position": true
+        },
+        "venue": "jupiter"
+      },
+      {
+        "pool": "5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq",
+        "custody": "AQCGyheWPLeo6Qp9WpYS9m3Qj479t7R636N9ey1rEjEn",
+        "market_symbol": "ETH",
+        "side": "long",
+        "size_usd": 11061.421689,
+        "collateral_usd": 3676.92328,
+        "leverage": 3.0083362764642727,
+        "entry_price_usd": 2120.522526,
+        "mark_price_usd": 2770.47638922,
+        "unrealized_pnl_usd": 3390.3972588457395,
+        "unrealized_pnl_pct": 92.20745173790354,
+        "realized_pnl_usd": 0,
+        "open_time": 1777880965,
+        "update_time": 1780667798,
+        "age_hours": 3376.346111111111,
+        "flags": {
+          "high_leverage": false,
+          "extreme_leverage": false,
+          "losing_collateral": false,
+          "approaching_liquidation": false,
+          "stale_position": true
+        },
+        "venue": "jupiter"
+      },
+      {
+        "pool": "5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq",
+        "custody": "5Pv3gM9JrFFH883SWAhvJC9RPYmo8UNxuFtv5bMMALkm",
+        "market_symbol": "BTC",
+        "side": "long",
+        "size_usd": 1534.678087,
+        "collateral_usd": 304.67519,
+        "leverage": 5.0370956919728185,
+        "entry_price_usd": 71666.385921,
+        "mark_price_usd": 86332.24002318,
+        "unrealized_pnl_usd": 314.05748494929344,
+        "unrealized_pnl_pct": 103.07944173245399,
+        "realized_pnl_usd": 0,
+        "open_time": 1782843996,
+        "update_time": 1789978815,
+        "age_hours": 1997.7263888888888,
+        "flags": {
+          "high_leverage": false,
+          "extreme_leverage": false,
+          "losing_collateral": false,
+          "approaching_liquidation": false,
+          "stale_position": true
+        },
+        "venue": "jupiter"
+      }
+    ],
+    "totals": {
+      "gross_exposure_usd": 15648.757207,
+      "net_exposure_usd": 15648.757207,
+      "total_collateral_usd": 4600.575867,
+      "total_unrealized_pnl_usd": 4739.561232553885,
+      "weighted_leverage": 3.4014779148081815,
+      "net_pnl_pct": 103.02104279055216
+    },
+    "by_venue": {
+      "jupiter": {
+        "has_positions": true,
+        "positions": [
+          {
+            "pool": "5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq",
+            "custody": "7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz",
+            "market_symbol": "SOL",
+            "side": "long",
+            "size_usd": 3052.657431,
+            "collateral_usd": 618.977397,
+            "leverage": 4.9317752890417745,
+            "entry_price_usd": 88.547381,
+            "mark_price_usd": 118.57235783,
+            "unrealized_pnl_usd": 1035.1064887588523,
+            "unrealized_pnl_pct": 167.22847938805305,
+            "realized_pnl_usd": 0,
+            "open_time": 1784902092,
+            "update_time": 1789978621,
+            "age_hours": 1426.0330555555556,
+            "flags": {
+              "high_leverage": false,
+              "extreme_leverage": false,
+              "losing_collateral": false,
+              "approaching_liquidation": false,
+              "stale_position": true
+            },
+            "venue": "jupiter"
+          },
+          {
+            "pool": "5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq",
+            "custody": "AQCGyheWPLeo6Qp9WpYS9m3Qj479t7R636N9ey1rEjEn",
+            "market_symbol": "ETH",
+            "side": "long",
+            "size_usd": 11061.421689,
+            "collateral_usd": 3676.92328,
+            "leverage": 3.0083362764642727,
+            "entry_price_usd": 2120.522526,
+            "mark_price_usd": 2770.47638922,
+            "unrealized_pnl_usd": 3390.3972588457395,
+            "unrealized_pnl_pct": 92.20745173790354,
+            "realized_pnl_usd": 0,
+            "open_time": 1777880965,
+            "update_time": 1780667798,
+            "age_hours": 3376.346111111111,
+            "flags": {
+              "high_leverage": false,
+              "extreme_leverage": false,
+              "losing_collateral": false,
+              "approaching_liquidation": false,
+              "stale_position": true
+            },
+            "venue": "jupiter"
+          },
+          {
+            "pool": "5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq",
+            "custody": "5Pv3gM9JrFFH883SWAhvJC9RPYmo8UNxuFtv5bMMALkm",
+            "market_symbol": "BTC",
+            "side": "long",
+            "size_usd": 1534.678087,
+            "collateral_usd": 304.67519,
+            "leverage": 5.0370956919728185,
+            "entry_price_usd": 71666.385921,
+            "mark_price_usd": 86332.24002318,
+            "unrealized_pnl_usd": 314.05748494929344,
+            "unrealized_pnl_pct": 103.07944173245399,
+            "realized_pnl_usd": 0,
+            "open_time": 1782843996,
+            "update_time": 1789978815,
+            "age_hours": 1997.7263888888888,
+            "flags": {
+              "high_leverage": false,
+              "extreme_leverage": false,
+              "losing_collateral": false,
+              "approaching_liquidation": false,
+              "stale_position": true
+            },
+            "venue": "jupiter"
+          }
+        ],
+        "totals": {
+          "gross_exposure_usd": 15648.757207,
+          "net_exposure_usd": 15648.757207,
+          "total_collateral_usd": 4600.575867,
+          "total_unrealized_pnl_usd": 4739.561232553885,
+          "weighted_leverage": 3.4014779148081815,
+          "net_pnl_pct": 103.02104279055216
+        },
+        "notes": []
+      },
+      "adrena": {
+        "has_positions": false,
+        "positions": [],
+        "totals": {
+          "gross_exposure_usd": 0,
+          "net_exposure_usd": 0,
+          "total_collateral_usd": 0,
+          "total_unrealized_pnl_usd": 0,
+          "weighted_leverage": 0,
+          "net_pnl_pct": null
+        },
+        "notes": []
+      }
+    },
+    "flags": {
+      "any_high_leverage": false,
+      "any_near_liquidation": false,
+      "concentrated_market": null,
+      "multi_venue": false
+    },
+    "fetched_at": 1790035811052,
+    "llm_summary": "## Perps Trader: Bvgz...rRu\n\n3 open positions across Jupiter (3). Profile: position trader. Directional bias: long.\nCombined gross exposure: $15,648.76. Net exposure: +$15,648.76. Collateral: $4,600.58. Unrealized PnL: +$4,739.56 (+103.02% on collateral). Weighted leverage: 3.40x.\n\n### Jupiter Perps positions (3)\nGross $15,648.76 · Collateral $4,600.58 · uPnL +$4,739.56 (+103.02%) · Weighted leverage 3.40x\n- SOL LONG $3,052.66 @ $88.55 (4.9x). uPnL: +$1,035.11 (+167.2%). Age: 59.4d.\n  ⚠ stale\n- ETH LONG $11,061.42 @ $2120.52 (3.0x). uPnL: +$3,390.40 (+92.2%). Age: 140.7d.\n  ⚠ stale\n- BTC LONG $1,534.68 @ $71666.39 (5.0x). uPnL: +$314.06 (+103.1%). Age: 83.2d.\n  ⚠ stale\n"
+  }
+}

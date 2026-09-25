@@ -1,0 +1,69 @@
+{
+  "key": "exit-signal",
+  "captured_at": "2026-09-22T00:09:23.745Z",
+  "input": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "format": "both"
+  },
+  "ms": 3860,
+  "output": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "symbol": "Bonk",
+    "name": "Bonk",
+    "price_usd": 0.000003376,
+    "liquidity_usd": 329125,
+    "market_cap_usd": 297097651,
+    "price_change_h1_pct": -0.55,
+    "price_change_h24_pct": 11.76,
+    "buys_h1": 295,
+    "sells_h1": 445,
+    "exit_score": 0.463,
+    "verdict": "DERISK",
+    "flags": [
+      "sellers_dominating",
+      "buying_slowing_1h",
+      "volume_fading",
+      "… 1 more (4 total)"
+    ],
+    "metrics": {
+      "sell_pressure_m5": 0.563,
+      "sell_pressure_h1": 0.601,
+      "sell_pressure_h6": 0.408,
+      "buy_rate_decel_m5_h1": 1.14,
+      "buy_rate_decel_h1_h6": 0.38,
+      "volume_decel": 0.61,
+      "holder_growth_pct": null,
+      "liquidity_change_pct": null,
+      "whale_sell_buy_ratio": 1.7,
+      "whale_distributing_count": 1,
+      "whale_accumulating_count": 1,
+      "signals_firing": 4
+    },
+    "whales": {
+      "net_flow_direction": "distributing",
+      "whale_count": 10,
+      "distributing_count": 1,
+      "accumulating_count": 1,
+      "total_sell_volume_usd": 789714,
+      "total_buy_volume_usd": 464089,
+      "lookback_hours": 24
+    },
+    "position": null,
+    "transfer_tax": {
+      "program": "spl-token",
+      "bps": 0,
+      "per_transfer_pct": 0,
+      "round_trip_pct": 0,
+      "fee_mutable_by": null,
+      "withdraw_authority": null
+    },
+    "reasoning": "Momentum is deteriorating but not gone — a partial exit pays for the risk: 60% of 1h trades are sells, 5m buy rate at 1.1× the hourly pace, volume at 0.6× the 6h pace, top holders: 1 distributing vs 1 accumulating (sell/buy volume 1.7×).",
+    "delta_window_minutes": null,
+    "caveats": [
+      "No prior snapshot for this token — liquidity-trend and holder-churn are null. Call again in 5+ minutes and they fill in (rug detection needs the second look).",
+      "A read of the current tape, not a price prediction. Signals are minutes-scale — a verdict older than the cache window is stale. Not financial advice."
+    ],
+    "last_updated": "2026-09-22T00:09:23.716Z",
+    "llm_summary": "## Exit Signal — $Bonk (DezX...263)\n\n**🟠 DERISK — reduce the position, momentum is deteriorating** | exit score 0.463\n\nprice $0.00000338 | 1h -0.55% | 24h +11.76% | liquidity $329,125.00\n\n**Read:** Momentum is deteriorating but not gone — a partial exit pays for the risk: 60% of 1h trades are sells, 5m buy rate at 1.1× the hourly pace, volume at 0.6× the 6h pace, top holders: 1 distributing vs 1 accumulating (sell/buy volume 1.7×).\n\n### 📉 Tape (1h)\n295 buys / 445 sells\nsell share 60% | 5m buy pace 1.14× hourly | volume 0.61× 6h pace\n\n### 🐋 Top-holder flow (24h) — distributing\n1 distributing / 1 accumulating of 10 whales — sells $789,714.00 vs buys $464,089.00\n\nFlags: sellers_dominating, buying_slowing_1h, volume_fading, whales_distributing\n\n_No prior snapshot for this token — liquidity-trend and holder-churn are null. Call again in 5+ minutes and they fill in (rug detection needs the second look)._\n_A read of the current tape, not a price prediction. Signals are minutes-scale — a verdict older than the cache window is stale. Not financial advice._"
+  }
+}

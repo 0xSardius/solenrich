@@ -1,0 +1,91 @@
+{
+  "key": "enrich-token-full",
+  "captured_at": "2026-09-22T00:10:15.815Z",
+  "input": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "format": "both"
+  },
+  "ms": 86,
+  "output": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "symbol": "Bonk",
+    "name": "Bonk",
+    "decimals": 5,
+    "supply": 87994397480606.05,
+    "holder_count": 20,
+    "price_usd": 0.000003376,
+    "market_cap": 297149393,
+    "volume_24h": 1096012.49,
+    "price_change_24h": 11.73,
+    "volatility": {
+      "daily_std_7d": 4.66,
+      "high_7d": 0.0000034,
+      "low_7d": 0.00000302,
+      "range_pct_7d": 12.4,
+      "classification": "MODERATE"
+    },
+    "top_holders": [
+      {
+        "address": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+        "balance": 7770515063166.431,
+        "pct_supply": 8.830692959604674
+      },
+      {
+        "address": "51yZyDSnec4xnUv7XLRVYcDyV4x3wUtzrDcRaYbmQU5j",
+        "balance": 5772593511837.953,
+        "pct_supply": 6.560183008367358
+      },
+      {
+        "address": "4xLpwxgYuPwPvtQjE94RLS4WZ4aD8NJYYKr2AJk99Qdg",
+        "balance": 3277887788443.162,
+        "pct_supply": 3.725109645947185
+      },
+      "… 17 more (20 total)"
+    ],
+    "concentration": {
+      "top1_pct": 8.83,
+      "top5_pct": 25.21,
+      "top10_pct": 38.58,
+      "herfindahl_index": 209
+    },
+    "holders_source": "rpc",
+    "slippage_estimates": [
+      {
+        "size_usd": 100,
+        "price_impact_pct": 0,
+        "output_amount": 2969430000000,
+        "input_amount": 100000000
+      },
+      {
+        "size_usd": 1000,
+        "price_impact_pct": 0.0008,
+        "output_amount": 29671670000000,
+        "input_amount": 1000000000
+      },
+      {
+        "size_usd": 10000,
+        "price_impact_pct": 0.0026,
+        "output_amount": 296182563520716,
+        "input_amount": 10000000000
+      },
+      "… 1 more (4 total)"
+    ],
+    "transfer_tax": {
+      "program": "spl-token",
+      "bps": 0,
+      "per_transfer_pct": 0,
+      "round_trip_pct": 0,
+      "fee_mutable_by": null,
+      "withdraw_authority": null
+    },
+    "liquidity": 329167.26,
+    "risk_flags": [
+      "unverified"
+    ],
+    "verified": false,
+    "mint_authority": null,
+    "freeze_authority": null,
+    "last_updated": "2026-09-22T00:10:13.631Z",
+    "llm_summary": "## Token: Bonk (Bonk)\n\nSolana SPL token. Price: $0.00000338 (↑ 11.73% 24h).\nMarket cap: $297,149,393.00. 24h volume: $1,096,012.49.\n\nLiquidity: $329,167.26. Thin relative to market cap.\nSlippage (USDC → token): $100: <0.01% | $1K: <0.01% | $10K: <0.01% | $100K: 0.01%.\n7d volatility: 4.66% daily std (MODERATE). Range: $0.00000302 — $0.00000340 (12.4%).\n\n### Holder Concentration\nTop holder: 8.8% of supply. Top 5: 25.2%. Top 10: 38.6%.\nHHI: 209 — Well distributed.\n  - 9WzDXwBb...AWWM: 8.8% (7770.52B tokens)\n  - 51yZyDSn...QU5j: 6.6% (5772.59B tokens)\n  - 4xLpwxgY...9Qdg: 3.7% (3277.89B tokens)\n\nNot verified on Jupiter -- exercise caution.\n\nRisk flags: unverified.\n\nData as of: 2026-09-22T00:10:13.631Z"
+  }
+}

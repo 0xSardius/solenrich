@@ -1,0 +1,149 @@
+{
+  "key": "perps-market-structure",
+  "captured_at": "2026-09-22T00:10:10.674Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 28,
+  "output": {
+    "pool": "5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq",
+    "markets": [
+      {
+        "symbol": "SOL",
+        "custody": "7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz",
+        "mark_price_usd": 118.57235783,
+        "open_interest": {
+          "long_usd": 28280156.138995,
+          "short_usd": 9937840.057722,
+          "total_usd": 38217996.196717,
+          "long_pct": 73.99696204225464,
+          "short_pct": 26.003037957745363,
+          "net_skew": "long"
+        },
+        "utilization_pct": 8.76483318417898,
+        "borrow_rate": {
+          "hourly_pct": 0.0014542249280885765,
+          "annualized_pct": 12.739010370055931,
+          "model": "jump"
+        },
+        "pool_assets": {
+          "owned_tokens": 3979545.968186784,
+          "locked_tokens": 348800.565599292,
+          "guaranteed_usd": 28280156.138995,
+          "global_short_sizes_usd": 9937840.057722
+        },
+        "limits": {
+          "max_long_oi_usd": 240000000,
+          "max_short_oi_usd": 112293947.65772,
+          "max_position_size_usd": 10000000
+        },
+        "flags": {
+          "extreme_long_skew": false,
+          "extreme_short_skew": false,
+          "high_utilization": false,
+          "near_long_oi_cap": false,
+          "near_short_oi_cap": false,
+          "elevated_borrow_rate": false
+        },
+        "long_headroom_usd": 211719843.861005,
+        "short_headroom_usd": 102356107.599998,
+        "health": "HEALTHY",
+        "notes": []
+      },
+      {
+        "symbol": "BTC",
+        "custody": "5Pv3gM9JrFFH883SWAhvJC9RPYmo8UNxuFtv5bMMALkm",
+        "mark_price_usd": 86332.24002318,
+        "open_interest": {
+          "long_usd": 11901196.338784,
+          "short_usd": 7711919.232153,
+          "total_usd": 19613115.570937,
+          "long_pct": 60.67978489057274,
+          "short_pct": 39.32021510942726,
+          "net_skew": "long"
+        },
+        "utilization_pct": 12.053768531601673,
+        "borrow_rate": {
+          "hourly_pct": 0.0013135526331564168,
+          "annualized_pct": 11.50672106645021,
+          "model": "jump"
+        },
+        "pool_assets": {
+          "owned_tokens": 1471.15363436,
+          "locked_tokens": 177.32945383,
+          "guaranteed_usd": 11901196.338784,
+          "global_short_sizes_usd": 7711919.232153
+        },
+        "limits": {
+          "max_long_oi_usd": 480000000,
+          "max_short_oi_usd": 112293947.65772,
+          "max_position_size_usd": 20000000
+        },
+        "flags": {
+          "extreme_long_skew": false,
+          "extreme_short_skew": false,
+          "high_utilization": false,
+          "near_long_oi_cap": false,
+          "near_short_oi_cap": false,
+          "elevated_borrow_rate": false
+        },
+        "long_headroom_usd": 468098803.661216,
+        "short_headroom_usd": 104582028.425567,
+        "health": "HEALTHY",
+        "notes": []
+      },
+      {
+        "symbol": "ETH",
+        "custody": "AQCGyheWPLeo6Qp9WpYS9m3Qj479t7R636N9ey1rEjEn",
+        "mark_price_usd": 2770.47638922,
+        "open_interest": {
+          "long_usd": 3320920.311706,
+          "short_usd": 4410794.135107,
+          "total_usd": 7731714.446813,
+          "long_pct": 42.95192656882042,
+          "short_pct": 57.04807343117958,
+          "net_skew": "balanced"
+        },
+        "utilization_pct": 5.9454127996863475,
+        "borrow_rate": {
+          "hourly_pct": 0.0012518412762498893,
+          "annualized_pct": 10.966129579949031,
+          "model": "jump"
+        },
+        "pool_assets": {
+          "owned_tokens": 26454.74064144,
+          "locked_tokens": 1572.84353622,
+          "guaranteed_usd": 3320920.311706,
+          "global_short_sizes_usd": 4410794.135107
+        },
+        "limits": {
+          "max_long_oi_usd": 300000000,
+          "max_short_oi_usd": 112293947.65772,
+          "max_position_size_usd": 20000000
+        },
+        "flags": {
+          "extreme_long_skew": false,
+          "extreme_short_skew": false,
+          "high_utilization": false,
+          "near_long_oi_cap": false,
+          "near_short_oi_cap": false,
+          "elevated_borrow_rate": false
+        },
+        "long_headroom_usd": 296679079.688294,
+        "short_headroom_usd": 107883153.522613,
+        "health": "HEALTHY",
+        "notes": []
+      }
+    ],
+    "totals": {
+      "long_oi_usd": 43502272.789485,
+      "short_oi_usd": 22060553.424982,
+      "total_oi_usd": 65562826.214467004,
+      "net_skew": "long"
+    },
+    "overall_health": "HEALTHY",
+    "summary_notes": [],
+    "fetched_at": 1790035808395,
+    "llm_summary": "## Jupiter Perps Market Structure\n\nPool: JLP. Total OI: $65,562,826.21 ($43,502,272.79 long / $22,060,553.42 short). Net skew: long. Overall health: HEALTHY.\n\n### Markets\n- SOL @ $118.57 — long-tilted (74% long). OI: $38,217,996.20. Util: 8.8%. Borrow: 12.7% APR (0.0015%/hr). Health: HEALTHY.\n  Headroom: $211,719,843.86 long / $102,356,107.60 short.\n- BTC @ $86332.24 — long-tilted (61% long). OI: $19,613,115.57. Util: 12.1%. Borrow: 11.5% APR (0.0013%/hr). Health: HEALTHY.\n  Headroom: $468,098,803.66 long / $104,582,028.43 short.\n- ETH @ $2770.48 — balanced (43% long / 57% short). OI: $7,731,714.45. Util: 5.9%. Borrow: 11.0% APR (0.0013%/hr). Health: HEALTHY.\n  Headroom: $296,679,079.69 long / $107,883,153.52 short.\n\n### Context\nJupiter Perps uses borrow fees (no funding rate). Rates compound hourly off utilization via jump-rate curve. High utilization + extreme skew signal crowded positioning."
+  }
+}

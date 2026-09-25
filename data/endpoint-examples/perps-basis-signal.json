@@ -1,0 +1,100 @@
+{
+  "key": "perps-basis-signal",
+  "captured_at": "2026-09-22T00:10:10.741Z",
+  "input": {
+    "asset": "SOL",
+    "format": "both"
+  },
+  "ms": 67,
+  "output": {
+    "asset": "SOL",
+    "spot": {
+      "price_usd": 118.5738642996456,
+      "sources": 2,
+      "spread_pct": 0.06
+    },
+    "checked_at": 1790035810717,
+    "min_yield_apr_pct": 5,
+    "venues": [
+      {
+        "venue": "jupiter-perps",
+        "available": true,
+        "type": "solana-onchain",
+        "rate_mechanism": "borrow-rate",
+        "mark_price_usd": 118.57235783,
+        "basis_bps": 0,
+        "rate_apr_pct": 12.739010370055931,
+        "trade": {
+          "direction": null,
+          "expected_yield_pct": 0,
+          "cost_pct": 12.739010370055931,
+          "net_yield_pct": -12.739010370055931,
+          "viable": false,
+          "reasoning": "Pool perps charge 12.74% APR borrow on both sides. No funding-income mechanism — basis trade not viable on its own."
+        }
+      },
+      {
+        "venue": "adrena",
+        "available": true,
+        "type": "solana-onchain",
+        "rate_mechanism": "borrow-rate",
+        "mark_price_usd": null,
+        "basis_bps": null,
+        "rate_apr_pct": 1.65,
+        "trade": {
+          "direction": null,
+          "expected_yield_pct": 0,
+          "cost_pct": 1.65,
+          "net_yield_pct": -1.65,
+          "viable": false,
+          "reasoning": "Pool perps charge 1.65% APR borrow on both sides. No funding-income mechanism — basis trade not viable on its own."
+        }
+      },
+      {
+        "venue": "flash",
+        "available": false,
+        "type": "solana-onchain",
+        "rate_mechanism": "borrow-rate",
+        "mark_price_usd": null,
+        "basis_bps": null,
+        "rate_apr_pct": null,
+        "trade": {
+          "direction": null,
+          "expected_yield_pct": 0,
+          "cost_pct": 0,
+          "net_yield_pct": 0,
+          "viable": false,
+          "reasoning": "Venue not available for this market."
+        },
+        "unavailable_reason": "SOL not available on Flash."
+      },
+      "… 2 more (5 total)"
+    ],
+    "opportunities": [
+      {
+        "venue": "hyperliquid",
+        "available": true,
+        "type": "reference",
+        "rate_mechanism": "funding-rate",
+        "mark_price_usd": 118.68,
+        "basis_bps": 9,
+        "rate_apr_pct": 12.0847704,
+        "trade": {
+          "direction": "short_perp_long_spot",
+          "expected_yield_pct": 12.0847704,
+          "cost_pct": 0,
+          "net_yield_pct": 12.0847704,
+          "viable": true,
+          "reasoning": "Funding +12.08% APR — longs pay shorts. Short the perp, hold spot."
+        }
+      }
+    ],
+    "best_trade": {
+      "venue": "hyperliquid",
+      "direction": "short_perp_long_spot",
+      "net_yield_pct": 12.0847704
+    },
+    "summary": "hyperliquid offers 12.08% net yield (short perp, long spot). 1 opportunity above 5% threshold.",
+    "llm_summary": "## SOL Basis Signal\n\nSpot: $118.5739 (2 sources, 0.06% spread).\nYield threshold: 5% APR.\n\n### Venues\n- Jupiter Perps — mark $118.5724 — basis +0bps — rate +12.74% APR (borrow-rate)\n  ↳ no viable trade: Pool perps charge 12.74% APR borrow on both sides. No funding-income mechanism — basis trade not viable on its own.\n- Adrena — mark n/a — basis n/a — rate +1.65% APR (borrow-rate)\n  ↳ no viable trade: Pool perps charge 1.65% APR borrow on both sides. No funding-income mechanism — basis trade not viable on its own.\n- flash: unavailable — SOL not available on Flash..\n- Hyperliquid — mark $118.6800 — basis +9bps — rate +12.08% APR (funding-rate)\n  ↳ SHORT perp, LONG spot → net 12.08% APR\n- dYdX v4 — mark $118.5400 — basis -3bps — rate -1.01% APR (funding-rate)\n  ↳ LONG perp, SHORT spot → net 1.01% APR\n\n### Opportunities (1)\n- Hyperliquid: short perp + long spot → 12.08% APR\n\n### Summary\nhyperliquid offers 12.08% net yield (short perp, long spot). 1 opportunity above 5% threshold.\n\n### Notes\nSolana pool perps (Jupiter, Adrena) charge borrow APR on BOTH sides — no funding-income mechanism, so a basis trade pays continuously and is not viable on its own. Reference venues (Hyperliquid, dYdX v4) use sign-aware funding: positive funding means longs pay shorts. To actually capture the rate, position must be opened on the reference venue itself."
+  }
+}

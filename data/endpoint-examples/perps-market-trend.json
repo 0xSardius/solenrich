@@ -1,0 +1,257 @@
+{
+  "key": "perps-market-trend",
+  "captured_at": "2026-09-22T00:10:10.833Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 92,
+  "output": {
+    "pool": "5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq",
+    "lookback_days": 7,
+    "markets": [
+      {
+        "symbol": "SOL",
+        "current": {
+          "mark_price_usd": 118.57235783,
+          "total_oi_usd": 38217996.196717,
+          "long_pct": 73.99696204225464,
+          "short_pct": 26.003037957745363,
+          "utilization_pct": 8.76483318417898,
+          "borrow_rate_annualized_pct": 12.739010370055931
+        },
+        "snapshots": [
+          {
+            "date": "2026-09-17",
+            "symbol": "SOL",
+            "mark_price_usd": 100.7279259,
+            "long_oi_usd": 29179310.999281,
+            "short_oi_usd": 9295977.948115,
+            "total_oi_usd": 38475288.947396,
+            "long_pct": 75.83909516358771,
+            "short_pct": 24.160904836412282,
+            "utilization_pct": 9.226803245894319,
+            "borrow_rate_annualized_pct": 12.883376014341973
+          },
+          {
+            "date": "2026-09-20",
+            "symbol": "SOL",
+            "mark_price_usd": 109.90903508,
+            "long_oi_usd": 28596017.322771,
+            "short_oi_usd": 9136303.971984,
+            "total_oi_usd": 37732321.294755004,
+            "long_pct": 75.78653086139707,
+            "short_pct": 24.21346913860292,
+            "utilization_pct": 8.917177139984537,
+            "borrow_rate_annualized_pct": 12.786617856245169
+          },
+          {
+            "date": "2026-09-21",
+            "symbol": "SOL",
+            "mark_price_usd": 111.76415342,
+            "long_oi_usd": 29604739.291303,
+            "short_oi_usd": 7583500.273243,
+            "total_oi_usd": 37188239.564546004,
+            "long_pct": 79.60779977207405,
+            "short_pct": 20.39220022792595,
+            "utilization_pct": 9.182462528658816,
+            "borrow_rate_annualized_pct": 12.869519540205879
+          },
+          "… 1 more (4 total)"
+        ],
+        "data_points": 4,
+        "deltas": [
+          {
+            "metric": "mark_price_usd",
+            "current": 118.572358,
+            "oldest": 100.727926,
+            "absolute_change": 17.844432,
+            "pct_change": 17.72,
+            "direction": "improving"
+          },
+          {
+            "metric": "total_oi_usd",
+            "current": 38217996.196717,
+            "oldest": 38475288.947396,
+            "absolute_change": -257292.750679,
+            "pct_change": -0.67,
+            "direction": "stable"
+          },
+          {
+            "metric": "utilization_pct",
+            "current": 8.764833,
+            "oldest": 9.226803,
+            "absolute_change": -0.46197,
+            "pct_change": -5.01,
+            "direction": "improving"
+          },
+          "… 2 more (5 total)"
+        ],
+        "market_direction": "improving"
+      },
+      {
+        "symbol": "BTC",
+        "current": {
+          "mark_price_usd": 86332.24002318,
+          "total_oi_usd": 19613115.570937,
+          "long_pct": 60.67978489057274,
+          "short_pct": 39.32021510942726,
+          "utilization_pct": 12.053768531601673,
+          "borrow_rate_annualized_pct": 11.50672106645021
+        },
+        "snapshots": [
+          {
+            "date": "2026-09-17",
+            "symbol": "BTC",
+            "mark_price_usd": 76482.5587547,
+            "long_oi_usd": 11223358.938858,
+            "short_oi_usd": 8425928.726759,
+            "total_oi_usd": 19649287.665617,
+            "long_pct": 57.118401083297385,
+            "short_pct": 42.881598916702615,
+            "utilization_pct": 12.090567058008897,
+            "borrow_rate_annualized_pct": 11.51132088225111
+          },
+          {
+            "date": "2026-09-20",
+            "symbol": "BTC",
+            "mark_price_usd": 80897.88937006,
+            "long_oi_usd": 11191460.71518,
+            "short_oi_usd": 11864267.419418,
+            "total_oi_usd": 23055728.134598,
+            "long_pct": 48.54091204513213,
+            "short_pct": 51.459087954867854,
+            "utilization_pct": 11.442121275378838,
+            "borrow_rate_annualized_pct": 11.430265159422353
+          },
+          {
+            "date": "2026-09-21",
+            "symbol": "BTC",
+            "mark_price_usd": 81550.08070517,
+            "long_oi_usd": 12140566.478608,
+            "short_oi_usd": 12072444.903607,
+            "total_oi_usd": 24213011.382215,
+            "long_pct": 50.140671422330875,
+            "short_pct": 49.85932857766912,
+            "utilization_pct": 12.250003436651891,
+            "borrow_rate_annualized_pct": 11.531250429581487
+          },
+          "… 1 more (4 total)"
+        ],
+        "data_points": 4,
+        "deltas": [
+          {
+            "metric": "mark_price_usd",
+            "current": 86332.240023,
+            "oldest": 76482.558755,
+            "absolute_change": 9849.681268,
+            "pct_change": 12.88,
+            "direction": "improving"
+          },
+          {
+            "metric": "total_oi_usd",
+            "current": 19613115.570937,
+            "oldest": 19649287.665617,
+            "absolute_change": -36172.09468,
+            "pct_change": -0.18,
+            "direction": "stable"
+          },
+          {
+            "metric": "utilization_pct",
+            "current": 12.053769,
+            "oldest": 12.090567,
+            "absolute_change": -0.036799,
+            "pct_change": -0.3,
+            "direction": "stable"
+          },
+          "… 2 more (5 total)"
+        ],
+        "market_direction": "declining"
+      },
+      {
+        "symbol": "ETH",
+        "current": {
+          "mark_price_usd": 2770.47638922,
+          "total_oi_usd": 7731714.446813,
+          "long_pct": 42.95192656882042,
+          "short_pct": 57.04807343117958,
+          "utilization_pct": 5.9454127996863475,
+          "borrow_rate_annualized_pct": 10.966129579949031
+        },
+        "snapshots": [
+          {
+            "date": "2026-09-17",
+            "symbol": "ETH",
+            "mark_price_usd": 2449.2101168,
+            "long_oi_usd": 4526129.615163,
+            "short_oi_usd": 4289489.337851,
+            "total_oi_usd": 8815618.953014001,
+            "long_pct": 51.34216484726291,
+            "short_pct": 48.657835152737086,
+            "utilization_pct": 8.21162655139077,
+            "borrow_rate_annualized_pct": 11.334389314601001
+          },
+          {
+            "date": "2026-09-20",
+            "symbol": "ETH",
+            "mark_price_usd": 2624.675,
+            "long_oi_usd": 3063315.481277,
+            "short_oi_usd": 7483108.699196,
+            "total_oi_usd": 10546424.180473,
+            "long_pct": 29.046010561084913,
+            "short_pct": 70.95398943891509,
+            "utilization_pct": 5.719119925848853,
+            "borrow_rate_annualized_pct": 10.92935698795044
+          },
+          {
+            "date": "2026-09-21",
+            "symbol": "ETH",
+            "mark_price_usd": 2665.17521342,
+            "long_oi_usd": 2848252.584932,
+            "short_oi_usd": 3868561.182192,
+            "total_oi_usd": 6716813.767124,
+            "long_pct": 42.40481698142366,
+            "short_pct": 57.59518301857634,
+            "utilization_pct": 5.365533998289417,
+            "borrow_rate_annualized_pct": 10.871899274722029
+          },
+          "… 1 more (4 total)"
+        ],
+        "data_points": 4,
+        "deltas": [
+          {
+            "metric": "mark_price_usd",
+            "current": 2770.476389,
+            "oldest": 2449.210117,
+            "absolute_change": 321.266272,
+            "pct_change": 13.12,
+            "direction": "improving"
+          },
+          {
+            "metric": "total_oi_usd",
+            "current": 7731714.446813,
+            "oldest": 8815618.953014,
+            "absolute_change": -1083904.506201,
+            "pct_change": -12.3,
+            "direction": "declining"
+          },
+          {
+            "metric": "utilization_pct",
+            "current": 5.945413,
+            "oldest": 8.211627,
+            "absolute_change": -2.266214,
+            "pct_change": -27.6,
+            "direction": "improving"
+          },
+          "… 2 more (5 total)"
+        ],
+        "market_direction": "stable"
+      }
+    ],
+    "totals": {
+      "current_total_oi_usd": 65562826.214467004,
+      "overall_direction": "stable"
+    },
+    "last_updated": "2026-09-22T00:10:10.814Z",
+    "llm_summary": "## Jupiter Perps Market Trend (7-day lookback)\n\nTotal open interest now: $65,562,826.21 across 3 markets. Overall direction: **stable**\n\n### SOL\nMark: $118.57 | OI: $38,217,996.20 (74% long / 26% short) | Util: 8.8% | Borrow APR: 12.7%\n\nChanges (4 data points):\n- **mark price usd**: $100.73 → $118.57 ↑ +17.7% (improving)\n- **total oi usd**: $38,475,288.95 → $38,217,996.20 → -0.7% (stable)\n- **utilization pct**: 9.2% → 8.8% ↑ -5.0% (improving)\n- **borrow rate annualized pct**: 12.9% → 12.7% → -1.1% (stable)\n- **skew imbalance pct**: 25.8% → 24.0% ↑ -7.1% (improving)\nMarket direction: **improving**\n\n### BTC\nMark: $86,332.24 | OI: $19,613,115.57 (61% long / 39% short) | Util: 12.1% | Borrow APR: 11.5%\n\nChanges (4 data points):\n- **mark price usd**: $76,482.56 → $86,332.24 ↑ +12.9% (improving)\n- **total oi usd**: $19,649,287.67 → $19,613,115.57 → -0.2% (stable)\n- **utilization pct**: 12.1% → 12.1% → -0.3% (stable)\n- **borrow rate annualized pct**: 11.5% → 11.5% → -0.0% (stable)\n- **skew imbalance pct**: 7.1% → 10.7% ↓ +50.0% (declining)\nMarket direction: **declining**\n\n### ETH\nMark: $2,770.48 | OI: $7,731,714.45 (43% long / 57% short) | Util: 5.9% | Borrow APR: 11.0%\n\nChanges (4 data points):\n- **mark price usd**: $2,449.21 → $2,770.48 ↑ +13.1% (improving)\n- **total oi usd**: $8,815,618.95 → $7,731,714.45 ↓ -12.3% (declining)\n- **utilization pct**: 8.2% → 5.9% ↑ -27.6% (improving)\n- **borrow rate annualized pct**: 11.3% → 11.0% ↑ -3.3% (improving)\n- **skew imbalance pct**: 1.3% → 7.0% ↓ +425.1% (declining)\nMarket direction: **stable**\n\nData as of: 2026-09-22T00:10:10.814Z"
+  }
+}

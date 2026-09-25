@@ -1,0 +1,85 @@
+{
+  "key": "stonk-reward-risk",
+  "captured_at": "2026-09-22T00:08:02.030Z",
+  "input": {
+    "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+    "format": "both"
+  },
+  "ms": 471,
+  "output": {
+    "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+    "symbol": "ZCAT",
+    "name": "Anonymous Cat",
+    "payout_status": "PAYING",
+    "trading_cost": {
+      "bps": 300,
+      "per_transfer_pct": 3,
+      "round_trip_pct": 6
+    },
+    "score": 97,
+    "level": "HEALTHY",
+    "reasons": [
+      "listed on StonkFun as a reward-mode raydium launch",
+      "on-chain transfer tax 300 bps, withheld to StonkFun's distributor",
+      "6.84K ZEC distributed over 1639143 payouts to 34109 holders",
+      "… 3 more (6 total)"
+    ],
+    "warnings": [
+      "rewards paid in ZEC, a custom mint — the reward asset carries its own token risk"
+    ],
+    "reward_mechanism": "transfer_tax",
+    "adoption": {
+      "listed_on_stonkfun": true,
+      "mode": "reward",
+      "launchpad": "raydium",
+      "withdraw_authority_is_stonkfun": true
+    },
+    "transfer_fee": {
+      "onchain_bps": 300,
+      "onchain_maximum_fee_raw": "1000000000000000000",
+      "maximum_fee_binds": false,
+      "withdraw_withheld_authority": "5KXDF6QnqhBj72hDtJNkkpFaQVUfbFXNybMsp3DiK6tD",
+      "config_authority": null,
+      "withheld_amount_raw": "217869790395176",
+      "stonkfun_bps": 300,
+      "token_program": "token-2022"
+    },
+    "rewards": {
+      "distributed_tokens": 6836.12355346,
+      "distributed_raw": "683612355346",
+      "reward_asset": "ZEC",
+      "payout_count": 1639143,
+      "holder_count": 34109,
+      "last_payout_at": "2026-09-21T22:06:50.462Z",
+      "hours_since_last_payout": 2
+    },
+    "flywheel_active": true,
+    "holders": {
+      "count": 34109,
+      "top10_pct": 16.03,
+      "source": "stonkfun"
+    },
+    "quote": {
+      "mint": "A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+      "symbol": "ZEC",
+      "category": "custom",
+      "category_raw": "custom"
+    },
+    "market": {
+      "price_usd": 0.09724596348495708,
+      "market_cap_usd": 94164674.22841088,
+      "volume_24h_usd": 862279.7684015367,
+      "price_change_24h_pct": 34.95886381677826
+    },
+    "age_days": 22.03,
+    "status": "graduated",
+    "graduated": true,
+    "next_steps": [
+      "stonk-yield for the realized 7d/30d holder yield on this coin.",
+      "due-diligence for structural safety (authorities, liquidity, rug flags).",
+      "exit-signal while you hold it."
+    ],
+    "llm_brief": "## StonkFun Reward Risk — $ZCAT (HcRL...eJR)\n\n**🟢 PAYING — holders received a payout in the last 24h** — last payout 2h ago\nTrading cost: 300 bps per transfer — a round trip costs 6% before slippage.\n🟢 HEALTHY — the tax reaches holders and the coin has a payout record | health score 97/100\n\nlisted (reward, raydium) | quote ZEC / custom | mcap $94,164,674.23 | age 22.0d | graduated\n\n### 🧾 Transf… (1203 characters)",
+    "llm_summary": "## StonkFun Reward Risk — $ZCAT (HcRL...eJR)\n\n**🟢 PAYING — holders received a payout in the last 24h** — last payout 2h ago\nTrading cost: 300 bps per transfer — a round trip costs 6% before slippage.\n🟢 HEALTHY — the tax reaches holders and the coin has a payout record | health score 97/100\n\nlisted (reward, raydium) | quote ZEC / custom | mcap $94,164,674.23 | age 22.0d | graduated\n\n### 🧾 Transfer tax (on-chain)\n300 bps, max fee 1000000000000000000 — withdraw authority StonkFun ✓ — fee immutable\n\n### 💸 Distributions\n6,836.1236 ZEC over 1639143 payouts to 34109 holders — last 2h ago — flywheel active\nTop-10 holders: 16.03% of supply\n\n**Read:** listed on StonkFun as a reward-mode raydium launch; on-chain transfer tax 300 bps, withheld to StonkFun's distributor; 6.84K ZEC distributed over 1639143 payouts to 34109 holders; last payout 2h ago; flywheel active — in the platform buyback rankings; top-10 holders own 16.0% — distributed\n\n⚠️ rewards paid in ZEC, a custom mint — the reward asset carries its own token risk\n\nNext: stonk-yield for the realized 7d/30d holder yield on this coin. due-diligence for structural safety (authorities, liquidity, rug flags). exit-signal while you hold it."
+  }
+}

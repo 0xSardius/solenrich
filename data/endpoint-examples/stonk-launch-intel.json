@@ -1,0 +1,217 @@
+{
+  "key": "stonk-launch-intel",
+  "captured_at": "2026-09-22T00:37:18.522Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 122,
+  "output": {
+    "quotes": [
+      {
+        "quote_mint": "CZEB3WNZuF2Yz1z2H81RcCk8T7fsw82KB33zqamASVsg",
+        "quote_symbol": "COST",
+        "quote_category": "prestock",
+        "coins": 5,
+        "launches_24h": 2,
+        "launches_7d": 3,
+        "traded_24h": 5,
+        "traded_share_24h": 1,
+        "paying_24h": 5,
+        "paying_share_24h": 1,
+        "survival_3d": 1,
+        "older_than_3d": 2,
+        "live_24h": 5,
+        "volume_24h_usd": 70121,
+        "holders_total": 1830,
+        "holders_median": 301,
+        "market_cap_median_usd": 5642,
+        "tax_mix": {
+          "bps_100": 2,
+          "bps_300": 3,
+          "other": 0
+        },
+        "paying_by_tax": {
+          "bps_100": 1,
+          "bps_300": 1
+        },
+        "traded_by_tax": {
+          "bps_100": 1,
+          "bps_300": 1
+        },
+        "crowding": 0.6,
+        "is_new": false,
+        "demand_score": 100,
+        "rank": 1
+      },
+      {
+        "quote_mint": "avaxGHCq3T7hoxd73oY2KY9hJSTaeMibXvHy5KNzh5D",
+        "quote_symbol": "AVAX",
+        "quote_category": "prestock",
+        "coins": 17,
+        "launches_24h": 17,
+        "launches_7d": 17,
+        "traded_24h": 17,
+        "traded_share_24h": 1,
+        "paying_24h": 16,
+        "paying_share_24h": 0.941,
+        "survival_3d": null,
+        "older_than_3d": 0,
+        "live_24h": 16,
+        "volume_24h_usd": 2008772,
+        "holders_total": 14171,
+        "holders_median": 257,
+        "market_cap_median_usd": 5338,
+        "tax_mix": {
+          "bps_100": 8,
+          "bps_300": 9,
+          "other": 0
+        },
+        "paying_by_tax": {
+          "bps_100": 0.875,
+          "bps_300": 1
+        },
+        "traded_by_tax": {
+          "bps_100": 1,
+          "bps_300": 1
+        },
+        "crowding": 1,
+        "is_new": true,
+        "demand_score": 79,
+        "rank": 2
+      },
+      {
+        "quote_mint": "DKNGQFNGQmoBdXSRGKJ8tTu7uPDasw5JDcfMmWniNfow",
+        "quote_symbol": "DKNG",
+        "quote_category": "prestock",
+        "coins": 9,
+        "launches_24h": 1,
+        "launches_7d": 3,
+        "traded_24h": 8,
+        "traded_share_24h": 0.889,
+        "paying_24h": 4,
+        "paying_share_24h": 0.444,
+        "survival_3d": 0.857,
+        "older_than_3d": 7,
+        "live_24h": 4,
+        "volume_24h_usd": 414937,
+        "holders_total": 23652,
+        "holders_median": 444,
+        "market_cap_median_usd": 8954,
+        "tax_mix": {
+          "bps_100": 7,
+          "bps_300": 2,
+          "other": 0
+        },
+        "paying_by_tax": {
+          "bps_100": 0.571,
+          "bps_300": 0
+        },
+        "traded_by_tax": {
+          "bps_100": 0.857,
+          "bps_300": 1
+        },
+        "crowding": 0.38,
+        "is_new": false,
+        "demand_score": 79,
+        "rank": 3
+      },
+      "… 17 more (20 total)"
+    ],
+    "overall": {
+      "coins": 17630,
+      "quotes": 324,
+      "launches_24h": 705,
+      "launches_7d": 5721,
+      "traded_24h": 3351,
+      "traded_share_24h": 0.19,
+      "paying_24h": 1881,
+      "paying_share_24h": 0.107,
+      "survival_3d": 0.139,
+      "tax": {
+        "bps_100": {
+          "coins": 10124,
+          "traded_share": 0.152,
+          "paying_share": 0.078
+        },
+        "bps_300": {
+          "coins": 6610,
+          "traded_share": 0.253,
+          "paying_share": 0.156
+        }
+      },
+      "by_category": {
+        "custom": {
+          "quotes": 212,
+          "coins": 9324,
+          "traded_share_24h": 0.18,
+          "paying_share_24h": 0.116
+        },
+        "prestock": {
+          "quotes": 74,
+          "coins": 2932,
+          "traded_share_24h": 0.291,
+          "paying_share_24h": 0.138
+        },
+        "xstock": {
+          "quotes": 26,
+          "coins": 2571,
+          "traded_share_24h": 0.183,
+          "paying_share_24h": 0.078
+        },
+        "leverage": {
+          "quotes": 2,
+          "coins": 2218,
+          "traded_share_24h": 0.106,
+          "paying_share_24h": 0.062
+        },
+        "solana": {
+          "quotes": 3,
+          "coins": 295,
+          "traded_share_24h": 0.214,
+          "paying_share_24h": 0.081
+        },
+        "currency": {
+          "quotes": 5,
+          "coins": 218,
+          "traded_share_24h": 0.202,
+          "paying_share_24h": 0.124
+        },
+        "collectible": {
+          "quotes": 2,
+          "coins": 72,
+          "traded_share_24h": 0.153,
+          "paying_share_24h": 0.042
+        }
+      }
+    },
+    "recommendations": [
+      "wXRP (custom): 81% of its 36 coins traded today, 73% still trade past day 3, 11 launches this week (0.38 per coin traded) — demand 73/100.",
+      "HIMS (prestock): 86% of its 14 coins traded today, 80% still trade past day 3, 7 launches this week (0.58 per coin traded) — demand 73/100.",
+      "RBLX (prestock): 86% of its 14 coins traded today, 71% still trade past day 3, 8 launches this week (0.67 per coin traded) — demand 70/100.",
+      "… 4 more (7 total)"
+    ],
+    "filters": {
+      "category": null,
+      "min_coins": 5,
+      "sort": "demand",
+      "limit": 20
+    },
+    "index": {
+      "rows": 17630,
+      "last_refresh_at": "2026-09-22T00:36:54.364Z",
+      "series_days": 15,
+      "oldest_point_at": "2026-09-06T12:00:00.000Z"
+    },
+    "caveats": [
+      "Survival and demand are 24h/3d activity measures on the index, not returns. A quote can be busy and still lose money for launchers.",
+      "Launches attributed to a quote include coins whose pool has since gone quiet; traded/paying shares are the honest denominator.",
+      "index: 17630 reward coins, refreshed 2026-09-22T00:36:54.364Z"
+    ],
+    "next_steps": [
+      "stonk-pairs (free) confirms the quote is launchable right now and gives the exact pricing doc to fetch.",
+      "stonk-launch-preflight on the unsigned transaction before broadcasting — a mismatched pool is never adopted.",
+      "stonk-gems shows what a winning launch on that quote looks like today."
+    ],
+    "llm_summary": "## StonkFun Launch Intel — 20 of 324 quote assets, sorted by demand\n\nAcross 17630 reward coins: 705 launched in 24h, 5721 in 7d. 19% traded today, 11% paid holders today, 14% of coins older than 3 days still trade.\nTax: 100 bps → 10124 coins, 15% trading, 8% paying · 300 bps → 6610 coins, 25% trading, 16% paying.\n\n### Recommendations\n- wXRP (custom): 81% of its 36 coins traded today, 73% still trade past day 3, 11 launches this week (0.38 per coin traded) — demand 73/100.\n- HIMS (prestock): 86% of its 14 coins traded today, 80% still trade past day 3, 7 launches this week (0.58 per coin traded) — demand 73/100.\n- RBLX (prestock): 86% of its 14 coins traded today, 71% still trade past day 3, 8 launches this week (0.67 per coin traded) — demand 70/100.\n- New this week, no 3-day survival yet: COPX (32 coins, 100% traded today), AVAX (17 coins, 100% traded today), URA (12 coins, 100% traded today). Early-shelf attention is real but unproven — demand capped at 80 until coins age past day 3.\n- Avoid $WIF: 141 launches this week for 16 coins trading today (crowding 8.81) — the shelf is full.\n- Tax level: 300 bps coins pay holders 16% of the time vs 8% at 100 bps, but 100 bps coins trade more (15% vs 25%). Pick 300 for a yield story, 100 for trading volume.\n- Category with the most trading per launch: prestock (29% of 2932 coins traded today).\n\n| # | Quote | Cat | Coins | 7d launches | Traded 24h | Paying 24h | Survival 3d | Crowding | Med holders | Vol 24h | Demand |\n|---|-------|-----|-------|-------------|------------|------------|-------------|----------|-------------|---------|--------|\n| 1 | COST | prestock | 5 | 3 | 100% | 100% | 100% | 0.6 | 301 | $70,121.00 | 100 |\n| 2 | AVAX (new) | prestock | 17 | 17 | 100% | 94% | new | 1 | 257 | $2,008,772.00 | 79 |\n| 3 | DKNG | prestock | 9 | 3 | 89% | 44% | 86% | 0.38 | 444 | $414,937.00 | 79 |\n| 4 | SOLO | custom | 7 | 7 | 86% | 57% | 80% | 1.17 | 28 | $83,912.00 | 78 |\n| 5 | WOW (new) | custom | 5 | 5 | 100% | 80% | new | 1 | 230 | $78,642.00 | 76 |\n| 6 | FTT (new) | custom | 5 | 5 | 100% | 80% | new | 1 | 68 | $56,990.00 | 76 |\n| 7 | RAWR (new) | custom | 7 | 7 | 100% | 71% | new | 1 | 20 | $330,971.00 | 74 |\n| 8 | wXRP | custom | 36 | 11 | 81% | 58% | 73% | 0.38 | 78 | $1,015,396.00 | 73 |\n| 9 | HIMS | prestock | 14 | 7 | 86% | 36% | 80% | 0.58 | 315 | $120,596.00 | 73 |\n| 10 | URA (new) | prestock | 12 | 12 | 100… (4254 characters)"
+  }
+}

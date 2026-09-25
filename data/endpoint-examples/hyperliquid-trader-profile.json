@@ -1,0 +1,104 @@
+{
+  "key": "hyperliquid-trader-profile",
+  "captured_at": "2026-09-22T00:10:08.194Z",
+  "input": {
+    "address": "0xd21d931890d27b6e7e2e668f27931e17698e90f1",
+    "format": "both"
+  },
+  "ms": 405,
+  "output": {
+    "address": "0xd21d931890d27b6e7e2e668f27931e17698e90f1",
+    "venue": "hyperliquid",
+    "has_positions": true,
+    "account": {
+      "value_usd": 8864894.464862,
+      "total_notional_usd": 25850828.157666,
+      "margin_used_usd": 8422352.864862,
+      "withdrawable_usd": 4381.6
+    },
+    "profile": "directional_long",
+    "directional_bias": "long",
+    "positions": [
+      {
+        "coin": "SOL",
+        "dir": "long",
+        "size_tokens": 85000.67,
+        "notional_usd": 10087879.5156,
+        "entry_px": 110.3424,
+        "current_px": 118.67999999999999,
+        "unrealized_pnl_usd": 708699.294315,
+        "pnl_pct": 37.78044976,
+        "leverage": 5,
+        "liquidation_px": 90.603771851,
+        "distance_to_liq_pct": 23.657084722783946,
+        "margin_used_usd": 2579032.736535,
+        "flags": {
+          "high_leverage": false,
+          "extreme_leverage": false,
+          "approaching_liquidation": false,
+          "losing": false
+        }
+      },
+      {
+        "coin": "HYPE",
+        "dir": "long",
+        "size_tokens": 49000.2,
+        "notional_usd": 4602392.7852,
+        "entry_px": 68.7371,
+        "current_px": 93.926,
+        "unrealized_pnl_usd": 1234258.530732,
+        "pnl_pct": 183.22585109,
+        "leverage": 5,
+        "liquidation_px": 58.6965933121,
+        "distance_to_liq_pct": 37.50761949609267,
+        "margin_used_usd": 1870055.214169,
+        "flags": {
+          "high_leverage": false,
+          "extreme_leverage": false,
+          "approaching_liquidation": false,
+          "losing": false
+        }
+      },
+      {
+        "coin": "VVV",
+        "dir": "long",
+        "size_tokens": 57000.6,
+        "notional_usd": 1826698.2282,
+        "entry_px": 24.7538,
+        "current_px": 32.047000000000004,
+        "unrealized_pnl_usd": 415715.305337,
+        "pnl_pct": 88.38844863,
+        "leverage": 3,
+        "liquidation_px": 19.078540026,
+        "distance_to_liq_pct": 40.46700151028178,
+        "margin_used_usd": 920458.037697,
+        "flags": {
+          "high_leverage": false,
+          "extreme_leverage": false,
+          "approaching_liquidation": false,
+          "losing": false
+        }
+      },
+      "… 3 more (6 total)"
+    ],
+    "totals": {
+      "gross_notional_usd": 25850828.157665998,
+      "net_notional_usd": 25850828.157665998,
+      "total_unrealized_pnl_usd": 3430132.5195770003,
+      "weighted_leverage": 4.687441485157839,
+      "position_count": 6
+    },
+    "pnl": {
+      "week_usd": 4791644.238512,
+      "month_usd": 4660426.480499,
+      "all_time_usd": 11216271.490485
+    },
+    "flags": {
+      "any_high_leverage": false,
+      "any_near_liquidation": false,
+      "concentrated_coin": null
+    },
+    "fetched_at": 1790035807796,
+    "llm_summary": "## Hyperliquid Trader: 0xd2...0f1\n\nPnL — week +$4,791,644.24 · month +$4,660,426.48 · all-time +$11,216,271.49.\nAccount value: $8,864,894.46 · withdrawable $4,381.60.\n\n6 open positions. Profile: directional long. Directional bias: long.\nGross notional $25,850,828.16 · net +$25,850,828.16 · uPnL +$3,430,132.52 · weighted leverage 4.7x.\n\n### Positions\n- LONG SOL 5x — notional $10,087,879.52, entry $110.3424, uPnL +$708,699.29 (+37.8%), liq 23.7% away\n- LONG HYPE 5x — notional $4,602,392.79, entry $68.7371, uPnL +$1,234,258.53 (+183.2%), liq 37.5% away\n- LONG VVV 3x — notional $1,826,698.23, entry $24.7538, uPnL +$415,715.31 (+88.4%), liq 40.5% away\n- LONG PUMP 5x — notional $3,490,217.63, entry $0.004053, uPnL +$246,490.70 (+38.0%), liq 25.4% away\n- LONG ZEC 4x — notional $4,426,500.00, entry $1218.0334, uPnL +$772,399.59 (+84.6%), liq 34.5% away\n- LONG LIT 5x — notional $1,417,140.00, entry $4.548569, uPnL +$52,569.09 (+19.3%), liq 17.4% away"
+  }
+}

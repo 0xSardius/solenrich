@@ -1,0 +1,74 @@
+{
+  "key": "wallet-graph",
+  "captured_at": "2026-09-22T00:10:29.796Z",
+  "input": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "format": "both"
+  },
+  "ms": 1452,
+  "output": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "depth": 1,
+    "node_count": 51,
+    "edge_count": 51,
+    "nodes": [
+      {
+        "address": "",
+        "interaction_count": 21,
+        "connection_strength": 1,
+        "category": "unknown"
+      },
+      {
+        "address": "HrkQ1Cof5kEYWBsy7QHMzVsp9M2XkrdcyYWRmmNokFBc",
+        "interaction_count": 20,
+        "connection_strength": 0.95,
+        "category": "unknown"
+      },
+      {
+        "address": "8gEGZbUfVE1poBq71VHKX9LU7ca4x8wTUyZgcbyQe51s",
+        "interaction_count": 9,
+        "connection_strength": 0.43,
+        "category": "unknown"
+      },
+      "… 47 more (50 total)"
+    ],
+    "edges": [
+      {
+        "source": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+        "target": "",
+        "interaction_count": 21,
+        "total_volume_sol": 0,
+        "direction": "both"
+      },
+      {
+        "source": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+        "target": "HrkQ1Cof5kEYWBsy7QHMzVsp9M2XkrdcyYWRmmNokFBc",
+        "interaction_count": 20,
+        "total_volume_sol": 1.68,
+        "direction": "both"
+      },
+      {
+        "source": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+        "target": "8gEGZbUfVE1poBq71VHKX9LU7ca4x8wTUyZgcbyQe51s",
+        "interaction_count": 9,
+        "total_volume_sol": 0,
+        "direction": "both"
+      },
+      "… 47 more (50 total)"
+    ],
+    "clusters": [
+      {
+        "members": [
+          "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+          "",
+          "HrkQ1Cof5kEYWBsy7QHMzVsp9M2XkrdcyYWRmmNokFBc",
+          "… 8 more (11 total)"
+        ],
+        "interaction_density": 0.35,
+        "suspicious_pattern": null
+      }
+    ],
+    "last_updated": "2026-09-22T00:10:29.768Z",
+    "llm_summary": "## Wallet Graph: vine...PTg\n\n51 connected address(es), 51 edge(s). Depth: 1.\n\n### Strongest Connections\n-  [unknown]: 21 interactions (strength 1)\n- HrkQ...FBc [unknown]: 20 interactions (strength 0.95)\n- 8gEG...51s [unknown]: 9 interactions (strength 0.43)\n- 8kts...vDS [unknown]: 8 interactions (strength 0.38)\n- 5mYW...Jrf [unknown]: 6 interactions (strength 0.29)\n\nCategories: 50 unknown.\n\n### Clusters Detected\n- 11 members (vine...PTg, , HrkQ...FBc, 8gEG...51s), density: 0.35\n\nData as of: 2026-09-22T00:10:29.768Z"
+  }
+}

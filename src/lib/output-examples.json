@@ -1,0 +1,1788 @@
+{
+ "enrich-wallet-light": {
+  "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+  "sol_balance": 0.039869,
+  "portfolio_value_usd": 4.7307,
+  "token_count": 6,
+  "top_holdings": [
+   {
+    "mint": "FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8",
+    "symbol": "SMOG",
+    "balance": 29.621,
+    "usd_value": 0.0015731
+   }
+  ],
+  "nft_count": 9,
+  "nft_summary": {
+   "total": 9,
+   "collected": 0,
+   "airdropped": 8,
+   "suspected_spam": 1,
+   "distinct_collections": 0
+  },
+  "nft_collections": [
+   {
+    "name": "Qualified #611",
+    "collection_mint": "7gCKeoTNBq8BvX5KQgeMiwbkBrtuxMcUN4JRMNfizTSK",
+    "count": 1,
+    "compressed": true,
+    "suspected_spam": false
+   }
+  ],
+  "defi_positions": [],
+  "tx_count_30d": 0,
+  "first_tx_date": "2022-04-15T22:33:33.000Z",
+  "labels": [
+   "dormant"
+  ],
+  "risk_score": 0.15,
+  "risk_level": "LOW"
+ },
+ "enrich-wallet-full": {
+  "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+  "sol_balance": 0.039869,
+  "portfolio_value_usd": 4.7292,
+  "token_count": 6,
+  "top_holdings": [
+   {
+    "mint": "FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8",
+    "symbol": "SMOG",
+    "balance": 29.621,
+    "usd_value": 0.0015731
+   }
+  ],
+  "nft_count": 9,
+  "nft_summary": {
+   "total": 9,
+   "collected": 0,
+   "airdropped": 8,
+   "suspected_spam": 1,
+   "distinct_collections": 0
+  },
+  "nft_collections": [
+   {
+    "name": "Qualified #611",
+    "collection_mint": "7gCKeoTNBq8BvX5KQgeMiwbkBrtuxMcUN4JRMNfizTSK",
+    "count": 1,
+    "compressed": true,
+    "suspected_spam": false
+   }
+  ],
+  "defi_positions": [
+   {
+    "protocol": "Orca",
+    "type": "swap",
+    "value_usd": 0
+   }
+  ],
+  "tx_count_30d": 0,
+  "first_tx_date": "2022-04-15T22:33:33.000Z",
+  "labels": [
+   "defi_user",
+   "dormant"
+  ],
+  "risk_score": 0,
+  "risk_level": "LOW"
+ },
+ "enrich-token-light": {
+  "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+  "symbol": "Bonk",
+  "name": "Bonk",
+  "decimals": 5,
+  "supply": 87994000000000,
+  "holder_count": 0,
+  "price_usd": 0.000003376,
+  "market_cap": 297149393,
+  "volume_24h": 1096000,
+  "price_change_24h": 11.73,
+  "volatility": {
+   "daily_std_7d": 4.66,
+   "high_7d": 0.0000034,
+   "low_7d": 0.00000302,
+   "range_pct_7d": 12.4,
+   "classification": "MODERATE"
+  },
+  "top_holders": [
+   {
+    "address": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+    "balance": 7770500000000,
+    "pct_supply": 8.8307
+   }
+  ],
+  "concentration": {
+   "top1_pct": 8.83,
+   "top5_pct": 25.21,
+   "top10_pct": 38.58,
+   "herfindahl_index": 209
+  },
+  "holders_source": "birdeye"
+ },
+ "enrich-token-full": {
+  "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+  "symbol": "Bonk",
+  "name": "Bonk",
+  "decimals": 5,
+  "supply": 87994000000000,
+  "holder_count": 20,
+  "price_usd": 0.000003376,
+  "market_cap": 297149393,
+  "volume_24h": 1096000,
+  "price_change_24h": 11.73,
+  "volatility": {
+   "daily_std_7d": 4.66,
+   "high_7d": 0.0000034,
+   "low_7d": 0.00000302,
+   "range_pct_7d": 12.4,
+   "classification": "MODERATE"
+  },
+  "top_holders": [
+   {
+    "address": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+    "balance": 7770500000000,
+    "pct_supply": 8.8307
+   }
+  ],
+  "concentration": {
+   "top1_pct": 8.83,
+   "top5_pct": 25.21,
+   "top10_pct": 38.58,
+   "herfindahl_index": 209
+  },
+  "holders_source": "rpc"
+ },
+ "parse-transaction": {
+  "signature": "bqTH7u2PJ33gDQwZMy9BXVxABRpgUbY8xSuK6y9PpKYxucFKhiJyiD7JTrH1zxFvMEJGz4847tvot...",
+  "type": "TRANSFER",
+  "description": "E16prLnWTwfLUYgXRTELYgw4u8QUnN9CAcHceLrDTjN1 transferred 0.0001 SOL to vines1...",
+  "protocol": null,
+  "fee_sol": 0.00008,
+  "fee_payer": "E16prLnWTwfLUYgXRTELYgw4u8QUnN9CAcHceLrDTjN1",
+  "timestamp": "2026-05-31T09:20:05.000Z",
+  "success": true,
+  "native_transfers": [
+   {
+    "from": "E16prLnWTwfLUYgXRTELYgw4u8QUnN9CAcHceLrDTjN1",
+    "to": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "amount_sol": 0.0001
+   }
+  ],
+  "token_transfers": [],
+  "accounts_involved": [
+   "E16prLnWTwfLUYgXRTELYgw4u8QUnN9CAcHceLrDTjN1",
+   "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+   "11111111111111111111111111111111"
+  ],
+  "last_updated": "2026-09-22T00:00:28.297Z"
+ },
+ "whale-watch": {
+  "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+  "threshold_usd": 10000,
+  "lookback_hours": 24,
+  "whales": [
+   {
+    "address": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+    "entity_label": "Binance Hot Wallet",
+    "entity_type": "cex",
+    "balance_usd": 26209000,
+    "pct_supply": 8.83,
+    "transaction_count": 0,
+    "total_volume_usd": 0,
+    "avg_transaction_usd": 0,
+    "buy_volume_usd": 0,
+    "sell_volume_usd": 0,
+    "flow_direction": "neutral",
+    "last_activity": "none"
+   }
+  ],
+  "total_whale_volume_usd": 1253800,
+  "net_flow_direction": "distributing",
+  "whale_count": 10,
+  "holders_source": "rpc",
+  "last_updated": "2026-09-22T00:09:23.672Z"
+ },
+ "batch-enrich": {
+  "results": [
+   {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "sol_balance": 0.039869,
+    "portfolio_value_usd": 4.7307,
+    "token_count": 6,
+    "top_holdings": [
+     "{…}"
+    ],
+    "nft_count": 9,
+    "nft_summary": {
+     "total": 9,
+     "collected": 0,
+     "airdropped": 8,
+     "suspected_spam": 1,
+     "distinct_collections": 0
+    },
+    "nft_collections": [
+     "{…}"
+    ],
+    "defi_positions": [],
+    "tx_count_30d": 0,
+    "first_tx_date": "2022-04-15T22:33:33.000Z",
+    "labels": [
+     "dormant"
+    ],
+    "risk_score": 0.15,
+    "risk_level": "LOW"
+   }
+  ],
+  "total_count": 1,
+  "success_count": 1,
+  "processing_time_ms": 18,
+  "last_updated": "2026-09-22T00:10:23.428Z"
+ },
+ "wallet-graph": {
+  "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+  "depth": 1,
+  "node_count": 51,
+  "edge_count": 51,
+  "nodes": [
+   {
+    "address": "",
+    "interaction_count": 21,
+    "connection_strength": 1,
+    "category": "unknown"
+   }
+  ],
+  "edges": [
+   {
+    "source": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "target": "",
+    "interaction_count": 21,
+    "total_volume_sol": 0,
+    "direction": "both"
+   }
+  ],
+  "clusters": [
+   {
+    "members": [
+     "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+     "",
+     "HrkQ1Cof5kEYWBsy7QHMzVsp9M2XkrdcyYWRmmNokFBc"
+    ],
+    "interaction_density": 0.35,
+    "suspicious_pattern": null
+   }
+  ],
+  "last_updated": "2026-09-22T00:10:29.768Z"
+ },
+ "copy-trade-signals": {
+  "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+  "lookback_days": 30,
+  "trades_analyzed": 0,
+  "win_rate": 0,
+  "total_pnl_usd": 0,
+  "avg_pnl_per_trade_usd": 0,
+  "avg_hold_time_days": 0,
+  "consistency_score": 0,
+  "trade_frequency_per_day": 0,
+  "top_performing_pairs": [],
+  "labels": [],
+  "last_updated": "2026-09-22T00:10:03.403Z"
+ },
+ "due-diligence": {
+  "token": {
+   "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+   "symbol": "Bonk",
+   "name": "Bonk",
+   "decimals": 5,
+   "supply": 87994000000000,
+   "holder_count": 20,
+   "price_usd": 0.000003376,
+   "market_cap": 297149393,
+   "volume_24h": 1096000
+  },
+  "whales": {
+   "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+   "threshold_usd": 10000,
+   "lookback_hours": 72,
+   "whales": [
+    {
+     "address": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+     "entity_label": "Binance Hot Wallet",
+     "entity_type": "cex",
+     "balance_usd": 26205000,
+     "pct_supply": 8.83,
+     "transaction_count": 0,
+     "total_volume_usd": 0,
+     "avg_transaction_usd": 0,
+     "buy_volume_usd": 0
+    }
+   ],
+   "total_whale_volume_usd": 1236200,
+   "net_flow_direction": "distributing",
+   "whale_count": 10,
+   "holders_source": "rpc",
+   "last_updated": "2026-09-22T00:10:14.653Z"
+  },
+  "overall_risk_score": 0.33,
+  "risk_level": "MODERATE",
+  "risk_factors": [
+   "1 risk flag(s) identified",
+   "Not verified on Jupiter",
+   "Whale distribution activity detected"
+  ],
+  "recommendation": "CAUTION",
+  "last_updated": "2026-09-22T00:10:14.705Z"
+ },
+ "query": {
+  "error": "Could not determine intent or find an address in your question.",
+  "hint": "Include a Solana address/mint and specify what you want. Examples:",
+  "examples": [
+   "should I buy <mint>?",
+   "wallet deep dive on <address>",
+   "is <mint> safe?"
+  ],
+  "parsed": {
+   "intent": "token",
+   "address": null
+  }
+ },
+ "compare-tokens": {
+  "tokens": [
+   {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "symbol": "Bonk",
+    "name": "Bonk",
+    "decimals": 5,
+    "supply": 87994000000000,
+    "holder_count": 20,
+    "price_usd": 0.000003376,
+    "market_cap": 297149393,
+    "volume_24h": 1096000,
+    "price_change_24h": 11.73,
+    "volatility": {
+     "daily_std_7d": 4.66,
+     "high_7d": 0.0000034,
+     "low_7d": 0.00000302,
+     "range_pct_7d": 12.4,
+     "classification": "MODERATE"
+    },
+    "top_holders": [
+     "{…}"
+    ]
+   }
+  ],
+  "rankings": [
+   {
+    "metric": "price",
+    "winner": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+    "values": {
+     "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263": "$0.000003376",
+     "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN": "$0.2989"
+    }
+   }
+  ],
+  "summary": {
+   "safest": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+   "most_liquid": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN",
+   "best_distributed": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+   "lowest_volatility": "JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN"
+  },
+  "last_updated": "2026-09-22T00:10:27.621Z"
+ },
+ "compare-wallets": {
+  "wallets": [
+   {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "sol_balance": 0.039869,
+    "portfolio_value_usd": 4.7307,
+    "token_count": 6,
+    "top_holdings": [
+     "{…}"
+    ],
+    "nft_count": 9,
+    "nft_summary": {
+     "total": 9,
+     "collected": 0,
+     "airdropped": 8,
+     "suspected_spam": 1,
+     "distinct_collections": 0
+    },
+    "nft_collections": [
+     "{…}"
+    ],
+    "defi_positions": [],
+    "tx_count_30d": 0,
+    "first_tx_date": "2022-04-15T22:33:33.000Z",
+    "labels": [
+     "dormant"
+    ],
+    "risk_score": 0.15,
+    "risk_level": "LOW"
+   }
+  ],
+  "rankings": [
+   {
+    "metric": "portfolio_value",
+    "winner": "BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu",
+    "values": {
+     "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg": "$4.73",
+     "BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu": "$3.3K"
+    }
+   }
+  ],
+  "summary": {
+   "highest_value": "BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu",
+   "most_active": "BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu",
+   "lowest_risk": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+   "oldest": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg"
+  },
+  "last_updated": "2026-09-22T00:10:28.345Z"
+ },
+ "token-trend": {
+  "current": {
+   "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+   "symbol": "Bonk",
+   "name": "Bonk",
+   "decimals": 5,
+   "supply": 87994000000000,
+   "holder_count": 20,
+   "price_usd": 0.000003376,
+   "market_cap": 297149393,
+   "volume_24h": 1096000,
+   "price_change_24h": 11.73,
+   "volatility": {
+    "daily_std_7d": 4.66,
+    "high_7d": 0.0000034,
+    "low_7d": 0.00000302,
+    "range_pct_7d": 12.4,
+    "classification": "MODERATE"
+   },
+   "top_holders": [
+    {
+     "address": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+     "balance": 7770500000000,
+     "pct_supply": 8.8307
+    }
+   ]
+  },
+  "snapshots": [
+   {
+    "date": "2026-09-17",
+    "price_usd": 0.000002684,
+    "market_cap": 238557155,
+    "volume_24h": 271510,
+    "liquidity": 250470,
+    "holder_count": 1017246,
+    "concentration_hhi": 208,
+    "top1_pct": 8.83,
+    "top5_pct": 25.3,
+    "volatility_std": 2.12,
+    "risk_flag_count": 1
+   }
+  ],
+  "lookback_days": 7,
+  "data_points": 2,
+  "deltas": [
+   {
+    "metric": "price",
+    "current": 0.000003,
+    "oldest": 0.000003,
+    "absolute_change": 0.000001,
+    "pct_change": 25.78,
+    "direction": "improving"
+   }
+  ],
+  "overall_direction": "improving",
+  "last_updated": "2026-09-22T00:10:23.239Z"
+ },
+ "wallet-history": {
+  "current": {
+   "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+   "sol_balance": 0.039869,
+   "portfolio_value_usd": 4.7292,
+   "token_count": 6,
+   "top_holdings": [
+    {
+     "mint": "FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8",
+     "symbol": "SMOG",
+     "balance": 29.621,
+     "usd_value": 0.0015731
+    }
+   ],
+   "nft_count": 9,
+   "nft_summary": {
+    "total": 9,
+    "collected": 0,
+    "airdropped": 8,
+    "suspected_spam": 1,
+    "distinct_collections": 0
+   }
+  },
+  "snapshots": [
+   {
+    "date": "2026-09-17",
+    "sol_balance": 0.039869,
+    "portfolio_value_usd": 4.0217,
+    "token_count": 6,
+    "nft_count": 9,
+    "tx_count_30d": 0,
+    "risk_score": 0.15
+   }
+  ],
+  "lookback_days": 7,
+  "data_points": 2,
+  "deltas": [
+   {
+    "metric": "portfolio_value",
+    "current": 4.7292,
+    "oldest": 4.0217,
+    "absolute_change": 0.7075,
+    "pct_change": 17.59,
+    "direction": "improving"
+   }
+  ],
+  "position_changes": {
+   "added": [],
+   "removed": []
+  },
+  "overall_direction": "improving"
+ },
+ "new-tokens": {
+  "tokens": [],
+  "total_scanned": 0,
+  "total_passed": 0,
+  "filters": {
+   "min_liquidity_usd": 1000,
+   "max_risk_score": 0.8,
+   "limit": 10
+  },
+  "last_updated": "2026-09-22T00:10:18.446Z"
+ },
+ "protocol-profile": {
+  "protocol": {
+   "name": "Jupiter",
+   "slug": "jupiter",
+   "program_id": "JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4",
+   "category": "DEX Aggregator"
+  },
+  "tvl": {
+   "total_usd": 0,
+   "solana_usd": 0,
+   "chains": {},
+   "solana_dominance_pct": 100
+  },
+  "yields": {
+   "pool_count": 0,
+   "top_pools": [],
+   "avg_apy": 0,
+   "median_apy": 0,
+   "total_yield_tvl_usd": 0
+  },
+  "activity": {
+   "recent_tx_count": 200,
+   "unique_signers": 61,
+   "tx_types": {
+    "TRANSFER": 130,
+    "SWAP": 55,
+    "UNKNOWN": 11,
+    "CLOSE_ACCOUNT": 3,
+    "TOKEN_MINT": 1
+   },
+   "avg_tx_per_hour": 0,
+   "sample_window_minutes": 0,
+   "automated_activity_pct": 0
+  },
+  "health_signals": {
+   "tvl_tier": "micro",
+   "yield_attractiveness": "low",
+   "activity_level": "low"
+  },
+  "last_updated": "2026-09-22T00:10:23.178Z"
+ },
+ "perps-market-structure": {
+  "pool": "5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq",
+  "markets": [
+   {
+    "symbol": "SOL",
+    "custody": "7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz",
+    "mark_price_usd": 118.57,
+    "open_interest": {
+     "long_usd": 28280000,
+     "short_usd": 9937800,
+     "total_usd": 38218000,
+     "long_pct": 73.997,
+     "short_pct": 26.003,
+     "net_skew": "long"
+    },
+    "utilization_pct": 8.7648,
+    "borrow_rate": {
+     "hourly_pct": 0.0014542,
+     "annualized_pct": 12.739,
+     "model": "jump"
+    },
+    "pool_assets": {
+     "owned_tokens": 3979500,
+     "locked_tokens": 348800,
+     "guaranteed_usd": 28280000,
+     "global_short_sizes_usd": 9937800
+    },
+    "limits": {
+     "max_long_oi_usd": 240000000,
+     "max_short_oi_usd": 112290000,
+     "max_position_size_usd": 10000000
+    },
+    "flags": {
+     "extreme_long_skew": false,
+     "extreme_short_skew": false,
+     "high_utilization": false,
+     "near_long_oi_cap": false,
+     "near_short_oi_cap": false,
+     "elevated_borrow_rate": false
+    },
+    "long_headroom_usd": 211720000
+   }
+  ],
+  "totals": {
+   "long_oi_usd": 43502000,
+   "short_oi_usd": 22061000,
+   "total_oi_usd": 65563000,
+   "net_skew": "long"
+  },
+  "overall_health": "HEALTHY",
+  "summary_notes": [],
+  "fetched_at": 1790035808395
+ },
+ "perps-trader-profile": {
+  "address": "BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu",
+  "has_positions": true,
+  "profile": "position_trader",
+  "directional_bias": "long",
+  "positions": [
+   {
+    "pool": "5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq",
+    "custody": "7xS2gz2bTp3fwCC7knJvUWTEU9Tycczu6VhJYKgi1wdz",
+    "market_symbol": "SOL",
+    "side": "long",
+    "size_usd": 3052.7,
+    "collateral_usd": 618.98,
+    "leverage": 4.9318
+   }
+  ],
+  "totals": {
+   "gross_exposure_usd": 15649,
+   "net_exposure_usd": 15649,
+   "total_collateral_usd": 4600.6,
+   "total_unrealized_pnl_usd": 4739.6,
+   "weighted_leverage": 3.4015,
+   "net_pnl_pct": 103.02
+  },
+  "by_venue": {
+   "jupiter": {
+    "has_positions": true,
+    "positions": [
+     "{…}"
+    ],
+    "totals": {
+     "gross_exposure_usd": 15649,
+     "net_exposure_usd": 15649,
+     "total_collateral_usd": 4600.6,
+     "total_unrealized_pnl_usd": 4739.6,
+     "weighted_leverage": 3.4015,
+     "net_pnl_pct": 103.02
+    },
+    "notes": []
+   },
+   "adrena": {
+    "has_positions": false,
+    "positions": [],
+    "totals": {
+     "gross_exposure_usd": 0,
+     "net_exposure_usd": 0,
+     "total_collateral_usd": 0,
+     "total_unrealized_pnl_usd": 0,
+     "weighted_leverage": 0,
+     "net_pnl_pct": null
+    },
+    "notes": []
+   }
+  }
+ },
+ "hyperliquid-trader-profile": {
+  "address": "0xd21d931890d27b6e7e2e668f27931e17698e90f1",
+  "venue": "hyperliquid",
+  "has_positions": true,
+  "account": {
+   "value_usd": 8864900,
+   "total_notional_usd": 25851000,
+   "margin_used_usd": 8422400,
+   "withdrawable_usd": 4381.6
+  },
+  "profile": "directional_long",
+  "directional_bias": "long",
+  "positions": [
+   {
+    "coin": "SOL",
+    "dir": "long",
+    "size_tokens": 85001,
+    "notional_usd": 10088000,
+    "entry_px": 110.34,
+    "current_px": 118.68,
+    "unrealized_pnl_usd": 708700,
+    "pnl_pct": 37.78,
+    "leverage": 5,
+    "liquidation_px": 90.604,
+    "distance_to_liq_pct": 23.657,
+    "margin_used_usd": 2579000,
+    "flags": {
+     "high_leverage": false,
+     "extreme_leverage": false,
+     "approaching_liquidation": false,
+     "losing": false
+    }
+   }
+  ],
+  "totals": {
+   "gross_notional_usd": 25851000,
+   "net_notional_usd": 25851000,
+   "total_unrealized_pnl_usd": 3430100,
+   "weighted_leverage": 4.6874,
+   "position_count": 6
+  },
+  "pnl": {
+   "week_usd": 4791600,
+   "month_usd": 4660400,
+   "all_time_usd": 11216000
+  },
+  "flags": {
+   "any_high_leverage": false,
+   "any_near_liquidation": false,
+   "concentrated_coin": null
+  },
+  "fetched_at": 1790035807796
+ },
+ "hyperliquid-smart-money": {
+  "generated_at": 1790035803480,
+  "market": null,
+  "trader_universe": {
+   "leaderboard_candidates": 100,
+   "inspected": 35,
+   "qualified": 32
+  },
+  "positioning": [
+   {
+    "coin": "ZEC",
+    "long_traders": 13,
+    "short_traders": 0,
+    "net_notional_usd": 8924436,
+    "gross_notional_usd": 8924436,
+    "bias": "long",
+    "conviction": "strong"
+   }
+  ],
+  "consensus_longs": [
+   "ZEC",
+   "NEAR",
+   "HYPE"
+  ],
+  "consensus_shorts": [],
+  "top_traders": [
+   {
+    "address": "0x30afce2f6842bf183c7e3fe7162e279ff0b6393e",
+    "account_value_usd": 13862898,
+    "month_roi": 4.1058,
+    "week_roi": 1.6205,
+    "month_pnl_usd": 15337000,
+    "profile": "directional_long",
+    "directional_bias": "long",
+    "top_positions": [
+     "{…}"
+    ]
+   }
+  ],
+  "summary": "32 consistently-profitable HL traders tracked. Strongest positioning: ZEC 13L..."
+ },
+ "perps-cross-venue-funding": {
+  "market": "SOL",
+  "checked_at": 1790035810579,
+  "venues": [
+   {
+    "venue": "jupiter-perps",
+    "available": true,
+    "type": "solana-onchain",
+    "borrow_apr_long": 12.739,
+    "borrow_apr_short": 12.739,
+    "open_interest_usd": 38218000,
+    "utilization_pct": 8.7648,
+    "skew": "long-heavy",
+    "mark_price_usd": 118.57
+   }
+  ],
+  "best_entry": {
+   "long": {
+    "venue": "adrena",
+    "apr": 1.65,
+    "reasoning": "adrena at 1.65% APR — 11.09pts cheaper than jupiter-perps (12.74%)."
+   },
+   "short": {
+    "venue": "adrena",
+    "apr": 1.65,
+    "reasoning": "adrena at 1.65% APR — 11.09pts cheaper than jupiter-perps (12.74%)."
+   }
+  },
+  "basis": {
+   "jupiter_vs_hyperliquid_bps": -9,
+   "adrena_vs_hyperliquid_bps": null,
+   "summary": "Jupiter mark trades -9bps vs Hyperliquid discount."
+  },
+  "arbitrage_opportunities": [
+   {
+    "type": "venue_spread",
+    "spread_apr_pct": 11.089,
+    "long_venue": "adrena",
+    "short_venue": "jupiter-perps",
+    "description": "jupiter-perps borrows at 12.74% APR vs adrena at 1.65% APR — 11.09pt spread f..."
+   }
+  ]
+ },
+ "perps-venue-comparison": {
+  "market": "SOL",
+  "size_usd": 5000,
+  "side": "long",
+  "spot_slippage_source": "jupiter-quote",
+  "spot_slippage_pct": 0,
+  "spot_slippage_tier_used": 10000,
+  "checked_at": 1790035810602,
+  "venues": [
+   {
+    "venue": "jupiter-perps",
+    "available": true,
+    "type": "solana-onchain",
+    "borrow_apr_long": 12.739,
+    "borrow_apr_short": 12.739,
+    "open_interest_usd": 38218000,
+    "oi_cap_headroom_usd": 211720000,
+    "estimated_slippage_pct": 0,
+    "fee_pct": 0.06,
+    "first_hour_borrow_pct": 0.0014542,
+    "total_entry_cost_pct": 0.061454,
+    "health": "TILTED",
+    "flags": []
+   }
+  ],
+  "rankings": {
+   "by_entry_cost": [
+    "hyperliquid",
+    "dydx-v4",
+    "adrena"
+   ],
+   "by_borrow_apr": [
+    "dydx-v4",
+    "adrena",
+    "hyperliquid"
+   ],
+   "by_headroom": [
+    "jupiter-perps"
+   ]
+  },
+  "recommendation": {
+   "venue": "adrena",
+   "reasoning": "adrena cheapest at 0.060% total entry cost (0.001pt below jupiter-perps at 0....",
+   "warnings": [
+    "best_venue_tilted"
+   ]
+  }
+ },
+ "perps-basis-signal": {
+  "asset": "SOL",
+  "spot": {
+   "price_usd": 118.57,
+   "sources": 2,
+   "spread_pct": 0.06
+  },
+  "checked_at": 1790035810717,
+  "min_yield_apr_pct": 5,
+  "venues": [
+   {
+    "venue": "jupiter-perps",
+    "available": true,
+    "type": "solana-onchain",
+    "rate_mechanism": "borrow-rate",
+    "mark_price_usd": 118.57,
+    "basis_bps": 0,
+    "rate_apr_pct": 12.739
+   }
+  ],
+  "opportunities": [
+   {
+    "venue": "hyperliquid",
+    "available": true,
+    "type": "reference",
+    "rate_mechanism": "funding-rate",
+    "mark_price_usd": 118.68,
+    "basis_bps": 9,
+    "rate_apr_pct": 12.085
+   }
+  ],
+  "best_trade": {
+   "venue": "hyperliquid",
+   "direction": "short_perp_long_spot",
+   "net_yield_pct": 12.085
+  }
+ },
+ "perps-market-trend": {
+  "pool": "5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq",
+  "lookback_days": 7,
+  "markets": [
+   {
+    "symbol": "SOL",
+    "current": {
+     "mark_price_usd": 118.57,
+     "total_oi_usd": 38218000,
+     "long_pct": 73.997,
+     "short_pct": 26.003,
+     "utilization_pct": 8.7648,
+     "borrow_rate_annualized_pct": 12.739
+    },
+    "snapshots": [
+     "{…}"
+    ],
+    "data_points": 4,
+    "deltas": [
+     "{…}"
+    ],
+    "market_direction": "improving"
+   }
+  ],
+  "totals": {
+   "current_total_oi_usd": 65563000,
+   "overall_direction": "stable"
+  },
+  "last_updated": "2026-09-22T00:10:10.814Z"
+ },
+ "trending-signals": {
+  "tokens": [],
+  "total_scanned": 0,
+  "filters": {
+   "min_liquidity_usd": 10000,
+   "max_risk_score": 0.7,
+   "limit": 10,
+   "include_whale_watch": true
+  },
+  "overall_sentiment": "mixed",
+  "last_updated": "2026-09-22T00:10:18.359Z"
+ },
+ "smart-money-flow": {
+  "seed_wallets_considered": 49,
+  "seed_source": "derived",
+  "qualifying_smart_wallets": [
+   {
+    "address": "4nBuvPXns3FofHt8G1nApNegcMtC1C4BdWDEYbc3dQzy",
+    "win_rate": 0.76,
+    "total_pnl_usd": 352.27,
+    "trades_analyzed": 325,
+    "sharpe_ratio": 0.12,
+    "consistency_score": 0.94,
+    "labels": [
+     "high_frequency",
+     "consistent_trader",
+     "strong_edge"
+    ]
+   }
+  ],
+  "accumulated_tokens": [],
+  "clusters": [],
+  "filters": {
+   "lookback_days": 14,
+   "min_win_rate": 0.55,
+   "top_n_tokens": 10,
+   "include_graph": true,
+   "user_provided_wallets": false
+  },
+  "last_updated": "2026-09-22T00:10:03.227Z"
+ },
+ "smart-money-trenches": {
+  "signals": [
+   {
+    "mint": "7AUzu756Pp3Cg3NByuKfcRSAFFt31kjC6U6R1npkiA1Q",
+    "symbol": "MAJOR",
+    "token_age_hours": 0.7,
+    "smart_buyers": 1,
+    "conviction_holder_buyers": 0,
+    "total_spent_usd": 996.07,
+    "most_recent_buy_minutes_ago": 36,
+    "liquidity_usd": 12179,
+    "market_cap_usd": 23008,
+    "price_usd": 0.000023,
+    "buys": [
+     "{…}"
+    ]
+   }
+  ],
+  "seeds_scanned": 104,
+  "seeds_skipped_bot_cadence": [
+   "wae8YMC7PWjcPbM3mdx3CUDZEkkjaFAE4VxS5mF2YuN",
+   "6bQSN4d6anoTwnE6XDPGLA9RV8cqZPeNJro4iQUsWmso"
+  ],
+  "seeds_flagged_elevated_cadence": [
+   "FLnMeVLh5RPhSRnhLsaNWiGxJxmULViqEzrQtheAzhts",
+   "8ZXnRVHWzcqgy54q6WUQKfAqfk6fZTYfK9BV37XjNcAf",
+   "AcoNeFQsTPYs7ZrH8RMWaxxGJTTQJJ4H5aTXmptaz5UK"
+  ],
+  "total_recent_buys": 58,
+  "buys_on_older_tokens": 49,
+  "buys_unknown_age": 0,
+  "filters": {
+   "hours_back": 12,
+   "max_token_age_hours": 6,
+   "min_buyers": 1,
+   "limit": 10
+  },
+  "seed_set": {
+   "derived_at": "2026-08-27",
+   "active_traders": 100,
+   "conviction_holders": 6,
+   "source": "birdeye-leaderboard-realized-pnl + known-runner-miners, vetted via cadence/bo..."
+  },
+  "last_updated": "2026-09-22T00:08:31.973Z"
+ },
+ "runner-scan": {
+  "runners": [
+   {
+    "mint": "DfbhY8XtNc317jpSEJDQejLD83QUMHtBzyn9EjgSTWGW",
+    "symbol": "BITCOINU",
+    "name": "bitcoinu",
+    "age_hours": 0.2,
+    "price_usd": 0.00007857,
+    "market_cap_usd": 78576,
+    "liquidity_usd": 25929,
+    "volume_h1_usd": 178242,
+    "volume_h24_usd": 178242,
+    "price_change_h1_pct": 58.76,
+    "price_change_h24_pct": 58.76,
+    "buys_h1": 1864,
+    "sells_h1": 1356,
+    "stage": "RUNNING"
+   }
+  ],
+  "candidates_scanned": 43,
+  "passed_filters": 13,
+  "stage_counts": {
+   "IGNITING": 2,
+   "RUNNING": 3,
+   "PARABOLIC_LATE": 4,
+   "FADING": 2,
+   "QUIET": 2
+  },
+  "filters": {
+   "max_token_age_hours": 24,
+   "min_liquidity_usd": 10000,
+   "min_volume_h1_usd": 5000,
+   "limit": 15
+  },
+  "candidate_source": "DexScreener latest profiles + latest boosts + top boosts (Solana). These surf...",
+  "caveats": [
+   "Detection lane is seconds-to-minutes pre-ape, not block-0. Anything already p...",
+   "DexScreener transaction counts are gameable — wash-traded tokens are flagged ...",
+   "Fresh memecoin outcomes are binary. Most flagged tokens still fail; the value..."
+  ],
+  "last_updated": "2026-09-22T00:08:05.468Z"
+ },
+ "feed-latest": {
+  "source": "fresh",
+  "generated_at": "2026-09-22T00:10:18.702Z",
+  "unchanged": false,
+  "brief": {
+   "tokens": [],
+   "total_scanned": 0,
+   "filters": {
+    "min_liquidity_usd": 15000,
+    "max_risk_score": 0.7,
+    "limit": 10,
+    "include_whale_watch": true
+   },
+   "overall_sentiment": "mixed",
+   "last_updated": "2026-09-22T00:10:18.702Z"
+  },
+  "last_updated": "2026-09-22T00:10:18.745Z"
+ },
+ "consensus-signal": {
+  "type": "token",
+  "window": "1h",
+  "window_start": "2026-09-21T23:10:18.448Z",
+  "window_end": "2026-09-22T00:10:18.448Z",
+  "entity": null,
+  "top_n": [
+   {
+    "address": "4MMQY9bwkxxTtsK3W227Q5ABT6yFY8Pmn9Ze7wmAXKY8",
+    "queries": 2,
+    "rising": false
+   }
+  ],
+  "aggregate": {
+   "total_unique_entities": 10,
+   "total_queries": 20
+  },
+  "generated_at": "2026-09-22T00:10:18.448Z"
+ },
+ "attention-momentum": {
+  "window": "6h",
+  "window_start": "2026-09-21T18:09:23.752Z",
+  "window_end": "2026-09-22T00:09:23.752Z",
+  "entries": [
+   {
+    "address": "4MMQY9bwkxxTtsK3W227Q5ABT6yFY8Pmn9Ze7wmAXKY8",
+    "symbol": "ALLINU",
+    "name": "ALLINU",
+    "queries": {
+     "prior2": 0,
+     "prior": 0,
+     "current": 9
+    },
+    "velocity": 9,
+    "acceleration": 9,
+    "attention": "accelerating",
+    "price_usd": 0.01854,
+    "price_change_pct": -28.49,
+    "liquidity_usd": 517910,
+    "divergence": "early_signal"
+   }
+  ],
+  "aggregate": {
+   "total_unique_tokens": 15,
+   "total_queries_current_window": 98,
+   "sample_quality": "ok"
+  },
+  "note": "Derived from SolEnrich's own agent query stream — attention measured before i...",
+  "generated_at": "2026-09-22T00:09:23.752Z"
+ },
+ "trenches-scan": {
+  "picks": [
+   {
+    "mint": "7AUzu756Pp3Cg3NByuKfcRSAFFt31kjC6U6R1npkiA1Q",
+    "symbol": "MAJOR",
+    "name": "Free Major",
+    "age_hours": 0.7,
+    "composite_score": 0.34,
+    "confluence": 2,
+    "verdict": "MODERATE"
+   }
+  ],
+  "confluence_counts": {
+   "triple": 0,
+   "double": 1,
+   "single": 17
+  },
+  "legs": {
+   "runner": {
+    "ok": true,
+    "candidates_scanned": 43,
+    "passed_filters": 15,
+    "error": null
+   },
+   "smart_money": {
+    "ok": true,
+    "seeds_scanned": 104,
+    "total_recent_buys": 57,
+    "error": null
+   },
+   "attention": {
+    "ok": true,
+    "total_queries": 98,
+    "sample_quality": "ok",
+    "error": null
+   }
+  },
+  "filters": {
+   "max_token_age_hours": 24,
+   "min_liquidity_usd": 5000,
+   "limit": 10
+  },
+  "caveats": [
+   "Composite ranking, not a buy list. Fresh memecoin outcomes are binary — most ...",
+   "Runner stage PARABOLIC_LATE or FADING on a pick means the move may already be...",
+   "Attention leg is derived from SolEnrich's own agent query stream; it is spars..."
+  ],
+  "last_updated": "2026-09-22T00:09:19.787Z"
+ },
+ "trenches-check": {
+  "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+  "symbol": "Bonk",
+  "name": "Bonk",
+  "age_hours": 32793,
+  "price_usd": 0.000003377,
+  "liquidity_usd": 329196,
+  "market_cap_usd": 297185305,
+  "composite_score": 0.02,
+  "confluence": 2,
+  "verdict": "MODERATE",
+  "runner": {
+   "stage": "QUIET",
+   "runner_score": 0.004,
+   "volume_h1_usd": 32996,
+   "price_change_h1_pct": -0.64,
+   "price_change_h24_pct": 11.61,
+   "buys_h1": 297,
+   "sells_h1": 457,
+   "flags": [
+    "sells_dominating"
+   ],
+   "metrics": {
+    "buy_rate_accel_m5_h1": 1.09,
+    "buy_rate_accel_h1_h6": 0.39,
+    "buy_pressure_m5": 0.391,
+    "buy_pressure_h1": 0.394,
+    "buy_pressure_h6": 0.592,
+    "volume_accel": 0.62,
+    "price_velocity": 0,
+    "holder_growth_pct": null,
+    "liquidity_change_pct": null,
+    "avg_trade_usd": 43.76,
+    "windows_accelerating": 0
+   },
+   "reasoning": "No meaningful acceleration: 5m buy rate 1.1× the hourly pace, 1h buy rate 0.4...",
+   "delta_window_minutes": null
+  },
+  "smart_money": null,
+  "attention": {
+   "queries_6h": 0,
+   "prior_window_queries": 1,
+   "rank": 15,
+   "percentile": 0,
+   "rising": false
+  }
+ },
+ "exit-signal": {
+  "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+  "symbol": "Bonk",
+  "name": "Bonk",
+  "price_usd": 0.000003376,
+  "liquidity_usd": 329125,
+  "market_cap_usd": 297097651,
+  "price_change_h1_pct": -0.55,
+  "price_change_h24_pct": 11.76,
+  "buys_h1": 295,
+  "sells_h1": 445,
+  "exit_score": 0.463,
+  "verdict": "DERISK",
+  "flags": [
+   "sellers_dominating",
+   "buying_slowing_1h",
+   "volume_fading"
+  ],
+  "metrics": {
+   "sell_pressure_m5": 0.563,
+   "sell_pressure_h1": 0.601,
+   "sell_pressure_h6": 0.408,
+   "buy_rate_decel_m5_h1": 1.14,
+   "buy_rate_decel_h1_h6": 0.38,
+   "volume_decel": 0.61,
+   "holder_growth_pct": null,
+   "liquidity_change_pct": null,
+   "whale_sell_buy_ratio": 1.7,
+   "whale_distributing_count": 1,
+   "whale_accumulating_count": 1,
+   "signals_firing": 4
+  }
+ },
+ "portfolio-history": {
+  "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+  "current": {
+   "portfolio_value_usd": 4.7307,
+   "sol_balance": 0.039869,
+   "token_count": 6,
+   "risk_score": 0.15,
+   "risk_level": "LOW"
+  },
+  "series": [
+   {
+    "date": "2026-09-17",
+    "sol_balance": 0.039869,
+    "portfolio_value_usd": 4.0217,
+    "token_count": 6,
+    "nft_count": 9,
+    "tx_count_30d": 0,
+    "risk_score": 0.15,
+    "risk_level": "LOW",
+    "label_count": 1,
+    "defi_position_count": 0,
+    "top_holding_mints": [
+     "FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8",
+     "Fxgdfsy1Z5Mvh53o69s2Ev6TGxtAJ1RQ5RJ5moCpKmQZ",
+     "55USDUivJLe4L1kY64XK1nDPAqbphG6nRpTjk2iZ5PwG"
+    ]
+   }
+  ],
+  "summary": {
+   "data_points": 2,
+   "lookback_days": 7,
+   "period_start": "2026-09-17",
+   "period_end": "2026-09-22",
+   "peak": {
+    "date": "2026-09-22",
+    "portfolio_value_usd": 4.741
+   },
+   "trough": {
+    "date": "2026-09-17",
+    "portfolio_value_usd": 4.0217
+   },
+   "max_drawdown_pct": 0,
+   "average_portfolio_value_usd": 4.38,
+   "change_vs_start_pct": 17.88
+  },
+  "last_updated": "2026-09-22T00:10:23.384Z"
+ },
+ "check-alerts": {
+  "since": "2026-06-01T00:00:00Z",
+  "checked_at": "2026-09-22T00:15:24.891Z",
+  "alerts": [],
+  "watchlist": {
+   "tokens": [
+    "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"
+   ],
+   "wallets": [
+    "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg"
+   ]
+  },
+  "counts_by_severity": {},
+  "counts_by_type": {}
+ },
+ "gacha-ev-scan": {
+  "scanned_at": "2026-09-22T00:10:29.994Z",
+  "franchise": "all",
+  "exit_strategy": "both",
+  "min_edge_pct": null,
+  "machine_count": 33,
+  "machines": [
+   {
+    "code": "onepiece_50",
+    "name": "One Piece Ocean Blue Pack",
+    "franchise": "onepiece",
+    "price": 50,
+    "gross_ev": 55.02,
+    "gross_edge_pct": 10.04,
+    "buyback": {
+     "payout_pct": 85,
+     "net_ev": 46.76,
+     "edge_pct": -6.47,
+     "capped": false
+    },
+    "marketplace": {
+     "fee_pct": 2,
+     "net_ev": 53.92,
+     "edge_pct": 7.83
+    },
+    "verdict": "HOUSE_EDGE",
+    "high_tier_stock_share": 0.631,
+    "total_stock": 8569
+   }
+  ],
+  "best": {
+   "code": "onepiece_50",
+   "name": "One Piece Ocean Blue Pack",
+   "franchise": "onepiece",
+   "price": 50,
+   "gross_ev": 55.02,
+   "gross_edge_pct": 10.04,
+   "buyback": {
+    "payout_pct": 85,
+    "net_ev": 46.76,
+    "edge_pct": -6.47,
+    "capped": false
+   },
+   "marketplace": {
+    "fee_pct": 2,
+    "net_ev": 53.92,
+    "edge_pct": 7.83
+   },
+   "verdict": "HOUSE_EDGE",
+   "high_tier_stock_share": 0.631,
+   "total_stock": 8569
+  },
+  "summary": {
+   "positive_ev_count": 0,
+   "house_edge_count": 25,
+   "negative_ev_count": 8,
+   "note": "Gross EV is expected INSURED value and overstates realizable EV. Instant-buyb..."
+  }
+ },
+ "stonk-reward-risk": {
+  "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+  "symbol": "ZCAT",
+  "name": "Anonymous Cat",
+  "payout_status": "PAYING",
+  "trading_cost": {
+   "bps": 300,
+   "per_transfer_pct": 3,
+   "round_trip_pct": 6
+  },
+  "score": 97,
+  "level": "HEALTHY",
+  "reasons": [
+   "listed on StonkFun as a reward-mode raydium launch",
+   "on-chain transfer tax 300 bps, withheld to StonkFun's distributor",
+   "6.84K ZEC distributed over 1639143 payouts to 34109 holders"
+  ],
+  "warnings": [
+   "rewards paid in ZEC, a custom mint — the reward asset carries its own token risk"
+  ],
+  "reward_mechanism": "transfer_tax",
+  "adoption": {
+   "listed_on_stonkfun": true,
+   "mode": "reward",
+   "launchpad": "raydium",
+   "withdraw_authority_is_stonkfun": true
+  },
+  "transfer_fee": {
+   "onchain_bps": 300,
+   "onchain_maximum_fee_raw": "1000000000000000000",
+   "maximum_fee_binds": false,
+   "withdraw_withheld_authority": "5KXDF6QnqhBj72hDtJNkkpFaQVUfbFXNybMsp3DiK6tD",
+   "config_authority": null,
+   "withheld_amount_raw": "217869790395176",
+   "stonkfun_bps": 300,
+   "token_program": "token-2022"
+  }
+ },
+ "stonk-yield": {
+  "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+  "symbol": "ZCAT",
+  "name": "Anonymous Cat",
+  "mode": "reward",
+  "reward_asset": {
+   "mint": "A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+   "symbol": "ZEC",
+   "decimals": 8,
+   "category": "custom",
+   "usd_price": 1475.6
+  },
+  "lifetime": {
+   "window_days": 23,
+   "actual_days": 22.03,
+   "rewards_quote": 6836.1,
+   "rewards_usd": 10087000,
+   "avg_market_cap_usd": 94276679,
+   "yield_pct": 10.7,
+   "annualized_pct": 177.28,
+   "caution": false
+  },
+  "trailing_7d": {
+   "window_days": 7,
+   "actual_days": 7,
+   "rewards_quote": 1163.3,
+   "rewards_usd": 1716500,
+   "avg_market_cap_usd": 108606083,
+   "yield_pct": 1.5805,
+   "annualized_pct": 82.41,
+   "caution": false
+  },
+  "trailing_30d": {
+   "window_days": 30,
+   "actual_days": 22.03,
+   "rewards_quote": 6836.1,
+   "rewards_usd": 10087000,
+   "avg_market_cap_usd": 94276679,
+   "yield_pct": 10.7,
+   "annualized_pct": 177.28,
+   "caution": true
+  }
+ },
+ "stonk-screener": {
+  "rows": [
+   {
+    "rank": 1,
+    "mint": "4UHmZGe6X4DZ5dxYGiGXMhi3Sp34uPWtHB7qDMyvRbYB",
+    "symbol": "QUEEF",
+    "name": "Queefcoin",
+    "quote_mint": "9BB6NFEcjBCtnNLFko2FqVQBq8HHM13kCyYcdQbgpump",
+    "quote_symbol": "Fartcoin",
+    "quote_category": "custom",
+    "quote_usd": 0.19397
+   }
+  ],
+  "matched": 20969,
+  "filters": {
+   "quote_mint": null,
+   "category": null,
+   "min_holders": null,
+   "min_age_days": null,
+   "max_age_days": null,
+   "min_volume_24h_usd": null,
+   "max_market_cap_usd": null,
+   "paying_only": false
+  },
+  "index": {
+   "rows": 20969,
+   "last_refresh_at": "2026-09-22T01:44:54.451Z",
+   "series_days": 15,
+   "oldest_point_at": "2026-09-06T12:00:00.000Z"
+  },
+  "caveats": [
+   "rewards_usd and yields price the quote asset at its current USD price",
+   "round_trip_pct is the transfer tax paid on a buy plus a sell (2 × bps), befor..."
+  ],
+  "next_steps": [
+   "stonk-gems ranks the young, paying, still-small coins in this set — the \"find...",
+   "stonk-reward-risk on a candidate gives payout status and the on-chain tax con...",
+   "trenches-check / exit-signal for the trade itself; both now price the transfe..."
+  ]
+ },
+ "stonk-launch-preflight": {
+  "ok": false,
+  "quote_mint": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
+  "mode": "reward",
+  "mismatches": [
+   {
+    "field": "totalFundRaisingB (raise)",
+    "expected": "1295647040",
+    "actual": "1164789044",
+    "fix": "The raise is a RAW amount in SPYX's 8 decimals — 1295647040 sizes the launch ..."
+   }
+  ],
+  "warnings": [],
+  "expected": {
+   "program_id": "LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj",
+   "config_id": "B7ctMMdGvy46Am56myTtzfkNzt9kWZVTNGM2BWrJ9adg",
+   "platform_id": "6BwHHDg3u1854jC8PDLXvR4spTcLNaoBxLJNGC4nTESt",
+   "curve_rule": "7MNLMFMmFVhN9Z3sj51QZso28oD2Ta3zDPwNAmfrs2vk",
+   "base_decimals": 6,
+   "supply": "1000000000000000",
+   "total_sell_a": "793100000000000"
+  },
+  "decoded": {
+   "variant": "initialize_with_token_2022",
+   "instruction_index": 0,
+   "account_count": 16,
+   "fee_payer": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+   "base_mint": "BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu",
+   "name": "Example Coin",
+   "symbol": "EXMPL"
+  }
+ },
+ "stonk-gems": {
+  "gems": [
+   {
+    "rank": 1,
+    "mint": "3xPfXX2RrEAD3dWx7YYYTuQ2AXS4S1xBu4GVHxiFoAwQ",
+    "symbol": "Shiba",
+    "name": "Wandering Shiba",
+    "quote_mint": "HTmQz7My6MehV7bjhJ6jde8nDND1yvsz68d24LP7YgUQ",
+    "quote_symbol": "GP",
+    "quote_category": "custom"
+   }
+  ],
+  "scanned": 18199,
+  "passed_filters": 1274,
+  "stage_counts": {
+   "GEM": 99,
+   "WATCH": 550,
+   "NOISE": 625,
+   "DEAD": 0
+  },
+  "filters": {
+   "quote_mint": null,
+   "category": null,
+   "max_age_days": 14,
+   "min_holders": 25,
+   "max_market_cap_usd": 5000000,
+   "limit": 15
+  },
+  "index": {
+   "rows": 18199,
+   "last_refresh_at": "2026-09-22T00:42:35.459Z",
+   "series_days": 15,
+   "oldest_point_at": "2026-09-06T12:00:00.000Z"
+  },
+  "caveats": [
+   "A ranking of what looks early and real on the tape, not a safety verdict and ...",
+   "round_trip_pct is the transfer tax on a buy plus a sell (2 × bps), before sli..."
+  ]
+ },
+ "stonk-launch-intel": {
+  "quotes": [
+   {
+    "quote_mint": "CZEB3WNZuF2Yz1z2H81RcCk8T7fsw82KB33zqamASVsg",
+    "quote_symbol": "COST",
+    "quote_category": "prestock",
+    "coins": 5,
+    "launches_24h": 2,
+    "launches_7d": 3
+   }
+  ],
+  "overall": {
+   "coins": 17630,
+   "quotes": 324,
+   "launches_24h": 705,
+   "launches_7d": 5721,
+   "traded_24h": 3351,
+   "traded_share_24h": 0.19
+  },
+  "recommendations": [
+   "wXRP (custom): 81% of its 36 coins traded today, 73% still trade past day 3, ...",
+   "HIMS (prestock): 86% of its 14 coins traded today, 80% still trade past day 3...",
+   "RBLX (prestock): 86% of its 14 coins traded today, 71% still trade past day 3..."
+  ],
+  "filters": {
+   "category": null,
+   "min_coins": 5,
+   "sort": "demand",
+   "limit": 20
+  },
+  "index": {
+   "rows": 17630,
+   "last_refresh_at": "2026-09-22T00:36:54.364Z",
+   "series_days": 15,
+   "oldest_point_at": "2026-09-06T12:00:00.000Z"
+  },
+  "caveats": [
+   "Survival and demand are 24h/3d activity measures on the index, not returns. A...",
+   "Launches attributed to a quote include coins whose pool has since gone quiet;...",
+   "index: 17630 reward coins, refreshed 2026-09-22T00:36:54.364Z"
+  ]
+ },
+ "stonk-quote": {
+  "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+  "symbol": "ZCAT",
+  "name": "Anonymous Cat",
+  "quote": {
+   "mint": "A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+   "symbol": "ZEC",
+   "category": "custom"
+  },
+  "size_usd": 100,
+  "hold_days": 7,
+  "payout_status": "PAYING",
+  "price_usd": 0.09729,
+  "tokens_at_size": 996.3,
+  "entry": {
+   "tax_pct": 3,
+   "tax_usd": 3,
+   "price_impact_pct": 0.07,
+   "price_impact_usd": 0.07,
+   "total_pct": 3.07,
+   "total_usd": 3.07
+  },
+  "exit": {
+   "tax_pct": 3,
+   "tax_usd": 3,
+   "price_impact_pct": 0.07,
+   "price_impact_usd": 0.07,
+   "total_pct": 3.07,
+   "total_usd": 3.07
+  },
+  "round_trip": {
+   "cost_pct": 6.14,
+   "cost_usd": 6.14,
+   "breakeven_move_pct": 6.33
+  },
+  "eligibility": {
+   "share_of_supply_pct": 0.0001,
+   "est_usd_per_payout": 0.000007,
+   "dust_risk": true,
+   "note": "StonkFun publishes no minimum holding; payouts are pro-rata by balance. Share..."
+  },
+  "expected_payout": {
+   "basis": "7d",
+   "basis_actual_days": 7,
+   "yield_pct_per_week": 1.5805,
+   "usd_per_week": 1.58,
+   "usd_over_hold": 1.58,
+   "reward_asset": "ZEC",
+   "caution": false,
+   "caution_reason": null
+  }
+ },
+ "stonk-yield-batch": {
+  "coins": [
+   {
+    "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+    "symbol": "ZCAT",
+    "name": "Anonymous Cat",
+    "mode": "reward",
+    "reward_asset": {
+     "mint": "A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+     "symbol": "ZEC",
+     "decimals": 8,
+     "category": "custom",
+     "usd_price": 1561.2
+    },
+    "lifetime": {
+     "window_days": 26,
+     "actual_days": 25.64,
+     "rewards_quote": 7172.2,
+     "rewards_usd": 11197000,
+     "avg_market_cap_usd": 90751581,
+     "yield_pct": 12.338
+    }
+   }
+  ],
+  "not_found": [],
+  "selection": {
+   "mode": "mints",
+   "requested": 2,
+   "matched": 2,
+   "limit": 2
+  },
+  "index": {
+   "rows": 8999,
+   "last_refresh_at": "2026-09-25T14:49:18.000Z",
+   "series_days": 18,
+   "oldest_point_at": "2026-09-06T12:00:00.000Z"
+  },
+  "caveats": [
+   "Same math as stonk-yield, computed from the index: rewards priced at the CURR...",
+   "Market caps are from the last index refresh (up to 10 minutes old) and the la..."
+  ],
+  "next_steps": [
+   "stonk-quote on a coin you would buy: entry and exit cost at your size, and wh...",
+   "stonk-reward-risk to confirm the tax actually reaches holders before trusting..."
+  ]
+ },
+ "stonk-alerts": {
+  "since": "2026-09-24T00:00:00.000Z",
+  "since_clamped_from": null,
+  "checked_at": "2026-09-25T14:49:30.950Z",
+  "alerts": [
+   {
+    "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+    "symbol": "ZCAT",
+    "type": "payout_landed",
+    "severity": "low",
+    "summary": "$ZCAT paid holders at 2026-09-24T22:35:47.842Z (16.2h ago), in ZEC",
+    "data": {
+     "last_payout_at": "2026-09-24T22:35:47.842Z",
+     "hours_ago": 16.2,
+     "payout_count": 1734464
+    }
+   }
+  ],
+  "coins": [
+   {
+    "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+    "symbol": "ZCAT",
+    "quote_symbol": "ZEC",
+    "payout_status": "PAYING",
+    "last_payout_at": "2026-09-24T22:35:47.842Z",
+    "hours_since_last_payout": 16.2,
+    "volume_24h_usd": 917214,
+    "holder_count": 35529,
+    "market_cap_usd": 69574179
+   }
+  ],
+  "not_found": [],
+  "counts_by_type": {
+   "payout_landed": 2,
+   "rewards_since": 2,
+   "holders_change": 1
+  },
+  "counts_by_severity": {
+   "high": 0,
+   "medium": 0,
+   "low": 5
+  },
+  "index": {
+   "rows": 8999,
+   "last_refresh_at": "2026-09-25T14:49:18.000Z",
+   "series_days": 18
+  },
+  "caveats": [
+   "rewards_since and holders_change measure from the daily snapshot nearest to `..."
+  ]
+ }
+}

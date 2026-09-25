@@ -1,0 +1,134 @@
+{
+  "key": "stonk-alerts",
+  "captured_at": "2026-09-25T14:49:31.467Z",
+  "input": {
+    "mints": [
+      "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+      "6HU4CmRb15C2nQDx8Ld2f2W2wTdmog6aZiiXdrT5Pzi8"
+    ],
+    "since": "2026-09-24T00:00:00Z",
+    "stale_after_hours": 24,
+    "format": "json"
+  },
+  "ms": 1466,
+  "output": {
+    "since": "2026-09-24T00:00:00.000Z",
+    "since_clamped_from": null,
+    "checked_at": "2026-09-25T14:49:30.950Z",
+    "alerts": [
+      {
+        "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+        "symbol": "ZCAT",
+        "type": "payout_landed",
+        "severity": "low",
+        "summary": "$ZCAT paid holders at 2026-09-24T22:35:47.842Z (16.2h ago), in ZEC",
+        "data": {
+          "last_payout_at": "2026-09-24T22:35:47.842Z",
+          "hours_ago": 16.2,
+          "payout_count": 1734464
+        }
+      },
+      {
+        "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+        "symbol": "ZCAT",
+        "type": "rewards_since",
+        "severity": "low",
+        "summary": "$ZCAT paid 269.3518 ZEC (≈$420,504.57) to holders since 2026-09-23T00:00:17.182Z (nearest daily snapshot)",
+        "data": {
+          "rewards_quote": 269.3517820999996,
+          "rewards_usd": 420504.57,
+          "quote_symbol": "ZEC",
+          "measured_from": "2026-09-23T00:00:17.182Z",
+          "approximate": true
+        }
+      },
+      {
+        "mint": "6HU4CmRb15C2nQDx8Ld2f2W2wTdmog6aZiiXdrT5Pzi8",
+        "symbol": "GROK",
+        "type": "payout_landed",
+        "severity": "low",
+        "summary": "$GROK paid holders at 2026-09-25T14:28:04.377Z (0.4h ago), in SPCXX",
+        "data": {
+          "last_payout_at": "2026-09-25T14:28:04.377Z",
+          "hours_ago": 0.4,
+          "payout_count": 576199
+        }
+      },
+      {
+        "mint": "6HU4CmRb15C2nQDx8Ld2f2W2wTdmog6aZiiXdrT5Pzi8",
+        "symbol": "GROK",
+        "type": "holders_change",
+        "severity": "low",
+        "summary": "$GROK holders up 76.2% (4411 → 7774) since 2026-09-23",
+        "data": {
+          "from": 4411,
+          "to": 7774,
+          "change_pct": 76.2,
+          "measured_from": "2026-09-23T00:00:17.182Z"
+        }
+      },
+      {
+        "mint": "6HU4CmRb15C2nQDx8Ld2f2W2wTdmog6aZiiXdrT5Pzi8",
+        "symbol": "GROK",
+        "type": "rewards_since",
+        "severity": "low",
+        "summary": "$GROK paid 1,694.6834 SPCXX (≈$248,307.87) to holders since 2026-09-23T00:00:17.182Z (nearest daily snapshot)",
+        "data": {
+          "rewards_quote": 1694.6834040100002,
+          "rewards_usd": 248307.87,
+          "quote_symbol": "SPCXX",
+          "measured_from": "2026-09-23T00:00:17.182Z",
+          "approximate": true
+        }
+      }
+    ],
+    "coins": [
+      {
+        "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+        "symbol": "ZCAT",
+        "quote_symbol": "ZEC",
+        "payout_status": "PAYING",
+        "last_payout_at": "2026-09-24T22:35:47.842Z",
+        "hours_since_last_payout": 16.2,
+        "volume_24h_usd": 917214,
+        "holder_count": 35529,
+        "market_cap_usd": 69574179
+      },
+      {
+        "mint": "6HU4CmRb15C2nQDx8Ld2f2W2wTdmog6aZiiXdrT5Pzi8",
+        "symbol": "GROK",
+        "quote_symbol": "SPCXX",
+        "payout_status": "PAYING",
+        "last_payout_at": "2026-09-25T14:28:04.377Z",
+        "hours_since_last_payout": 0.4,
+        "volume_24h_usd": 936630,
+        "holder_count": 7774,
+        "market_cap_usd": 4862827
+      }
+    ],
+    "not_found": [],
+    "counts_by_type": {
+      "payout_landed": 2,
+      "rewards_since": 2,
+      "holders_change": 1
+    },
+    "counts_by_severity": {
+      "high": 0,
+      "medium": 0,
+      "low": 5
+    },
+    "index": {
+      "rows": 8999,
+      "last_refresh_at": "2026-09-25T14:49:18.000Z",
+      "series_days": 18
+    },
+    "caveats": [
+      "rewards_since and holders_change measure from the daily snapshot nearest to `since` (see measured_from); windows under a day are approximate."
+    ],
+    "next_steps": [
+      "Pass checked_at as `since` on the next poll to see only new events.",
+      "stonk-reward-risk on a coin that went stale: is the tax still reaching holders?",
+      "stonk-quote before adding to a position: does the payout still cover the round trip?"
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "key": "query",
+  "captured_at": "2026-09-22T00:10:18.266Z",
+  "input": {
+    "question": "Is BONK a safe token to hold?",
+    "format": "both"
+  },
+  "ms": 2,
+  "output": {
+    "error": "Could not determine intent or find an address in your question.",
+    "hint": "Include a Solana address/mint and specify what you want. Examples:",
+    "examples": [
+      "should I buy <mint>?",
+      "wallet deep dive on <address>",
+      "is <mint> safe?",
+      "… 7 more (10 total)"
+    ],
+    "parsed": {
+      "intent": "token",
+      "address": null
+    }
+  }
+}

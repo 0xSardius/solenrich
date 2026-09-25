@@ -1,0 +1,72 @@
+{
+  "key": "trenches-check",
+  "captured_at": "2026-09-22T00:08:56.083Z",
+  "input": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "format": "both"
+  },
+  "ms": 24081,
+  "output": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "symbol": "Bonk",
+    "name": "Bonk",
+    "age_hours": 32793.1,
+    "price_usd": 0.000003377,
+    "liquidity_usd": 329196,
+    "market_cap_usd": 297185305,
+    "composite_score": 0.02,
+    "confluence": 2,
+    "verdict": "MODERATE",
+    "runner": {
+      "stage": "QUIET",
+      "runner_score": 0.004,
+      "volume_h1_usd": 32996,
+      "price_change_h1_pct": -0.64,
+      "price_change_h24_pct": 11.61,
+      "buys_h1": 297,
+      "sells_h1": 457,
+      "flags": [
+        "sells_dominating"
+      ],
+      "metrics": {
+        "buy_rate_accel_m5_h1": 1.09,
+        "buy_rate_accel_h1_h6": 0.39,
+        "buy_pressure_m5": 0.391,
+        "buy_pressure_h1": 0.394,
+        "buy_pressure_h6": 0.592,
+        "volume_accel": 0.62,
+        "price_velocity": 0,
+        "holder_growth_pct": null,
+        "liquidity_change_pct": null,
+        "avg_trade_usd": 43.76,
+        "windows_accelerating": 0
+      },
+      "reasoning": "No meaningful acceleration: 5m buy rate 1.1× the hourly pace, 1h buy rate 0.4× the 6h pace, 39% of 1h trades are buys, volume 0.6× the 6h pace.",
+      "delta_window_minutes": null
+    },
+    "smart_money": null,
+    "attention": {
+      "queries_6h": 0,
+      "prior_window_queries": 1,
+      "rank": 15,
+      "percentile": 0,
+      "rising": false
+    },
+    "transfer_tax": {
+      "program": "spl-token",
+      "bps": 0,
+      "per_transfer_pct": 0,
+      "round_trip_pct": 0,
+      "fee_mutable_by": null,
+      "withdraw_authority": null
+    },
+    "reasoning": "on-chain QUIET (runner score 0.004); flags: sells_dominating; agent attention: 0 queries/6h, not rising (top 100% of queried tokens); absent: no proven-winner buys.",
+    "caveats": [
+      "No prior snapshot for this token — liquidity-trend and holder-growth are null. Re-check in 5+ minutes and they fill in.",
+      "Token is older than the smart-money window (72h) — absence of proven-winner buys here is expected, not a red flag.",
+      "A verdict on the signals, not the token's safety — run due-diligence for holder concentration and rug flags. Not financial advice."
+    ],
+    "last_updated": "2026-09-22T00:08:56.057Z",
+    "llm_summary": "## Trenches Check — $Bonk (DezX...263)\n\n**🟡 MODERATE — some signal, incomplete confluence** | composite 0.02 | 2/3 legs\n\nage 32793.1h | price $0.00000338 | liquidity $329,196.00 | mcap $297,185,305.00\n\n**Read:** on-chain QUIET (runner score 0.004); flags: sells_dominating; agent attention: 0 queries/6h, not rising (top 100% of queried tokens); absent: no proven-winner buys.\n\n### ⚡ On-chain velocity — QUIET (score 0.004)\n1h: 297 buys / 457 sells, $32,996.00 volume, price -0.64% (24h +11.61%)\nNo meaningful acceleration: 5m buy rate 1.1× the hourly pace, 1h buy rate 0.4× the 6h pace, 39% of 1h trades are buys, volume 0.6× the 6h pace.\n\n### 👁 Agent attention — present, not rising\n0 queries in 6h (prior window 1) — rank #15, 0th percentile of queried tokens.\n\n_No prior snapshot for this token — liquidity-trend and holder-growth are null. Re-check in 5+ minutes and they fill in._\n_Token is older than the smart-money window (72h) — absence of proven-winner buys here is expected, not a red flag._\n_A verdict on the signals, not the token's safety — run due-diligence for holder concentration and rug flags. Not financial advice._"
+  }
+}

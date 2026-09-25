@@ -1,0 +1,61 @@
+{
+  "key": "whale-watch",
+  "captured_at": "2026-09-22T00:10:03.450Z",
+  "input": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "format": "both"
+  },
+  "ms": 21,
+  "output": {
+    "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "threshold_usd": 10000,
+    "lookback_hours": 24,
+    "whales": [
+      {
+        "address": "9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM",
+        "entity_label": "Binance Hot Wallet",
+        "entity_type": "cex",
+        "balance_usd": 26208777.55732918,
+        "pct_supply": 8.83,
+        "transaction_count": 0,
+        "total_volume_usd": 0,
+        "avg_transaction_usd": 0,
+        "buy_volume_usd": 0,
+        "sell_volume_usd": 0,
+        "flow_direction": "neutral",
+        "last_activity": "none"
+      },
+      {
+        "address": "51yZyDSnec4xnUv7XLRVYcDyV4x3wUtzrDcRaYbmQU5j",
+        "balance_usd": 19470088.9259961,
+        "pct_supply": 6.56,
+        "transaction_count": 0,
+        "total_volume_usd": 0,
+        "avg_transaction_usd": 0,
+        "buy_volume_usd": 0,
+        "sell_volume_usd": 0,
+        "flow_direction": "neutral",
+        "last_activity": "none"
+      },
+      {
+        "address": "4xLpwxgYuPwPvtQjE94RLS4WZ4aD8NJYYKr2AJk99Qdg",
+        "balance_usd": 11055822.066727329,
+        "pct_supply": 3.73,
+        "transaction_count": 6,
+        "total_volume_usd": 947572.9841631404,
+        "avg_transaction_usd": 157928.83069385673,
+        "buy_volume_usd": 176609.77964567044,
+        "sell_volume_usd": 770963.20451747,
+        "flow_direction": "distributing",
+        "last_activity": "2026-09-21T18:04:06.000Z"
+      },
+      "… 7 more (10 total)"
+    ],
+    "total_whale_volume_usd": 1253803.0101275598,
+    "net_flow_direction": "distributing",
+    "whale_count": 10,
+    "holders_source": "rpc",
+    "last_updated": "2026-09-22T00:09:23.672Z",
+    "llm_summary": "## Whale Watch: DezX...263\n\n10 whale(s) tracked. Threshold: $10,000.00 in the last 24h.\nTotal whale volume: $1,253,803.01. Net flow: **distributing**.\n\n### Top Holders\n- 9WzD...WWM [Binance Hot Wallet] | Holds $26,208,777.56 (8.8% supply) | No recent activity\n- 51yZ...U5j | Holds $19,470,088.93 (6.6% supply) | No recent activity\n- 4xLp...Qdg | Holds $11,055,822.07 (3.7% supply) | $947,572.98 across 6 txs — distributing\n- 9Rpz...ubB | Holds $9,067,097.44 (3.1% supply) | No recent activity\n- EbLm...tKi | Holds $9,029,548.96 (3.0% supply) | No recent activity\n\nFlow breakdown: 1 accumulating, 1 distributing, 8 neutral.\n\nData as of: 2026-09-22T00:09:23.672Z"
+  }
+}

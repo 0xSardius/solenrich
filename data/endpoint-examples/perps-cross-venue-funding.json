@@ -1,0 +1,80 @@
+{
+  "key": "perps-cross-venue-funding",
+  "captured_at": "2026-09-22T00:10:10.645Z",
+  "input": {
+    "market": "SOL",
+    "format": "both"
+  },
+  "ms": 24,
+  "output": {
+    "market": "SOL",
+    "checked_at": 1790035810579,
+    "venues": [
+      {
+        "venue": "jupiter-perps",
+        "available": true,
+        "type": "solana-onchain",
+        "borrow_apr_long": 12.739010370055931,
+        "borrow_apr_short": 12.739010370055931,
+        "open_interest_usd": 38217996.196717,
+        "utilization_pct": 8.76483318417898,
+        "skew": "long-heavy",
+        "mark_price_usd": 118.57235783
+      },
+      {
+        "venue": "adrena",
+        "available": true,
+        "type": "solana-onchain",
+        "borrow_apr_long": 1.65,
+        "borrow_apr_short": 1.65,
+        "open_interest_usd": 3144.467026,
+        "utilization_pct": 3.28,
+        "skew": "short-heavy",
+        "mark_price_usd": null,
+        "notes": [
+          "Adrena SOL exposure is via jitoSOL custody."
+        ]
+      },
+      {
+        "venue": "flash",
+        "available": false,
+        "type": "solana-onchain",
+        "borrow_apr_long": null,
+        "borrow_apr_short": null,
+        "open_interest_usd": null,
+        "utilization_pct": null,
+        "skew": "unknown",
+        "mark_price_usd": null,
+        "unavailable_reason": "SOL not available on Flash."
+      },
+      "… 2 more (5 total)"
+    ],
+    "best_entry": {
+      "long": {
+        "venue": "adrena",
+        "apr": 1.65,
+        "reasoning": "adrena at 1.65% APR — 11.09pts cheaper than jupiter-perps (12.74%)."
+      },
+      "short": {
+        "venue": "adrena",
+        "apr": 1.65,
+        "reasoning": "adrena at 1.65% APR — 11.09pts cheaper than jupiter-perps (12.74%)."
+      }
+    },
+    "basis": {
+      "jupiter_vs_hyperliquid_bps": -9,
+      "adrena_vs_hyperliquid_bps": null,
+      "summary": "Jupiter mark trades -9bps vs Hyperliquid discount."
+    },
+    "arbitrage_opportunities": [
+      {
+        "type": "venue_spread",
+        "spread_apr_pct": 11.08901037005593,
+        "long_venue": "adrena",
+        "short_venue": "jupiter-perps",
+        "description": "jupiter-perps borrows at 12.74% APR vs adrena at 1.65% APR — 11.09pt spread for same-side hedge."
+      }
+    ],
+    "llm_summary": "## SOL-PERP Cross-Venue Funding\n\n### Venues\n- Jupiter Perps — borrow +12.74% APR (long/short paid) — OI $38,217,996.20 — util 8.8% — skew long-heavy\n- Adrena — borrow +1.65% APR (long/short paid) — OI $3,144.47 — util 3.3% — skew short-heavy (Adrena SOL exposure is via jitoSOL custody.)\n- flash: unavailable — SOL not available on Flash..\n- Hyperliquid — funding long +12.08% APR / short -12.08% APR — OI $717,985,264.62\n- dYdX v4 — funding long -1.01% APR / short +1.01% APR — OI $4,843,259.90\n\n### Best Entry (Solana venues)\n- LONG: Adrena — adrena at 1.65% APR — 11.09pts cheaper than jupiter-perps (12.74%).\n- SHORT: Adrena — adrena at 1.65% APR — 11.09pts cheaper than jupiter-perps (12.74%).\n\n### Basis vs Hyperliquid\nJupiter mark trades -9bps vs Hyperliquid discount.\n\n### Arbitrage Opportunities\n- jupiter-perps borrows at 12.74% APR vs adrena at 1.65% APR — 11.09pt spread for same-side hedge.\n\n### Notes\nSolana venues quote borrow APR (utilization-based, paid by both sides). Reference venues quote funding rate (longs pay shorts when positive). Reference rates are cross-chain context — to capture them, position must be opened on the reference venue itself.\nNote: Adrena routes SOL exposure through wrapped collateral (jitoSOL), not native SOL."
+  }
+}

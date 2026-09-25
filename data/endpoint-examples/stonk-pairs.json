@@ -1,0 +1,83 @@
+{
+  "key": "stonk-pairs",
+  "captured_at": "2026-09-22T00:08:01.264Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 437,
+  "output": {
+    "pairs": [
+      {
+        "mint": "HzwqbKZw8HxMN6bF2yFZNrht3c2iXXzpKcFu7uBEDKtr",
+        "symbol": "EURC",
+        "name": "EURC",
+        "decimals": 6,
+        "category": "currency",
+        "category_raw": "currency",
+        "category_label": "Currency",
+        "token_program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "launchable": true,
+        "launch_lab_ready": true,
+        "symbol_ambiguous": false,
+        "is_agent_launchable": true
+      },
+      {
+        "mint": "9BEcn9aPEmhSPbPQeFGjidRiEKki46fVQDyPpSQXPA2D",
+        "symbol": "JLUSDC",
+        "name": "JLUSDC",
+        "decimals": 6,
+        "category": "currency",
+        "category_raw": "currency",
+        "category_label": "Currency",
+        "token_program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "launchable": true,
+        "launch_lab_ready": true,
+        "symbol_ambiguous": false,
+        "is_agent_launchable": true
+      },
+      {
+        "mint": "5Y8NV33Vv7WbnLfq3zBcKSdYPrk7g2KoiQoe7M2tcxp5",
+        "symbol": "ONYC",
+        "name": "ONYC",
+        "decimals": 9,
+        "category": "currency",
+        "category_raw": "currency",
+        "category_label": "Currency",
+        "token_program": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+        "launchable": true,
+        "launch_lab_ready": true,
+        "symbol_ambiguous": false,
+        "is_agent_launchable": true
+      },
+      "… 523 more (526 total)"
+    ],
+    "total": 526,
+    "agent_launchable_count": 519,
+    "allowed_categories": [
+      "xstock",
+      "prestock",
+      "currency",
+      "… 2 more (5 total)"
+    ],
+    "by_category": {
+      "xstock": 26,
+      "prestock": 76,
+      "currency": 5,
+      "custom": 412,
+      "leverage": 2,
+      "solana": 3,
+      "collectible": 2
+    },
+    "filters": {
+      "category": null,
+      "launchable_only": false
+    },
+    "source": "stonkfun.xyz /api/public/v1/pairs (cached 5 min)",
+    "next_steps": [
+      "Pick a quote with is_agent_launchable=true, then GET /launchlab/pricing?quoteMint=<mint> on StonkFun for the exact curve constants.",
+      "Run stonk-launch-preflight on the unsigned transaction before broadcasting.",
+      "stonk-screener shows which reward coins on that quote already pay holders."
+    ],
+    "llm_summary": "## StonkFun Launchable Pairs — 526 of 526 quote assets\n\nCategories: xstock 26, prestock 76, currency 5, custom 412, leverage 2, solana 3, collectible 2. Agent-launchable: 519 (launchable + LaunchLab-ready + category in xstock/prestock/currency/solana/custom).\n\n| Symbol | Name | Category | Decimals | Program | Launchable | LaunchLab ready | Agent-launchable |\n|--------|------|----------|----------|---------|------------|-----------------|------------------|\n| EURC | EURC | currency | 6 | SPL | ✓ | ✓ | ✓ |\n| JLUSDC | JLUSDC | currency | 6 | SPL | ✓ | ✓ | ✓ |\n| ONYC | ONYC | currency | 9 | SPL | ✓ | ✓ | ✓ |\n| USDC | USDC | currency | 6 | SPL | ✓ | ✓ | ✓ |\n| USDT | USDT | currency | 6 | SPL | ✓ | ✓ | ✓ |\n| .exe | cashcow | custom | 6 | Token-2022 | ✓ | ✓ | ✓ |\n| $1 | just buy $1 worth of this coin | custom | 6 | SPL | ✓ | ✓ | ✓ |\n| $HACHI | Hachiko | custom | 4 | SPL | ✓ | ✓ | ✓ |\n| $MAD | Mad Coin | custom | 6 | Token-2022 | ✓ | ✓ | ✓ |\n| $michi | michi | custom | 6 | SPL | ✓ | ✓ | ✓ |\n| $WIF | dogwifhat | custom | 6 | SPL | ✓ | ✓ | ✓ |\n| 1 | 1 | custom | 6 | SPL | ✓ | ✓ | ✓ |\n| 1 | 1 coin can change your life | custom | 6 | SPL | ✓ | ✓ | ✓ |\n| 1 | 1 memecoin can change your life | custom | 6 | Token-2022 | ✓ | ✓ | ✓ |\n| 67 | The Official 67 Coin | custom | 6 | SPL | ✓ | ✓ | ✓ |\n| AAVE | AAVE | custom | 8 | SPL | ✓ | ✓ | ✓ |\n| ACT | Act I : The AI Prophecy | custom | 6 | SPL | ✓ | ✓ | ✓ |\n| AFC | Arsenal FC | custom | 9 | SPL | ✓ | ✓ | ✓ |\n| Agartha | Agartha | custom | 6 | SPL | ✓ | ✓ | ✓ |\n| AGI | artificial gooner intelligence | custom | 9 | Token-2022 | ✓ | ✓ | ✓ |\n| ai16z | ai16z | custom | 9 | Token-2022 | ✓ | ✓ | ✓ |\n| AIR3 | AIR3 Agent by AIRewardrop | custom | 9 | SPL | ✓ | ✓ | ✓ |\n| AIRDROP | AIRDROP | custom | 6 | Token-2022 | ✓ | ✓ | ✓ |\n| AISLOP | AI SLOP | custom | 6 | SPL | ✓ | ✓ | ✓ |\n| ALLINU | ALLINU | custom | 6 | Token-2022 | ✓ | ✓ | ✓ |\n| ALON | alon | custom | 6 | SPL | ✓ | ✓ | ✓ |\n| ALON | The PumpFun Father | custom | 6 | Token-2022 | ✓ | ✓ | ✓ |\n| ALTSZN | ALTSEASON | custom | 6 | Token-2022 | ✓ | ✓ | ✓ |\n| AMC | AMC | custom | 9 | SPL | ✓ | ✓ | ✓ |\n| AMC | A Meme Coin | custom | 6 | Token-2022 | ✓ | ✓ | ✓ |\n| ANSEM | The Black Bull | custom | 6 | Token-2022 | ✓ | ✓ | ✓ |\n| ANSEM | The Black Bull | custom | 6 | Token-2022 | ✓ | ✓ | ✓ |\n| ASH | Unc Ash | custom | 9 | Token-2022 | ✓ | ✓ | ✓ |\n| aura | aura | custom | 6 | SPL | ✓ | ✓ | ✓ |… (3075 characters)"
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "key": "stonk-quote",
+  "captured_at": "2026-09-22T00:08:03.341Z",
+  "input": {
+    "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+    "size_usd": 100,
+    "hold_days": 7,
+    "format": "both"
+  },
+  "ms": 671,
+  "output": {
+    "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+    "symbol": "ZCAT",
+    "name": "Anonymous Cat",
+    "quote": {
+      "mint": "A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+      "symbol": "ZEC",
+      "category": "custom"
+    },
+    "size_usd": 100,
+    "hold_days": 7,
+    "payout_status": "PAYING",
+    "price_usd": 0.09729,
+    "tokens_at_size": 996.2997,
+    "entry": {
+      "tax_pct": 3,
+      "tax_usd": 3,
+      "price_impact_pct": 0.07,
+      "price_impact_usd": 0.07,
+      "total_pct": 3.07,
+      "total_usd": 3.07
+    },
+    "exit": {
+      "tax_pct": 3,
+      "tax_usd": 3,
+      "price_impact_pct": 0.07,
+      "price_impact_usd": 0.07,
+      "total_pct": 3.07,
+      "total_usd": 3.07
+    },
+    "round_trip": {
+      "cost_pct": 6.14,
+      "cost_usd": 6.14,
+      "breakeven_move_pct": 6.33
+    },
+    "eligibility": {
+      "share_of_supply_pct": 0.0001,
+      "est_usd_per_payout": 0.000007,
+      "dust_risk": true,
+      "note": "StonkFun publishes no minimum holding; payouts are pro-rata by balance. Share = size ÷ market cap. Amounts too small for the quote token's decimals are not delivered."
+    },
+    "expected_payout": {
+      "basis": "7d",
+      "basis_actual_days": 7,
+      "yield_pct_per_week": 1.5805,
+      "usd_per_week": 1.58,
+      "usd_over_hold": 1.58,
+      "reward_asset": "ZEC",
+      "caution": false,
+      "caution_reason": null
+    },
+    "net": {
+      "usd_over_hold": -4.56,
+      "pct_of_size": -4.56,
+      "breakeven_hold_days": 27.2,
+      "verdict": "COSTS"
+    },
+    "market": {
+      "market_cap_usd": 94217739,
+      "volume_24h_usd": 832107.74,
+      "liquidity_usd": 1691350.99,
+      "holders": 34109
+    },
+    "reasoning": "$ZCAT at $100: the 6.14% round trip ($6.14) is more than the ≈$1.58 the position is expected to be paid over 7 days. Payouts alone do not justify the trade; price must move 6.33% just to break even.",
+    "warnings": [
+      "At $100 your share of a typical payout is under 100 base units of ZEC — it can round to nothing."
+    ],
+    "caveats": [
+      "Exit price impact is assumed equal to entry impact at the same size; a thinner book at exit time costs more.",
+      "A cost and payout estimate at one size, not a price forecast. Payout rates change with volume; the tax does not. Not financial advice."
+    ],
+    "next_steps": [
+      "trenches-check on the mint for velocity + smart-money + attention before entering.",
+      "exit-signal with entry_price_usd while holding — reports PnL net of the sell-side tax.",
+      "stonk-yield for the full window math behind expected_payout."
+    ],
+    "last_updated": "2026-09-22T00:08:03.324Z",
+    "llm_summary": "## StonkFun Quote — $ZCAT at $100.00 for 7d\n\n**🔴 COSTS — the round trip is more than the hold is expected to pay back**\n\n**Read:** $ZCAT at $100: the 6.14% round trip ($6.14) is more than the ≈$1.58 the position is expected to be paid over 7 days. Payouts alone do not justify the trade; price must move 6.33% just to break even.\n\n| Leg | Tax | Price impact | Total |\n|---|---|---|---|\n| Entry | 3% ($3.00) | 0.07% ($0.07) | 3.07% ($3.07) |\n| Exit | 3% ($3.00) | 0.07% ($0.07) | 3.07% ($3.07) |\n| Round trip | | | **6.14% ($6.14)** — price must move +6.33% to break even |\n\nExpected payout: $1.58/week (1.5805% of size, basis 7d over 7d) → $1.58 in ZEC over 7 days.\nNet of the round trip: $-4.56 (-4.56% of size) — payouts alone cover the trip after ≈27.2 days.\nYour share of each payout: 0.0001% of supply ≈ $0.00000700 per distribution — DUST RISK.\n\nmcap $94,217,739.00 | liquidity $1,691,350.99 | 24h vol $832,107.74 | 34109 holders | quote ZEC (custom) | payout status PAYING\n\n⚠️ At $100 your share of a typical payout is under 100 base units of ZEC — it can round to nothing.\n\n_Exit price impact is assumed equal to entry impact at the same size; a thinner book at exit time costs more._\n_A cost and payout estimate at one size, not a price forecast. Payout rates change with volume; the tax does not. Not financial advice._\n\nNext: trenches-check on the mint for velocity + smart-money + attention before entering. exit-signal with entry_price_usd while holding — reports PnL net of the sell-side tax. stonk-yield for the full window math behind expected_payout."
+  }
+}

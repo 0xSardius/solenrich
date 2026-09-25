@@ -1,0 +1,39 @@
+{
+  "key": "consensus-signal",
+  "captured_at": "2026-09-22T00:10:18.569Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 127,
+  "output": {
+    "type": "token",
+    "window": "1h",
+    "window_start": "2026-09-21T23:10:18.448Z",
+    "window_end": "2026-09-22T00:10:18.448Z",
+    "entity": null,
+    "top_n": [
+      {
+        "address": "4MMQY9bwkxxTtsK3W227Q5ABT6yFY8Pmn9Ze7wmAXKY8",
+        "queries": 2,
+        "rising": false
+      },
+      {
+        "address": "6UtY9iTZMQQ5QZVrbzFnNaJntV7oySm9k97mvwnuZcxr",
+        "queries": 2,
+        "rising": false
+      },
+      {
+        "address": "8RNUw4N655VSrZKuhGdywhbSMDTrheguFPfxbpE2NZHQ",
+        "queries": 2,
+        "rising": false
+      },
+      "… 7 more (10 total)"
+    ],
+    "aggregate": {
+      "total_unique_entities": 10,
+      "total_queries": 20
+    },
+    "generated_at": "2026-09-22T00:10:18.448Z",
+    "llm_summary": "## Consensus Signal — Token attention (1h)\n\nWindow: 2026-09-21T23:10:18.448Z → 2026-09-22T00:10:18.448Z. 10 distinct token(s) queried, 20 total queries.\n\n### Top 10 Tokens by agent attention\n\n| # | Address | Queries | Trend |\n|---|---------|---------|-------|\n| 1 | 4MMQ...KY8 | 2 | ↓ |\n| 2 | 6UtY...cxr | 2 | ↓ |\n| 3 | 8RNU...ZHQ | 2 | ↓ |\n| 4 | 8RVB...GkS | 2 | ↓ |\n| 5 | CFNR...pFL | 2 | ↓ |\n| 6 | E4Ap...jHx | 2 | ↓ |\n| 7 | HTmQ...gUQ | 2 | ↓ |\n| 8 | HcRL...eJR | 2 | ↓ |\n| 9 | Hgcx...YZT | 2 | ↓ |\n| 10 | ZesM...TNK | 2 | ↓ |\n\n_This signal is derived from SolEnrich's own query stream — what agents are actively researching right now. Not a market signal, an **attention signal**._"
+  }
+}

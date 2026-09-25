@@ -1,0 +1,76 @@
+{
+  "key": "portfolio-history",
+  "captured_at": "2026-09-22T00:10:23.404Z",
+  "input": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "format": "both"
+  },
+  "ms": 72,
+  "output": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "current": {
+      "portfolio_value_usd": 4.730675352767843,
+      "sol_balance": 0.039869364,
+      "token_count": 6,
+      "risk_score": 0.15000000000000002,
+      "risk_level": "LOW"
+    },
+    "series": [
+      {
+        "date": "2026-09-17",
+        "sol_balance": 0.039869364,
+        "portfolio_value_usd": 4.0217308320312375,
+        "token_count": 6,
+        "nft_count": 9,
+        "tx_count_30d": 0,
+        "risk_score": 0.15000000000000002,
+        "risk_level": "LOW",
+        "label_count": 1,
+        "defi_position_count": 0,
+        "top_holding_mints": [
+          "FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8",
+          "Fxgdfsy1Z5Mvh53o69s2Ev6TGxtAJ1RQ5RJ5moCpKmQZ",
+          "55USDUivJLe4L1kY64XK1nDPAqbphG6nRpTjk2iZ5PwG",
+          "… 2 more (5 total)"
+        ]
+      },
+      {
+        "date": "2026-09-22",
+        "sol_balance": 0.039869364,
+        "portfolio_value_usd": 4.740967268076912,
+        "token_count": 6,
+        "nft_count": 9,
+        "tx_count_30d": 0,
+        "risk_score": 0.15000000000000002,
+        "risk_level": "LOW",
+        "label_count": 1,
+        "defi_position_count": 0,
+        "top_holding_mints": [
+          "FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8",
+          "Fxgdfsy1Z5Mvh53o69s2Ev6TGxtAJ1RQ5RJ5moCpKmQZ",
+          "55USDUivJLe4L1kY64XK1nDPAqbphG6nRpTjk2iZ5PwG",
+          "… 2 more (5 total)"
+        ]
+      }
+    ],
+    "summary": {
+      "data_points": 2,
+      "lookback_days": 7,
+      "period_start": "2026-09-17",
+      "period_end": "2026-09-22",
+      "peak": {
+        "date": "2026-09-22",
+        "portfolio_value_usd": 4.740967268076912
+      },
+      "trough": {
+        "date": "2026-09-17",
+        "portfolio_value_usd": 4.0217308320312375
+      },
+      "max_drawdown_pct": 0,
+      "average_portfolio_value_usd": 4.38,
+      "change_vs_start_pct": 17.88
+    },
+    "last_updated": "2026-09-22T00:10:23.384Z",
+    "llm_summary": "## Portfolio History: vine...PTg (7-day lookback)\n\nCurrent: $4.73 | 0.04 SOL | 6 tokens | Risk: 0.15 (LOW)\n\n### Summary (2 data points)\n- Peak: $4.74 on 2026-09-22\n- Trough: $4.02 on 2026-09-17\n- Average: $4.38\n- Max drawdown: 0.00%\n- Change vs period start: +17.88%\n\n### Series\n\n| Date | Portfolio | SOL | Tokens | Risk |\n|------|-----------|-----|--------|------|\n| 2026-09-17 | $4.02 | 0.04 | 6 | 0.15 |\n| 2026-09-22 | $4.74 | 0.04 | 6 | 0.15 |\n\n_Note: 2 of 7 possible daily points present. Gaps indicate days this wallet was not queried — snapshots accumulate fire-and-forget on every enrichment call._"
+  }
+}

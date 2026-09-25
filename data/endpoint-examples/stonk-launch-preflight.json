@@ -1,0 +1,79 @@
+{
+  "key": "stonk-launch-preflight",
+  "captured_at": "2026-09-22T00:08:03.593Z",
+  "input": {
+    "unsigned_transaction": "AgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAJDg3DCB8iG/qh2fapNS7+A6KwO1p4JbWqXBb+DHdxyv/jolXgVp80Z/1WrkA6M9RZNdP9XQ2K1FaV90kALEdOXOCO+c2uBkh80jQRonwPh6TQfa2KEdihsSNZCeNUbNc5M5dISzbJDzmJXXKK+W8rg5xUVqhedm6jGc7L0Q3GRjiqtgLyUq/LCrWGgJAliJxepe01T4o3ab0TjH165iy9+mEAAAAAAAAA… (1020 characters)",
+    "quote_mint": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
+    "mode": "reward",
+    "format": "both"
+  },
+  "ms": 113,
+  "output": {
+    "ok": false,
+    "quote_mint": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
+    "mode": "reward",
+    "mismatches": [
+      {
+        "field": "totalFundRaisingB (raise)",
+        "expected": "1295647040",
+        "actual": "1164789044",
+        "fix": "The raise is a RAW amount in SPYX's 8 decimals — 1295647040 sizes the launch like the default 85 SOL raise. Reusing Raydium's 85-SOL lamport constant on another quote is the classic mistake."
+      }
+    ],
+    "warnings": [],
+    "expected": {
+      "program_id": "LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj",
+      "config_id": "B7ctMMdGvy46Am56myTtzfkNzt9kWZVTNGM2BWrJ9adg",
+      "platform_id": "6BwHHDg3u1854jC8PDLXvR4spTcLNaoBxLJNGC4nTESt",
+      "curve_rule": "7MNLMFMmFVhN9Z3sj51QZso28oD2Ta3zDPwNAmfrs2vk",
+      "base_decimals": 6,
+      "supply": "1000000000000000",
+      "total_sell_a": "793100000000000",
+      "total_fund_raising_b": "1295647040",
+      "curve_type": "ConstantCurve",
+      "migrate_type": "cpmm",
+      "transfer_fee_bps": [
+        100,
+        300
+      ],
+      "withdraw_withheld_authority": "5KXDF6QnqhBj72hDtJNkkpFaQVUfbFXNybMsp3DiK6tD",
+      "pricing_observed_at": "2026-09-22T00:07:15.979Z"
+    },
+    "decoded": {
+      "variant": "initialize_with_token_2022",
+      "instruction_index": 0,
+      "account_count": 16,
+      "fee_payer": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+      "base_mint": "BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu",
+      "name": "Example Coin",
+      "symbol": "EXMPL",
+      "params": {
+        "decimals": 6,
+        "name": "Example Coin",
+        "symbol": "EXMPL",
+        "uri": "https://example.com/meta.json",
+        "curveType": "ConstantCurve",
+        "supply": "1000000000000000",
+        "totalSellA": "793100000000000",
+        "totalFundRaisingB": "1164789044",
+        "migrateType": "cpmm",
+        "totalLockedAmount": "0",
+        "cliffPeriod": "0",
+        "unlockPeriod": "0",
+        "cpmmCreatorFeeOn": 0,
+        "transferFee": {
+          "present": true,
+          "transferFeeBasePoints": 300,
+          "maxinumFee": "1000000000000000"
+        }
+      },
+      "trailing_accounts": [
+        "7MNLMFMmFVhN9Z3sj51QZso28oD2Ta3zDPwNAmfrs2vk"
+      ]
+    },
+    "next_steps": [
+      "Apply every fix, rebuild, and preflight again before signing. A mismatched pool is left alone by StonkFun — for a taxed mint the tax then goes to nobody."
+    ],
+    "llm_summary": "## StonkFun Launch Preflight — reward mode against XsoC...F2W\n\n**🔴 NOT OK — 1 mismatch. Do not broadcast.**\n\nDecoded: initialize_with_token_2022 at instruction 0, 16 accounts, base mint Bvgz...rRu ($EXMPL)\n\n### ❌ Mismatches\n- **totalFundRaisingB (raise)** — expected `1295647040`, got `1164789044`. The raise is a RAW amount in SPYX's 8 decimals — 1295647040 sizes the launch like the default 85 SOL raise. Reusing Raydium's 85-SOL lamport constant on another quote is the classic mistake.\n\nExpected shape: program LanM...3uj, config B7ct...adg, platform 6BwH...ESt, curve rule 7MNL...2vk, 6 decimals, supply 1000000000000000, totalSellA 793100000000000, raise 1295647040, tax 100/300 bps (pricing observed 2026-09-22T00:07:15.979Z)\n\nNext: Apply every fix, rebuild, and preflight again before signing. A mismatched pool is left alone by StonkFun — for a taxed mint the tax then goes to nobody."
+  }
+}

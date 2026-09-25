@@ -1,0 +1,142 @@
+{
+  "key": "hyperliquid-smart-money",
+  "captured_at": "2026-09-22T00:10:07.787Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 4336,
+  "output": {
+    "generated_at": 1790035803480,
+    "market": null,
+    "trader_universe": {
+      "leaderboard_candidates": 100,
+      "inspected": 35,
+      "qualified": 32
+    },
+    "positioning": [
+      {
+        "coin": "ZEC",
+        "long_traders": 13,
+        "short_traders": 0,
+        "net_notional_usd": 8924436,
+        "gross_notional_usd": 8924436,
+        "bias": "long",
+        "conviction": "strong"
+      },
+      {
+        "coin": "NEAR",
+        "long_traders": 11,
+        "short_traders": 0,
+        "net_notional_usd": 29573908,
+        "gross_notional_usd": 29573908,
+        "bias": "long",
+        "conviction": "strong"
+      },
+      {
+        "coin": "HYPE",
+        "long_traders": 9,
+        "short_traders": 0,
+        "net_notional_usd": 9039196,
+        "gross_notional_usd": 9039196,
+        "bias": "long",
+        "conviction": "strong"
+      },
+      "… 35 more (38 total)"
+    ],
+    "consensus_longs": [
+      "ZEC",
+      "NEAR",
+      "HYPE",
+      "… 8 more (11 total)"
+    ],
+    "consensus_shorts": [],
+    "top_traders": [
+      {
+        "address": "0x30afce2f6842bf183c7e3fe7162e279ff0b6393e",
+        "account_value_usd": 13862898,
+        "month_roi": 4.1057828301,
+        "week_roi": 1.6205111849,
+        "month_pnl_usd": 15336914.779071,
+        "profile": "directional_long",
+        "directional_bias": "long",
+        "top_positions": [
+          {
+            "coin": "NEAR",
+            "dir": "long",
+            "leverage": 10,
+            "notional_usd": 22165082,
+            "pnl_pct": 1213.2
+          },
+          {
+            "coin": "INJ",
+            "dir": "long",
+            "leverage": 5,
+            "notional_usd": 11689403,
+            "pnl_pct": 196
+          }
+        ]
+      },
+      {
+        "address": "0x266b5569ed3017e74dd48059c6db804e016eefcb",
+        "account_value_usd": 920532,
+        "month_roi": 3.111000933,
+        "week_roi": 1.5378055504,
+        "month_pnl_usd": 1924047.662257,
+        "profile": "directional_long",
+        "directional_bias": "long",
+        "top_positions": [
+          {
+            "coin": "HYPE",
+            "dir": "long",
+            "leverage": 10,
+            "notional_usd": 3005632,
+            "pnl_pct": 489.7
+          },
+          {
+            "coin": "ZEC",
+            "dir": "long",
+            "leverage": 10,
+            "notional_usd": 1947660,
+            "pnl_pct": 1031.8
+          },
+          {
+            "coin": "TAO",
+            "dir": "long",
+            "leverage": 5,
+            "notional_usd": 1283360,
+            "pnl_pct": 272.6
+          },
+          "… 2 more (5 total)"
+        ]
+      },
+      {
+        "address": "0x005a09b498f2a28b54652a70d7812e63414161fe",
+        "account_value_usd": 551719,
+        "month_roi": 6.5172536556,
+        "week_roi": 2.3302566447,
+        "month_pnl_usd": 1604705.490069,
+        "profile": "directional_long",
+        "directional_bias": "long",
+        "top_positions": [
+          {
+            "coin": "NEAR",
+            "dir": "long",
+            "leverage": 7,
+            "notional_usd": 2811646,
+            "pnl_pct": 749.8
+          },
+          {
+            "coin": "ZEC",
+            "dir": "long",
+            "leverage": 3,
+            "notional_usd": 465463,
+            "pnl_pct": 173.5
+          }
+        ]
+      },
+      "… 7 more (10 total)"
+    ],
+    "summary": "32 consistently-profitable HL traders tracked. Strongest positioning: ZEC 13L/0S (net long), NEAR 11L/0S (net long), HYPE 9L/0S (net long).",
+    "llm_summary": "## Hyperliquid Smart Money\n\n32 consistently-profitable HL traders tracked. Strongest positioning: ZEC 13L/0S (net long), NEAR 11L/0S (net long), HYPE 9L/0S (net long).\n_Universe: 32 consistent directional traders (from 100 MM-filtered leaderboard candidates, 35 inspected)._\n\n### Positioning consensus\n| Coin | Long | Short | Bias | Net notional |\n|---|---|---|---|---|\n| ZEC | 13 | 0 | NET LONG (strong) | +$8,924,436.00 |\n| NEAR | 11 | 0 | NET LONG (strong) | +$29,573,908.00 |\n| HYPE | 9 | 0 | NET LONG (strong) | +$9,039,196.00 |\n| ETH | 8 | 0 | NET LONG (strong) | +$7,358,000.00 |\n| BTC | 7 | 1 | NET LONG (moderate) | +$4,072,708.00 |\n| UNI | 6 | 0 | NET LONG (strong) | +$2,454,757.00 |\n| SOL | 5 | 0 | NET LONG (strong) | +$1,735,212.00 |\n| ENA | 4 | 0 | NET LONG (strong) | +$1,211,013.00 |\n| ARB | 3 | 0 | NET LONG (moderate) | +$2,511,186.00 |\n| TAO | 3 | 0 | NET LONG (moderate) | +$1,784,301.00 |\n| XRP | 2 | 1 | NET LONG (mixed) | +$419,702.00 |\n| PUMP | 3 | 0 | NET LONG (moderate) | +$947,278.00 |\n\n**Consensus longs:** ZEC, NEAR, HYPE, ETH, BTC, UNI, SOL, ENA, ARB, TAO, PUMP\n\n### Top traders (ranked by month PnL)\n- 0x30...93e — acct $13,862,898.00, month PnL +$15,336,914.78, bias long: LONG NEAR 10x, LONG INJ 5x\n- 0x26...fcb — acct $920,532.00, month PnL +$1,924,047.66, bias long: LONG HYPE 10x, LONG ZEC 10x, LONG TAO 5x, LONG VIRTUAL 5x, LONG kPEPE 10x\n- 0x00...1fe — acct $551,719.00, month PnL +$1,604,705.49, bias long: LONG NEAR 7x, LONG ZEC 3x\n- 0x99...e54 — acct $659,796.00, month PnL +$1,566,836.06, bias long: LONG ZEC 10x, LONG HYPE 10x, LONG SOL 20x, LONG NEAR 10x, LONG CRV 10x\n- 0xfd...d10 — acct $399,428.00, month PnL +$981,153.36, bias long: LONG HYPE 10x, LONG ARB 10x\n- 0xb4...210 — acct $258,117.00, month PnL +$600,529.79, bias long: LONG NEAR 10x, LONG PONS 3x\n- 0xa1...8f7 — acct $547,557.00, month PnL +$566,610.21, bias long: LONG ZEC 10x, LONG ETH 10x\n- 0xd5...cb8 — acct $530,985.00, month PnL +$511,544.14, bias long: LONG ETH 25x, LONG BTC 40x, LONG ZEC 10x, LONG ENA 10x, LONG SOL 20x\n- 0x12...bf8 — acct $369,691.00, month PnL +$458,151.01, bias long: LONG ETH 25x, LONG kPEPE 10x, LONG ENA 10x, LONG XRP 20x, LONG PUMP 10x\n- 0x91...5d5 — acct $198,786.00, month PnL +$395,523.23, bias long: LONG UNI 10x\n\n_This is a positioning signal, not a trade. Smart-money consensus is often late/crowded and regime-dependent — use it as confluence and ris… (2533 characters)"
+  }
+}

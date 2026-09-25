@@ -1,0 +1,175 @@
+{
+  "key": "runner-scan",
+  "captured_at": "2026-09-22T00:08:05.505Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 1911,
+  "output": {
+    "runners": [
+      {
+        "mint": "DfbhY8XtNc317jpSEJDQejLD83QUMHtBzyn9EjgSTWGW",
+        "symbol": "BITCOINU",
+        "name": "bitcoinu",
+        "age_hours": 0.2,
+        "price_usd": 0.00007857,
+        "market_cap_usd": 78576,
+        "liquidity_usd": 25929,
+        "volume_h1_usd": 178242,
+        "volume_h24_usd": 178242,
+        "price_change_h1_pct": 58.76,
+        "price_change_h24_pct": 58.76,
+        "buys_h1": 1864,
+        "sells_h1": 1356,
+        "stage": "RUNNING",
+        "runner_score": 0.81,
+        "metrics": {
+          "buy_rate_accel_m5_h1": 2.72,
+          "buy_rate_accel_h1_h6": 6,
+          "buy_pressure_m5": 0.594,
+          "buy_pressure_h1": 0.579,
+          "buy_pressure_h6": 0.579,
+          "volume_accel": 6,
+          "price_velocity": 6,
+          "holder_growth_pct": null,
+          "liquidity_change_pct": null,
+          "avg_trade_usd": 55.35,
+          "windows_accelerating": 3
+        },
+        "flags": [
+          "accelerating_5m",
+          "accelerating_1h",
+          "volume_surge",
+          "… 2 more (5 total)"
+        ],
+        "reasoning": "Sustained acceleration across 3 windows: 5m buy rate 2.7× the hourly pace, 1h buy rate 6.0× the 6h pace, 58% of 1h trades are buys, volume 6.0× the 6h pace. Caveat: under an hour old, so every ratio is a small sample.",
+        "delta_window_minutes": null,
+        "transfer_tax": {
+          "program": "token-2022",
+          "bps": 100,
+          "per_transfer_pct": 1,
+          "round_trip_pct": 2,
+          "fee_mutable_by": "WLHv2UAZm6z4KyaaELi5pjdbJh6RESMva1Rnn8pJVVh",
+          "withdraw_authority": "5KXDF6QnqhBj72hDtJNkkpFaQVUfbFXNybMsp3DiK6tD"
+        }
+      },
+      {
+        "mint": "BxjHPNGXi2erj7j4yfUYg3y1Sn7vN1xE3LdcP6Fhmoon",
+        "symbol": "MOON",
+        "name": "MoonDAT",
+        "age_hours": 0.7,
+        "price_usd": 0.00004649,
+        "market_cap_usd": 46123,
+        "liquidity_usd": 14100,
+        "volume_h1_usd": 516165,
+        "volume_h24_usd": 516165,
+        "price_change_h1_pct": -64.51,
+        "price_change_h24_pct": -64.51,
+        "buys_h1": 1787,
+        "sells_h1": 1184,
+        "stage": "RUNNING",
+        "runner_score": 0.501,
+        "metrics": {
+          "buy_rate_accel_m5_h1": 0.03,
+          "buy_rate_accel_h1_h6": 6,
+          "buy_pressure_m5": 0.308,
+          "buy_pressure_h1": 0.601,
+          "buy_pressure_h6": 0.601,
+          "volume_accel": 6,
+          "price_velocity": 0,
+          "holder_growth_pct": null,
+          "liquidity_change_pct": null,
+          "avg_trade_usd": 173.73,
+          "windows_accelerating": 2
+        },
+        "flags": [
+          "accelerating_1h",
+          "volume_surge",
+          "strong_buy_pressure",
+          "… 2 more (5 total)"
+        ],
+        "reasoning": "Sustained acceleration across 2 windows: 5m buy rate 0.0× the hourly pace, 1h buy rate 6.0× the 6h pace, 60% of 1h trades are buys, volume 6.0× the 6h pace. Caveat: under an hour old, so every ratio is a small sample; liquidity is thin — exiting at size may not be possible.",
+        "delta_window_minutes": null,
+        "transfer_tax": {
+          "program": "token-2022",
+          "bps": 0,
+          "per_transfer_pct": 0,
+          "round_trip_pct": 0,
+          "fee_mutable_by": null,
+          "withdraw_authority": null
+        }
+      },
+      {
+        "mint": "GvTa54sSiqhp7FonLnb9vdjWNBZ2wKtVwqG3WF2Upump",
+        "symbol": "JEANCAT",
+        "name": "Jean Cat",
+        "age_hours": 1.2,
+        "price_usd": 0.0002049,
+        "market_cap_usd": 201941,
+        "liquidity_usd": 40164,
+        "volume_h1_usd": 253505,
+        "volume_h24_usd": 395824,
+        "price_change_h1_pct": 53.54,
+        "price_change_h24_pct": 168,
+        "buys_h1": 6505,
+        "sells_h1": 948,
+        "stage": "PARABOLIC_LATE",
+        "runner_score": 0.446,
+        "metrics": {
+          "buy_rate_accel_m5_h1": 0.49,
+          "buy_rate_accel_h1_h6": 4.61,
+          "buy_pressure_m5": 0.872,
+          "buy_pressure_h1": 0.873,
+          "buy_pressure_h6": 0.871,
+          "volume_accel": 3.84,
+          "price_velocity": 1.91,
+          "holder_growth_pct": null,
+          "liquidity_change_pct": null,
+          "avg_trade_usd": 34.01,
+          "windows_accelerating": 2
+        },
+        "flags": [
+          "accelerating_1h",
+          "volume_surge",
+          "strong_buy_pressure",
+          "… 3 more (6 total)"
+        ],
+        "reasoning": "Already up 168% in 24h with buying decelerating — entry risk high, this is distribution territory: 5m buy rate 0.5× the hourly pace, 1h buy rate 4.6× the 6h pace, 87% of 1h trades are buys, volume 3.8× the 6h pace.",
+        "delta_window_minutes": null,
+        "transfer_tax": {
+          "program": "token-2022",
+          "bps": 0,
+          "per_transfer_pct": 0,
+          "round_trip_pct": 0,
+          "fee_mutable_by": null,
+          "withdraw_authority": null
+        }
+      },
+      "… 10 more (13 total)"
+    ],
+    "candidates_scanned": 43,
+    "passed_filters": 13,
+    "stage_counts": {
+      "IGNITING": 2,
+      "RUNNING": 3,
+      "PARABOLIC_LATE": 4,
+      "FADING": 2,
+      "QUIET": 2
+    },
+    "filters": {
+      "max_token_age_hours": 24,
+      "min_liquidity_usd": 10000,
+      "min_volume_h1_usd": 5000,
+      "limit": 15
+    },
+    "candidate_source": "DexScreener latest profiles + latest boosts + top boosts (Solana). These surfaces are pay-to-appear, so the pool skews toward promoted tokens rather than every fresh launch.",
+    "caveats": [
+      "Detection lane is seconds-to-minutes pre-ape, not block-0. Anything already parabolic is flagged LATE rather than presented as an entry.",
+      "DexScreener transaction counts are gameable — wash-traded tokens are flagged via average trade size, but the flag is a heuristic, not proof.",
+      "Fresh memecoin outcomes are binary. Most flagged tokens still fail; the value is avoiding obvious dumps and catching the occasional runner early. Not financial advice.",
+      "… 1 more (4 total)"
+    ],
+    "last_updated": "2026-09-22T00:08:05.468Z",
+    "llm_summary": "## Runner Scan — On-Chain Velocity of Fresh Solana Tokens\n\n_Scanned 43 candidates; 13 cleared the filters (younger than 24h, liquidity ≥ $10,000.00, 1h volume ≥ $5,000.00)._\n\n**3 running, 2 igniting, 4 already ran.** Ranked by composite velocity score.\n\n| Token | Stage | Score | Age | 1h Buys/Sells | Buy Pressure | 5m Accel | 1h Vol | Liquidity |\n|-------|-------|-------|-----|---------------|--------------|----------|--------|-----------|\n| BITCOINU | 🟢 RUNNING | 0.81 | 0.2h | 1864/1356 | 58% | 2.7× | $178,242.00 | $25,929.00 |\n| MOON | 🟢 RUNNING | 0.50 | 0.7h | 1787/1184 | 60% | 0.0× | $516,165.00 | $14,100.00 |\n| JEANCAT | 🟠 LATE | 0.45 | 1.2h | 6505/948 | 87% | 0.5× | $253,505.00 | $40,164.00 |\n| MAJOR | 🟡 IGNITING | 0.43 | 0.7h | 5097/4452 | 53% | 0.0× | $500,789.00 | $12,474.00 |\n| kirkinu | 🟢 RUNNING | 0.33 | 1.3h | 2047/1629 | 56% | 0.3× | $205,430.00 | $20,695.00 |\n| bub | ⚪ QUIET | 0.22 | 10.5h | 227/97 | 70% | 0.6× | $13,719.00 | $29,651.00 |\n| WASH | 🟡 IGNITING | 0.19 | 6.1h | 63/57 | 53% | 1.7× | $9,418.00 | $19,772.00 |\n| SATOSHINU | 🟠 LATE | 0.18 | 2.1h | 2450/1906 | 56% | 0.3× | $516,078.00 | $107,157.00 |\n| LOOONGCAT | 🟠 LATE | 0.10 | 2.7h | 7292/4881 | 60% | 0.7× | $373,875.00 | $100,055.00 |\n| Usefees | 🔴 FADING | 0.05 | 0.5h | 820/1031 | 44% | 1.2× | $57,410.00 | $12,827.00 |\n| TRUMPTV | 🟠 LATE | 0.04 | 2.6h | 2108/1696 | 55% | 0.4× | $161,624.00 | $34,302.00 |\n| BULLCAT | 🔴 FADING | 0.00 | 4.1h | 204/261 | 44% | 0.7× | $29,729.00 | $24,711.00 |\n| CAT | ⚪ QUIET | 0.00 | 8.2h | 22/22 | 50% | — | $5,839.00 | $44,062.00 |\n\n### BITCOINU — 🟢 RUNNING (score 0.81)\n`DfbhY8XtNc317jpSEJDQejLD83QUMHtBzyn9EjgSTWGW`\n\nSustained acceleration across 3 windows: 5m buy rate 2.7× the hourly pace, 1h buy rate 6.0× the 6h pace, 58% of 1h trades are buys, volume 6.0× the 6h pace. Caveat: under an hour old, so every ratio is a small sample.\n\n- Market cap $78,576.00 · liquidity $25,929.00 · 0.2h old\n- Price +58.8% (1h), +58.8% (24h)\n- Holder growth and liquidity trend: no prior snapshot yet (fills in on the next scan of this token)\n- Flags: accelerating_5m, accelerating_1h, volume_surge, price_accelerating, thin_history\n- Transfer tax 100 bps — round trip 2% before slippage\n\n### MOON — 🟢 RUNNING (score 0.50)\n`BxjHPNGXi2erj7j4yfUYg3y1Sn7vN1xE3LdcP6Fhmoon`\n\nSustained acceleration across 2 windows: 5m buy rate 0.0× the hourly pace, 1h buy rate 6.0× the… (7990 characters)"
+  }
+}

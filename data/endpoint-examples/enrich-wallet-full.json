@@ -1,0 +1,103 @@
+{
+  "key": "enrich-wallet-full",
+  "captured_at": "2026-09-22T00:10:18.176Z",
+  "input": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "format": "both"
+  },
+  "ms": 1784,
+  "output": {
+    "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
+    "sol_balance": 0.039869364,
+    "portfolio_value_usd": 4.729234645377018,
+    "token_count": 6,
+    "top_holdings": [
+      {
+        "mint": "FS66v5XYtJAFo14LiPz5HT93EUMAHmYipCfQhLpU4ss8",
+        "symbol": "SMOG",
+        "balance": 29.621167,
+        "usd_value": 0.0015730646497528792
+      },
+      {
+        "mint": "Fxgdfsy1Z5Mvh53o69s2Ev6TGxtAJ1RQ5RJ5moCpKmQZ",
+        "symbol": "SI",
+        "balance": 50,
+        "usd_value": 0.001182099554533137
+      },
+      {
+        "mint": "55USDUivJLe4L1kY64XK1nDPAqbphG6nRpTjk2iZ5PwG",
+        "symbol": "FATCAT",
+        "balance": 115,
+        "usd_value": 0.0004556319143816978
+      },
+      "… 3 more (6 total)"
+    ],
+    "nft_count": 9,
+    "nft_summary": {
+      "total": 9,
+      "collected": 0,
+      "airdropped": 8,
+      "suspected_spam": 1,
+      "distinct_collections": 0
+    },
+    "nft_collections": [
+      {
+        "name": "Qualified #611",
+        "collection_mint": "7gCKeoTNBq8BvX5KQgeMiwbkBrtuxMcUN4JRMNfizTSK",
+        "count": 1,
+        "compressed": true,
+        "suspected_spam": false
+      },
+      {
+        "name": "Permit #152",
+        "collection_mint": "4VsTtAYVq8KszD6bi3zRdbH2jhoWXNfoyZtDGjEvU81G",
+        "count": 1,
+        "compressed": true,
+        "suspected_spam": false
+      },
+      {
+        "name": "JupReward #612",
+        "collection_mint": "4UDzwWwTvvvqEQPjD2fUk7EuZcadUBQLx4gfYU6Q9kRA",
+        "count": 1,
+        "compressed": true,
+        "suspected_spam": false
+      },
+      "… 6 more (9 total)"
+    ],
+    "defi_positions": [
+      {
+        "protocol": "Orca",
+        "type": "swap",
+        "value_usd": 0
+      },
+      {
+        "protocol": "Raydium",
+        "type": "swap",
+        "value_usd": 0
+      }
+    ],
+    "tx_count_30d": 0,
+    "first_tx_date": "2022-04-15T22:33:33.000Z",
+    "labels": [
+      "defi_user",
+      "dormant"
+    ],
+    "risk_score": 0,
+    "risk_level": "LOW",
+    "risk_factors": [],
+    "connected_wallets": [
+      {
+        "address": "E16prLnWTwfLUYgXRTELYgw4u8QUnN9CAcHceLrDTjN1"
+      },
+      {
+        "address": "54uJifihfpmTjCGperSxWaZmEHzGFpsaKKEiiGL1fmTs"
+      },
+      {
+        "address": "54u5q7Wto6vgyhAgh8xN1AxgkuKo2mPFzohSNu8vwsTs"
+      },
+      "… 17 more (20 total)"
+    ],
+    "last_updated": "2026-09-22T00:10:18.155Z",
+    "llm_summary": "## Wallet Profile: vine...PTg\n\nActive since April 2022 Solana wallet. Holds 0.04 SOL and 6 SPL tokens.\nPortfolio value: ~$4.73 across tokens, NFTs, and DeFi positions.\n\nTop holdings: SMOG ($0.00157), SI ($0.00118), FATCAT ($0.000456), SOL ($0.00), $ƧOЯⱯ ($0.00).\n\nNFTs: 9 total — 8 compressed airdrops, 1 suspected spam.\nSuspected spam is flagged from name patterns (claim bait, embedded links, invisible characters). Treat it as a signal, not a verdict.\n\nDeFi activity: Orca, Raydium.\n\nClassified as: defi_user, dormant.\n0 transactions in 30 days. Risk score: 0.00/1.0 (low).\n20 additional connected wallet(s).\n\nData as of: 2026-09-22T00:10:18.155Z"
+  }
+}
