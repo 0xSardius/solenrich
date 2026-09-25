@@ -96,7 +96,11 @@ Buyers 9/24: 289 payments / $1.78; `2otm6W` 251 per-coin stonk-yield (NOT the ba
 calls (calls still succeed — watch 2–3 days); `34CMQ3` tried stonk-yield-batch once (first outside call).
 **`9e9e32d` deployed 23:42 (quiet gap):** stonk-screener + stonk-yield `next_steps` name stonk-yield-batch first. Verified:
 sweep 50/50, paid screener shows the hint. Watch whether 2otm6W switches.
-**Backtest re-run with compact memory** (Float64Array per coin, lean walk) after the first run was killed for low RAM.
+**Backtest DONE (compact-memory re-run):** 2,751 trades 9/9–9/24 (log `local/scripts/backtest-yield-2026-09-24.log`).
+Holding paying coins loses on the median coin: 7d median net −27.7% (price −30.6%, rewards +4.8%), win 34%; mean
++30% only from a few huge winners; ≥$1M median −20.7%; 300 bps beats 100 bps. Top-20 portfolio mean +50% but 3/8
+cohorts −23% to −41%. → Moneta v1 = trading book with exits (yield = tiebreaker); yield book deferred; re-run at 30+
+days. Product idea: price-risk line in stonk-quote. Memory: `project_stonk_yield_backtest_2026_09_24.md`.
 **llms.txt + llms-full.txt carry the skill install line** (deployed 01:30 UTC 9/24, verified on api + www; sweep 50/50).
 **Moneta — step 0 = yield backtest, IN PROGRESS (not finished when the session ended):**
 `bun --env-file=.env local/scripts/backtest-yield.ts` (read-only: ~100 Redis reads of `stonk:snap:*`, one StonkFun walk,
