@@ -18,6 +18,7 @@ import {
   encodeUnsignedTransaction,
   launchLabEventAuthority,
   EXAMPLE_LAUNCH,
+  EXAMPLE_LAUNCH_SOL,
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from '../src/sources/launchlab';
@@ -125,6 +126,17 @@ describe('preflight: diffLaunchAgainstPricing', () => {
     expect(r.ok).toBe(true);
     expect(r.decoded.variant).toBe('initialize_with_token_2022');
     expect(r.expected.platform_id).toBe(pricing.platform.reward);
+  });
+
+  // 2026-09-25: the live preflight flagged the SPYX reference launch once SPYX moved ~11% (the raise is sized in
+  // SOL terms). The SOL-quoted example has a fixed 85 SOL raise, so it is the one the bazaar and SolScout use.
+  test('SOL reference launch passes against SOL pricing with no warnings (raise = 85 SOL, never drifts)', async () => {
+    const solPricing = fixture<{ data: StonkLaunchLabPricing }>('launchlab-pricing-sol.json').data;
+    expect(solPricing.raise.raw).toBe('85000000000');
+    const r = diffLaunchAgainstPricing(await decodeLaunchTransaction(buildExampleLaunchTransaction({}, undefined, EXAMPLE_LAUNCH_SOL)), solPricing, 'reward', EXAMPLE_LAUNCH_SOL.quoteMint);
+    expect(r.mismatches).toEqual([]);
+    expect(r.ok).toBe(true);
+    expect(r.warnings.filter((w: any) => String(w.field ?? w).includes('raise'))).toEqual([]);
   });
 
   test('misspelled maxinumFee → zero cap mismatch naming the field', async () => {

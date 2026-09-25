@@ -337,7 +337,7 @@ console.log(`  ⏱ ${ex.ms}ms\n`);
 // ============================================================
 // 20. StonkFun product line
 // ============================================================
-import { buildExampleLaunchTransaction, EXAMPLE_LAUNCH } from '../src/sources/launchlab';
+import { buildExampleLaunchTransaction, EXAMPLE_LAUNCH_SOL } from '../src/sources/launchlab';
 const STONK_MINT = 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR'; // ZCAT (reward, ZEC quote)
 
 console.log('━━━ 20a. stonk-pairs (free) ━━━');
@@ -394,12 +394,13 @@ check('has llm_summary', typeof ss.body?.output?.llm_summary === 'string' && ss.
 console.log(`  ⏱ ${ss.ms}ms\n`);
 
 console.log('━━━ 20e. stonk-launch-preflight ━━━');
-const okTx = buildExampleLaunchTransaction();
-const pf = await invoke('stonk-launch-preflight', { unsigned_transaction: okTx, quote_mint: EXAMPLE_LAUNCH.quoteMint, mode: 'reward', format: 'both' }, 30000);
+// SOL-quoted reference launch: fixed 85 SOL raise, never drifts (the SPYX one did, 2026-09-25).
+const okTx = buildExampleLaunchTransaction({}, undefined, EXAMPLE_LAUNCH_SOL);
+const pf = await invoke('stonk-launch-preflight', { unsigned_transaction: okTx, quote_mint: EXAMPLE_LAUNCH_SOL.quoteMint, mode: 'reward', format: 'both' }, 30000);
 check('returns 200', pf.status === 200, `got ${pf.status}`);
 check('reference launch passes', pf.body?.output?.ok === true, JSON.stringify(pf.body?.output?.mismatches));
-const badTx = buildExampleLaunchTransaction({ transferFee: { present: true, transferFeeBasePoints: 0, maxinumFee: '0' } }, []);
-const pf2 = await invoke('stonk-launch-preflight', { unsigned_transaction: badTx, quote_mint: EXAMPLE_LAUNCH.quoteMint, mode: 'reward', launch_params: { transferFeeExtensionParams: { transferFeeBasisPoints: 300, maximumFee: '1000000000000000' } }, format: 'json' }, 30000);
+const badTx = buildExampleLaunchTransaction({ transferFee: { present: true, transferFeeBasePoints: 0, maxinumFee: '0' } }, [], EXAMPLE_LAUNCH_SOL);
+const pf2 = await invoke('stonk-launch-preflight', { unsigned_transaction: badTx, quote_mint: EXAMPLE_LAUNCH_SOL.quoteMint, mode: 'reward', launch_params: { transferFeeExtensionParams: { transferFeeBasisPoints: 300, maximumFee: '1000000000000000' } }, format: 'json' }, 30000);
 check('zero-rate + missing curve rule + misspelled fields rejected', pf2.body?.output?.ok === false && (pf2.body?.output?.mismatches?.length ?? 0) >= 3, `mismatches=${pf2.body?.output?.mismatches?.map((m: any) => m.field).join(',')}`);
 check('names the misspelled field', (pf2.body?.output?.mismatches ?? []).some((m: any) => m.actual === 'maximumFee' && m.expected === 'maxinumFee'));
 console.log(`  ⏱ ${pf.ms}ms / ${pf2.ms}ms\n`);

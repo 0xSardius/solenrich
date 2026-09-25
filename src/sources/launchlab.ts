@@ -359,6 +359,7 @@ export function launchLabEventAuthority(): string {
  */
 export const EXAMPLE_LAUNCH = {
   quoteMint: 'XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W', // SPYX
+  quoteTokenProgram: TOKEN_2022_PROGRAM_ID,
   mode: 'reward' as const,
   payer: 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg',
   mintA: 'BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu',
@@ -370,8 +371,25 @@ export const EXAMPLE_LAUNCH = {
   totalFundRaisingB: '1164789044',
 };
 
-export function buildExampleLaunchTransaction(overrides: Partial<EncodeInitializeInput['params']> = {}, trailing?: string[]): string {
-  const e = EXAMPLE_LAUNCH;
+/**
+ * The same correct reward launch against SOL — the example for everything that meets the LIVE API (bazaar input
+ * example, SolScout stress, test-all-endpoints). StonkFun sizes every raise "like the default 85 SOL raise", so on
+ * the SOL quote the raise is exactly 85 SOL and never drifts; the SPYX raise moves with the SPYX/SOL price and the
+ * live preflight flagged the SPYX example as a mismatch once SPYX moved ~11% (2026-09-25). Values from
+ * /launchlab/pricing?quoteMint=So111… on 2026-09-25 (fixture test/fixtures/stonk/launchlab-pricing-sol.json).
+ * SPYX stays the unit-test example (deterministic against its own fixture).
+ */
+export const EXAMPLE_LAUNCH_SOL: typeof EXAMPLE_LAUNCH = {
+  ...EXAMPLE_LAUNCH,
+  quoteMint: 'So11111111111111111111111111111111111111112',
+  quoteTokenProgram: TOKEN_PROGRAM_ID,
+  configId: '6s1xP3hpbAfFoNtUNF8mfHsjr2Bd97JxFJRWLbL6aHuX',
+  curveRuleReward: '9tDwmELGF2bXsqLWb887vysBL9JnTusuqeUtrBqPDcnK',
+  totalFundRaisingB: '85000000000',
+};
+
+export function buildExampleLaunchTransaction(overrides: Partial<EncodeInitializeInput['params']> = {}, trailing?: string[], launch: typeof EXAMPLE_LAUNCH = EXAMPLE_LAUNCH): string {
+  const e = launch;
   const ix = encodeInitializeInstruction({
     variant: 'initialize_with_token_2022',
     accounts: {
@@ -380,7 +398,7 @@ export function buildExampleLaunchTransaction(overrides: Partial<EncodeInitializ
       poolId: 'DFVooc8ekdz4xznApLxEbTNSDMDB9P4czeqH6ZMXn78C',
       mintA: e.mintA, mintB: e.quoteMint,
       vaultA: 'BBYVxswtLq8VTxQvzmVYkJsjMv8Jsw3csBK7jLmBQpjK', vaultB: 'Ad7pbBvVRNofo96WR6eHwmU2o4naZ6Lao1J98hW8a1TQ',
-      tokenProgramA: TOKEN_2022_PROGRAM_ID, tokenProgramB: TOKEN_2022_PROGRAM_ID,
+      tokenProgramA: TOKEN_2022_PROGRAM_ID, tokenProgramB: e.quoteTokenProgram,
       eventAuthority: launchLabEventAuthority(),
       trailing: trailing ?? [e.curveRuleReward],
     },

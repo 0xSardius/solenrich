@@ -1,35 +1,28 @@
 {
   "key": "stonk-launch-preflight",
-  "captured_at": "2026-09-22T00:08:03.593Z",
+  "captured_at": "2026-09-25T23:01:44.041Z",
   "input": {
-    "unsigned_transaction": "AgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAJDg3DCB8iG/qh2fapNS7+A6KwO1p4JbWqXBb+DHdxyv/jolXgVp80Z/1WrkA6M9RZNdP9XQ2K1FaV90kALEdOXOCO+c2uBkh80jQRonwPh6TQfa2KEdihsSNZCeNUbNc5M5dISzbJDzmJXXKK+W8rg5xUVqhedm6jGc7L0Q3GRjiqtgLyUq/LCrWGgJAliJxepe01T4o3ab0TjH165iy9+mEAAAAAAAAA… (1020 characters)",
-    "quote_mint": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
+    "unsigned_transaction": "AgAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgAKDw3DCB8iG/qh2fapNS7+A6KwO1p4JbWqXBb+DHdxyv/jolXgVp80Z/1WrkA6M9RZNdP9XQ2K1FaV90kALEdOXOCO+c2uBkh80jQRonwPh6TQfa2KEdihsSNZCeNUbNc5M5dISzbJDzmJXXKK+W8rg5xUVqhedm6jGc7L0Q3GRjiqtgLyUq/LCrWGgJAliJxepe01T4o3ab0TjH165iy9+mEAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAABIHuZs13eKOS57e6X5J12OXtaSgyT+v0nTHhqAGjt1vTReeOu7iHfE/oQ5BByzYm12j0+WKVd0u0rnR+AbW+rFXGo4ByN94IPnWazxzZbjR5K+oG3hUzC73XO9YvQiGfoP8wLFvQe/EISs4jS2NWM+umloyXRUu3HtKOT2B20NwBQQ7lU3KJuHvkbUsT4+Jr4pvWsjGIVbxcc8PIaxRySIGm4hX/quBhPtof2NGGMA12sQ53BrrO1WYoPAAAAAAAQbd9uHXZaGT2cvhRs7reawctIXtX1s3kTqM9YV+/wCpBt324e51j94YQl285GzN2rYa/E2DuQ0n/r35KNihi/wHg6gVJiEPlKDo6E0ghwA7OkJg0pznnaz+IaTqdx+mKAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQoQAAAIBw4EAQsDAg0MBQYKCYEBJb5+3iyaqxEGDAAAAEV4YW1wbGUgQ29pbgUAAABFWE1QTB0AAABodHRwczovL2V4YW1wbGUuY29tL21ldGEuanNvbgAAgMakfo0DAAB4xftR0QIAABJlyhMAAAABAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAEsAQCAxqR+jQMA",
+    "quote_mint": "So11111111111111111111111111111111111111112",
     "mode": "reward",
-    "format": "both"
+    "format": "json"
   },
-  "ms": 113,
+  "ms": 1810,
   "output": {
-    "ok": false,
-    "quote_mint": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
+    "ok": true,
+    "quote_mint": "So11111111111111111111111111111111111111112",
     "mode": "reward",
-    "mismatches": [
-      {
-        "field": "totalFundRaisingB (raise)",
-        "expected": "1295647040",
-        "actual": "1164789044",
-        "fix": "The raise is a RAW amount in SPYX's 8 decimals — 1295647040 sizes the launch like the default 85 SOL raise. Reusing Raydium's 85-SOL lamport constant on another quote is the classic mistake."
-      }
-    ],
+    "mismatches": [],
     "warnings": [],
     "expected": {
       "program_id": "LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj",
-      "config_id": "B7ctMMdGvy46Am56myTtzfkNzt9kWZVTNGM2BWrJ9adg",
+      "config_id": "6s1xP3hpbAfFoNtUNF8mfHsjr2Bd97JxFJRWLbL6aHuX",
       "platform_id": "6BwHHDg3u1854jC8PDLXvR4spTcLNaoBxLJNGC4nTESt",
-      "curve_rule": "7MNLMFMmFVhN9Z3sj51QZso28oD2Ta3zDPwNAmfrs2vk",
+      "curve_rule": "9tDwmELGF2bXsqLWb887vysBL9JnTusuqeUtrBqPDcnK",
       "base_decimals": 6,
       "supply": "1000000000000000",
       "total_sell_a": "793100000000000",
-      "total_fund_raising_b": "1295647040",
+      "total_fund_raising_b": "85000000000",
       "curve_type": "ConstantCurve",
       "migrate_type": "cpmm",
       "transfer_fee_bps": [
@@ -37,7 +30,7 @@
         300
       ],
       "withdraw_withheld_authority": "5KXDF6QnqhBj72hDtJNkkpFaQVUfbFXNybMsp3DiK6tD",
-      "pricing_observed_at": "2026-09-22T00:07:15.979Z"
+      "pricing_observed_at": "2026-09-25T23:01:32.614Z"
     },
     "decoded": {
       "variant": "initialize_with_token_2022",
@@ -55,7 +48,7 @@
         "curveType": "ConstantCurve",
         "supply": "1000000000000000",
         "totalSellA": "793100000000000",
-        "totalFundRaisingB": "1164789044",
+        "totalFundRaisingB": "85000000000",
         "migrateType": "cpmm",
         "totalLockedAmount": "0",
         "cliffPeriod": "0",
@@ -68,12 +61,12 @@
         }
       },
       "trailing_accounts": [
-        "7MNLMFMmFVhN9Z3sj51QZso28oD2Ta3zDPwNAmfrs2vk"
+        "9tDwmELGF2bXsqLWb887vysBL9JnTusuqeUtrBqPDcnK"
       ]
     },
     "next_steps": [
-      "Apply every fix, rebuild, and preflight again before signing. A mismatched pool is left alone by StonkFun — for a taxed mint the tax then goes to nobody."
-    ],
-    "llm_summary": "## StonkFun Launch Preflight — reward mode against XsoC...F2W\n\n**🔴 NOT OK — 1 mismatch. Do not broadcast.**\n\nDecoded: initialize_with_token_2022 at instruction 0, 16 accounts, base mint Bvgz...rRu ($EXMPL)\n\n### ❌ Mismatches\n- **totalFundRaisingB (raise)** — expected `1295647040`, got `1164789044`. The raise is a RAW amount in SPYX's 8 decimals — 1295647040 sizes the launch like the default 85 SOL raise. Reusing Raydium's 85-SOL lamport constant on another quote is the classic mistake.\n\nExpected shape: program LanM...3uj, config B7ct...adg, platform 6BwH...ESt, curve rule 7MNL...2vk, 6 decimals, supply 1000000000000000, totalSellA 793100000000000, raise 1295647040, tax 100/300 bps (pricing observed 2026-09-22T00:07:15.979Z)\n\nNext: Apply every fix, rebuild, and preflight again before signing. A mismatched pool is left alone by StonkFun — for a taxed mint the tax then goes to nobody."
+      "Sign and broadcast. Once the pool lands it is adopted automatically — the token page, fee forwarding, and holder rewards work like an API launch.",
+      "After launch: stonk-reward-risk on the new mint confirms the on-chain fee config."
+    ]
   }
 }

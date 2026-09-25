@@ -1524,23 +1524,16 @@
   ]
  },
  "stonk-launch-preflight": {
-  "ok": false,
-  "quote_mint": "XsoCS1TfEyfFhfvj8EtZ528L3CaKBDBRqRapnBbDF2W",
+  "ok": true,
+  "quote_mint": "So11111111111111111111111111111111111111112",
   "mode": "reward",
-  "mismatches": [
-   {
-    "field": "totalFundRaisingB (raise)",
-    "expected": "1295647040",
-    "actual": "1164789044",
-    "fix": "The raise is a RAW amount in SPYX's 8 decimals — 1295647040 sizes the launch ..."
-   }
-  ],
+  "mismatches": [],
   "warnings": [],
   "expected": {
    "program_id": "LanMV9sAd7wArD4vJFi2qDdfnVhFxYSUg6eADduJ3uj",
-   "config_id": "B7ctMMdGvy46Am56myTtzfkNzt9kWZVTNGM2BWrJ9adg",
+   "config_id": "6s1xP3hpbAfFoNtUNF8mfHsjr2Bd97JxFJRWLbL6aHuX",
    "platform_id": "6BwHHDg3u1854jC8PDLXvR4spTcLNaoBxLJNGC4nTESt",
-   "curve_rule": "7MNLMFMmFVhN9Z3sj51QZso28oD2Ta3zDPwNAmfrs2vk",
+   "curve_rule": "9tDwmELGF2bXsqLWb887vysBL9JnTusuqeUtrBqPDcnK",
    "base_decimals": 6,
    "supply": "1000000000000000",
    "total_sell_a": "793100000000000"

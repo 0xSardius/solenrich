@@ -7,7 +7,7 @@
  */
 
 import { PRICING } from '../../src/config';
-import { buildExampleLaunchTransaction, EXAMPLE_LAUNCH } from '../../src/sources/launchlab';
+import { buildExampleLaunchTransaction, EXAMPLE_LAUNCH_SOL } from '../../src/sources/launchlab';
 
 const TEST_WALLET = 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg';
 const TEST_TOKEN = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263'; // BONK
@@ -717,16 +717,16 @@ export const ENDPOINTS: Array<{
     ],
   },
   {
-    // Deterministic correct launch (SPYX, reward, 300 bps, curve rule last).
-    // Only the raise drifts with price → warning, never a mismatch inside 10%.
+    // Deterministic correct launch against SOL (reward, 300 bps, curve rule last). The SOL raise is a fixed 85 SOL,
+    // so it never drifts; the SPYX example failed this check once SPYX moved ~11% (2026-09-25).
     key: 'stonk-launch-preflight',
-    input: { unsigned_transaction: buildExampleLaunchTransaction(), quote_mint: EXAMPLE_LAUNCH.quoteMint, mode: EXAMPLE_LAUNCH.mode, format: 'both' },
+    input: { unsigned_transaction: buildExampleLaunchTransaction({}, undefined, EXAMPLE_LAUNCH_SOL), quote_mint: EXAMPLE_LAUNCH_SOL.quoteMint, mode: EXAMPLE_LAUNCH_SOL.mode, format: 'both' },
     timeout: 30000,
     checks: [
       { name: 'decoded variant', test: (d) => d.decoded?.variant === 'initialize_with_token_2022', detail: (d) => `variant=${d.decoded?.variant}` },
       { name: 'ok is boolean', test: (d) => typeof d.ok === 'boolean', detail: (d) => `ok=${d.ok} mismatches=${d.mismatches?.map((m: any) => m.field).join(',')}` },
       { name: 'no mismatches on the reference launch', test: (d) => Array.isArray(d.mismatches) && d.mismatches.length === 0, detail: (d) => JSON.stringify(d.mismatches) },
-      { name: 'expected block has platform + curve rule', test: (d) => d.expected?.platform_id === EXAMPLE_LAUNCH.platformReward && d.expected?.curve_rule === EXAMPLE_LAUNCH.curveRuleReward },
+      { name: 'expected block has platform + curve rule', test: (d) => d.expected?.platform_id === EXAMPLE_LAUNCH_SOL.platformReward && d.expected?.curve_rule === EXAMPLE_LAUNCH_SOL.curveRuleReward },
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Preflight') },
     ],
   },
