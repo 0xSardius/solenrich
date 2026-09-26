@@ -133,18 +133,10 @@ const HOURLY_TTL = 96 * 3600;   // 96h for hourly buckets — attention-momentum
 // Caller identity extraction lives in ./caller-id (pure, unit-tested —
 // see test/caller-id.test.ts). Handles x402 Solana + Base/EVM payloads,
 // MPP credential hashes, and IP fallback.
-import { extractCaller } from './caller-id';
+import { extractCaller, dogfoodCallerIds } from './caller-id';
 
-// Our own wallets. Their paid calls settle for real but are not demand.
-// SolScout = seed/stress runs; Eris = the outcome harness (own repo, 2026-09-04).
-// Extend with DOGFOOD_WALLETS=addr1,addr2 (Solana base58 or 0x EVM).
-const DOGFOOD_CALLER_IDS = new Set(
-  [
-    'H3UyiWm1YTzSKxXTpyssxxEreq6HzWTwNW5BVYewmmfC', // SolScout
-    'ANY4ztPwdXTNjLvTjgNCJrJCxpRpnzxyJhVpCqtz5veF', // Eris
-    ...(process.env.DOGFOOD_WALLETS ?? '').split(',').map((s) => s.trim()).filter(Boolean),
-  ].map((a) => `x402:${a.startsWith('0x') ? a.toLowerCase() : a}`),
-);
+// Our own wallets (list in ./caller-id). Extend with DOGFOOD_WALLETS=addr1,addr2.
+const DOGFOOD_CALLER_IDS = dogfoodCallerIds(process.env.DOGFOOD_WALLETS);
 
 // --- OOM hardening (2026-07-16): in-flight tracker + memory watchdog ---
 // The Jul 5 + Jul 15 8GB OOM kills left no trace in logs (no invoke lines at
@@ -305,7 +297,9 @@ app.use('/entrypoints/*/invoke', async (c, next) => {
 
     // Extract the queried address/mint from the pre-handler body clone (already
     // drained to `cloneText` above — never re-read the stream).
-    if (cloneText) {
+    // Our own wallets are skipped: these counters feed consensus-signal and
+    // attention-momentum, which sell other agents' interest, not our bots'.
+    if (cloneText && !(caller && DOGFOOD_CALLER_IDS.has(caller))) {
       try {
         const body = JSON.parse(cloneText);
         const input = body?.input ?? body;

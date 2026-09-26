@@ -66,3 +66,21 @@ export function extractCaller(
   const ip = forwardedFor?.split(',')[0]?.trim();
   return ip ? `ip:${ip}` : null;
 }
+
+// Our own wallets. Their paid calls settle for real but are not demand, so
+// /metrics reports them apart and the attention counters skip them.
+// SolScout = seed/stress runs; Eris = the outcome harness; Moneta = the stonk
+// paper trader (2026-09-26). `extra` = DOGFOOD_WALLETS (comma-separated,
+// Solana base58 or 0x EVM).
+const OWN_WALLETS = [
+  'H3UyiWm1YTzSKxXTpyssxxEreq6HzWTwNW5BVYewmmfC', // SolScout
+  'ANY4ztPwdXTNjLvTjgNCJrJCxpRpnzxyJhVpCqtz5veF', // Eris
+  '5x2U2bCCpnAUoHz8WKyM324jiVGzvSSrJvWvdgcyeZ26', // Moneta
+];
+
+export function dogfoodCallerIds(extra = ''): Set<string> {
+  const extras = extra.split(',').map((s) => s.trim()).filter(Boolean);
+  return new Set(
+    [...OWN_WALLETS, ...extras].map((a) => `x402:${a.startsWith('0x') ? a.toLowerCase() : a}`),
+  );
+}

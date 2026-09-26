@@ -8,7 +8,7 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from '@solana/web3.js';
-import { extractCaller } from '../src/lib/caller-id';
+import { extractCaller, dogfoodCallerIds } from '../src/lib/caller-id';
 
 const b64 = (obj: unknown) => Buffer.from(JSON.stringify(obj)).toString('base64');
 
@@ -91,5 +91,25 @@ describe('extractCaller', () => {
 
   test('non-Payment Authorization (e.g. Bearer) does not count as MPP', () => {
     expect(extractCaller(undefined, 'Bearer tok', '2.2.2.2')).toBe('ip:2.2.2.2');
+  });
+});
+
+describe('dogfoodCallerIds', () => {
+  test('includes SolScout, Eris and Moneta without any env value', () => {
+    const ids = dogfoodCallerIds();
+    expect(ids.has('x402:H3UyiWm1YTzSKxXTpyssxxEreq6HzWTwNW5BVYewmmfC')).toBe(true);
+    expect(ids.has('x402:ANY4ztPwdXTNjLvTjgNCJrJCxpRpnzxyJhVpCqtz5veF')).toBe(true);
+    expect(ids.has('x402:5x2U2bCCpnAUoHz8WKyM324jiVGzvSSrJvWvdgcyeZ26')).toBe(true);
+  });
+  test('adds env wallets, trims them, and lowercases EVM addresses', () => {
+    const ids = dogfoodCallerIds(' Abc111, 0xABCdef ,');
+    expect(ids.has('x402:Abc111')).toBe(true);
+    expect(ids.has('x402:0xabcdef')).toBe(true);
+    expect(ids.size).toBe(5);
+  });
+  test('does not include outside buyers or IP callers', () => {
+    const ids = dogfoodCallerIds();
+    expect(ids.has('x402:2otm6WRwaxaqWehypxrcicosgMq2Fdd5Nbo6J6G71wJz')).toBe(false);
+    expect(ids.has('ip:1.2.3.4')).toBe(false);
   });
 });
