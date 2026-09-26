@@ -1,3 +1,39 @@
+# Idea Context — StonkFun Telegram bot (2026-09-26)
+
+Report: `docs/stonkfun-bot-validation-2026-09-26.html`. Free bot (/check, /watch, /gems) on SolEnrich
+stonk endpoints; trade fees after ~30 weekly users; token after ~100. Score 10/15.
+
+## validation
+
+```json
+{
+  "demand_signals": [
+    "Main paying buyer 2otm6W is an agent checking ~14 StonkFun coins hourly via stonk-yield: someone already pays to automate /watch",
+    "At least four community devs built payout trackers or alert scanners (stonkfun-rewards, crypto-rewards-tracker, stonkclaude, stonk-gem-radar)",
+    "The Stonk Board tracks $46.8M paid to holders; STONK10 reached 3,307 recipients"
+  ],
+  "risks": [
+    { "category": "distribution", "description": "No audience; The Stonk Board is the default place holders look", "severity": "high" },
+    { "category": "market", "description": "Holding paying coins loses on the median coin (7d -28% net); honest verdicts often say skip", "severity": "medium" },
+    { "category": "technical", "description": "Jupiter routing + platformFeeBps on Token-2022 tax coins and LaunchLab curve coins unverified", "severity": "medium" },
+    { "category": "regulatory", "description": "A fee-sharing token looks like a security; prefer holder-gating", "severity": "medium-high" },
+    { "category": "team", "description": "Solo builder running Moneta, Colosseum and SolEnrich at once", "severity": "medium" }
+  ],
+  "go_no_go": "go",
+  "confidence": 0.6,
+  "next_steps": [
+    "Ask 5-10 StonkFun holders how they notice when payouts stop",
+    "Contact The Stonk Board dev about embedding /check verdicts",
+    "Build the free bot: /check, /watch (3 coins), /gems; name other than StonkBot",
+    "Test Jupiter quotes with a platform fee on 3 StonkFun tax coins (no funds)",
+    "Gate after 2 weeks: ~30 weekly users -> build trade fees; fewer -> fold alerts into Stonk Ledger or sell to Stonk Board",
+    "Use the bot as new work in the Colosseum entry (2026-10-12)"
+  ]
+}
+```
+
+---
+
 # Idea Context — Next-Build Validation Sprint (2026-08-23)
 
 Question: which candidate provides the most value next — daily digest infographic, Eris

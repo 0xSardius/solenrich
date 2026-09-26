@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StonkFun Bot Validation</title>
+<style>
+  :root {
+    --bg: #fbfaf7; --fg: #1d1c1a; --muted: #6b6760; --line: #e3dfd6; --card: #ffffff;
+    --go: #1f7a4a; --wait: #9a6a00; --no: #a3342b; --accent: #2d5bd7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #141413; --fg: #ecebe7; --muted: #a09d96; --line: #2d2c29; --card: #1c1c1a;
+      --go: #5cc58b; --wait: #e0b04a; --no: #ee7a70; --accent: #7fa2ff;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #141413; --fg: #ecebe7; --muted: #a09d96; --line: #2d2c29; --card: #1c1c1a;
+    --go: #5cc58b; --wait: #e0b04a; --no: #ee7a70; --accent: #7fa2ff;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font: 15px/1.55 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  main { max-width: 860px; margin: 0 auto; padding: 32px 16px 64px; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  h2 { font-size: 18px; margin: 36px 0 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+  .sub { color: var(--muted); margin: 0 0 20px; }
+  .verdict { background: var(--card); border: 1px solid var(--line); border-left: 4px solid var(--go); border-radius: 8px; padding: 16px; }
+  .verdict b.go { color: var(--go); } .verdict b.wait { color: var(--wait); } .verdict b.no { color: var(--no); }
+  .scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { text-align: left; vertical-align: top; padding: 8px 10px; border-bottom: 1px solid var(--line); }
+  th { color: var(--muted); font-weight: 600; }
+  td.n { text-align: center; font-variant-numeric: tabular-nums; }
+  ul, ol { padding-left: 20px; } li { margin: 4px 0; }
+  .tag { display: inline-block; font-size: 12px; padding: 1px 8px; border-radius: 10px; border: 1px solid var(--line); color: var(--muted); }
+  .hi { color: var(--no); } .med { color: var(--wait); } .lo { color: var(--go); }
+  a { color: var(--accent); }
+  code { font-size: 13px; }
+</style>
+</head>
+<body>
+<main>
+<h1>StonkFun bot: validation</h1>
+<p class="sub">2026-09-26 · validate-idea sprint · SolEnrich / Parallax Labs</p>
+
+<div class="verdict">
+  <p><b class="go">GO</b> on a free bot (<code>/check</code>, <code>/watch</code>, <code>/gems</code>) as the validation step. Score 10/15. Confidence 0.6.</p>
+  <p><b class="wait">NOT YET</b> on trade fees: build them after the bot has about 30 weekly users.</p>
+  <p><b class="no">NOT NOW</b> on a token: revisit after about 100 weekly users. $SE showed that a token without usage dies.</p>
+</div>
+
+<h2>The idea</h2>
+<ul>
+  <li><b>/check [mint]</b>: does this coin's payout cover its transfer tax and price impact at my size? Uses <code>stonk-quote</code> and <code>stonk-reward-risk</code>.</li>
+  <li><b>/watch [wallet or mint]</b>: alert when payouts stop, the coin stops trading, or a hold rule fires (stop at -15%, sell some at +25%, exit at +50%). Uses <code>stonk-alerts</code>.</li>
+  <li><b>/gems</b>: top coins from <code>stonk-gems</code>.</li>
+  <li>Money: free research, then a fee on non-custodial swaps the bot builds (the user signs in Phantom). A token only later.</li>
+</ul>
+
+<h2>Competitors (two-pass sweep)</h2>
+<div class="scroll">
+<table>
+  <tr><th>Name</th><th>What it does</th><th>Overlap</th></tr>
+  <tr><td><a href="https://thestonkboard.com/">The Stonk Board</a></td><td>Web ranking of top 100 reward coins, APR, payouts per $100. Earns from JTX referral links. $46.8M paid lifetime across its coins.</td><td class="hi">High on /gems</td></tr>
+  <tr><td><a href="https://stonkbot.vip/">StonkBot</a></td><td>Telegram/Discord bot that pays pump.fun holders in xStocks. Has $STONKBOT. Takes the name.</td><td class="lo">Low (serves creators)</td></tr>
+  <tr><td><a href="https://stonk10.com/">STONK10</a></td><td>Token paying holders the top 10 StonkFun coins. 3,307 recipients, 417 SOL of buys.</td><td class="lo">Low; the token precedent</td></tr>
+  <tr><td>stonkfun-rewards, crypto-rewards-tracker</td><td>Open-source payout trackers per wallet.</td><td class="med">Medium (receipts)</td></tr>
+  <tr><td>stonkclaude</td><td>Scanner with Telegram webhook alerts on reward coins. 0 stars.</td><td class="med">Medium (alerts)</td></tr>
+  <tr><td>stonk-gem-radar</td><td>Gem finder. Shut down 2026-09-26.</td><td class="med">Was high on /gems</td></tr>
+  <tr><td>Trojan, BonkBot, GMGN, Axiom</td><td>General trading bots. No payout or tax analysis found.</td><td class="med">High on trading only</td></tr>
+  <tr><td>Stonk Ledger (own)</td><td>Payout receipts per wallet + Stock DRIP.</td><td class="hi">High (receipts)</td></tr>
+</table>
+</div>
+<p><b>Not found:</b> a bot that answers "does this payout cover the tax at my size?" or alerts when a coin's payouts stop.</p>
+
+<h2>Demand signals</h2>
+<ol>
+  <li><b>Strong:</b> our main paying buyer (<code>2otm6W</code>) is an agent that checks about 14 StonkFun coins every hour with <code>stonk-yield</code>. Someone already pays to automate <code>/watch</code>.</li>
+  <li><b>Strong:</b> at least four community developers built their own payout trackers or alert scanners (table above). People are building manual versions.</li>
+  <li><b>Moderate:</b> The Stonk Board tracks $46.8M paid to holders, and STONK10 reached 3,307 recipients. Holders care about payouts.</li>
+  <li><b>Against:</b> the community tools have 0 stars, and one gem finder shut down today. Interest may be narrow.</li>
+</ol>
+<p>Demand score: <b>2 of 3 (moderate)</b>. Not yet measured: whether human holders will use a bot. The free bot is the test.</p>
+
+<h2>Scorecard</h2>
+<div class="scroll">
+<table>
+  <tr><th>Dimension</th><th class="n">Score</th><th>Reason</th></tr>
+  <tr><td>Founder fit</td><td class="n">3</td><td>Own API with the only tax and payout verdicts, own census data, Stonk Ledger, Moneta.</td></tr>
+  <tr><td>MVP speed</td><td class="n">3</td><td>Free bot is a thin layer over live endpoints: 1-2 sessions.</td></tr>
+  <tr><td>Distribution</td><td class="n">1</td><td>No audience yet. StonkFun partnership and community are unconfirmed.</td></tr>
+  <tr><td>Market pull</td><td class="n">2</td><td>Signals 1-3 above.</td></tr>
+  <tr><td>Revenue</td><td class="n">1</td><td>$5K/month at a 1% fee needs about $500K/month routed. Unproven that traders switch from Axiom or Jupiter.</td></tr>
+  <tr><td><b>Total</b></td><td class="n"><b>10/15</b></td><td>Go threshold is 8.</td></tr>
+</table>
+</div>
+<p>Go criteria met: 5 of 5 (demand ≥ 2, straightforward build, MVP within 2 weeks, unfair advantage, crypto needed). No-go criteria met: 0.</p>
+<p><b>Crypto check:</b> without the chain there are no payouts, no tax and no swaps. The product cannot exist without it.</p>
+<p><b>Revenue note:</b> the bot's calls to SolEnrich are our own money moving between wallets. They are not revenue. The bot earns only from trade fees or a token.</p>
+
+<h2>Risks</h2>
+<div class="scroll">
+<table>
+  <tr><th>Category</th><th>Risk</th><th>Severity</th></tr>
+  <tr><td>Distribution</td><td>No audience. The Stonk Board is already the default place holders look.</td><td class="hi">High</td></tr>
+  <tr><td>Market</td><td>Holding paying coins loses on the typical coin (7d: -28% net). An honest bot often says "skip", which some users will not like.</td><td class="med">Medium</td></tr>
+  <tr><td>Technical</td><td>Unverified: Jupiter routing and <code>platformFeeBps</code> on Token-2022 tax coins, including coins still on the LaunchLab bonding curve.</td><td class="med">Medium</td></tr>
+  <tr><td>Regulatory</td><td>A token that shares fees looks like a security. Holder-gated features carry less risk.</td><td class="med">Medium-high (token)</td></tr>
+  <tr><td>Operations</td><td>Many <code>/watch</code> users multiply StonkFun and Helius load. Watches must batch through <code>stonk-alerts</code>.</td><td class="med">Medium</td></tr>
+  <tr><td>Security</td><td>Non-custodial signing avoids holding keys. Impersonation bots are common on Telegram.</td><td class="lo">Low-medium</td></tr>
+  <tr><td>Team</td><td>Solo builder running Moneta, Colosseum and SolEnrich at the same time.</td><td class="med">Medium</td></tr>
+</table>
+</div>
+
+<h2>The token question</h2>
+<ul>
+  <li><b>Recommendation: not now.</b> $SE mooned and died without usage behind it.</li>
+  <li><b>If later:</b> launch it on StonkFun in reward mode, so it pays holders in a quote asset. The token then demonstrates the product, and creator fees fund the bot.</li>
+  <li>Prefer holder-gating (for example, more <code>/watch</code> slots) over fee sharing, for the regulatory reason above.</li>
+  <li>STONK10 shows a StonkFun-native token can reach thousands of holders. It also shows the payout accounting must be reliable.</li>
+</ul>
+
+<h2>Build plan</h2>
+<p><b>Integrate, do not build a program.</b> Telegram Bot API + SolEnrich + Jupiter swap API (or Raydium LaunchLab for bonding-curve coins) + Phantom deep links or Solana Actions for signing. No custom on-chain program.</p>
+<ol>
+  <li>Ask 5-10 holders in the StonkFun Telegram how they notice when payouts stop.</li>
+  <li>Contact the Stonk Board developer about embedding <code>/check</code> verdicts instead of competing.</li>
+  <li>Build the free bot: <code>/check</code>, <code>/watch</code> (up to 3 coins), <code>/gems</code>. Pick a name other than StonkBot.</li>
+  <li>Test Jupiter routing of 3 StonkFun tax coins with a platform fee (quote API only, no funds).</li>
+  <li>Gate after 2 weeks: about 30 weekly users means build trade fees. Fewer means fold the alerts into Stonk Ledger or sell them to the Stonk Board.</li>
+  <li>Use the bot as new work in the Colosseum entry (deadline 2026-10-12).</li>
+</ol>
+
+<h2>If it fails</h2>
+<ul>
+  <li><b>Wedge:</b> add payout-stop alerts to Stonk Ledger, which already has the receipts.</li>
+  <li><b>Stack:</b> sell <code>/check</code> verdicts to the Stonk Board or StonkFun as an API or widget.</li>
+</ul>
+</main>
+</body>
+</html>

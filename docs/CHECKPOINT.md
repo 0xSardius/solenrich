@@ -1,7 +1,24 @@
 # Session Checkpoint
 
 ## Last session date
-2026-09-20
+2026-09-26
+
+## ▶️ 2026-09-26 (afternoon) — dogfood fix live; StonkFun bot validated; Colosseum this week
+
+- **Shipped `fb35826`** (deployed 16:16 UTC): own wallets (SolScout, Eris, Moneta) no longer add attention
+  counts (feeds `consensus-signal` / `attention-momentum`). Call and caller counts unchanged. List moved to
+  `dogfoodCallerIds()` in `src/lib/caller-id.ts` (tested). `DOGFOOD_WALLETS` on Railway = Moneta.
+  Verified: health, 402, facilitator ok; index refilled 16:24 (first refresh aborted, retry filled 9,246 rows).
+  **Not yet verified:** a Moneta `stonk-quote` call after the deploy adds 0 attention keys
+  (`local/scripts/check-attention.ts`).
+- **Main buyer `2otm6W` paused** after 13:50 UTC (missed 14:50 and 15:50; wallet holds $7.89 USDC; no
+  settle failures on our side; pause began before any restart). Re-check tomorrow.
+- **StonkFun bot validated: GO on a free bot** (`/check`, `/watch`, `/gems`), 10/15. Report
+  `docs/stonkfun-bot-validation-2026-09-26.html`. Trade fees at ~30 weekly users; token not now.
+- **Colosseum = Crypto World's Fair**, deadline 2026-10-12 11:59pm PT. Official rules allow existing
+  projects (no clause against; FAQ unread). Enter SolEnrich directly; work on it the week of 9/28.
+- Sardius has a Jev (TypeSafe) API key. Ideas: bot command parsing; a logged second opinion beside Moneta.
+- Moneta results unread: Railway CLI not logged in on this machine (`railway login`, `railway link`).
 
 ## 📋 ACTIVE PLAN (agreed 2026-09-25) — where agents find us first; buyers; growth; proof; payments
 
