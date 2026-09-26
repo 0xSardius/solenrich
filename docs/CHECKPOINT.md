@@ -66,7 +66,19 @@ said "Eight calls"; now "Ten"). Sweep 50/50.
 **Open (Sardius):** monthly infra costs (Railway, Helius, Upstash) → real margin in the next review.
 **Next:** long-term growth and expansion beyond the single buyer.
 
-## ▶️ MONETA D1 BUILT (2026-09-26) — waiting on Sardius: fund wallet + create Railway service
+## ✅ MONETA LIVE ON PAPER (2026-09-26 00:24 UTC) — Railway service `moneta` in the SolEnrich project
+
+Running from the Eris repo (`6acf46e`), wallet `5x2U2b…eZ26` funded (30 USDC, 0.02 SOL), volume at /data. First paid
+round 00:24:27 (stonk-gems $0.03 + 4 × stonk-quote); after the guard redeploy 12 payments / $0.14 by 00:40.
+Setup lessons: (1) Railway's Raw Editor REPLACES the whole variable list — the block's empty key lines wiped the two
+hand-entered keys; (2) the first key pasted was Eris's (from `.env`, not `.env.moneta`) → paid from an empty wallet →
+"402 … out of USDC". Fix `6acf46e`: the harness refuses a key whose wallet ≠ ERIS_WALLET_ADDRESS.
+Moneta has its own Helius key (visibility + separate revocation; shared account limits).
+**Still to do:** add `5x2U2bCCpnAUoHz8WKyM324jiVGzvSSrJvWvdgcyeZ26` to SolEnrich `DOGFOOD_WALLETS` (API restart → buyer
+gap). Check the first tape / paper book after a few hours; live gate = results (see below). Build live execution
+(Jupiter swaps, Token-2022 fees, CDP wallet) during the paper run.
+
+## (history) 2026-09-26 — MONETA D1 BUILT, waiting on Sardius: fund wallet + create Railway service
 
 Decisions taken (Sardius, 9/26): code in the Eris repo · small Railway service · new dedicated hot wallet (paper
 phase), CDP Server Wallet before real trading money. Gate to live = results, not days: ≥200 labeled verdicts + ≥40
