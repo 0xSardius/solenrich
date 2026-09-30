@@ -730,6 +730,8 @@
             </div>
           </div>
           <p>${docs.payment ? escapeHTML(typeof docs.payment === 'string' ? docs.payment : JSON.stringify(docs.payment)) : 'Settlement is on-chain via the Coinbase CDP facilitator. Verifiable at <a href="https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641" target="_blank">x402scan</a>.'}</p>
+          <p class="paycheck">Independently monitored by Lumière PayCheck, which makes real test payments and watches uptime and the payout wallet:
+            <a href="https://lumierepaycheck.org/e?url=https%3A%2F%2Fapi.solenrich.com%2Fentrypoints%2Fstonk-yield%2Finvoke" target="_blank" rel="noopener"><img src="https://lumierepaycheck.org/badge?url=https%3A%2F%2Fapi.solenrich.com%2Fentrypoints%2Fstonk-yield%2Finvoke" alt="Lumière PayCheck grade for stonk-yield" width="135" height="20" loading="lazy" style="vertical-align:middle"></a></p>
 
           <h2 id="formats">Output Formats</h2>
           <p>Every endpoint accepts a <code>format</code> param. Same enrichment, three response shapes.</p>
