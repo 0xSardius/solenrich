@@ -1,7 +1,32 @@
 # Session Checkpoint
 
 ## Last session date
-2026-09-26
+2026-09-30
+
+## ▶️ RESUME HERE (2026-09-30 night) — `wallet-link-check` session 1 done; wiring next
+
+- **Local, NOT pushed: `2309b61`** `src/enrichers/wallet-link.ts` + `test/wallet-link.test.ts` (8 pass). A push
+  touches `src/` → Railway restart. Push it together with the wiring, in a buyer gap, after telling Sardius.
+- **Checker (standard RPC only):** direct link = intersection of A's and B's signature lists; first funder
+  (SOL or USDC) + one step back (`funding_tree_link`); x402-style USDC inflows to B's listed USDC accounts
+  (fee payer ≠ sender; CDP fee payer `BFK9TLC3…9b4F`); flags `new_wallet`, `no_history`, `thin_history`,
+  `no_link_found`, `b_is_known_entity`. Thin evidence stays UNCERTAIN.
+- **Fixtures** (`local/scripts/wallet-link-fixtures.ts`): agent→Moneta LIKELY_ROTATION 1.0; SolScout→Moneta
+  UNCERTAIN 0.5 (funding tree); unrelated UNCERTAIN/SUSPICIOUS; wallets with no history SUSPICIOUS. 2–5 s per
+  check; Helius 429s on bursts (client retries).
+- **Measured:** our Helius plan is lower tier: Wallet API `/funded-by` and `/identity` = 403; `/transfers`
+  works but costs 100 credits a call → not used. Our pay-to USDC account `ApsGW4…` is NOT the derived ATA.
+- **Next (session 2):** full new-endpoint checklist for `wallet-link-check` at $0.03 (PRICING, handler + Zod +
+  LLM formatter, MCP tool, ENDPOINT_META + suite, /docs, SolScout stress, test-all-endpoints, README + home
+  card, INPUT_EXAMPLES, skill registries). Consider SETTLE_FIRST if cold calls pass ~20 s. Deploy in a buyer gap
+  → paid SolScout sweep → sample response to Elijah (Lumière). Scope: `docs/wallet-link-check-scope.md`.
+- **Also open:** Moneta wallet ≈ $10 USDC (runs out ~10/2; top up ~$30); Moneta improvements proposed (cap 3→8,
+  24 h cooldown after a stop, rank candidates, `min_market_cap_usd` on `stonk-gems`) — not started; Railway
+  CLI still logged out (needed for Moneta's outcome data). Colosseum (Crypto World's Fair) due 10/12.
+- **Badge live** on /docs (`dc223f5`, stonk-yield). Reply draft to Elijah given in chat (Sardius sends).
+- **Traffic 9/28–29:** main buyer back to full pace; outside ≈ $2.2 and $1.7/day; new catalog-check wallet
+  `2WgRFR…`; `8LZj73` gone since 9/26. 30-day on-chain: 4,514 calls / $41.95, of which ours (Moneta +
+  SolScout) 1,019 calls / $20.22 — x402scan counts both.
 
 ## ▶️ 2026-09-26 (afternoon) — dogfood fix live; StonkFun bot validated; Colosseum this week
 
