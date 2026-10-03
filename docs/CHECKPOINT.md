@@ -3,6 +3,14 @@
 ## Last session date
 2026-09-30
 
+## ✅ 2026-10-03 19:15 UTC — `wallet-link-check` LIVE ($0.03, 48 paid endpoints)
+
+- Deployed `85a8cfe` (with `2309b61`) at 19:14 in the main buyer's gap. Verified: health 200, 402 on the new
+  route, listed in `/openapi.json` and `llms.txt`, stonk index refilled from 19:17. Paid SolScout call: 200 in
+  5.7 s, 5/5 checks (known pair agent→Moneta = LIKELY_ROTATION) → settles, seeds the CDP Bazaar.
+- Not done: skill-registry forks (sendai/clawpump) are two releases behind (45 endpoints); sample response sent
+  to Elijah (Sardius sends; draft in chat). Check agentic.market / Bazaar listing in a day.
+
 ## ▶️ 2026-10-03 — Moneta results exported; new stonk buyer; wallet-link wiring in progress
 
 - **Moneta:** full checkpoint in `../moneta/docs/CHECKPOINT.md`. Results export to its own Upstash (eris `5d466e9`),
