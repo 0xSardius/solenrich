@@ -22,13 +22,17 @@ const WALLET_2 = 'BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu';
 const ZCAT = 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR';
 const GROK = '6HU4CmRb15C2nQDx8Ld2f2W2wTdmog6aZiiXdrT5Pzi8';
 const NVDAX = 'Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh';
-const SIG = 'bqTH7u2PJ33gDQwZMy9BXVxABRpgUbY8xSuK6y9PpKYxucFKhiJyiD7JTrH1zxFvMEJGz4847tvotMoP1Ekavaa';
+const OUR_AGENT_WALLET = '66Qvhr1xnwqbCT36KfHfZF1JpoWdmCQ3uFYTN335CGXe';
+const OUR_MONETA_WALLET = '5x2U2bCCpnAUoHz8WKyM324jiVGzvSSrJvWvdgcyeZ26';
+const SIG ='bqTH7u2PJ33gDQwZMy9BXVxABRpgUbY8xSuK6y9PpKYxucFKhiJyiD7JTrH1zxFvMEJGz4847tvotMoP1Ekavaa';
 
 export const INPUT_EXAMPLES: Record<string, Record<string, unknown>> = {
   // wallet
   'enrich-wallet-light': { address: WALLET, format: 'json' },
   'enrich-wallet-full': { address: WALLET, depth: 'full', format: 'json' },
   'wallet-graph': { address: WALLET, depth: 1, min_interactions: 2, format: 'json' },
+  // Our agent wallet → Moneta (our paper trader): the agent funded Moneta, so this returns LIKELY_ROTATION.
+  'wallet-link-check': { wallet_a: OUR_AGENT_WALLET, wallet_b: OUR_MONETA_WALLET, context: 'payout_rotation', format: 'json' },
   'wallet-history': { address: WALLET, lookback: '7d', format: 'json' },
   'portfolio-history': { address: WALLET, period: '30d', format: 'json' },
   'copy-trade-signals': { address: WALLET, lookback_days: 30, format: 'json' },

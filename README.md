@@ -15,7 +15,7 @@ curl https://api.solenrich.com/health
 # Agent card (A2A discovery)
 curl https://api.solenrich.com/.well-known/agent.json
 
-# List all 48 endpoints (47 paid + 1 free)
+# List all 49 endpoints (48 paid + 1 free)
 curl https://api.solenrich.com/entrypoints
 
 # Full API documentation (agent-readable JSON)
@@ -48,6 +48,7 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 | `whale-watch` | $0.008 | `mint`, `format` | Top holders with accumulation/distribution tracking |
 | `batch-enrich` | $0.015 | `addresses[]`, `type`, `depth`, `format` | Parallel enrichment of up to 25 wallets or tokens |
 | `wallet-graph` | $0.010 | `address`, `depth`, `format` | Transaction connection mapping and cluster detection |
+| `wallet-link-check` | $0.030 | `wallet_a`, `wallet_b`, `context`, `format` | Are two wallets the same owner? Verdict + confidence from direct transfers, first funders, new-wallet age and x402 history (payout-wallet rotation vs hijack) |
 | `copy-trade-signals` | $0.010 | `address`, `format` | PnL, win rate, Sharpe/Sortino ratios, max drawdown |
 | `due-diligence` | $0.020 | `mint`, `format` | Composite risk report with SAFE / CAUTION / RISKY verdict |
 
@@ -264,7 +265,7 @@ SolEnrich exposes an MCP endpoint for Claude Desktop, Claude Code, and Cursor. *
 }
 ```
 
-46 tools — every endpoint is exposed as an MCP tool (wallet/token light+full variants fold into `depth`/`include_holders` toggles). Highlights: `enrich_wallet`, `enrich_token`, `due_diligence`, `whale_watch`, `perps_cross_venue_funding`, `trending_signals`, `smart_money_flow`, `check_alerts`.
+47 tools — every endpoint is exposed as an MCP tool (wallet/token light+full variants fold into `depth`/`include_holders` toggles). Highlights: `enrich_wallet`, `enrich_token`, `due_diligence`, `whale_watch`, `perps_cross_venue_funding`, `trending_signals`, `smart_money_flow`, `check_alerts`.
 
 ## Free Demo
 

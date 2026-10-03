@@ -119,6 +119,20 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'wallet-link-check': {
+    summary: 'Are two Solana wallets the same owner? Payout-wallet rotation vs hijack',
+    description: 'Same-owner confidence (0-1) and verdict for two Solana wallets: direct transfers between them, first funders (one step back), age and activity of the new wallet, x402 payments it has received, risk flags. Thin evidence gives UNCERTAIN. Built for x402 trust monitors checking a payout-wallet change.',
+    schema: {
+      type: 'object',
+      required: ['wallet_a', 'wallet_b'],
+      properties: {
+        wallet_a: { type: 'string', description: 'Old wallet (Solana base58; a token account is resolved to its owner)', minLength: 32, maxLength: 44 },
+        wallet_b: { type: 'string', description: 'New wallet (Solana base58; a token account is resolved to its owner)', minLength: 32, maxLength: 44 },
+        context: { type: 'string', enum: ['payout_rotation', 'general'], default: 'general', description: 'payout_rotation labels a same-owner result LIKELY_ROTATION' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'copy-trade-signals': {
     summary: 'Score a Solana wallet trading PnL, win rate, and consistency',
     description: 'Trading PnL, win rate, Sharpe/Sortino ratios, max drawdown, profit factor.',

@@ -51,6 +51,8 @@ import { registerTransactionEntrypoint } from "../entrypoints/transaction";
 import { registerWhaleWatchEntrypoint } from "../entrypoints/whale-watch";
 import { registerBatchEntrypoint } from "../entrypoints/batch";
 import { registerGraphEntrypoint } from "../entrypoints/graph";
+import { registerWalletLinkEntrypoint } from "../entrypoints/wallet-link";
+import { WalletLinkChecker } from "../enrichers/wallet-link";
 import { registerCopyTradeEntrypoint } from "../entrypoints/copy-trade";
 import { registerDueDiligenceEntrypoint } from "../entrypoints/due-diligence";
 import { registerQueryEntrypoint } from "../entrypoints/query";
@@ -401,6 +403,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'enrich-wallet-light': ['solana', 'wallet-risk', 'wallet-profiling', 'onchain', 'ai-agents'],
     'enrich-wallet-full': ['solana', 'wallet-risk', 'defi-positions', 'onchain', 'ai-agents'],
     'wallet-graph': ['solana', 'wallet-graph', 'wallet-clustering', 'smart-money', 'onchain'],
+    'wallet-link-check': ['solana', 'wallet-link', 'same-owner', 'x402-trust', 'sybil-detection'],
     'wallet-history': ['solana', 'wallet-history', 'portfolio', 'onchain', 'ai-agents'],
     'compare-wallets': ['solana', 'wallet-comparison', 'wallet-risk', 'onchain', 'ai-agents'],
     'copy-trade-signals': ['solana', 'copy-trade', 'smart-money', 'trader-pnl', 'ai-agents'],
@@ -630,6 +633,7 @@ const tokenAnalyzer = new TokenAnalyzer(helius, dexscreener, solanaRpc, jupiter,
 const txParser = new TxParser(helius, cache);
 const whaleWatcher = new WhaleWatcher(helius, dexscreener, solanaRpc, cache, priceAggregator, birdeye);
 const graphMapper = new GraphMapper(helius, cache);
+const walletLinkChecker = new WalletLinkChecker(helius, solanaRpc, cache);
 const copyTradeAnalyzer = new CopyTradeAnalyzer(helius, dexscreener, cache, priceAggregator);
 const dueDiligenceAnalyzer = new DueDiligenceAnalyzer(tokenAnalyzer, whaleWatcher, cache);
 const defiLlama = new DefiLlamaClient(cache);
@@ -676,6 +680,8 @@ registerTransactionEntrypoint(addEntrypoint, txParser);
 registerWhaleWatchEntrypoint(addEntrypoint, whaleWatcher);
 registerBatchEntrypoint(addEntrypoint, walletProfiler, tokenAnalyzer);
 registerGraphEntrypoint(addEntrypoint, graphMapper);
+// Same-owner check for two wallets (2026-10-03, requested by Lumière PayCheck for payout-wallet changes).
+registerWalletLinkEntrypoint(addEntrypoint, walletLinkChecker);
 registerCopyTradeEntrypoint(addEntrypoint, copyTradeAnalyzer);
 registerDueDiligenceEntrypoint(addEntrypoint, dueDiligenceAnalyzer);
 
@@ -1097,6 +1103,11 @@ function buildDocs() {
         price: '0.010',
         input: { address: 'string', depth: '1 | 2', format: 'json | llm | both' },
         description: 'Transaction connection mapping and suspicious cluster detection',
+      },
+      'wallet-link-check': {
+        price: '0.030',
+        input: { wallet_a: 'string (old wallet)', wallet_b: 'string (new wallet)', context: 'payout_rotation | general (default general)', format: 'json | llm | both' },
+        description: 'Are two Solana wallets the same owner? Verdict LIKELY_SAME_OWNER (LIKELY_ROTATION in payout_rotation context) / UNCERTAIN / SUSPICIOUS with a 0-1 same_owner_confidence. Evidence: transactions both wallets appear in (direct transfers), first funders in SOL or USDC plus one step back (funding_tree_link), the new wallet\'s age and activity, x402-style USDC inflows to it (another wallet paid the fee; known facilitators flagged), and risk flags (new_wallet, no_history, thin_history, no_link_found, b_is_known_entity). Thin evidence stays UNCERTAIN. Behaviour signals only, no scam database. Token accounts are resolved to their owners. Solana wallets only.',
       },
       'copy-trade-signals': {
         price: '0.010',

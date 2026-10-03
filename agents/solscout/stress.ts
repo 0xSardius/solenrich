@@ -146,6 +146,19 @@ export const ENDPOINTS: Array<{
     ],
   },
   {
+    key: 'wallet-link-check',
+    // Our agent wallet → Moneta: a known same-owner pair (the agent funded Moneta).
+    input: { wallet_a: '66Qvhr1xnwqbCT36KfHfZF1JpoWdmCQ3uFYTN335CGXe', wallet_b: '5x2U2bCCpnAUoHz8WKyM324jiVGzvSSrJvWvdgcyeZ26', context: 'payout_rotation', format: 'both' },
+    timeout: 60000,
+    checks: [
+      { name: 'has verdict', test: (d) => ['LIKELY_SAME_OWNER', 'LIKELY_ROTATION', 'UNCERTAIN', 'SUSPICIOUS'].includes(d.verdict) },
+      { name: 'confidence 0-1', test: (d) => typeof d.same_owner_confidence === 'number' && d.same_owner_confidence >= 0 && d.same_owner_confidence <= 1 },
+      { name: 'known pair → LIKELY_ROTATION', test: (d) => d.verdict === 'LIKELY_ROTATION' },
+      { name: 'has evidence', test: (d) => Array.isArray(d.evidence) && d.evidence.length > 0 },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' },
+    ],
+  },
+  {
     key: 'copy-trade-signals',
     input: { address: TEST_WALLET, format: 'both' },
     timeout: 45000,

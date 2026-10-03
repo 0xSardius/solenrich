@@ -162,6 +162,22 @@ export const MCP_TOOLS: McpToolDef[] = [
     }),
   },
   {
+    name: 'wallet_link_check',
+    title: 'Wallet Link Check',
+    description: 'Are two Solana wallets controlled by the same owner? Returns a verdict (LIKELY_SAME_OWNER / UNCERTAIN / SUSPICIOUS), a same-owner confidence, and the evidence: direct transfers, shared funders, the new wallet\'s age, and its x402 payment history. Use it when a payout wallet changes, or to check two wallets for a sybil link.',
+    inputSchema: {
+      wallet_a: z.string().describe('Old wallet (Solana base58)'),
+      wallet_b: z.string().describe('New wallet (Solana base58)'),
+      context: z.enum(['payout_rotation', 'general']).default('general').describe('payout_rotation labels a same-owner result LIKELY_ROTATION'),
+    },
+    handler: async (args) => invoke('wallet-link-check', {
+      wallet_a: args.wallet_a,
+      wallet_b: args.wallet_b,
+      context: args.context ?? 'general',
+      format: 'llm',
+    }),
+  },
+  {
     name: 'copy_trade_signals',
     title: 'Copy Trade Signals',
     description: 'Analyze a wallet\'s trading performance: win rate, PnL, consistency, hold time, and smart_money classification.',

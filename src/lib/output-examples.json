@@ -271,6 +271,49 @@
   ],
   "last_updated": "2026-09-22T00:10:29.768Z"
  },
+ "wallet-link-check": {
+  "wallet_a": "66Qvhr1xnwqbCT36KfHfZF1JpoWdmCQ3uFYTN335CGXe",
+  "wallet_b": "5x2U2bCCpnAUoHz8WKyM324jiVGzvSSrJvWvdgcyeZ26",
+  "context": "payout_rotation",
+  "direct_link": {
+   "shared_txs": 2,
+   "a_to_b": 1,
+   "b_to_a": 0,
+   "first_at": "2026-09-26T00:01:23.000Z",
+   "last_at": "2026-09-26T00:01:44.000Z",
+   "complete": true
+  },
+  "funding": {
+   "a_funder": "xByP6T1RQqFkS6sSaSbzFA15t7AJ3BcSR1enjDqnN1y",
+   "b_funder": "66Qvhr1xnwqbCT36KfHfZF1JpoWdmCQ3uFYTN335CGXe",
+   "b_funded_by_a": true,
+   "shared_funder": null,
+   "b_funder_funder": null,
+   "funding_tree_link": null,
+   "b_funder_entity": null
+  },
+  "b_profile": {
+   "first_seen": "2026-09-26T00:01:23.000Z",
+   "age_days": 7.8,
+   "tx_count": 1492,
+   "history_complete": true,
+   "entity": null
+  },
+  "x402": {
+   "usdc_inflows_sampled": 1,
+   "facilitator_style_inflows": 0,
+   "distinct_payers": 0,
+   "known_facilitator": false
+  },
+  "verdict": "LIKELY_ROTATION",
+  "same_owner_confidence": 1,
+  "risk_flags": [],
+  "evidence": [
+   "A and B appear together in 2 transaction(s) (A→B 1, B→A 0)",
+   "B received its first SOL from A",
+   "B first seen 2026-09-26 (1492 transactions)"
+  ]
+ },
  "copy-trade-signals": {
   "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
   "lookback_days": 30,

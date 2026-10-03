@@ -43,6 +43,7 @@ export const PRICING = {
   'whale-watch': '0.008',
   'batch-enrich': '0.015',
   'wallet-graph': '0.010',
+  'wallet-link-check': '0.030',
   'copy-trade-signals': '0.010',
   'due-diligence': '0.020',
   'query': '0.003',

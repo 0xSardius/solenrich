@@ -192,6 +192,17 @@ check('has llm_summary', typeof graph.body?.output?.llm_summary === 'string');
 console.log(`  ⏱ ${graph.ms}ms\n`);
 
 // ============================================================
+// 8b. wallet-link-check
+// ============================================================
+console.log('━━━ 8b. wallet-link-check ━━━');
+const link = await invoke('wallet-link-check', { wallet_a: '66Qvhr1xnwqbCT36KfHfZF1JpoWdmCQ3uFYTN335CGXe', wallet_b: '5x2U2bCCpnAUoHz8WKyM324jiVGzvSSrJvWvdgcyeZ26', context: 'payout_rotation', format: 'both' }, 60000);
+check('returns 200', link.status === 200, `got ${link.status}`);
+check('known pair → LIKELY_ROTATION', link.body?.output?.verdict === 'LIKELY_ROTATION', `got ${link.body?.output?.verdict}`);
+check('has evidence', Array.isArray(link.body?.output?.evidence));
+check('has llm_summary', typeof link.body?.output?.llm_summary === 'string');
+console.log(`  ⏱ ${link.ms}ms\n`);
+
+// ============================================================
 // 9. copy-trade-signals
 // ============================================================
 console.log('━━━ 9. copy-trade-signals ━━━');

@@ -63,7 +63,7 @@ export const ENDPOINT_SUITES: EndpointSuite[] = [
     id: 'composition',
     title: 'Batch, comparison, and graph',
     blurb: 'Many addresses in one call, side-by-side rankings, wallet connection maps.',
-    keys: ['batch-enrich', 'compare-tokens', 'compare-wallets', 'wallet-graph'],
+    keys: ['batch-enrich', 'compare-tokens', 'compare-wallets', 'wallet-graph', 'wallet-link-check'],
   },
   {
     id: 'collectibles',
