@@ -3,6 +3,16 @@
 ## Last session date
 2026-09-30
 
+## ▶️ 2026-10-03 — Moneta results exported; new stonk buyer; wallet-link wiring in progress
+
+- **Moneta:** full checkpoint in `../moneta/docs/CHECKPOINT.md`. Results export to its own Upstash (eris `5d466e9`),
+  cap 8, 24 h stop cooldown, price sanity check, 8-point outcome path (eris `75a0a1b`). First read: −$181.60 on
+  123 paper trades; entries +5.4% vs a falling market; gem score points the wrong way → `stonk-gems` wording issue.
+- **Traffic 10/3:** new buyer `WuJQtT` paid 232 calls ($2.32), 203 of them `stonk-screener` in one hour, then hit
+  $0 USDC; the 2,133 settlement failures today are most likely its retries after that (not confirmed in logs).
+  Main buyer `2otm6W` wallet at $0.88. `8LZj73` returned (5 calls).
+- **Next after wallet-link-check:** review the stonk docs for further StonkFun endpoints (Sardius).
+
 ## ▶️ RESUME HERE (2026-09-30 night) — `wallet-link-check` session 1 done; wiring next
 
 - **Local, NOT pushed: `2309b61`** `src/enrichers/wallet-link.ts` + `test/wallet-link.test.ts` (8 pass). A push
