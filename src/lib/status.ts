@@ -58,9 +58,11 @@ export function computeStatus(i: StatusInputs): StatusVerdict {
     degraded = true;
     reasons.push('cache in memory mode in production');
   }
+  // A note, not degraded (2026-10-05): a refused settlement is almost always the buyer's side — an empty wallet
+  // retrying (2otm6W on 10/5, WuJQtT on 10/3 with 2,133 attempts). The facilitator reports no usable reason, and a
+  // 503 here told monitors we were down for a buyer's empty wallet. Paid errors (settle-first losses) still degrade.
   if (i.last_settlement_failure_at != null && i.now - i.last_settlement_failure_at <= RECENT_WINDOW_MS) {
-    degraded = true;
-    reasons.push(`settlement refused in the last 15 min (${i.settlement_failures_today} today)`);
+    reasons.push(`settlement refused in the last 15 min (${i.settlement_failures_today} today; usually a buyer wallet that cannot pay)`);
   }
   if (i.last_settle_first_loss_at != null && i.now - i.last_settle_first_loss_at <= RECENT_WINDOW_MS) {
     degraded = true;

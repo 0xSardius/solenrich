@@ -52,12 +52,14 @@ describe('computeStatus', () => {
     expect(computeStatus(healthy({ redis: 'memory', payments_enabled: false, facilitator: 'disabled' })).verdict).toBe('ok');
   });
 
-  test('a refused settlement inside 15 min is degraded; older than that is not', () => {
+  test('a refused settlement is a note, not degraded (usually a buyer wallet that cannot pay)', () => {
     const recent = computeStatus(healthy({ last_settlement_failure_at: NOW - RECENT_WINDOW_MS + 1000, settlement_failures_today: 3 }));
-    expect(recent.verdict).toBe('degraded');
+    expect(recent.verdict).toBe('ok');
+    expect(recent.http).toBe(200);
     expect(recent.reasons[0]).toContain('3 today');
     const old = computeStatus(healthy({ last_settlement_failure_at: NOW - RECENT_WINDOW_MS - 1000, settlement_failures_today: 3 }));
     expect(old.verdict).toBe('ok');
+    expect(old.reasons).toEqual([]);
   });
 
   test('a settle-first loss inside 15 min is degraded', () => {
