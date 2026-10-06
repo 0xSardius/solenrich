@@ -626,8 +626,8 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'stonk-gems': {
-    summary: 'Find gems on StonkFun: early, real, paying reward coins',
-    description: 'Gem finder over every StonkFun reward coin: which look early, real, and paying? Scores 0-100 from the 10-minute index — recent holder payout, holders (found but not saturated), market cap headroom, 24h turnover, age, momentum (not yet parabolic), quote-asset strength, flywheel. Stages GEM / WATCH / NOISE / DEAD with plain reasons and warnings per coin, plus the round-trip tax cost. Filters: quote_mint, category, max_age_days, min_holders, max_market_cap_usd. Milliseconds.',
+    summary: 'Shortlist StonkFun reward coins that are alive, paying, and liquid',
+    description: 'Ranks every StonkFun reward coin 0-100 on whether it is alive, paying, and liquid: recent holder payout, holders, size, turnover, age, momentum, quote strength. Stages GEM / WATCH / NOISE / DEAD with reasons and round-trip tax. A shortlist, not a price forecast: in a paper test (9/26-10/3) higher scores did not beat the market. Pair with stonk-creator and stonk-quote. Milliseconds.',
     schema: {
       type: 'object',
       properties: {
@@ -680,6 +680,18 @@ export const ENDPOINT_META: Record<string, {
         mint: { type: 'string', description: 'StonkFun reward coin mint (base58)', minLength: 32, maxLength: 44 },
         size_usd: { type: 'number', minimum: 1, maximum: 1000000, default: 100, description: 'Position size in USD' },
         hold_days: { type: 'number', minimum: 0.25, maximum: 365, default: 7, description: 'Intended holding period' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
+  'stonk-creator': {
+    summary: 'Track record of a StonkFun creator: serial launcher or established?',
+    description: 'Track record of a StonkFun creator (pass the wallet, or a coin mint to find who launched it): ESTABLISHED / MIXED / SERIAL_LAUNCHER / NEW, launches in 24h / 7d / all-time, share of coins older than 3 days still trading, payouts in 24h, living coins with market cap. Baseline: 19% of one-time creators\' coins vs 5% of serial launchers\' still trade after 3 days.',
+    schema: {
+      type: 'object',
+      properties: {
+        creator: { type: 'string', description: 'Creator wallet (base58). Give this or mint.', minLength: 32, maxLength: 44 },
+        mint: { type: 'string', description: 'A StonkFun coin mint; resolved to its creator. Give this or creator.', minLength: 32, maxLength: 44 },
         format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
       },
     },

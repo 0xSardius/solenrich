@@ -87,6 +87,8 @@ export const PRICING = {
   // Watchlist of up to 25 coins, from the index. $0.02 (was $0.005 at launch, 2026-09-23): it replaces 14–25
   // per-coin stonk-yield polls ($0.005 each) for a holder agent, so it is priced against what it replaces.
   'stonk-alerts': '0.02',
+  // A creator's track record (2026-10-05): one-time creators' coins still traded 3–4× as often after 3 days (19% vs 5%).
+  'stonk-creator': '0.01',
 } as const;
 
 /** Entrypoints served without a paywall. Kept out of PRICING so x402/MPP never gate them. */
@@ -148,4 +150,5 @@ export const CACHE_TTL = {
   stonkRewardRisk: 120,  // 2 minutes — on-chain fee config + rewards read
   stonkYield: 300,       // 5 minutes — window math over daily snapshots
   stonkQuote: 120,       // 2 minutes — composed cost/payback at one size
+  stonkCreator: 600,     // 10 minutes — a creator's launch ledger page and the composed report
 } as const;

@@ -1820,5 +1820,57 @@
   "caveats": [
    "rewards_since and holders_change measure from the daily snapshot nearest to `..."
   ]
+ },
+ "stonk-creator": {
+  "creator": "7gAKiGycmoSKtKWwVeSwqWxfmf9qVUtiyXKi6amTRTM6",
+  "verdict": "MIXED",
+  "launches": {
+   "total": 40,
+   "last_24h": 0,
+   "last_7d": 1,
+   "read": 40,
+   "complete": true
+  },
+  "matured": {
+   "count": 40,
+   "still_trading": 2,
+   "still_trading_pct": 5,
+   "paying_24h": 1
+  },
+  "living": {
+   "count": 2,
+   "best_market_cap_usd": 46155000,
+   "graduated": 2,
+   "holders_total": 39056
+  },
+  "quotes": [
+   {
+    "symbol": "TikTok",
+    "launches": 8
+   }
+  ],
+  "coins": [
+   {
+    "mint": "HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR",
+    "symbol": "ZCAT",
+    "quote": "ZEC",
+    "created_at": "2026-08-30T23:29:57.301Z",
+    "alive": true,
+    "paying_24h": true,
+    "market_cap_usd": 46155000,
+    "volume_24h_usd": 541330,
+    "holders": 38620
+   }
+  ],
+  "baseline": {
+   "one_time_creator_survival_pct": 19,
+   "serial_launcher_survival_pct": 5,
+   "note": "Share of coins still trading 3 days after launch, by creator type (StonkFun l..."
+  },
+  "evidence": [
+   "40 launch(es) all-time; 0 in the last 24 h, 1 in the last 7 days",
+   "2 of 40 coins older than 3 days still trade (5%; baseline 19% one-time creato...",
+   "1 matured coin(s) paid holders in the last 24 h"
+  ]
  }
 }

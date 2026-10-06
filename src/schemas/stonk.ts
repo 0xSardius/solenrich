@@ -95,6 +95,15 @@ export const StonkLaunchIntelInput = z.object({
   format: FormatSchema,
 });
 
+/** A creator wallet, or a coin mint resolved to its creator. One of the two is required. */
+export const StonkCreatorInput = z
+  .object({
+    creator: SolanaAddressSchema.optional(),
+    mint: SolanaAddressSchema.optional(),
+    format: FormatSchema,
+  })
+  .refine((v) => Boolean(v.creator || v.mint), { message: 'Provide creator (a wallet) or mint (a StonkFun coin)' });
+
 export const StonkQuoteInput = z.object({
   mint: SolanaAddressSchema,
   size_usd: z.number().min(1).max(1_000_000).default(100),

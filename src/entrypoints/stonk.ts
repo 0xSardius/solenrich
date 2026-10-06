@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Cache } from '../cache';
-import { StonkPairsInput, StonkRewardRiskInput, StonkYieldInput, StonkYieldBatchInput, StonkAlertsInput, StonkScreenerInput, StonkPreflightInput, StonkGemsInput, StonkLaunchIntelInput, StonkQuoteInput } from '../schemas/stonk';
+import { StonkPairsInput, StonkRewardRiskInput, StonkYieldInput, StonkYieldBatchInput, StonkAlertsInput, StonkScreenerInput, StonkPreflightInput, StonkGemsInput, StonkLaunchIntelInput, StonkQuoteInput, StonkCreatorInput } from '../schemas/stonk';
 import type { StonkFunClient, StonkPair } from '../sources/stonkfun';
 import { normalizeCategory, type StonkIndex, type StonkCategory, type StonkIndexStatus, type StonkScreenerRow } from '../enrichers/stonk-index';
 import type { GemStage, PayoutStatus, QuoteStats } from '../enrichers/stonk-gems';
@@ -10,6 +10,7 @@ import type { StonkYieldAnalyzer } from '../enrichers/stonk-yield';
 import type { StonkPreflightAnalyzer } from '../enrichers/stonk-preflight';
 import type { StonkQuoteAnalyzer } from '../enrichers/stonk-quote';
 import { StonkAlertChecker } from '../enrichers/stonk-alerts';
+import type { StonkCreatorAnalyzer } from '../enrichers/stonk-creator';
 import { formatResponse } from '../formatters';
 import {
   formatStonkPairsBriefing,
@@ -22,6 +23,7 @@ import {
   formatStonkGemsBriefing,
   formatStonkLaunchIntelBriefing,
   formatStonkQuoteBriefing,
+  formatStonkCreatorBriefing,
 } from '../formatters/llm-stonk';
 
 type AddEntrypoint = (def: any) => void;
@@ -156,9 +158,27 @@ export function registerStonkEntrypoints(
     yieldAnalyzer: StonkYieldAnalyzer;
     preflight: StonkPreflightAnalyzer;
     quote: StonkQuoteAnalyzer;
+    creator: StonkCreatorAnalyzer;
     cache: Cache;
   },
 ) {
+  // --- stonk-creator -----------------------------------------------------------
+  // A creator's track record (2026-10-05). Measured first: one-time creators' coins still traded 3 days after launch
+  // 19% of the time vs 5–6% for repeat launchers, and repeat launchers made 65% of launches.
+  addEntrypoint({
+    key: 'stonk-creator',
+    description:
+      'Track record of a StonkFun creator — pass the creator wallet, or a coin mint to look up who launched it. Verdict ESTABLISHED (several coins that survive), MIXED, SERIAL_LAUNCHER (many launches, few survivors), or NEW (too little history). Launches in 24h / 7d / all-time, share of coins older than 3 days that still trade, how many paid holders in 24h, living coins with market cap, quote shelves used, plus the measured baseline (19% of one-time creators\' coins vs 5% of serial launchers\' still trade after 3 days). A cheap filter before paying for anything else on a fresh coin.',
+    input: StonkCreatorInput,
+    handler: async (ctx: { input: z.infer<typeof StonkCreatorInput> }) => {
+      const input = ctx.input;
+      if (!input.creator && !input.mint) throw new Error('Provide creator (a wallet) or mint (a StonkFun coin)');
+      const data = await deps.creator.analyze({ creator: input.creator, mint: input.mint });
+      if ('error' in data) throw new Error(data.error);
+      return { output: formatResponse(data, input.format, formatStonkCreatorBriefing) };
+    },
+  });
+
   // --- stonk-pairs (FREE) ----------------------------------------------------
   addEntrypoint({
     key: 'stonk-pairs',
@@ -307,7 +327,7 @@ export function registerStonkEntrypoints(
   addEntrypoint({
     key: 'stonk-gems',
     description:
-      'Gem finder over every StonkFun reward coin: which look early, real, and paying? Scores 0-100 from the 10-minute index — recent holder payout, holders (found but not saturated), market cap headroom, 24h turnover, age, momentum (not yet parabolic), quote-asset strength, flywheel. Stages GEM / WATCH / NOISE / DEAD with plain reasons and warnings per coin, plus the round-trip tax cost. Filters: quote_mint, category, max_age_days, min_holders, max_market_cap_usd. Milliseconds.',
+      'Shortlist of StonkFun reward coins that are alive, paying, and liquid. Scores 0-100 from the 10-minute index — recent holder payout, holders, size, 24h turnover, age, momentum, quote-asset strength, flywheel. Stages GEM / WATCH / NOISE / DEAD with plain reasons and warnings per coin, plus the round-trip tax cost. A liveness ranking, not a price forecast: in a paper test (9/26-10/3) higher scores did not beat the market. Check stonk-creator and stonk-quote before sizing. Filters: quote_mint, category, max_age_days, min_holders, max_market_cap_usd. Milliseconds.',
     input: StonkGemsInput,
     handler: async (ctx: { input: z.infer<typeof StonkGemsInput> }) => {
       const input = ctx.input;

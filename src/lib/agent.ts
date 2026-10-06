@@ -90,6 +90,7 @@ import { StonkYieldAnalyzer } from "../enrichers/stonk-yield";
 import { StonkPreflightAnalyzer } from "../enrichers/stonk-preflight";
 import { StonkQuoteAnalyzer } from "../enrichers/stonk-quote";
 import { registerStonkEntrypoints } from "../entrypoints/stonk";
+import { StonkCreatorAnalyzer } from "../enrichers/stonk-creator";
 import { formatStonkRewardRiskBriefing } from "../formatters/llm-stonk";
 import { INPUT_EXAMPLES } from "./input-examples";
 import OUTPUT_EXAMPLES from "./output-examples.json";
@@ -449,6 +450,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'stonk-gems': ['stonkfun', 'gems', 'reward-coin', 'payout-status', 'xstocks'],
     'stonk-launch-intel': ['stonkfun', 'launch', 'quote-assets', 'xstocks', 'reward-coin'],
     'stonk-quote': ['stonkfun', 'trade-cost', 'transfer-tax', 'holder-yield', 'reward-coin'],
+    'stonk-creator': ['stonkfun', 'creator-reputation', 'dev-reputation', 'rug-filter', 'reward-coin'],
   };
 
   // --- Bazaar input + output examples: src/lib/input-examples.ts + src/lib/output-examples.json ---
@@ -833,6 +835,7 @@ registerStonkEntrypoints(addEntrypoint, {
   yieldAnalyzer: stonkYield,
   preflight: stonkPreflight,
   quote: stonkQuote,
+  creator: new StonkCreatorAnalyzer(stonkfun, stonkIndex, cache),
   cache,
 });
 if (process.env.NODE_ENV !== 'test' && process.env.STONK_INGEST !== 'off') {
@@ -1292,7 +1295,7 @@ function buildDocs() {
       'stonk-gems': {
         price: '0.03',
         input: { quote_mint: 'string (optional)', category: 'xstock | prestock | currency | leverage | solana | collectible | custom (optional)', max_age_days: 'number (default 14)', min_holders: 'number (default 25)', max_market_cap_usd: 'number (default 5000000)', limit: 'number 1-50 (default 15)', format: 'json | llm | both' },
-        description: 'Gem finder over every StonkFun reward coin: which coins look early, real, and paying? Scores each coin 0-100 from the 10-minute index — recent holder payout (the flywheel is real), holders (discovered but not saturated), market cap (room to move), 24h turnover vs mcap, age, 24h momentum (not already parabolic), quote-asset strength (share of that quote\'s coins trading today), flywheel. Stages GEM / WATCH / NOISE / DEAD with plain reasons and warnings per coin, plus the round-trip transfer-tax cost. Filters: quote_mint, category, max_age_days (14), min_holders (25), max_market_cap_usd (5M). Answers in milliseconds. Score = recent payout (25) + holders (12) + size (15) + turnover (15) + age (10) + momentum (10, negative once already run) + quote strength (10) + flywheel (3); GEM ≥ 80, WATCH ≥ 62, no 24h volume = DEAD.',
+        description: 'Shortlist of StonkFun reward coins that are alive, paying, and liquid. The score is a liveness ranking, not a price forecast: in our paper trading test (2026-09-26 to 10-03, 648 coins, each counted once) higher scores did not beat the market median, and the top scores did worst. Use it to find live candidates, then check stonk-creator (who launched it) and stonk-quote (cost vs payback). Scores each coin 0-100 from the 10-minute index — recent holder payout (the flywheel is real), holders (discovered but not saturated), market cap (room to move), 24h turnover vs mcap, age, 24h momentum (not already parabolic), quote-asset strength (share of that quote\'s coins trading today), flywheel. Stages GEM / WATCH / NOISE / DEAD with plain reasons and warnings per coin, plus the round-trip transfer-tax cost. Filters: quote_mint, category, max_age_days (14), min_holders (25), max_market_cap_usd (5M). Answers in milliseconds. Score = recent payout (25) + holders (12) + size (15) + turnover (15) + age (10) + momentum (10, negative once already run) + quote strength (10) + flywheel (3); GEM ≥ 80, WATCH ≥ 62, no 24h volume = DEAD.',
       },
       'stonk-launch-intel': {
         price: '0.02',
@@ -1303,6 +1306,11 @@ function buildDocs() {
         price: '0.005',
         input: { mint: 'string (required) — StonkFun reward coin mint', size_usd: 'number (default 100)', hold_days: 'number (default 7)', format: 'json | llm | both' },
         description: 'Cost and payback of one StonkFun trade at one size, no swap: entry and exit cost (transfer tax + price impact at size), round-trip % and the breakeven price move, your pro-rata share of each payout with a dust warning, expected payout over the hold from the yield window with real history, and a PAYS / MARGINAL / COSTS / NOT_PAYING verdict with breakeven hold days. Composes stonk-reward-risk, stonk-yield, and enrich-token-light. Inputs: mint, size_usd (100), hold_days (7). Verdict thresholds: PAYS when expected payout over the hold ≥ 1.5× the round trip, MARGINAL when ≥ 1×, else COSTS. Yield basis = the shortest window with ≥ 6.5 days of real history, else lifetime.',
+      },
+      'stonk-creator': {
+        price: '0.01',
+        input: { creator: 'string — creator wallet (give this or mint)', mint: 'string — a StonkFun coin, resolved to its creator', format: 'json | llm | both' },
+        description: 'Track record of a StonkFun creator. Verdict: ESTABLISHED (≥2 coins older than 3 days still trade and ≥30% of matured coins survive), SERIAL_LAUNCHER (≥5 launches in 24h or ≥20 in 7 days with <10% survival, or no survivors after 5+ launches), NEW (fewer than 2 coins old enough to judge, not at serial volume), MIXED (the rest). "Still trading" = the coin traded in the last 24h (it is in the 10-minute live index). Reports launches in 24h / 7d / all-time (the newest 500 are read), matured survival, matured coins paid in 24h, living coins with market cap, volume and holders, and quote shelves. Baseline measured 2026-10-05: 19% of one-time creators\' coins and 5% of serial launchers\' coins still traded 3 days after launch; 65% of launches came from repeat creators. "Ever paid" is not used as a quality signal: launch-day trades trigger tiny payouts even on coins that die.',
       },
       'stonk-launch-preflight': {
         price: '0.25',

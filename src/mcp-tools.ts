@@ -727,8 +727,8 @@ export const MCP_TOOLS: McpToolDef[] = [
   },
   {
     name: 'stonk_gems',
-    title: 'StonkFun Gem Finder',
-    description: 'Find gems on StonkFun: reward coins that look early, real, and paying. Ranks every reward coin 0-100 on recent holder payout, holders, market cap headroom, 24h turnover, age, momentum, quote-asset strength, and flywheel — stages GEM / WATCH / NOISE with plain reasons and warnings, plus the round-trip tax cost. Use for "what should I look at on StonkFun right now?" Follow up with trenches_check on a GEM and stonk_reward_risk before sizing.',
+    title: 'StonkFun Live-Coin Shortlist',
+    description: 'Shortlist StonkFun reward coins that are alive, paying, and liquid. Ranks every reward coin 0-100 on recent holder payout, holders, size, turnover, age, momentum, and quote-asset strength — stages GEM / WATCH / NOISE with plain reasons and warnings, plus the round-trip tax cost. It is a liveness ranking, not a price forecast (in a paper test, higher scores did not beat the market). Use for "what is alive on StonkFun right now?", then check stonk_creator and stonk_quote before sizing.',
     inputSchema: {
       quote_mint: z.string().optional().describe('Only coins paired against this quote mint'),
       category: z.enum(['xstock', 'prestock', 'currency', 'leverage', 'solana', 'collectible', 'custom']).optional().describe('Quote category filter'),
@@ -793,6 +793,16 @@ export const MCP_TOOLS: McpToolDef[] = [
       hold_days: z.number().min(0.25).max(365).default(7).describe('Intended holding period in days'),
     },
     handler: async (args) => invoke('stonk-quote', { mint: args.mint, size_usd: args.size_usd ?? 100, hold_days: args.hold_days ?? 7, format: 'llm' }),
+  },
+  {
+    name: 'stonk_creator',
+    title: 'StonkFun Creator Track Record',
+    description: 'Who launched this StonkFun coin, and do their coins survive? Pass a creator wallet or a coin mint. Returns ESTABLISHED / MIXED / SERIAL_LAUNCHER / NEW with launches per day and week, the share of their coins older than 3 days that still trade, payouts in 24h, and their living coins. A cheap filter before paying for anything else on a fresh coin.',
+    inputSchema: {
+      creator: z.string().optional().describe('Creator wallet (base58). Give this or mint.'),
+      mint: z.string().optional().describe('A StonkFun coin mint; resolved to its creator. Give this or creator.'),
+    },
+    handler: async (args) => invoke('stonk-creator', { ...(args.creator ? { creator: args.creator } : {}), ...(args.mint ? { mint: args.mint } : {}), format: 'llm' }),
   },
 ];
 

@@ -3,6 +3,7 @@ import type { StonkYieldResult, StonkYieldBatchResult, YieldWindow } from '../en
 import type { StonkAlertsResult } from '../enrichers/stonk-alerts';
 import type { StonkPreflightResult } from '../enrichers/stonk-preflight';
 import type { StonkQuoteResult } from '../enrichers/stonk-quote';
+import type { CreatorReport } from '../enrichers/stonk-creator';
 import type { StonkPairsResult, StonkScreenerResult, StonkGemsResult, StonkLaunchIntelResult } from '../entrypoints/stonk';
 import { shortenAddress, formatUsd } from '../utils/normalize';
 
@@ -348,5 +349,22 @@ export function formatStonkQuoteBriefing(d: StonkQuoteResult): string {
   for (const c of d.caveats) lines.push(`_${c}_`);
   lines.push('');
   lines.push(`Next: ${d.next_steps.join(' ')}`);
+  return lines.join('\n');
+}
+
+export function formatStonkCreatorBriefing(d: CreatorReport): string {
+  const lines: string[] = [];
+  lines.push(`## StonkFun creator ${shortenAddress(d.creator)}: ${d.verdict}`);
+  lines.push('');
+  for (const e of d.evidence) lines.push(`- ${e}`);
+  if (d.quotes.length) lines.push(`- Quote shelves: ${d.quotes.map((q) => `${q.symbol} ${q.launches}`).join(', ')}`);
+  const living = d.coins.filter((c) => c.alive).slice(0, 5);
+  if (living.length) {
+    lines.push('');
+    lines.push('### Coins still trading');
+    for (const c of living) lines.push(`- ${c.symbol} (${c.quote}): mcap ${formatUsd(c.market_cap_usd ?? 0)}, 24h volume ${formatUsd(c.volume_24h_usd ?? 0)}, ${c.holders ?? 0} holders${c.paying_24h ? ', paid in 24h' : ''}`);
+  }
+  lines.push('');
+  lines.push(`_Baseline: ${d.baseline.one_time_creator_survival_pct}% of one-time creators' coins and ${d.baseline.serial_launcher_survival_pct}% of serial launchers' coins still trade 3 days after launch. A filter, not a guarantee: most StonkFun coins die either way._`);
   return lines.join('\n');
 }

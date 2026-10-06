@@ -290,6 +290,23 @@ export class StonkFunClient {
     return Array.isArray(data.launches) ? data.launches : [];
   }
 
+  /**
+   * One page of a creator's launches, newest first, with the creator's all-time total. Cached 10 minutes.
+   * Shape (2026-10-05): data.launches[] + data.pagination { page, pageSize, total, totalPages }.
+   */
+  async getCreatorLaunches(creator: string, page = 1, pageSize = 100): Promise<{ launches: StonkLaunch[]; total: number; totalPages: number }> {
+    const cacheKey = `stonk:creator:${creator}:${page}:${pageSize}`;
+    const cached = await this.cache.get<{ launches: StonkLaunch[]; total: number; totalPages: number }>(cacheKey);
+    if (cached) return cached;
+    const data = await this.request<{ launches: StonkLaunch[]; pagination?: { total?: number; totalPages?: number } }>(
+      `/launches?creator=${encodeURIComponent(creator)}&page=${page}&pageSize=${pageSize}`,
+    );
+    const launches = Array.isArray(data.launches) ? data.launches : [];
+    const result = { launches, total: data.pagination?.total ?? launches.length, totalPages: data.pagination?.totalPages ?? 1 };
+    await this.cache.set(cacheKey, result, CACHE_TTL.stonkCreator);
+    return result;
+  }
+
   /** Exact curve constants for a self-built LaunchLab launch against this quote. Cached 1 minute. */
   async getLaunchLabPricing(quoteMint: string): Promise<StonkLaunchLabPricing> {
     const cacheKey = `stonk:launchlab-pricing:${quoteMint}`;

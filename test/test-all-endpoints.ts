@@ -442,6 +442,14 @@ check('verdict present', typeof sq.body?.output?.net?.verdict === 'string', `ver
 check('has llm_summary', typeof sq.body?.output?.llm_summary === 'string' && sq.body.output.llm_summary.includes('Quote'));
 console.log(`  ⏱ ${sq.ms}ms\n`);
 
+console.log('━━━ 20i. stonk-creator ━━━');
+const sc = await invoke('stonk-creator', { mint: STONK_MINT, format: 'both' }, 45000);
+check('returns 200', sc.status === 200, `got ${sc.status}`);
+check('verdict present', ['ESTABLISHED', 'MIXED', 'SERIAL_LAUNCHER', 'NEW'].includes(sc.body?.output?.verdict), `verdict=${sc.body?.output?.verdict}`);
+check('launch counts', typeof sc.body?.output?.launches?.total === 'number');
+check('has llm_summary', typeof sc.body?.output?.llm_summary === 'string' && sc.body.output.llm_summary.includes('creator'));
+console.log(`  ⏱ ${sc.ms}ms\n`);
+
 console.log('━━━ 21. discovery surfaces agree (live) ━━━');
 {
   const [ep, oa, docs] = await Promise.all([

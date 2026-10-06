@@ -85,6 +85,7 @@ export const INPUT_EXAMPLES: Record<string, Record<string, unknown>> = {
   'stonk-gems': { category: 'xstock', max_age_days: 14, min_holders: 50, limit: 15, format: 'json' },
   'stonk-launch-intel': { category: 'xstock', min_coins: 20, sort: 'demand', limit: 10, format: 'json' },
   'stonk-quote': { mint: ZCAT, size_usd: 100, hold_days: 7, format: 'json' },
+  'stonk-creator': { mint: ZCAT, format: 'json' },
   // SOL-quoted reference launch: its raise is a fixed 85 SOL, so the example never drifts into a mismatch.
   'stonk-launch-preflight': { unsigned_transaction: buildExampleLaunchTransaction({}, undefined, EXAMPLE_LAUNCH_SOL), quote_mint: EXAMPLE_LAUNCH_SOL.quoteMint, mode: EXAMPLE_LAUNCH_SOL.mode, format: 'json' },
 };

@@ -787,6 +787,20 @@ export const ENDPOINTS: Array<{
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('Quote') },
     ],
   },
+  {
+    key: 'stonk-creator',
+    // ZCAT (a long-lived reward coin on ZEC), resolved to its creator.
+    input: { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR', format: 'both' },
+    timeout: 45000,
+    checks: [
+      { name: 'resolves a creator', test: (d) => typeof d.creator === 'string' && d.creator.length >= 32 },
+      { name: 'has verdict', test: (d) => ['ESTABLISHED', 'MIXED', 'SERIAL_LAUNCHER', 'NEW'].includes(d.verdict), detail: (d) => `verdict=${d.verdict}` },
+      { name: 'launch counts', test: (d) => d.launches?.total >= 1 && d.launches.last_7d <= d.launches.total },
+      { name: 'ZCAT itself still trades', test: (d) => Array.isArray(d.coins) && d.coins.some((c: any) => c.mint === 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR' && c.alive) },
+      { name: 'has baseline + evidence', test: (d) => d.baseline?.serial_launcher_survival_pct === 5 && d.evidence.length > 0 },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('creator') },
+    ],
+  },
 ];
 
 // --- Coverage guard ---------------------------------------------------------
