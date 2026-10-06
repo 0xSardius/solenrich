@@ -3,6 +3,18 @@
 ## Last session date
 2026-09-30
 
+## ✅ 2026-10-06 00:13 UTC — `stonk-creator` LIVE ($0.01, 49 paid endpoints); `/status` fix; `stonk-gems` reworded
+
+- `93a24b5`: `stonk-creator` (creator wallet or coin mint → ESTABLISHED / MIXED / SERIAL_LAUNCHER / NEW from the
+  launch ledger + live index). Measured first (`local/scripts/measure-creators.ts`): 65% of launches from repeat
+  creators; one-time creators' coins still trade after 3 days 19% vs 5–6%. Verified: 402 unpaid, in llms.txt,
+  paid SolScout call 200 in 2.7 s, 6/6 checks (seeds the Bazaar). `stonk-gems` now described as a live-coin
+  shortlist, not a price forecast. CI now runs wallet-link + stonk-creator tests.
+- `5eac314` (10/5 23:08): `/status` no longer 503 "degraded" on refused settlements (buyer wallets that cannot pay).
+- **Buyers:** main buyer `2otm6W` out of USDC since 10/5 ($0.0026 left); `WuJQtT` at $0 since 10/3. Small buyers
+  (`8LZj73`, `34CMQ3`, `2WgRFR`) steady. Moneta $24.64.
+- **Next:** `stonk-market-pulse` (review doc rank 2); Moneta replay script; add creator survival to Moneta features.
+
 ## ✅ 2026-10-03 19:15 UTC — `wallet-link-check` LIVE ($0.03, 48 paid endpoints)
 
 - Deployed `85a8cfe` (with `2309b61`) at 19:14 in the main buyer's gap. Verified: health 200, 402 on the new
