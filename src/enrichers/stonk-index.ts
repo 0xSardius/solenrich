@@ -271,6 +271,11 @@ export class StonkIndex {
     return this.rows.get(mint) ?? null;
   }
 
+  /** Every row (the coins that traded in the last 24 h). A copy; callers may filter freely. */
+  allRows(): StonkIndexRow[] {
+    return [...this.rows.values()];
+  }
+
   getSeries(mint: string): DayPoint[] {
     return [...(this.series.get(mint) ?? [])].sort((a, b) => a.t - b.t);
   }

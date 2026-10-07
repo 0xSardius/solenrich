@@ -91,6 +91,7 @@ import { StonkPreflightAnalyzer } from "../enrichers/stonk-preflight";
 import { StonkQuoteAnalyzer } from "../enrichers/stonk-quote";
 import { registerStonkEntrypoints } from "../entrypoints/stonk";
 import { StonkCreatorAnalyzer } from "../enrichers/stonk-creator";
+import { StonkPulseAnalyzer } from "../enrichers/stonk-pulse";
 import { formatStonkRewardRiskBriefing } from "../formatters/llm-stonk";
 import { INPUT_EXAMPLES } from "./input-examples";
 import OUTPUT_EXAMPLES from "./output-examples.json";
@@ -451,6 +452,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'stonk-launch-intel': ['stonkfun', 'launch', 'quote-assets', 'xstocks', 'reward-coin'],
     'stonk-quote': ['stonkfun', 'trade-cost', 'transfer-tax', 'holder-yield', 'reward-coin'],
     'stonk-creator': ['stonkfun', 'creator-reputation', 'dev-reputation', 'rug-filter', 'reward-coin'],
+    'stonk-market-pulse': ['stonkfun', 'market-breadth', 'market-regime', 'risk-on-risk-off', 'reward-coin'],
   };
 
   // --- Bazaar input + output examples: src/lib/input-examples.ts + src/lib/output-examples.json ---
@@ -828,6 +830,7 @@ const stonkRewardRisk = new StonkRewardRiskAnalyzer(stonkfun, solanaRpc, cache, 
 const stonkYield = new StonkYieldAnalyzer(stonkfun, stonkIndex, jupiter, cache);
 const stonkPreflight = new StonkPreflightAnalyzer(stonkfun, solanaRpc.getConnection());
 const stonkQuote = new StonkQuoteAnalyzer(stonkRewardRisk, stonkYield, tokenAnalyzer, cache);
+const stonkPulse = new StonkPulseAnalyzer(stonkfun, stonkIndex, cache);
 registerStonkEntrypoints(addEntrypoint, {
   client: stonkfun,
   index: stonkIndex,
@@ -836,10 +839,15 @@ registerStonkEntrypoints(addEntrypoint, {
   preflight: stonkPreflight,
   quote: stonkQuote,
   creator: new StonkCreatorAnalyzer(stonkfun, stonkIndex, cache),
+  pulse: stonkPulse,
   cache,
 });
 if (process.env.NODE_ENV !== 'test' && process.env.STONK_INGEST !== 'off') {
   void stonkIndex.start();
+  // Hourly breadth snapshot for the stonk-market-pulse trend line (one SETNX an hour; skipped while the index is empty).
+  const snapshotPulse = () => stonkPulse.recordSnapshot().catch((err) => console.warn('[stonk-pulse] snapshot failed:', err instanceof Error ? err.message : err));
+  setTimeout(snapshotPulse, 10 * 60_000);
+  setInterval(snapshotPulse, 60 * 60_000).unref?.();
 }
 
 // Event-Driven Alerts (Priority 13) — poll-based V1. Stateless: agent passes
@@ -1306,6 +1314,11 @@ function buildDocs() {
         price: '0.005',
         input: { mint: 'string (required) — StonkFun reward coin mint', size_usd: 'number (default 100)', hold_days: 'number (default 7)', format: 'json | llm | both' },
         description: 'Cost and payback of one StonkFun trade at one size, no swap: entry and exit cost (transfer tax + price impact at size), round-trip % and the breakeven price move, your pro-rata share of each payout with a dust warning, expected payout over the hold from the yield window with real history, and a PAYS / MARGINAL / COSTS / NOT_PAYING verdict with breakeven hold days. Composes stonk-reward-risk, stonk-yield, and enrich-token-light. Inputs: mint, size_usd (100), hold_days (7). Verdict thresholds: PAYS when expected payout over the hold ≥ 1.5× the round trip, MARGINAL when ≥ 1×, else COSTS. Yield basis = the shortest window with ≥ 6.5 days of real history, else lifetime.',
+      },
+      'stonk-market-pulse': {
+        price: '0.005',
+        input: { format: 'json | llm | both' },
+        description: 'Is the StonkFun market rising or falling right now? Verdict: RISK_OFF when the median live coin moved −5% or worse over 24h or fewer than 30% of live coins are up; RISK_ON when the median moved +2% or better and at least 55% are up; NEUTRAL otherwise (thresholds provisional, set 2026-10-06 when breadth was 40% and the median −1.7%). Also: the volume-weighted 24h move (the big coins vs the typical coin), 24h volume, share of live coins paid in 24h; from the population summary of every reward coin: launches in 24h / 7d, share trading and paying in 24h, survival past day 3; holder revenue for the last 7 complete days vs the 7 before (StonkFun revenue ledger); the 5 strongest and weakest quote shelves by median 24h move (15+ live coins each); and a daily breadth trend from our own hourly snapshots (kept 8 days). Live coins = traded in the last 24h; dead coins drop out, so the true market is weaker than the median shown. Cached 1 minute.',
       },
       'stonk-creator': {
         price: '0.01',

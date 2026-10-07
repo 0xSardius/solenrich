@@ -1872,5 +1872,58 @@
    "2 of 40 coins older than 3 days still trade (5%; baseline 19% one-time creato...",
    "1 matured coin(s) paid holders in the last 24 h"
   ]
+ },
+ "stonk-market-pulse": {
+  "verdict": "NEUTRAL",
+  "live": {
+   "coins": 7176,
+   "coins_with_change": 2487,
+   "breadth_pct": 40.6,
+   "median_change_pct": -1.7,
+   "p25_change_pct": -7.9,
+   "p75_change_pct": 2.6,
+   "volume_weighted_change_pct": 14.2
+  },
+  "population": null,
+  "revenue": {
+   "last_7d": [
+    {
+     "date": "2026-09-30",
+     "holders_usd": 587211,
+     "total_usd": 980101
+    }
+   ],
+   "holders_7d_usd": 2664154,
+   "holders_prior_7d_usd": 4152808,
+   "holders_change_pct": -35.8
+  },
+  "shelves": {
+   "strongest": [
+    {
+     "quote": "ZCAT",
+     "live_coins": 20,
+     "breadth_pct": 90,
+     "median_change_pct": 36.1,
+     "volume_24h_usd": 89659
+    }
+   ],
+   "weakest": [
+    {
+     "quote": "GP",
+     "live_coins": 52,
+     "breadth_pct": 15.4,
+     "median_change_pct": -17.8,
+     "volume_24h_usd": 30574
+    }
+   ]
+  },
+  "trend": [],
+  "thresholds": {
+   "risk_off_median_pct": -5,
+   "risk_off_breadth_pct": 30,
+   "risk_on_median_pct": 2,
+   "risk_on_breadth_pct": 55,
+   "min_live_coins_per_shelf": 15
+  }
  }
 }

@@ -53,3 +53,4 @@ jobs:
       # Verdict rules for wallet-link-check (2026-10-03) and stonk-creator (2026-10-05) — pure functions.
       - run: bun test test/wallet-link.test.ts
       - run: bun test test/stonk-creator.test.ts
+      - run: bun test test/stonk-pulse.test.ts

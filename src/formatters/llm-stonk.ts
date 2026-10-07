@@ -4,6 +4,26 @@ import type { StonkAlertsResult } from '../enrichers/stonk-alerts';
 import type { StonkPreflightResult } from '../enrichers/stonk-preflight';
 import type { StonkQuoteResult } from '../enrichers/stonk-quote';
 import type { CreatorReport } from '../enrichers/stonk-creator';
+import type { PulseReport } from '../enrichers/stonk-pulse';
+
+export function formatStonkPulseBriefing(d: PulseReport): string {
+  const lines: string[] = [];
+  lines.push(`## StonkFun market pulse: ${d.verdict}`);
+  lines.push('');
+  for (const e of d.evidence) lines.push(`- ${e}`);
+  if (d.shelves.strongest.length) {
+    lines.push('');
+    lines.push(`Strongest shelves: ${d.shelves.strongest.map((s) => `${s.quote} ${s.median_change_pct}% (${s.breadth_pct}% up)`).join(', ')}`);
+    lines.push(`Weakest shelves: ${d.shelves.weakest.map((s) => `${s.quote} ${s.median_change_pct}% (${s.breadth_pct}% up)`).join(', ')}`);
+  }
+  if (d.trend.length > 1) {
+    lines.push('');
+    lines.push(`Breadth by day: ${d.trend.map((t) => `${t.t.slice(5, 10)} ${t.breadth_pct}%`).join(' · ')}`);
+  }
+  lines.push('');
+  for (const c of d.caveats) lines.push(`_${c}_`);
+  return lines.join('\n');
+}
 import type { StonkPairsResult, StonkScreenerResult, StonkGemsResult, StonkLaunchIntelResult } from '../entrypoints/stonk';
 import { shortenAddress, formatUsd } from '../utils/normalize';
 

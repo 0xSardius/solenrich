@@ -1,0 +1,162 @@
+{
+  "key": "stonk-market-pulse",
+  "captured_at": "2026-10-07T00:11:05.672Z",
+  "input": {
+    "format": "both"
+  },
+  "ms": 51,
+  "output": {
+    "verdict": "NEUTRAL",
+    "live": {
+      "coins": 7176,
+      "coins_with_change": 2487,
+      "breadth_pct": 40.6,
+      "median_change_pct": -1.7,
+      "p25_change_pct": -7.9,
+      "p75_change_pct": 2.6,
+      "volume_weighted_change_pct": 14.2,
+      "volume_24h_usd": 47065088,
+      "paying_24h_pct": 24
+    },
+    "population": null,
+    "revenue": {
+      "last_7d": [
+        {
+          "date": "2026-09-30",
+          "holders_usd": 587211,
+          "total_usd": 980101
+        },
+        {
+          "date": "2026-10-01",
+          "holders_usd": 535244,
+          "total_usd": 893226
+        },
+        {
+          "date": "2026-10-02",
+          "holders_usd": 417359,
+          "total_usd": 694664
+        },
+        {
+          "date": "2026-10-03",
+          "holders_usd": 219316,
+          "total_usd": 365714
+        },
+        {
+          "date": "2026-10-04",
+          "holders_usd": 353601,
+          "total_usd": 590268
+        },
+        {
+          "date": "2026-10-05",
+          "holders_usd": 274232,
+          "total_usd": 456429
+        },
+        {
+          "date": "2026-10-06",
+          "holders_usd": 277190,
+          "total_usd": 461540
+        }
+      ],
+      "holders_7d_usd": 2664154,
+      "holders_prior_7d_usd": 4152808,
+      "holders_change_pct": -35.8
+    },
+    "shelves": {
+      "strongest": [
+        {
+          "quote": "ZCAT",
+          "live_coins": 20,
+          "breadth_pct": 90,
+          "median_change_pct": 36.1,
+          "volume_24h_usd": 89659
+        },
+        {
+          "quote": "CARDS",
+          "live_coins": 47,
+          "breadth_pct": 76.6,
+          "median_change_pct": 11.4,
+          "volume_24h_usd": 244153
+        },
+        {
+          "quote": "STONK",
+          "live_coins": 85,
+          "breadth_pct": 80,
+          "median_change_pct": 9.9,
+          "volume_24h_usd": 963660
+        },
+        {
+          "quote": "QNT",
+          "live_coins": 22,
+          "breadth_pct": 77.3,
+          "median_change_pct": 4.6,
+          "volume_24h_usd": 70692
+        },
+        {
+          "quote": "ZEC",
+          "live_coins": 100,
+          "breadth_pct": 70,
+          "median_change_pct": 2.8,
+          "volume_24h_usd": 3497801
+        }
+      ],
+      "weakest": [
+        {
+          "quote": "GP",
+          "live_coins": 52,
+          "breadth_pct": 15.4,
+          "median_change_pct": -17.8,
+          "volume_24h_usd": 30574
+        },
+        {
+          "quote": "SI",
+          "live_coins": 38,
+          "breadth_pct": 15.8,
+          "median_change_pct": -15.4,
+          "volume_24h_usd": 302844
+        },
+        {
+          "quote": "MRNA",
+          "live_coins": 19,
+          "breadth_pct": 5.3,
+          "median_change_pct": -15.1,
+          "volume_24h_usd": 112971
+        },
+        {
+          "quote": "USELESS",
+          "live_coins": 34,
+          "breadth_pct": 11.8,
+          "median_change_pct": -8.6,
+          "volume_24h_usd": 228274
+        },
+        {
+          "quote": "Fartcoin",
+          "live_coins": 15,
+          "breadth_pct": 13.3,
+          "median_change_pct": -8.3,
+          "volume_24h_usd": 62521
+        }
+      ]
+    },
+    "trend": [],
+    "thresholds": {
+      "risk_off_median_pct": -5,
+      "risk_off_breadth_pct": 30,
+      "risk_on_median_pct": 2,
+      "risk_on_breadth_pct": 55,
+      "min_live_coins_per_shelf": 15
+    },
+    "evidence": [
+      "40.6% of 2487 live coins are up over 24 h; the median coin moved -1.7% (middle half -7.9% to 2.6%)",
+      "Volume-weighted 24 h move 14.2% on $47,065,088 volume — the big coins and the typical coin are moving apart",
+      "Holders were paid $2,664,154 over the last 7 days, -35.8% vs the 7 days before",
+      "Strongest shelf: ZCAT (median 36.1%); weakest: GP (median -17.8%)"
+    ],
+    "caveats": [
+      "Breadth and moves cover live coins only (traded in the last 24 h); dead coins drop out, so the true market is weaker than the median shown.",
+      "Thresholds are provisional (set 2026-10-06 from one day of data); the trend line is our own hourly record and grows daily.",
+      "Population totals (launches, share trading and paying, survival) are omitted: the 6-hourly summary of every reward coin is not fresh right now."
+    ],
+    "checked_at": "2026-10-07T00:11:05.622Z",
+    "llm_summary": "## StonkFun market pulse: NEUTRAL\n\n- 40.6% of 2487 live coins are up over 24 h; the median coin moved -1.7% (middle half -7.9% to 2.6%)\n- Volume-weighted 24 h move 14.2% on $47,065,088 volume — the big coins and the typical coin are moving apart\n- Holders were paid $2,664,154 over the last 7 days, -35.8% vs the 7 days before\n- Strongest shelf: ZCAT (median 36.1%); weakest: GP (median -17.8%)\n\nStrongest shelves: ZCAT 36.1% (90% up), CARDS 11.4% (76.6% up), STONK 9.9% (80% up), QNT 4.6% (77.3% up), ZEC 2.8% (70% up)\nWeakest shelves: GP -17.8% (15.4% up), SI -15.4% (15.8% up), MRNA -15.1% (5.3% up), USELESS -8.6% (11.8% up), Fartcoin -8.3% (13.3% up)\n\n_Breadth and moves cover live coins only (traded in the last 24 h); dead coins drop out, so the true market is weaker than the median shown._\n_Thresholds are provisional (set 2026-10-06 from one day of data); the trend line is our own hourly record and grows daily._\n_Population totals (launches, share trading and paying, survival) are omitted: the 6-hourly summary of every reward coin is not fresh right now._"
+  }
+}

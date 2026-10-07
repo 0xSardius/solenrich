@@ -15,7 +15,7 @@ curl https://api.solenrich.com/health
 # Agent card (A2A discovery)
 curl https://api.solenrich.com/.well-known/agent.json
 
-# List all 50 endpoints (49 paid + 1 free)
+# List all 51 endpoints (50 paid + 1 free)
 curl https://api.solenrich.com/entrypoints
 
 # Full API documentation (agent-readable JSON)
@@ -125,6 +125,7 @@ Coins launched on [stonkfun.xyz](https://www.stonkfun.xyz) are priced against a 
 | `stonk-gems` | $0.03 | `quote_mint`, `category`, `max_age_days`, `min_holders`, `max_market_cap_usd`, `limit`, `format` | Live-coin shortlist: ranks reward coins 0–100 on recent holder payout, holders, mcap headroom, 24h turnover, age, momentum, quote strength, flywheel. Stages `GEM` / `WATCH` / `NOISE` / `DEAD` with reasons and warnings per coin. Measures alive, paying and liquid — not a price forecast (in a paper test higher scores did not beat the market); pair with `stonk-creator` and `stonk-quote` |
 | `stonk-launch-intel` | $0.02 | `category`, `min_coins`, `sort`, `limit`, `format` | What to launch and against what. Per quote asset: launches (24h/7d), share trading today, share paying today, survival past day 3, median holders + mcap, 100 vs 300 bps tax mix with trading/paying rates, crowding, 0–100 demand score, plus overall stats and plain recommendations |
 | `stonk-quote` | $0.005 | `mint`, `size_usd`, `hold_days`, `format` | Cost and payback of one trade at one size, no swap: entry/exit cost (tax + price impact), round-trip % and breakeven move, pro-rata payout share with dust warning, expected payout over the hold from real yield history, `PAYS` / `MARGINAL` / `COSTS` / `NOT_PAYING` with breakeven hold days |
+| `stonk-market-pulse` | $0.005 | `format` | Is the StonkFun market rising or falling? `RISK_ON` / `NEUTRAL` / `RISK_OFF` from breadth (share of live coins up 24h) and the median move, plus the volume-weighted move, launches per day, share trading and paying, holder revenue 7d vs prior 7d, strongest and weakest quote shelves, daily breadth trend |
 | `stonk-creator` | $0.01 | `creator` or `mint`, `format` | Track record of a StonkFun creator: `ESTABLISHED` / `MIXED` / `SERIAL_LAUNCHER` / `NEW`, launches per day and week, share of coins older than 3 days still trading (baseline 19% one-time creators vs 5% serial launchers), payouts in 24h, living coins |
 | `stonk-launch-preflight` | $0.25 | `unsigned_transaction`, `quote_mint`, `mode`, `launch_params`, `format` | Decodes the LaunchLab initialize instruction and diffs every parameter against StonkFun's `/launchlab/pricing` — GlobalConfig, platform id per mode, curve, supply, totalSellA, raise, 6-decimal Token-2022 base mint, quote token program, curve-rule account last, and the reward-mode transfer fee (catches Raydium's `transferFeeBasePoints` / `maxinumFee` spelling). Returns `ok`, `mismatches[{field, expected, actual, fix}]`, `warnings`. A mismatched pool is never adopted: the tax goes to nobody |
 
@@ -266,7 +267,7 @@ SolEnrich exposes an MCP endpoint for Claude Desktop, Claude Code, and Cursor. *
 }
 ```
 
-48 tools — every endpoint is exposed as an MCP tool (wallet/token light+full variants fold into `depth`/`include_holders` toggles). Highlights: `enrich_wallet`, `enrich_token`, `due_diligence`, `whale_watch`, `perps_cross_venue_funding`, `trending_signals`, `smart_money_flow`, `check_alerts`.
+49 tools — every endpoint is exposed as an MCP tool (wallet/token light+full variants fold into `depth`/`include_holders` toggles). Highlights: `enrich_wallet`, `enrich_token`, `due_diligence`, `whale_watch`, `perps_cross_venue_funding`, `trending_signals`, `smart_money_flow`, `check_alerts`.
 
 ## Free Demo
 

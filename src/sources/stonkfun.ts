@@ -307,6 +307,20 @@ export class StonkFunClient {
     return result;
   }
 
+  /**
+   * Daily platform revenue by UTC day: total, paid to holders, protocol. Cached 1 hour.
+   * Shape (2026-10-06): data.days[] = { date, dailyRevenue, dailyHoldersRevenue, dailyProtocolRevenue }.
+   */
+  async getRevenueHistory(): Promise<{ date: string; total_usd: number; holders_usd: number; protocol_usd: number }[]> {
+    const cacheKey = 'stonk:revenue-history';
+    const cached = await this.cache.get<{ date: string; total_usd: number; holders_usd: number; protocol_usd: number }[]>(cacheKey);
+    if (cached) return cached;
+    const data = await this.request<{ days?: { date: string; dailyRevenue: number; dailyHoldersRevenue: number; dailyProtocolRevenue: number }[] }>('/revenue/history');
+    const days = (data.days ?? []).map((d) => ({ date: d.date, total_usd: d.dailyRevenue ?? 0, holders_usd: d.dailyHoldersRevenue ?? 0, protocol_usd: d.dailyProtocolRevenue ?? 0 }));
+    await this.cache.set(cacheKey, days, 3600);
+    return days;
+  }
+
   /** Exact curve constants for a self-built LaunchLab launch against this quote. Cached 1 minute. */
   async getLaunchLabPricing(quoteMint: string): Promise<StonkLaunchLabPricing> {
     const cacheKey = `stonk:launchlab-pricing:${quoteMint}`;

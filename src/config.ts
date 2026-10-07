@@ -89,6 +89,8 @@ export const PRICING = {
   'stonk-alerts': '0.02',
   // A creator's track record (2026-10-05): one-time creators' coins still traded 3–4× as often after 3 days (19% vs 5%).
   'stonk-creator': '0.01',
+  // Market regime (2026-10-06): breadth, median vs volume-weighted move, launches, revenue trend. All in memory.
+  'stonk-market-pulse': '0.005',
 } as const;
 
 /** Entrypoints served without a paywall. Kept out of PRICING so x402/MPP never gate them. */

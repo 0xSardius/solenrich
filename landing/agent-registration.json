@@ -1,7 +1,7 @@
 {
   "type": "https://eips.ethereum.org/EIPS/eip-8004#registration-v1",
   "name": "SolEnrich",
-  "description": "Agent-native onchain intelligence for Solana. StonkFun reward coins: gem finder, payout status and alerts, holder yield for one coin or 25, trade cost and payback, and launch intel per quote asset. Plus wallet risk scoring, token due-diligence and rug detection, smart-money tracking across spot, perps, and fresh launches, cross-venue perps funding, and LLM-ready briefings. 49 paid endpoints plus 1 free, per-call USDC via x402 on Solana or Base. Operated by Parallax Labs.",
+  "description": "Agent-native onchain intelligence for Solana. StonkFun reward coins: gem finder, payout status and alerts, holder yield for one coin or 25, trade cost and payback, and launch intel per quote asset. Plus wallet risk scoring, token due-diligence and rug detection, smart-money tracking across spot, perps, and fresh launches, cross-venue perps funding, and LLM-ready briefings. 50 paid endpoints plus 1 free, per-call USDC via x402 on Solana or Base. Operated by Parallax Labs.",
   "image": "https://www.solenrich.com/logo.png",
   "services": [
     { "name": "web", "endpoint": "https://www.solenrich.com" },

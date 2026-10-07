@@ -795,6 +795,13 @@ export const MCP_TOOLS: McpToolDef[] = [
     handler: async (args) => invoke('stonk-quote', { mint: args.mint, size_usd: args.size_usd ?? 100, hold_days: args.hold_days ?? 7, format: 'llm' }),
   },
   {
+    name: 'stonk_market_pulse',
+    title: 'StonkFun Market Pulse',
+    description: 'Is the StonkFun market rising or falling right now? RISK_ON / NEUTRAL / RISK_OFF from the share of live coins up over 24h and the median move, plus the volume-weighted move, launches per day, share of coins trading and paying, holder revenue this week vs last, the strongest and weakest quote shelves, and a daily breadth trend. Check it before entering any reward-coin position.',
+    inputSchema: {},
+    handler: async () => invoke('stonk-market-pulse', { format: 'llm' }),
+  },
+  {
     name: 'stonk_creator',
     title: 'StonkFun Creator Track Record',
     description: 'Who launched this StonkFun coin, and do their coins survive? Pass a creator wallet or a coin mint. Returns ESTABLISHED / MIXED / SERIAL_LAUNCHER / NEW with launches per day and week, the share of their coins older than 3 days that still trade, payouts in 24h, and their living coins. A cheap filter before paying for anything else on a fresh coin.',

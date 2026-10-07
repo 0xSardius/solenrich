@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { Cache } from '../cache';
-import { StonkPairsInput, StonkRewardRiskInput, StonkYieldInput, StonkYieldBatchInput, StonkAlertsInput, StonkScreenerInput, StonkPreflightInput, StonkGemsInput, StonkLaunchIntelInput, StonkQuoteInput, StonkCreatorInput } from '../schemas/stonk';
+import { StonkPairsInput, StonkRewardRiskInput, StonkYieldInput, StonkYieldBatchInput, StonkAlertsInput, StonkScreenerInput, StonkPreflightInput, StonkGemsInput, StonkLaunchIntelInput, StonkQuoteInput, StonkCreatorInput, StonkPulseInput } from '../schemas/stonk';
 import type { StonkFunClient, StonkPair } from '../sources/stonkfun';
 import { normalizeCategory, type StonkIndex, type StonkCategory, type StonkIndexStatus, type StonkScreenerRow } from '../enrichers/stonk-index';
 import type { GemStage, PayoutStatus, QuoteStats } from '../enrichers/stonk-gems';
@@ -11,6 +11,7 @@ import type { StonkPreflightAnalyzer } from '../enrichers/stonk-preflight';
 import type { StonkQuoteAnalyzer } from '../enrichers/stonk-quote';
 import { StonkAlertChecker } from '../enrichers/stonk-alerts';
 import type { StonkCreatorAnalyzer } from '../enrichers/stonk-creator';
+import type { StonkPulseAnalyzer } from '../enrichers/stonk-pulse';
 import { formatResponse } from '../formatters';
 import {
   formatStonkPairsBriefing,
@@ -24,6 +25,7 @@ import {
   formatStonkLaunchIntelBriefing,
   formatStonkQuoteBriefing,
   formatStonkCreatorBriefing,
+  formatStonkPulseBriefing,
 } from '../formatters/llm-stonk';
 
 type AddEntrypoint = (def: any) => void;
@@ -159,9 +161,23 @@ export function registerStonkEntrypoints(
     preflight: StonkPreflightAnalyzer;
     quote: StonkQuoteAnalyzer;
     creator: StonkCreatorAnalyzer;
+    pulse: StonkPulseAnalyzer;
     cache: Cache;
   },
 ) {
+  // --- stonk-market-pulse --------------------------------------------------------
+  // Is the StonkFun market rising or falling (2026-10-06)? The market move outweighed every pick in Moneta's test.
+  addEntrypoint({
+    key: 'stonk-market-pulse',
+    description:
+      'Is the StonkFun market rising or falling right now? Verdict RISK_ON / NEUTRAL / RISK_OFF from breadth (share of live coins up over 24h) and the median 24h move, plus the volume-weighted move (big coins vs the typical coin), launches per day, share of all reward coins trading and paying, survival past day 3, holder revenue for the last 7 days vs the 7 before, the strongest and weakest quote shelves, and a daily breadth trend from our own hourly record. One call, no inputs; gate entries on it or show it on a dashboard.',
+    input: StonkPulseInput,
+    handler: async (ctx: { input: z.infer<typeof StonkPulseInput> }) => {
+      const data = await deps.pulse.analyze();
+      return { output: formatResponse(data, ctx.input.format, formatStonkPulseBriefing) };
+    },
+  });
+
   // --- stonk-creator -----------------------------------------------------------
   // A creator's track record (2026-10-05). Measured first: one-time creators' coins still traded 3 days after launch
   // 19% of the time vs 5–6% for repeat launchers, and repeat launchers made 65% of launches.

@@ -684,6 +684,16 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'stonk-market-pulse': {
+    summary: 'Is the StonkFun market rising or falling right now?',
+    description: 'StonkFun market regime in one call: RISK_ON / NEUTRAL / RISK_OFF from breadth (share of live coins up 24h) and the median 24h move, plus the volume-weighted move, launches per day, share of coins trading and paying, survival past day 3, holder revenue 7d vs prior 7d, strongest and weakest quote shelves, and a daily breadth trend. No inputs.',
+    schema: {
+      type: 'object',
+      properties: {
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'stonk-creator': {
     summary: 'Track record of a StonkFun creator: serial launcher or established?',
     description: 'Track record of a StonkFun creator (pass the wallet, or a coin mint to find who launched it): ESTABLISHED / MIXED / SERIAL_LAUNCHER / NEW, launches in 24h / 7d / all-time, share of coins older than 3 days still trading, payouts in 24h, living coins with market cap. Baseline: 19% of one-time creators\' coins vs 5% of serial launchers\' still trade after 3 days.',

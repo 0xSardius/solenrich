@@ -450,6 +450,14 @@ check('launch counts', typeof sc.body?.output?.launches?.total === 'number');
 check('has llm_summary', typeof sc.body?.output?.llm_summary === 'string' && sc.body.output.llm_summary.includes('creator'));
 console.log(`  ⏱ ${sc.ms}ms\n`);
 
+console.log('━━━ 20j. stonk-market-pulse ━━━');
+const mp = await invoke('stonk-market-pulse', { format: 'both' }, 30000);
+check('returns 200', mp.status === 200, `got ${mp.status}`);
+check('verdict present', ['RISK_ON', 'NEUTRAL', 'RISK_OFF'].includes(mp.body?.output?.verdict), `verdict=${mp.body?.output?.verdict}`);
+check('breadth measured', typeof mp.body?.output?.live?.breadth_pct === 'number');
+check('has llm_summary', typeof mp.body?.output?.llm_summary === 'string' && mp.body.output.llm_summary.includes('market pulse'));
+console.log(`  ⏱ ${mp.ms}ms\n`);
+
 console.log('━━━ 21. discovery surfaces agree (live) ━━━');
 {
   const [ep, oa, docs] = await Promise.all([

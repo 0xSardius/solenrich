@@ -788,6 +788,18 @@ export const ENDPOINTS: Array<{
     ],
   },
   {
+    key: 'stonk-market-pulse',
+    input: { format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'has verdict', test: (d) => ['RISK_ON', 'NEUTRAL', 'RISK_OFF'].includes(d.verdict), detail: (d) => `verdict=${d.verdict} breadth=${d.live?.breadth_pct}% median=${d.live?.median_change_pct}%` },
+      { name: 'live breadth measured', test: (d) => d.live?.coins_with_change > 100 && d.live.breadth_pct >= 0 && d.live.breadth_pct <= 100 },
+      { name: 'has shelves', test: (d) => Array.isArray(d.shelves?.strongest) && d.shelves.strongest.length > 0 },
+      { name: 'has evidence + caveats', test: (d) => d.evidence.length > 0 && d.caveats.length > 0 },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('market pulse') },
+    ],
+  },
+  {
     key: 'stonk-creator',
     // ZCAT (a long-lived reward coin on ZEC), resolved to its creator.
     input: { mint: 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR', format: 'both' },

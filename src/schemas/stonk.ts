@@ -95,6 +95,11 @@ export const StonkLaunchIntelInput = z.object({
   format: FormatSchema,
 });
 
+/** No inputs besides the format: the pulse covers the whole StonkFun market. */
+export const StonkPulseInput = z.object({
+  format: FormatSchema,
+});
+
 /** A creator wallet, or a coin mint resolved to its creator. One of the two is required. */
 export const StonkCreatorInput = z
   .object({
