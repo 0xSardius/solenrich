@@ -12,6 +12,8 @@ export interface JupiterToken {
   tags: string[];
   logoURI?: string;
   verified?: boolean;
+  /** Holders, from Jupiter's token API (2026-10-08). Null when Jupiter does not report it. */
+  holderCount?: number | null;
 }
 
 export interface JupiterPrice {
@@ -112,19 +114,25 @@ export class JupiterClient {
     const cached = await this.cache.get<JupiterToken>(cacheKey);
     if (cached) return cached;
 
-    const res = await this.fetchWithKey(`https://tokens.jup.ag/token/${mint}`);
+    // Tokens API v2 (2026-10-08): the old tokens.jup.ag/token/{mint} host stopped answering, so every lookup failed
+    // silently — no verified flag (every token got the 'unverified' risk flag) and no metadata. v2 search by mint
+    // returns an array; take the exact id match. It also carries holderCount (BONK: 1,025,727).
+    const res = await this.fetchWithKey(`https://api.jup.ag/tokens/v2/search?query=${encodeURIComponent(mint)}`);
     if (res.status === 404) return null;
     if (!res.ok) throw new Error(`Jupiter Token HTTP ${res.status}: ${await res.text()}`);
 
-    const raw: any = await res.json();
+    const list: any = await res.json();
+    const raw = Array.isArray(list) ? list.find((t: any) => t?.id === mint) : null;
+    if (!raw) return null;
     const token: JupiterToken = {
-      address: raw.address ?? mint,
+      address: raw.id ?? mint,
       name: raw.name ?? '',
       symbol: raw.symbol ?? '',
       decimals: raw.decimals ?? 0,
-      tags: raw.tags ?? [],
-      logoURI: raw.logoURI,
-      verified: raw.verified,
+      tags: Array.isArray(raw.tags) ? raw.tags : [],
+      logoURI: raw.icon,
+      verified: raw.isVerified === true,
+      holderCount: typeof raw.holderCount === 'number' ? raw.holderCount : null,
     };
 
     await this.cache.set(cacheKey, token, CACHE_TTL.tokenMetadata);

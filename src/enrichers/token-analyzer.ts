@@ -326,7 +326,9 @@ export class TokenAnalyzer {
       name: dexData?.name ?? jupiterToken?.name ?? birdeyeOverview?.name ?? '',
       decimals,
       supply,
-      holder_count: birdeyeOverview?.holder ?? largestAccounts.length,
+      // Birdeye first; Jupiter's token API when Birdeye is unavailable (its free compute units ran out on 2026-10-08,
+      // which made the light path report 0 holders for BONK); the top-20 list length only as a last resort.
+      holder_count: birdeyeOverview?.holder ?? jupiterToken?.holderCount ?? largestAccounts.length,
       price_usd: price,
       market_cap: dexData?.marketCap ?? birdeyeOverview?.marketCap ?? (price * supply),
       volume_24h: dexData?.volume24h ?? birdeyeOverview?.volume24h ?? 0,
