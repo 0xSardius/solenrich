@@ -1717,6 +1717,14 @@ if (faviconData) {
     return c.body(data);
   });
 
+  // /logo.png on the API host too (2026-10-09): x402scan stored https://api.solenrich.com/logo.png as our icon
+  // (the www site's relative "/logo.png" resolved against the API host after the root's 301 to www), and it 404'd.
+  app.get('/logo.png', (c) => {
+    c.header('Content-Type', 'image/png');
+    c.header('Cache-Control', 'public, max-age=86400');
+    return c.body(data);
+  });
+
   app.get('/favicon.png', (c) => {
     c.header('Content-Type', 'image/png');
     c.header('Cache-Control', 'public, max-age=86400');
