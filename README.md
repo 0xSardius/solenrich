@@ -1,6 +1,8 @@
 # SolEnrich
 
-Solana onchain data enrichment agent. Accepts USDC micropayments via x402 and returns enriched wallet, token, and transaction data — structured JSON for agents or natural language briefings for LLMs.
+Onchain intelligence for Solana agents. An agent sends one request, pays a small amount of USDC per call over x402 (on Solana or Base, no API key, no account), and gets back a verdict with its evidence — structured JSON, or a short plain-language briefing for an LLM.
+
+Verdicts instead of raw data: SAFE / CAUTION / RISKY for a token, EXIT / DERISK / HOLD for a position, PAYING / STALE / NEVER for a StonkFun reward coin, ESTABLISHED / SERIAL_LAUNCHER for a coin's creator, RISK_ON / NEUTRAL / RISK_OFF for a market. Scoring is deterministic (no LLM in the pipeline), so the same input gives the same answer. Suites cover wallets and tokens, memecoin trenches (entry and exit), smart money, perps across five venues, and StonkFun reward coins. Every endpoint is also a tool on the MCP server.
 
 **Live API:** https://api.solenrich.com/
 **Landing Page:** https://solenrich.com
@@ -26,6 +28,15 @@ curl -X POST https://api.solenrich.com/demo/enrich \
   -H "Content-Type: application/json" \
   -d '{"address":"DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"}'
 ```
+
+## How payment works
+
+1. The agent calls an endpoint with no payment.
+2. SolEnrich answers `402 Payment Required` with a `payment-required` header: the price, the USDC pay-to address on Solana and on Base, and a real example of the response.
+3. The agent signs a USDC transfer for that price and repeats the call with the payment attached (any x402 client does this; see `skills/solenrich/examples/x402/`).
+4. The Coinbase CDP facilitator settles the payment on-chain, and SolEnrich returns the answer.
+
+Endpoints that can run longer than about 20 seconds settle the payment before the work starts, so a slow run never loses the payment. Payments are visible on [x402scan](https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641).
 
 ## Endpoints
 
@@ -207,6 +218,20 @@ Median of up to 3 sources (Helius DAS, DexScreener, Jupiter). Median resists out
 Client → x402 Paywall → Entrypoint Router → Enrichment Engine → Format Router → Response
 ```
 
+### Repo layout
+
+| Path | What is there |
+|------|---------------|
+| `src/enrichers/` | The scoring logic: each enricher fetches, cross-checks, and scores. Verdict rules are pure functions with unit tests (for example `stonk-creator.ts`, `stonk-pulse.ts`, `wallet-link.ts`, `risk-scorer.ts`). |
+| `src/entrypoints/` | One file per endpoint suite: input schema, handler, briefing. |
+| `src/sources/` | Clients for Helius, Solana RPC, DexScreener, Jupiter, Birdeye, DeFi Llama, StonkFun, and the perps venues. |
+| `src/lib/agent.ts` | App setup, x402 payment middleware, metrics, `/docs`. |
+| `src/mcp-tools.ts` | The MCP server's tools (one per endpoint). |
+| `src/openapi.ts`, `src/lib/llms-txt.ts` | Discovery surfaces: OpenAPI, `llms.txt`. |
+| `agents/solscout/` | Our test agent: pays every endpoint in production and checks the answers. |
+| `skills/solenrich/` | The installable agent skill. |
+| `test/` | Unit tests (run in CI) and live endpoint checks. |
+
 ### Data Sources
 
 | Source | Usage |
@@ -216,7 +241,8 @@ Client → x402 Paywall → Entrypoint Router → Enrichment Engine → Format R
 | [DeFi Llama](https://defillama.com) | Protocol TVL, yield data |
 | [Jupiter](https://jup.ag) | Token prices (cross-reference), metadata, verification status, perps quotes |
 | [Birdeye](https://birdeye.so) | Real holder counts, daily OHLCV for volatility |
-| Solana RPC | SOL balances, mint info, top 20 holders, Jupiter Perps + Adrena on-chain accounts |
+| Solana RPC | SOL balances, mint info, top 20 holders, Token-2022 transfer fees, Jupiter Perps, Adrena and Flash on-chain accounts |
+| [StonkFun](https://www.stonkfun.xyz) public API | Reward coins, payouts, launch ledger (creators), revenue history |
 | Hyperliquid + dYdX v4 | Cross-chain perps reference (funding rates, basis) |
 
 ### Entity Labeling
@@ -295,10 +321,12 @@ bun run dev
 # Type check
 bunx tsc --noEmit
 
-# Run tests
-bun test test/unit.test.ts                # 138 unit tests
-bun run test/test-all-endpoints.ts        # 55 endpoint tests (requires local server)
-bun run test/test-402-production.ts       # Production paywall verification
+# Run tests (CI runs the unit test files: 500+ tests across 15 files, see .github/workflows/ci.yml)
+bun test test/unit.test.ts                # core unit tests
+bun test test/stonk.test.ts               # StonkFun suite (recorded fixtures)
+bun run test/test-all-endpoints.ts        # live endpoint checks (requires a running server)
+bun run test/test-402-production.ts       # production paywall verification
+bun run agents/solscout/index.ts --target production --mode stress   # free 402 check of every route
 ```
 
 ### Environment Variables
@@ -314,6 +342,8 @@ bun run test/test-402-production.ts       # Production paywall verification
 | `JUPITER_API_KEY` | No | Jupiter API key (optional, free tier works) |
 | `BIRDEYE_API_KEY` | No | Birdeye API key — real holder counts + daily OHLCV for volatility |
 | `METRICS_TOKEN` | No | Bearer token for `GET /metrics`; without it metrics are locked in production |
+| `EVM_PAY_TO` | No | Base address for USDC payments; when set, every 402 also offers payment on Base |
+| `DOGFOOD_WALLETS` | No | Comma-separated payer wallets that are ours (test agents); kept out of organic counts and attention signals |
 
 ## Deployment
 
