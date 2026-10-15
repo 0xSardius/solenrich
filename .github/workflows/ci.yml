@@ -54,3 +54,5 @@ jobs:
       - run: bun test test/wallet-link.test.ts
       - run: bun test test/stonk-creator.test.ts
       - run: bun test test/stonk-pulse.test.ts
+      # Upstream canary (2026-10-14): probe outcomes and /status reasons — fake probes, no network.
+      - run: bun test test/upstream-canary.test.ts

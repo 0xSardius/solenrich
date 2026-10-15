@@ -21,7 +21,8 @@ import { POPULATION_CACHE_KEY, populationStatus, type PopulationStatus, type Sto
 
 export const STONK_INGEST_INTERVAL_MS = 10 * 60 * 1000;
 const SERIES_DAYS = 31;
-const SNAPSHOT_TTL_SECONDS = 35 * 24 * 60 * 60;
+// 400 days (was 35 until 2026-10-14): the daily series is kept as history. ~2.6 MB/day in Upstash (3 GB limit).
+const SNAPSHOT_TTL_SECONDS = 400 * 24 * 60 * 60;
 const SNAPSHOT_CHUNK = 1500;
 const PAGE_SIZE = 100;
 const PAGE_GAP_MS = 60;

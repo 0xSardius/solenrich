@@ -27,7 +27,7 @@ export const PULSE_THRESHOLDS = {
 };
 
 const SNAPSHOT_KEY = (hour: string) => `stonk:pulse:${hour}`;
-const SNAPSHOT_TTL = 8 * 86400;
+const SNAPSHOT_TTL = 400 * 86400; // was 8 days until 2026-10-14; ~200 bytes/hour, kept as history
 const DAY_MS = 86_400_000;
 
 export interface PulseSnapshot { t: string; breadth_pct: number; median_change_pct: number; volume_weighted_change_pct: number; live_coins: number }

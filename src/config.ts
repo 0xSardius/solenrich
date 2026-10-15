@@ -131,7 +131,7 @@ export const CACHE_TTL = {
   graph: 1800,
   copyTrade: 600,
   dueDiligence: 600,
-  snapshot: 2_592_000,  // 30 days
+  snapshot: 34_560_000, // 400 days (was 30 until 2026-10-14): history is kept, not rolled off
   trend: 300,           // 5 minutes
   protocolProfile: 1800, // 30 minutes — activity data is RPC-heavy
   perpsMarket: 30,       // 30 seconds — on-chain state changes every block

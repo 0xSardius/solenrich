@@ -10,6 +10,7 @@ import { x402ResourceServer } from "@x402/hono";
 import { settleFirstMiddleware, settleFirstStats } from "./settle-first";
 import { CacheWarmer } from "./cache-warmer";
 import { computeStatus, type FacilitatorState } from "./status";
+import { UpstreamCanary, NULL_CACHE, canaryReasons } from "./upstream-canary";
 import { buildLlmsFull } from "./llms-full";
 import { buildLlmsTxt } from "./llms-txt";
 import { ENDPOINT_SUITES } from "./suites";
@@ -850,6 +851,25 @@ if (process.env.NODE_ENV !== 'test' && process.env.STONK_INGEST !== 'off') {
   setInterval(snapshotPulse, 60 * 60_000).unref?.();
 }
 
+// Upstream canary (2026-10-14): hourly known-input calls through our own client code; failures show in /status.
+// Separate client instances with a cache that stores nothing, so probes always reach the upstream.
+const CANARY_TX = 'zMCtSYWy7KoZkmodg1VtUWVhVhWTY9SreiskrkH5U88CvzAAG1sjkaJwCQT1JyR6Bha8dHvEZ1rhmvHAfg5SFGc';
+const CANARY_BONK = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
+const CANARY_JUP = 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN';
+const CANARY_SOL = 'So11111111111111111111111111111111111111112';
+const canaryJupiter = new JupiterClient(NULL_CACHE);
+const canaryBirdeye = CONFIG.birdeye.apiKey ? new BirdeyeClient(NULL_CACHE) : null;
+const upstreamCanary = new UpstreamCanary([
+  { name: 'helius_enhanced_tx', run: async () => (await new HeliusClient(NULL_CACHE).getEnhancedTransactions([CANARY_TX])).length > 0 },
+  { name: 'helius_rpc', run: async () => typeof (await solanaRpc.getBalance('66Qvhr1xnwqbCT36KfHfZF1JpoWdmCQ3uFYTN335CGXe')) === 'number' },
+  { name: 'jupiter_tokens', run: async () => (await canaryJupiter.getTokenInfo(CANARY_JUP))?.address === CANARY_JUP },
+  { name: 'jupiter_price', run: async () => CANARY_SOL in (await canaryJupiter.getPriceUncached([CANARY_SOL])) },
+  { name: 'dexscreener', run: async () => (await new DexScreenerClient(NULL_CACHE).getTokenData(CANARY_BONK)) != null },
+  { name: 'stonkfun', run: async () => (await new StonkFunClient(NULL_CACHE).getTokens({ sort: 'volume', pageSize: 1 })).tokens.length > 0 },
+  ...(canaryBirdeye ? [{ name: 'birdeye', run: async () => (await canaryBirdeye.getTokenOverview(CANARY_BONK)) != null }] : []),
+]);
+if (process.env.NODE_ENV !== 'test') upstreamCanary.start();
+
 // Event-Driven Alerts (Priority 13) — poll-based V1. Stateless: agent passes
 // watchlist + `since` cursor each call. Detection composes token-analyzer,
 // wallet-profiler, whale-watcher, and snapshot diffs in parallel. SSE + webhook
@@ -1526,9 +1546,11 @@ app.get('/status', async (c) => {
     index_partial: idx.partial ? `${idx.partial.pages}/${idx.partial.totalPages} pages` : null,
   });
   const warm = warmer.stats(now);
+  const upstreams = upstreamCanary.status();
   return c.json({
     status: verdict.verdict,
-    reasons: verdict.reasons,
+    // Upstream failures are notes, not "degraded": the endpoints still answer, with less data.
+    reasons: [...verdict.reasons, ...canaryReasons(upstreams)],
     checked_at: new Date(now).toISOString(),
     payments: {
       enabled: PAYMENTS_ENABLED,
@@ -1555,6 +1577,7 @@ app.get('/status', async (c) => {
         return p ? { generated_at: p.generatedAt, age_hours: p.ageHours, fresh: p.fresh, coins: p.coins, pages: `${p.pagesRead}/${p.pagesTotal}` } : null;
       })(),
     },
+    upstreams,
     process: {
       uptime_hours: Math.round(process.uptime() / 36) / 100,
       rss_mb: Math.round(process.memoryUsage().rss / 1e6),

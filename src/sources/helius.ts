@@ -179,7 +179,8 @@ export class HeliusClient {
 
   /** Enhanced transaction parsing (REST) — batch, max 100 */
   async getEnhancedTransactions(signatures: string[]): Promise<EnhancedTransaction[]> {
-    const url = `${this.baseUrl}/transactions/?api-key=${this.apiKey}`;
+    // No trailing slash: Helius returns 404 for `/transactions/` (observed 2026-10-14).
+    const url = `${this.baseUrl}/transactions?api-key=${this.apiKey}`;
     const res = await this.fetchWithRetry(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
