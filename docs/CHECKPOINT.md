@@ -1,7 +1,27 @@
 # Session Checkpoint
 
 ## Last session date
-2026-09-30
+2026-10-14
+
+## ✅ 2026-10-15 00:15 UTC — reliability: Helius path fix, upstream canary, history kept 400 days (`0146f8a`)
+
+- **Found by a paid SolScout sweep (10/14):** 52/53 after re-runs (4 failures were client-side Helius 429s while
+  building payments). `parse-transaction` returned 500: Helius now 404s `/v0/transactions/` (trailing slash). The
+  same call feeds wallet-profiler, whale-watch, copy-trade, wallet-graph, protocol-analyzer, which swallowed the
+  error (`Promise.allSettled`) and returned 200 with no parsed transactions. Fixed; verified paid in prod:
+  parse-transaction, enrich-wallet-full, whale-watch, copy-trade-signals 4/4.
+- **Upstream canary** (`src/lib/upstream-canary.ts`): hourly known-input probes through our own clients with a
+  cache that stores nothing — helius_rpc, helius_enhanced_tx, jupiter_tokens, jupiter_price, dexscreener, stonkfun,
+  birdeye. `/status` gains an `upstreams` block; failures are reasons, not "degraded". Live: 6 OK, birdeye failing
+  (free compute units exhausted — upgrade or remove `BIRDEYE_API_KEY`).
+- **History retention:** stonk daily snapshots, hourly pulse snapshots and token/wallet/perps snapshots now 400 days
+  (were 35/8/30). Existing 4,789 keys extended (`local/scripts/extend-history-ttl.ts`). Upstash 7.6 MB / 3 GB;
+  stonk snapshots ~2.6 MB/day.
+- **Demand:** 4,917 outside calls / $34.42 since 9/12; last 4 days ~15/day, nearly all `8LZj73`. Moneta $7.70
+  (~5 days at ~$1.40/day). Colosseum submitted 10/12.
+- **Open:** stonk index holds 76,277 rows (was ~11,500 traded coins on 9/23) — check what it now holds;
+  6 local-only test failures (pass in CI; `.env` loads locally); Birdeye decision; Moneta pause or top-up.
+- **Next:** what `8LZj73` buys → per-decision pricing experiment → distribution asks (agentic.market enrichment).
 
 ## ✅ 2026-10-06 00:13 UTC — `stonk-creator` LIVE ($0.01, 49 paid endpoints); `/status` fix; `stonk-gems` reworded
 
