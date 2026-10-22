@@ -1,7 +1,35 @@
 # Session Checkpoint
 
 ## Last session date
-2026-10-14
+2026-10-22
+
+## 🔴 2026-10-22 00:30 UTC — Railway breach: keys rotated, API DOWN until Railway resumes builds
+
+- **Railway disclosed (10/21)** that an attacker accessed customer env vars (some decrypted). Not known whether our
+  account is affected; no email from Railway yet. All Railway builds paused (incident QH8L8B3E, status.railway.com).
+  Blog: blog.railway.com/p/security-disclosure-wednesday-october-21st.
+- **Rotated by Sardius:** Stripe, CDP, Upstash, MPP secret, METRICS_TOKEN, Moneta wallet/Upstash, and the rest,
+  EXCEPT Helius, Birdeye, Jupiter. The Solana agent wallet key was never on Railway (funds safe, payTo unchanged).
+- **API is DOWN (verified 00:20 UTC):** `/status` = down, facilitator unreachable, redis error, uptime 168 h. The
+  container still runs the old (revoked) CDP + Upstash keys; new values are set but not live. Redeploy clicked; it
+  is queued behind Railway's build pause. Do NOT click Redeploy again, do NOT Rollback (restores old vars), do NOT
+  change more variables until builds resume.
+- **Moneta:** wallet `5x2U…eZ26` ran out of USDC at 07:37 UTC 10/20 (0.015 left, gems call = 0.03). Its key was
+  on Railway → treat as leaked, never refund it. New keypair + new `ERIS_PRIVATE_KEY` needed (rotated per Sardius;
+  confirm the new wallet is funded).
+- **Repo checks (clean):** no keyv/cacheable; axios 1.13.5; dotenv 17.3.1; lockfile unchanged since August;
+  `.github/` commits all ours; Actions runs only our cron; no worm-style repos on the account.
+- **Stripe/MPP:** never tested E2E, no known card payer. Decision pending: remove `STRIPE_SECRET_KEY` +
+  `MPP_SECRET_KEY` after checking the Stripe dashboard for charges (x402-only fallback is automatic,
+  `src/lib/agent.ts:525`; `/openapi.json` loses MPP info).
+- **Next (morning 10/22):**
+  1. Check status.railway.com; when builds resume, confirm `/status` uptime near 0, facilitator + redis `ok`.
+  2. Run a paid SolScout call to confirm settlement.
+  3. Rotate Helius (both `HELIUS_API_KEY` and `SOLANA_RPC_URL`), Birdeye, Jupiter: new key → set → deploy →
+     verify `/status` upstreams → revoke old.
+  4. Check Helius credits and Birdeye usage for spikes after 10/21 (Birdeye "compute units exceeded" since 10/21).
+  5. Pin GitHub Actions to commit SHAs (no uptime effect).
+  6. Decide on Stripe/MPP removal.
 
 ## ✅ 2026-10-15 00:15 UTC — reliability: Helius path fix, upstream canary, history kept 400 days (`0146f8a`)
 
