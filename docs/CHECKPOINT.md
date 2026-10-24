@@ -1,7 +1,17 @@
 # Session Checkpoint
 
 ## Last session date
-2026-10-22
+2026-10-24
+
+## ✅ 2026-10-24 00:18 UTC — API back online after the Railway breach; paid SolScout 53/53
+
+- Railway builds resumed 10/23. Sardius redeployed; the new container (uptime reset) runs the rotated CDP + Upstash
+  keys. `/status` = ok: facilitator ok, redis ok, 0 settlement failures and 0 settle-first losses after the run.
+- **Paid SolScout sweep: 53/53 PASS**, avg 6.4 s. Slow (>10 s, expected): smart-money-flow 46 s, feed-latest 28 s,
+  smart-money-trenches 28 s, trenches-check 25 s, trenches-scan 23 s, trending-signals 17 s, new-tokens 17 s.
+- **Still open:** rotate Helius (`HELIUS_API_KEY` + `SOLANA_RPC_URL`), Birdeye, Jupiter; Birdeye still out of
+  compute units (upgrade or remove `BIRDEYE_API_KEY`); stonk population summary is 50 h old (`fresh:false`), check
+  the next 6-hourly job runs; Moneta new wallet funding; pin GitHub Actions SHAs; Stripe/MPP removal decision.
 
 ## 🔴 2026-10-22 00:30 UTC — Railway breach: keys rotated, API DOWN until Railway resumes builds
 
