@@ -9,9 +9,19 @@
   keys. `/status` = ok: facilitator ok, redis ok, 0 settlement failures and 0 settle-first losses after the run.
 - **Paid SolScout sweep: 53/53 PASS**, avg 6.4 s. Slow (>10 s, expected): smart-money-flow 46 s, feed-latest 28 s,
   smart-money-trenches 28 s, trenches-check 25 s, trenches-scan 23 s, trending-signals 17 s, new-tokens 17 s.
-- **Still open:** rotate Helius (`HELIUS_API_KEY` + `SOLANA_RPC_URL`), Birdeye, Jupiter; Birdeye still out of
-  compute units (upgrade or remove `BIRDEYE_API_KEY`); stonk population summary is 50 h old (`fresh:false`), check
-  the next 6-hourly job runs; Moneta new wallet funding; pin GitHub Actions SHAs; Stripe/MPP removal decision.
+- **Moneta wallet rotated:** new wallet `DqEFUW4Q1MHTvWABLAoj3kGLt617jdaeeynEbHXxjXSR`, funded 29.97 USDC, 0 SOL
+  (x402 fees are paid by the facilitator). Key is in `eris/.env.moneta` (gitignored); old file kept as
+  `eris/.env.moneta.leaked-2026-10-21`. Never fund the old wallet `5x2U…eZ26`.
+- **TODO 2026-10-24 (Sardius):**
+  1. Railway `moneta` service: set `ERIS_PRIVATE_KEY` (copy from `eris/.env.moneta`) and `ERIS_WALLET_ADDRESS`,
+     one variable at a time (the Raw Editor replaces all variables), then deploy. Until then Moneta runs the
+     leaked, empty wallet.
+  2. Paste the rotated Moneta Upstash URL + token into `eris/.env.moneta` (local copy still has the old values).
+  3. Rotate Helius (`HELIUS_API_KEY` + `SOLANA_RPC_URL`), Birdeye, Jupiter: new key → set → deploy → verify
+     `/status` upstreams → revoke old.
+  4. After Moneta deploys: Claude confirms payments come from `DqEF…jXSR` and updates `../moneta/docs/CHECKPOINT.md`.
+- **Still open:** Birdeye still out of compute units (upgrade or remove `BIRDEYE_API_KEY`); stonk population summary
+  is 50 h old (`fresh:false`), check the next 6-hourly job runs; pin GitHub Actions SHAs; Stripe/MPP removal decision.
 
 ## 🔴 2026-10-22 00:30 UTC — Railway breach: keys rotated, API DOWN until Railway resumes builds
 
