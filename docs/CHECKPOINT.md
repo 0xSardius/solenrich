@@ -20,6 +20,14 @@ Moneta wallet rotated, funded and live on Railway.
 4. Decide Birdeye: upgrade or remove `BIRDEYE_API_KEY`.
 5. Pin GitHub Actions to commit SHAs; decide Stripe/MPP removal.
 6. Check demand while away: `/metrics` callers, buyer `8LZj73`.
+7. Add the new Moneta wallet `DqEFUW4Q1MHTvWABLAoj3kGLt617jdaeeynEbHXxjXSR` to the dogfood list in
+   `src/lib/caller-id.ts:78` (or `DOGFOOD_WALLETS` on Railway). Until then `/metrics` counts Moneta as organic and
+   its queries feed `consensus-signal` (`src/lib/agent.ts:307`). Deferred on purpose: no API restart before vacation.
+8. Find out why `/metrics` `today.total_calls` (61) differs from `last_7_days` for the same date (356), and why 38
+   of 44 callers on 10/25 have only an `ip:` caller ID.
+
+**Settlements 10/25 23:06 UTC:** 0 failures, settle-first 4 settled / 0 losses. Daily paid calls: 10/19 413,
+10/20 347, 10/21 323, 10/22 3, 10/23 0 (down), 10/24 415, 10/25 356 so far — back to the pre-breach level.
 
 
 ## ✅ 2026-10-24 00:18 UTC — API back online after the Railway breach; paid SolScout 53/53
