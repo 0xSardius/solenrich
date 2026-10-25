@@ -1,7 +1,26 @@
 # Session Checkpoint
 
 ## Last session date
-2026-10-24
+2026-10-25
+
+## ⏸️ 2026-10-25 23:05 UTC — pausing for Sardius's vacation; resume here
+
+**Verified now:** `/status` ok — facilitator ok, redis ok, 0 settlement failures, stonk index 49,883 rows (3 min
+old). Only failing upstream: Birdeye (out of compute units). Moneta pays from the new wallet `DqEF…jXSR`
+(27.18 USDC left, 95 txs since funding; about $1.40/day at this rate → roughly 2–3 weeks, check on return).
+
+**Done since the breach:** API redeployed with rotated CDP/Upstash/Stripe/MPP/METRICS_TOKEN; paid SolScout 53/53;
+Moneta wallet rotated, funded and live on Railway.
+
+**On return, in order:**
+1. Read this file; check `/status` and the Moneta wallet balance.
+2. Rotate Helius (`HELIUS_API_KEY` + `SOLANA_RPC_URL`), Birdeye, Jupiter: new key → set on Railway (one variable
+   at a time) → deploy → verify `/status` upstreams → revoke old. **These keys were exposed and are still live.**
+3. Paste the rotated Moneta Upstash URL + token into `eris/.env.moneta`.
+4. Decide Birdeye: upgrade or remove `BIRDEYE_API_KEY`.
+5. Pin GitHub Actions to commit SHAs; decide Stripe/MPP removal.
+6. Check demand while away: `/metrics` callers, buyer `8LZj73`.
+
 
 ## ✅ 2026-10-24 00:18 UTC — API back online after the Railway breach; paid SolScout 53/53
 
@@ -19,7 +38,7 @@
   2. Paste the rotated Moneta Upstash URL + token into `eris/.env.moneta` (local copy still has the old values).
   3. Rotate Helius (`HELIUS_API_KEY` + `SOLANA_RPC_URL`), Birdeye, Jupiter: new key → set → deploy → verify
      `/status` upstreams → revoke old.
-  4. After Moneta deploys: Claude confirms payments come from `DqEF…jXSR` and updates `../moneta/docs/CHECKPOINT.md`.
+  4. ✅ 10/25: Moneta pays from `DqEF…jXSR`; `../moneta/docs/CHECKPOINT.md` updated. (Step 1 done 10/24.)
 - **Still open:** Birdeye still out of compute units (upgrade or remove `BIRDEYE_API_KEY`); stonk population summary
   is 50 h old (`fresh:false`), check the next 6-hourly job runs; pin GitHub Actions SHAs; Stripe/MPP removal decision.
 
