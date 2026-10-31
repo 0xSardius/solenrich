@@ -58,3 +58,5 @@ jobs:
       - run: bun test test/upstream-canary.test.ts
       # /tasks block (2026-10-31): encoded paths like /%74asks must 402 inside Hono.
       - run: bun test test/tasks-guard.test.ts
+      # Fail-closed paywall (2026-10-31): production without x402 middleware returns 503, never free data.
+      - run: bun test test/payment-guard.test.ts

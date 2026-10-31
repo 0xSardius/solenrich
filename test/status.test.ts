@@ -34,6 +34,13 @@ describe('computeStatus', () => {
     expect(v.reasons[0]).toContain('facilitator unreachable');
   });
 
+  test('closed paywall (production, no x402 middleware) is down / 503', () => {
+    const v = computeStatus(healthy({ paywall_closed: true }));
+    expect(v.verdict).toBe('down');
+    expect(v.http).toBe(503);
+    expect(v.reasons[0]).toContain('paywall not installed');
+  });
+
   test('facilitator unreachable with payments disabled (local dev) is not down', () => {
     const v = computeStatus(healthy({ payments_enabled: false, facilitator: 'disabled' }));
     expect(v.verdict).toBe('ok');

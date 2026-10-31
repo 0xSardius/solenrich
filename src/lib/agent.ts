@@ -1,5 +1,6 @@
 import { createAgentApp } from "@lucid-agents/hono";
 import { blockTaskRoutes } from "./tasks-guard";
+import { paymentsRequired, paywallClosedMiddleware, skipX402ForMpp } from "./payment-guard";
 import { createAgent } from "@lucid-agents/core";
 import { http } from "@lucid-agents/http";
 // NOTE: Lucid's payments plugin only supports EVM (ExactEvmScheme).
@@ -360,6 +361,8 @@ const PAYMENTS_ENABLED = process.env.PAYMENTS_ENABLED?.toLowerCase() === "true" 
 const BASE_NETWORK = "eip155:8453" as `${string}:${string}`;
 const EVM_PAY_TO = process.env.EVM_PAY_TO ?? "";
 const BASE_ACCEPTS_ENABLED = PAYMENTS_ENABLED && EVM_PAY_TO !== "";
+// Set true once the MPP charge handlers are installed (see skipX402ForMpp).
+let mppActive = false;
 
 // Build x402 resource server eagerly so we can catch auth/network failures before
 // the process enters its restart loop. If init fails we log and fall back to
@@ -387,6 +390,11 @@ if (PAYMENTS_ENABLED) {
     console.error('[x402] Facilitator init failed — x402 payments DISABLED for this process. Fix CDP_API_KEY_ID/CDP_API_KEY_SECRET or FACILITATOR_URL and redeploy. Error:', err);
   }
 }
+
+// Production must never serve paid endpoints unpaid: if the x402 middleware
+// cannot be installed there, paid routes return 503 (see the else-if below).
+const PAYMENTS_REQUIRED = paymentsRequired(process.env);
+const PAYWALL_CLOSED = PAYMENTS_REQUIRED && !(PAYMENTS_ENABLED && resourceServer);
 
 if (PAYMENTS_ENABLED && resourceServer) {
 
@@ -548,9 +556,10 @@ if (PAYMENTS_ENABLED && resourceServer) {
   // No credential → x402 returns 402 with x402 challenge (preferred protocol).
   // X-Payment header → x402 verifies the payment.
   // Authorization: Payment → skip x402, let MPP handle below.
+  // Authorization: Payment → skip x402 ONLY when MPP is installed (mppActive);
+  // otherwise x402 handles the request, so a stray header cannot skip payment.
   app.use("/entrypoints/*", async (c, next) => {
-    const hasMppCredential = c.req.header('authorization')?.startsWith('Payment ');
-    if (hasMppCredential) {
+    if (skipX402ForMpp(c.req.header('authorization'), mppActive)) {
       // MPP credential present — skip x402, let MPP middleware handle
       await next();
       return;
@@ -606,13 +615,19 @@ if (PAYMENTS_ENABLED && resourceServer) {
           return mppHandler(c, next);
         });
       }
+      mppActive = true;
       console.log(`[mpp] MPP + Stripe enabled on ${Object.keys(PRICING).length} endpoints (gated — only runs with Authorization: Payment header)`);
     }
   }
+} else if (PAYWALL_CLOSED) {
+  // Fail closed (src/lib/payment-guard.ts): without the x402 middleware, Lucid
+  // would serve every paid endpoint free. Registered before addEntrypoint.
+  app.use("/entrypoints/*", paywallClosedMiddleware(FREE_ENDPOINTS));
+  console.error(`[x402] PAYWALL CLOSED — ${!PAYMENTS_ENABLED ? 'PAYMENTS_ENABLED is not "true" or AGENT_WALLET_ADDRESS is empty' : 'facilitator init failed'}. Paid endpoints return 503 until a redeploy fixes it.`);
 } else if (!PAYMENTS_ENABLED) {
-  console.log("[x402] Payments disabled — set AGENT_WALLET_ADDRESS and PAYMENTS_ENABLED=true to enable");
+  console.log("[x402] Payments disabled (not production) — paid endpoints run unpaid. Set AGENT_WALLET_ADDRESS and PAYMENTS_ENABLED=true to enable");
 } else {
-  console.warn("[x402] Payments enabled but facilitator init failed — paid endpoints will return 402 with no verification path. MPP/Stripe routes (if configured) still work.");
+  console.warn("[x402] Payments enabled but facilitator init failed (not production) — paid endpoints run unpaid in this process.");
 }
 
 // --- Dependency injection ---
@@ -1535,6 +1550,7 @@ app.get('/status', async (c) => {
     now,
     uptime_sec: process.uptime(),
     payments_enabled: PAYMENTS_ENABLED,
+    paywall_closed: PAYWALL_CLOSED,
     facilitator: facilitatorState,
     last_settlement_failure_at: settleFailures.lastAt,
     settlement_failures_today: settleFailures.today,
@@ -1555,6 +1571,9 @@ app.get('/status', async (c) => {
     checked_at: new Date(now).toISOString(),
     payments: {
       enabled: PAYMENTS_ENABLED,
+      required: PAYMENTS_REQUIRED,
+      paywall: PAYWALL_CLOSED ? 'closed' : (PAYMENTS_ENABLED && resourceServer ? 'installed' : 'off'),
+      mpp: mppActive,
       facilitator: facilitatorState,
       facilitator_checked_at: facilitatorProbe.at ? new Date(facilitatorProbe.at).toISOString() : null,
       settlement_failures_today: settleFailures.today,

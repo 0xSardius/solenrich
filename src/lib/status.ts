@@ -13,6 +13,8 @@ export interface StatusInputs {
   now: number;
   uptime_sec: number;
   payments_enabled: boolean;
+  /** Production without an installed x402 middleware: paid routes return 503 (src/lib/payment-guard.ts). */
+  paywall_closed?: boolean;
   facilitator: FacilitatorState;
   /** ms timestamp of the last refused settlement, if any. */
   last_settlement_failure_at: number | null;
@@ -46,6 +48,10 @@ export function computeStatus(i: StatusInputs): StatusVerdict {
   let down = false;
   let degraded = false;
 
+  if (i.paywall_closed) {
+    down = true;
+    reasons.push('paywall not installed — paid endpoints return 503 until a redeploy fixes payments');
+  }
   if (i.payments_enabled && i.facilitator === 'unreachable') {
     down = true;
     reasons.push('facilitator unreachable — no payment can settle');
