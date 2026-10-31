@@ -56,3 +56,5 @@ jobs:
       - run: bun test test/stonk-pulse.test.ts
       # Upstream canary (2026-10-14): probe outcomes and /status reasons — fake probes, no network.
       - run: bun test test/upstream-canary.test.ts
+      # /tasks block (2026-10-31): encoded paths like /%74asks must 402 inside Hono.
+      - run: bun test test/tasks-guard.test.ts

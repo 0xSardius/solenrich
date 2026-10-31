@@ -1,6 +1,7 @@
 import { app } from './lib/agent';
 import { PRICING } from './config';
 import { rootResponse } from './lib/root';
+import { tasksBlockedResponse } from './lib/tasks-guard';
 
 const port = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 const PAY_TO = process.env.AGENT_WALLET_ADDRESS ?? '';
@@ -90,18 +91,9 @@ export default {
     const root = rootResponse(request);
     if (root) return root;
 
-    if (path === '/tasks' || path.startsWith('/tasks/')) {
-      return new Response(
-        JSON.stringify({
-          error: 'Payment Required',
-          message:
-            'A2A task execution is not available on SolEnrich. Every skill is a paid endpoint — call it directly and pay per request via x402.',
-          how_to_call: 'POST /entrypoints/{key}/invoke with {"input": {...}}',
-          discovery: { endpoints: '/entrypoints', docs: '/docs', mcp: '/mcp' },
-        }),
-        { status: 402, headers: { 'Content-Type': 'application/json' } },
-      );
-    }
+    // Raw-path check only. Encoded variants (`/%74asks`) are caught inside
+    // Hono by blockTaskRoutes (src/lib/tasks-guard.ts).
+    if (path === '/tasks' || path.startsWith('/tasks/')) return tasksBlockedResponse();
 
     const res = await app.fetch(request, { IP: server?.requestIP?.(request) });
     if (res.status !== 402) return res;

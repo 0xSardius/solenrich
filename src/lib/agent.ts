@@ -1,4 +1,5 @@
 import { createAgentApp } from "@lucid-agents/hono";
+import { blockTaskRoutes } from "./tasks-guard";
 import { createAgent } from "@lucid-agents/core";
 import { http } from "@lucid-agents/http";
 // NOTE: Lucid's payments plugin only supports EVM (ExactEvmScheme).
@@ -118,7 +119,7 @@ const agent = await createAgent({
   .use(http())
   .build();
 
-const { app, addEntrypoint } = await createAgentApp(agent);
+const { app, addEntrypoint } = await createAgentApp(agent, { beforeMount: blockTaskRoutes });
 
 // --- Shared cache ---
 // One instance for data + metrics: a silent Redis init failure can't split
