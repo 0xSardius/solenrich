@@ -8,6 +8,12 @@ bun.lockb
 # Private strategy docs (not for public GitHub)
 project-context.md
 docs/helius-application.md
+# Internal docs (2026-10-31): checkpoint, scopes, strategy, outreach. The
+# files stay on disk in place, so Claude Code still reads CLAUDE.md and
+# docs/CHECKPOINT.md; they are only kept off public GitHub.
+docs/
+CLAUDE.md
+solenrich-claude-code-prd.md
 
 # Local-only workspace — deliverables, drafts, screenshots, scratch notes
 # Anything in here stays on your machine, never pushed.
