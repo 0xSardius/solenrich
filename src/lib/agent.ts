@@ -1561,6 +1561,8 @@ app.get('/status', async (c) => {
     index_last_refresh_at: indexLastRefreshAt,
     index_last_error: idx.lastError,
     index_partial: idx.partial ? `${idx.partial.pages}/${idx.partial.totalPages} pages` : null,
+    ledger_rows: idx.ledgerRows,
+    ledger_error: idx.ledgerError,
   });
   const warm = warmer.stats(now);
   const upstreams = upstreamCanary.status();
@@ -1591,6 +1593,7 @@ app.get('/status', async (c) => {
       refreshing: idx.refreshing,
       last_error: idx.lastError,
       partial: idx.partial,
+      ledger: { rows: idx.ledgerRows, loaded_at: idx.ledgerLoadedAt, error: idx.ledgerError },
       // Written by the GitHub Actions job every 6h (stonk-population.ts). Stale (> 48h) → launch-intel says LIMITED.
       population: (() => {
         const p = stonkIndex.populationStatus();

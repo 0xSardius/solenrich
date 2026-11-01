@@ -34,6 +34,20 @@ describe('computeStatus', () => {
     expect(v.reasons[0]).toContain('facilitator unreachable');
   });
 
+  test('a rewards ledger under LEDGER_MIN_ROWS is degraded (the 100-row read of 10/7–11/1)', () => {
+    const v = computeStatus(healthy({ ledger_rows: 100 }));
+    expect(v.verdict).toBe('degraded');
+    expect(v.reasons[0]).toContain('rewards ledger has 100 rows');
+    expect(computeStatus(healthy({ ledger_rows: 60_000 })).verdict).toBe('ok');
+    expect(computeStatus(healthy({ ledger_rows: null })).verdict).toBe('ok');
+  });
+
+  test('a failed ledger reload with an older ledger served is a note, not degraded', () => {
+    const v = computeStatus(healthy({ ledger_rows: 60_000, ledger_error: 'timeout' }));
+    expect(v.verdict).toBe('ok');
+    expect(v.reasons[0]).toContain('rewards ledger reload failed');
+  });
+
   test('closed paywall (production, no x402 middleware) is down / 503', () => {
     const v = computeStatus(healthy({ paywall_closed: true }));
     expect(v.verdict).toBe('down');

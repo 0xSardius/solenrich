@@ -28,6 +28,10 @@ export interface StatusInputs {
   index_last_error: string | null;
   /** "12/200 pages" while the rows come from a partial walk; null after a full refresh. */
   index_partial?: string | null;
+  /** Rows in the rewards ledger the index uses; null before the first load. */
+  ledger_rows?: number | null;
+  /** Last ledger reload error while an older ledger is still served. */
+  ledger_error?: string | null;
 }
 
 export interface StatusVerdict {
@@ -40,6 +44,8 @@ export interface StatusVerdict {
 export const RECENT_WINDOW_MS = 15 * 60 * 1000;
 /** The StonkFun index refreshes every 10 min; older than this is stale. */
 export const INDEX_STALE_MS = 30 * 60 * 1000;
+/** The rewards ledger held 52,361 rows on 2026-10-07 and only grows; fewer than this means a broken read. */
+export const LEDGER_MIN_ROWS = 10_000;
 /** After boot the index needs about a minute; do not call it stale before this. */
 export const BOOT_GRACE_SEC = 5 * 60;
 
@@ -89,6 +95,16 @@ export function computeStatus(i: StatusInputs): StatusVerdict {
   } else if (i.index_partial) {
     // Serving the top pages by volume; a retry is scheduled. A note, not degraded: callers get real rows.
     reasons.push(`stonk index partial: ${i.index_partial}`);
+  }
+  // A size check, not an HTTP check (2026-11-01): StonkFun's /rewards switched to 100-row pages on 2026-10-07
+  // and we served 100 ledger rows for 24 days while every probe stayed green. Degraded: holders and payout
+  // status are wrong for every coin outside the ledger we hold.
+  if (i.ledger_rows != null && i.ledger_rows < LEDGER_MIN_ROWS) {
+    degraded = true;
+    reasons.push(`rewards ledger has ${i.ledger_rows} rows (< ${LEDGER_MIN_ROWS}) — holders and payout status missing for most coins`);
+  }
+  if (i.ledger_error) {
+    reasons.push(`rewards ledger reload failed, serving the previous one: ${i.ledger_error}`);
   }
   if (i.payments_enabled && i.facilitator === 'unknown') {
     reasons.push('facilitator check timed out — payments state unknown');

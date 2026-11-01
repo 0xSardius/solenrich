@@ -7,6 +7,7 @@
 import { Cache } from '../src/cache';
 import { StonkFunClient, type StonkRewardsLedgerEntry } from '../src/sources/stonkfun';
 import { toRow } from '../src/enrichers/stonk-index';
+import { LEDGER_MIN_ROWS } from '../src/lib/status';
 import {
   POPULATION_CACHE_KEY,
   POPULATION_MIN_COVERAGE,
@@ -34,6 +35,11 @@ if (walk.failedPages.length) console.log(`failed pages: ${walk.failedPages.join(
 
 if (coverage < POPULATION_MIN_COVERAGE) {
   console.error(`coverage ${(coverage * 100).toFixed(1)}% < ${POPULATION_MIN_COVERAGE * 100}% — not writing; the API keeps the last good summary.`);
+  process.exit(1);
+}
+// The ledger fed holders and paying shares with 100 rows from 2026-10-07 to 2026-11-01 (StonkFun paginated it).
+if (ledger.length < LEDGER_MIN_ROWS) {
+  console.error(`rewards ledger has ${ledger.length} rows < ${LEDGER_MIN_ROWS} — not writing; the API keeps the last good summary.`);
   process.exit(1);
 }
 

@@ -35,6 +35,8 @@ const MAX_PAGES = 200;
  */
 export const STONK_VOLUME_SORT = 'volume';
 const RETRY_DELAY_MS = 60 * 1000;
+/** The rewards ledger is ~60 pages since 2026-10-07; reload it every third index refresh, not every one. */
+export const LEDGER_REFRESH_MS = 30 * 60 * 1000;
 /** Per-page timeout for the walk. Fast pages answer in < 1s; a slow page is retried once, then skipped. */
 const PAGE_TIMEOUT_MS = 8_000;
 /** Failures come in clusters (a live walk on 2026-09-22 lost 3 pages in a row at page 60). 5 × ~17s ≈ 85s. */
@@ -153,6 +155,10 @@ export interface StonkIndexStatus {
   refreshing: boolean;
   /** Non-null while the rows come from a partial page walk (the top pages by volume). */
   partial: { pages: number; totalPages: number; reason: string } | null;
+  /** Rewards-ledger rows in use (holders + payouts); null before the first load. See LEDGER_MIN_ROWS. */
+  ledgerRows: number | null;
+  ledgerLoadedAt: string | null;
+  ledgerError: string | null;
   seriesCoins: number;
   seriesDays: number;
   oldestPointAt: string | null;
@@ -217,6 +223,8 @@ export class StonkIndex {
   private retryTimer: ReturnType<typeof setTimeout> | null = null;
   /** Set when the last refresh kept a partial walk; null after a full one. */
   private partial: { pages: number; totalPages: number; reason: string } | null = null;
+  private ledger: { byMint: Map<string, StonkRewardsLedgerEntry>; at: number } | null = null;
+  private ledgerError: string | null = null;
   private loaded = false;
   /** Per-quote stats over the whole population, written by the scheduled job (stonk-population.ts). */
   private population: StonkPopulation | null = null;
@@ -261,6 +269,9 @@ export class StonkIndex {
       lastError: this.lastError,
       refreshing: this.refreshing,
       partial: this.partial,
+      ledgerRows: this.ledger ? this.ledger.byMint.size : null,
+      ledgerLoadedAt: this.ledger ? new Date(this.ledger.at).toISOString() : null,
+      ledgerError: this.ledgerError,
       seriesCoins: this.series.size,
       seriesDays: days.size,
       oldestPointAt: oldest != null ? new Date(oldest).toISOString() : null,
@@ -440,8 +451,7 @@ export class StonkIndex {
     const started = this.now();
     await this.loadPopulation();
     try {
-      const [ledger, walk] = await Promise.all([this.client.getRewardsLedger(), this.fetchAllRewardTokens()]);
-      const ledgerByMint = new Map<string, StonkRewardsLedgerEntry>(ledger.map((l) => [l.mint, l]));
+      const [ledgerByMint, walk] = await Promise.all([this.loadLedger(started), this.fetchAllRewardTokens()]);
 
       const next = new Map<string, StonkIndexRow>();
       for (const t of walk.tokens) {
@@ -476,6 +486,25 @@ export class StonkIndex {
     } finally {
       this.refreshing = false;
     }
+  }
+
+  /**
+   * The rewards ledger (holders, payouts), reloaded at most every LEDGER_REFRESH_MS: since 2026-10-07 it is
+   * ~60+ pages instead of one call. If a reload fails, the previous ledger is kept and the error is reported
+   * in status(); only with no ledger at all does the refresh fail.
+   */
+  private async loadLedger(now: number): Promise<Map<string, StonkRewardsLedgerEntry>> {
+    if (this.ledger && now - this.ledger.at < LEDGER_REFRESH_MS) return this.ledger.byMint;
+    try {
+      const rows = await this.client.getRewardsLedger();
+      this.ledger = { byMint: new Map(rows.map((l) => [l.mint, l])), at: this.now() };
+      this.ledgerError = null;
+    } catch (err) {
+      this.ledgerError = err instanceof Error ? err.message : String(err);
+      console.warn(`[stonk-index] rewards ledger reload failed${this.ledger ? ', keeping the previous one' : ''}: ${this.ledgerError}`);
+      if (!this.ledger) throw err;
+    }
+    return this.ledger.byMint;
   }
 
   /**

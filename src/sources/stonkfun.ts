@@ -17,9 +17,15 @@ import { drain } from '../utils/drain';
 
 export const STONKFUN_BASE_URL = 'https://www.stonkfun.xyz/api/public/v1';
 
-/** Per-request ceiling. The full rewards ledger (~1.4MB) takes ~9s upstream. */
+/** Per-request ceiling. */
 const DEFAULT_TIMEOUT_MS = 15_000;
-const LEDGER_TIMEOUT_MS = 40_000;
+/** One rewards-ledger page (1,000 rows, ~690 KB, ~0.35 s measured 2026-11-01; some pages are slow at random). */
+const LEDGER_TIMEOUT_MS = 20_000;
+/** StonkFun's largest `pageSize` on /rewards (measured 2026-11-01: 5,000 and 20,000 both return 1,000). */
+export const LEDGER_PAGE_SIZE = 1_000;
+const LEDGER_CONCURRENCY = 4;
+/** 300,000 rows — far above the ~60,000+ reward launches of 2026-11. A guard against a page loop, not a cap. */
+const LEDGER_MAX_PAGES = 300;
 const MAX_RETRY_AFTER_MS = 5_000;
 
 export type StonkMode = 'standard' | 'reward';
@@ -284,10 +290,35 @@ export class StonkFunClient {
     }
   }
 
-  /** Lifetime payout totals for every reward coin (one ~1.4MB call). Not cached. */
-  async getRewardsLedger(limit = 10_000): Promise<StonkRewardsLedgerEntry[]> {
-    const data = await this.request<{ launches: StonkRewardsLedgerEntry[] }>(`/rewards?limit=${limit}`, LEDGER_TIMEOUT_MS);
-    return Array.isArray(data.launches) ? data.launches : [];
+  /**
+   * Lifetime payout totals for every reward coin, deduplicated by mint. Not cached.
+   *
+   * Until 2026-10-07 one `/rewards?limit=10000` call returned the whole ledger (52,361 rows). StonkFun then
+   * switched to pages: `limit` is ignored, `pageSize` caps at 1,000 (default 100) and `total` is null. We read
+   * only the first 100 rows for 24 days, so most coins showed no holders and a STALE payout. This walks pages,
+   * LEDGER_CONCURRENCY at a time, until a short page. A page that fails twice throws: a partial ledger reads
+   * as "never paid" for every missing coin, which is worse than the caller keeping its previous ledger.
+   */
+  async getRewardsLedger(): Promise<StonkRewardsLedgerEntry[]> {
+    const byMint = new Map<string, StonkRewardsLedgerEntry>();
+    const fetchPage = async (page: number): Promise<StonkRewardsLedgerEntry[]> => {
+      const path = `/rewards?pageSize=${LEDGER_PAGE_SIZE}&page=${page}`;
+      let data: { launches?: StonkRewardsLedgerEntry[] };
+      try {
+        data = await this.request(path, LEDGER_TIMEOUT_MS);
+      } catch {
+        data = await this.request(path, LEDGER_TIMEOUT_MS);
+      }
+      return Array.isArray(data.launches) ? data.launches : [];
+    };
+    for (let first = 1; first <= LEDGER_MAX_PAGES; first += LEDGER_CONCURRENCY) {
+      const pages = await Promise.all(Array.from({ length: LEDGER_CONCURRENCY }, (_, i) => fetchPage(first + i)));
+      for (const rows of pages) {
+        for (const r of rows) byMint.set(r.mint, r);
+        if (rows.length < LEDGER_PAGE_SIZE) return [...byMint.values()];
+      }
+    }
+    throw new StonkFunError(0, 'ledger_too_long', `rewards ledger exceeded ${LEDGER_MAX_PAGES} pages of ${LEDGER_PAGE_SIZE}`);
   }
 
   /**

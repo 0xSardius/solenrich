@@ -1155,3 +1155,92 @@ describe('stonk-quote: pure math', () => {
     expect(brief).toContain('StonkFun Quote'); expect(brief).toContain('Round trip');
   });
 });
+
+// ---------------------------------------------------------------------------
+// Rewards ledger pagination (2026-11-01). StonkFun switched /rewards to pages on 2026-10-07 (`limit` ignored,
+// `pageSize` ≤ 1,000, default 100, total null); we read 100 rows for 24 days.
+describe('rewards ledger: pages until a short page', () => {
+  const entry = (mint: string) => ({ mint, quote: { mint: 'Q', symbol: 'ZEC', decimals: 8 }, distributedRaw: '1', distributedTokens: 1, payoutCount: 1, holderCount: 7, lastPayoutAt: null });
+  const serveLedger = (total: number, failPage?: number) => {
+    const seen: string[] = [];
+    const server = Bun.serve({
+      port: 0,
+      fetch: (req) => {
+        const url = new URL(req.url);
+        seen.push(url.search);
+        const page = Number(url.searchParams.get('page') ?? '1');
+        const size = Math.min(Number(url.searchParams.get('pageSize') ?? '100'), 1000);
+        if (page === failPage) return Response.json({ error: { code: 'boom', message: 'boom' } }, { status: 503 });
+        const from = (page - 1) * size;
+        const launches = Array.from({ length: Math.max(0, Math.min(size, total - from)) }, (_, i) => entry(`m${from + i}`));
+        return Response.json({ data: { launches, launchesPagination: { page, pageSize: size, total: null, totalPages: null } } });
+      },
+    });
+    return { server, seen, client: new StonkFunClient(new Cache(), `http://127.0.0.1:${server.port}`) };
+  };
+
+  test('reads every page at pageSize=1000 and stops at the short page', async () => {
+    const { server, seen, client } = serveLedger(5_250);
+    try {
+      const rows = await client.getRewardsLedger();
+      expect(rows.length).toBe(5_250);
+      expect(new Set(rows.map((r) => r.mint)).size).toBe(5_250);
+      expect(seen.every((s) => s.includes('pageSize=1000'))).toBe(true);
+      expect(seen.some((s) => s.includes('limit='))).toBe(false);
+      expect(seen.length).toBe(8); // two batches of 4; page 6 is short
+    } finally {
+      server.stop(true);
+    }
+  });
+
+  test('an exact multiple of 1,000 ends on the empty page after it', async () => {
+    const { server, client } = serveLedger(4_000);
+    try {
+      expect((await client.getRewardsLedger()).length).toBe(4_000);
+    } finally {
+      server.stop(true);
+    }
+  });
+
+  test('a page that fails twice throws instead of returning a partial ledger', async () => {
+    const { server, client } = serveLedger(5_250, 3);
+    try {
+      await expect(client.getRewardsLedger()).rejects.toThrow('stonkfun 503');
+    } finally {
+      server.stop(true);
+    }
+  });
+
+  test('the index reloads the ledger every 30 min and keeps the previous one when a reload fails', async () => {
+    const page = fixture<{ data: { tokens: StonkToken[] } }>('tokens-reward-page.json').data.tokens;
+    const ledger = fixture<{ data: { launches: any[] } }>('rewards-ledger.json').data.launches;
+    let ledgerCalls = 0;
+    let failLedger = false;
+    const client = {
+      getTokens: async () => ({ tokens: page, pagination: { page: 1, pageSize: 25, total: page.length, totalPages: 1 } }),
+      getRewardsLedger: async () => { ledgerCalls++; if (failLedger) throw new Error('ledger down'); return ledger; },
+    } as unknown as StonkFunClient;
+    const fakePrices = async (mints: string[]) => Object.fromEntries(mints.map((m) => [m, { id: m, price: 100, mintSymbol: '', vsToken: '', vsTokenSymbol: 'USDC' }]));
+    const jupiter = { getPrice: fakePrices, getPriceUncached: fakePrices } as any;
+    let now = NOW;
+    const idx = new StonkIndex(client, jupiter, new Cache(), () => now);
+
+    await idx.refresh();
+    expect(ledgerCalls).toBe(1);
+    expect(idx.status().ledgerRows).toBe(new Set(ledger.map((l) => l.mint)).size);
+    const holdersBefore = idx.getRow(zcat.token.mint)?.holders;
+
+    now += 10 * 60_000; // next index refresh: ledger still fresh
+    await idx.refresh();
+    expect(ledgerCalls).toBe(1);
+
+    now += 25 * 60_000; // past 30 min: reload, which fails
+    failLedger = true;
+    await idx.refresh();
+    expect(ledgerCalls).toBe(2);
+    const st = idx.status();
+    expect(st.lastError).toBeNull();
+    expect(st.ledgerError).toBe('ledger down');
+    expect(idx.getRow(zcat.token.mint)?.holders).toBe(holdersBefore);
+  });
+});
