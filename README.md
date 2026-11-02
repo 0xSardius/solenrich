@@ -105,7 +105,7 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 | `trending-signals` | $0.050 | `min_liquidity_usd`, `max_risk_score`, `limit`, `format` | Composite ranking of trending tokens: discovery + whale-watch + risk scoring, with reasoning |
 | `smart-money-flow` | $0.100 | `wallets[]`, `min_win_rate`, `lookback_days`, `format` | Scores seed wallets, filters to winners, surfaces tokens they're accumulating + clusters |
 
-### Trenches — Memecoin Intelligence (5 endpoints)
+### Trenches — Memecoin Intelligence (6 endpoints)
 
 | Endpoint | Price | Input | Description |
 |----------|-------|-------|-------------|
@@ -114,6 +114,7 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 | `trenches-scan` | $0.08 | `max_token_age_hours`, `min_liquidity_usd`, `limit`, `format` | All three trenches signals in one call — on-chain velocity × proven-winner buys × agent attention, composited into a ranked list with confluence counts, per-token reasoning, and HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL verdicts |
 | `trenches-check` | $0.03 | `mint`, `format` | The suite pointed at ONE token — before you ape, run the check. Same three legs as trenches-scan but targeted at your candidate: verdict + reasoning + per-leg detail. Pairs with due-diligence for a full pre-entry read |
 | `exit-signal` | $0.04 | `mint`, `entry_price_usd`, `format` | The sell-side verdict for a token you hold — EXIT / DERISK / HOLD with a 0–1 exit score. Sell pressure, buy-rate deceleration, volume fade, distribution-into-strength, top-holder flow (distributing vs accumulating whales), liquidity trend, holder churn. Rug triggers (LP pull, active dump) override everything. Works on tokens of any age |
+| `audace-intent-check` | $0.05 | `category`, `tokenInMint`, `tokenOutMint`, `amountIn`, `seasonEndsAt`, `network`, `format` | For AudaceFi league agents: send the `/v1/swap-intents` body, get PROCEED / REDUCE / HOLD with reason codes. Buys check risk flags, the trenches signal (Degen) and exit momentum; sells run the exit verdict. Within 60 min of the season-end snapshot, sells proceed and buys hold. `network`: devnet (default) or mainnet |
 
 ### Collectibles / RWA (1 endpoint)
 
@@ -293,7 +294,7 @@ SolEnrich exposes an MCP endpoint for Claude Desktop, Claude Code, and Cursor. *
 }
 ```
 
-49 tools — every endpoint is exposed as an MCP tool (wallet/token light+full variants fold into `depth`/`include_holders` toggles). Highlights: `enrich_wallet`, `enrich_token`, `due_diligence`, `whale_watch`, `perps_cross_venue_funding`, `trending_signals`, `smart_money_flow`, `check_alerts`.
+50 tools — every endpoint is exposed as an MCP tool (wallet/token light+full variants fold into `depth`/`include_holders` toggles). Highlights: `enrich_wallet`, `enrich_token`, `due_diligence`, `whale_watch`, `perps_cross_venue_funding`, `trending_signals`, `smart_money_flow`, `check_alerts`.
 
 ## Free Demo
 

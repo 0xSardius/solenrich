@@ -1,0 +1,55 @@
+{
+  "key": "audace-intent-check",
+  "captured_at": "2026-11-02T00:30:22.124Z",
+  "input": {
+    "category": "degen",
+    "tokenInMint": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "tokenOutMint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+    "amountIn": 25,
+    "network": "devnet",
+    "format": "both"
+  },
+  "ms": 23215,
+  "output": {
+    "intent": {
+      "category": "degen",
+      "network": "devnet",
+      "direction": "buy",
+      "token_in": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+      "token_out": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "amount_in": 25,
+      "size_usd": 25
+    },
+    "verdict": "HOLD",
+    "suggested_fraction": 0,
+    "codes": [
+      "SIGNAL_TOO_WEAK"
+    ],
+    "season": {
+      "ends_at": "2026-11-07T00:00:00.000Z",
+      "ends_at_source": "default_saturday",
+      "minutes_to_snapshot": 7170
+    },
+    "buy_check": {
+      "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+      "symbol": "Bonk",
+      "allow": false,
+      "codes": [
+        "SIGNAL_TOO_WEAK"
+      ],
+      "risk_flags": [],
+      "degen_signal": "SINGLE_SIGNAL",
+      "exit_verdict": "HOLD",
+      "price_impact_pct": null
+    },
+    "sell_check": null,
+    "reasoning": "Hold: SIGNAL_TOO_WEAK. on-chain IGNITING (runner score 0.238); flags: accelerating_1h, strong_buy_pressure, wash_trade_risk; absent: no proven-winner buys, no agent attention. Momentum intact — no exit case in the current tape: 29% of 1h trades are sells, 5m buy rate at 0.5× the hourly pace, volume at 0.8× the 6h pace.",
+    "caveats": [
+      "seasonEndsAt not given: assumed the standard season end, the next Saturday 00:00 UTC. Pass season.active.endsAt from GET /v1/me/state for the real date.",
+      "Devnet league: the verdicts read the mainnet market for each mint identity. Devnet pool depth is not part of the verdict.",
+      "A verdict on market signals, not a guarantee. Not financial advice."
+    ],
+    "last_updated": "2026-11-02T00:30:22.099Z",
+    "llm_summary": "## AudaceFi Intent Check — buy $Bonk\n\n**⚪ HOLD — do not send it now**\n\ndegen · devnet · amount 25 (~$25.00) · 7170 min to the season-end snapshot\nCodes: SIGNAL_TOO_WEAK\n\n**Buy side ($Bonk):** risk flags: none · trenches signal SINGLE_SIGNAL · momentum HOLD\n\nHold: SIGNAL_TOO_WEAK. on-chain IGNITING (runner score 0.238); flags: accelerating_1h, strong_buy_pressure, wash_trade_risk; absent: no proven-winner buys, no agent attention. Momentum intact — no exit case in the current tape: 29% of 1h trades are sells, 5m buy rate at 0.5× the hourly pace, volume at 0.8× the 6h pace.\n\n_seasonEndsAt not given: assumed the standard season end, the next Saturday 00:00 UTC. Pass season.active.endsAt from GET /v1/me/state for the real date._\n_Devnet league: the verdicts read the mainnet market for each mint identity. Devnet pool depth is not part of the verdict._\n_A verdict on market signals, not a guarantee. Not financial advice._"
+  }
+}

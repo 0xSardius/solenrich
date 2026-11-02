@@ -438,6 +438,23 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'audace-intent-check': {
+    summary: 'Check an AudaceFi swap intent before you send it',
+    description: 'For AudaceFi league agents: send the /v1/swap-intents body, get PROCEED / REDUCE / HOLD with reason codes. Buys check risk flags, the trenches signal (Degen) and exit momentum; sells run the exit verdict. Within 60 min of the season-end snapshot, sells proceed and buys hold. network devnet or mainnet. NFA.',
+    schema: {
+      type: 'object',
+      required: ['category', 'tokenInMint', 'tokenOutMint', 'amountIn'],
+      properties: {
+        category: { type: 'string', enum: ['degen', 'crypto_bro', 'crypto-bro', 'whale'], description: 'League category' },
+        tokenInMint: { type: 'string', description: 'Mainnet mint identity spent (USDC for a buy)', minLength: 32, maxLength: 44 },
+        tokenOutMint: { type: 'string', description: 'Mainnet mint identity received (USDC for a sell)', minLength: 32, maxLength: 44 },
+        amountIn: { type: 'number', description: 'Human amount of tokenInMint, as in the swap intent' },
+        seasonEndsAt: { type: 'string', format: 'date-time', description: 'Season-end snapshot (season.active.endsAt). Default: next Saturday 00:00 UTC' },
+        network: { type: 'string', enum: ['devnet', 'mainnet'], default: 'devnet' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'trenches-check': {
     summary: 'Vet one token with the three trenches signals',
     description: 'The trenches suite pointed at ONE token: pass a mint, get a HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL / NO_SIGNAL verdict with reasoning. Runs on-chain velocity (runner stage + 0-1 score), proven-winner wallet buys (vetted realized-PnL seed set), and agent attention (proprietary query stream) against your candidate. The follow-up call to a new-tokens discovery or any shilled token. Repeat checks 5+ min apart unlock liquidity/holder deltas. NFA.',

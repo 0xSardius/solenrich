@@ -85,6 +85,8 @@ import { TrenchesScanOrchestrator } from "../enrichers/trenches-scan";
 import { TrenchesCheckAnalyzer } from "../enrichers/trenches-check";
 import { registerExitSignalEntrypoint } from "../entrypoints/exit";
 import { ExitSignalAnalyzer } from "../enrichers/exit-analyzer";
+import { registerAudaceEntrypoints } from "../entrypoints/audace";
+import { AudaceIntentChecker } from "../enrichers/audace-intent-check";
 import { StonkFunClient } from "../sources/stonkfun";
 import { TransferTaxReader } from "../sources/token-2022";
 import { StonkIndex } from "../enrichers/stonk-index";
@@ -436,6 +438,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'trenches-scan': ['solana', 'memecoin', 'smart-money', 'momentum', 'trenches'],
     'trenches-check': ['solana', 'memecoin', 'token-vetting', 'smart-money', 'trenches'],
     'exit-signal': ['solana', 'memecoin', 'exit', 'sell-signal', 'trenches'],
+    'audace-intent-check': ['solana', 'trading-league', 'swap-intent', 'exit', 'trenches'],
     'trending-signals': ['solana', 'trending', 'smart-money', 'new-tokens', 'signals'],
     'consensus-signal': ['solana', 'agent-attention', 'consensus', 'signals', 'smart-money'],
     'attention-momentum': ['solana', 'agent-attention', 'momentum', 'signals', 'divergence'],
@@ -836,6 +839,10 @@ registerTrenchesCheckEntrypoint(addEntrypoint, trenchesCheckAnalyzer);
 // top-holder flow. Works on tokens of any age, not just fresh launches.
 const exitSignalAnalyzer = new ExitSignalAnalyzer(dexscreener, whaleWatcher, cache, birdeye, transferTaxReader);
 registerExitSignalEntrypoint(addEntrypoint, exitSignalAnalyzer);
+
+// AudaceFi league intent check — one call per swap intent, composed from the
+// token analyzer, trenches-check and exit-signal above. Adds the season-end clock.
+registerAudaceEntrypoints(addEntrypoint, new AudaceIntentChecker(tokenAnalyzer, trenchesCheckAnalyzer, exitSignalAnalyzer));
 
 // StonkFun product line — quote-paired + reward-mode (transfer-tax) coins.
 // The index ingests every reward coin + the rewards ledger every 10 minutes
@@ -1280,6 +1287,19 @@ function buildDocs() {
         price: '0.04',
         input: { mint: 'string (required) — token mint you hold', entry_price_usd: 'number (optional) — your entry price, adds unrealized-PnL context (does not change the verdict)', format: 'json | llm | both' },
         description: 'The sell-side verdict — pass a mint you hold, get EXIT / DERISK / HOLD / INSUFFICIENT_DATA with a 0-1 exit score and reasoning. Reads sell pressure, buy-rate deceleration, volume fade, distribution-into-strength divergence, top-holder flow (distributing vs accumulating whales, 24h), liquidity trend, and holder churn. Hard triggers (LP pull ≤ -25%, active dump) force EXIT over everything else. Works on tokens of any age. Repeat calls 5+ min apart unlock liquidity/holder deltas — rug detection needs the second look.',
+      },
+      'audace-intent-check': {
+        price: PRICING['audace-intent-check'],
+        input: {
+          category: "'degen' | 'crypto_bro' | 'crypto-bro' | 'whale' (required)",
+          tokenInMint: 'string (required) — mainnet mint identity spent; USDC for a buy',
+          tokenOutMint: 'string (required) — mainnet mint identity received; USDC for a sell',
+          amountIn: 'number (required) — human amount of tokenInMint, as in the swap intent',
+          seasonEndsAt: 'ISO datetime (optional) — season.active.endsAt from GET /v1/me/state; default the next Saturday 00:00 UTC',
+          network: "'devnet' (default, Season 1 sandbox) | 'mainnet'",
+          format: 'json | llm | both',
+        },
+        description: 'For AudaceFi league agents. Send the body of the swap intent you are about to POST to /v1/swap-intents (seasonId, idempotencyKey, surface are accepted and ignored). Returns PROCEED / REDUCE / HOLD, suggested_fraction, reason codes, and the buy-side and sell-side checks. Direction comes from the mints: USDC in = buy, USDC out = sell, else token-to-token. Buys check the token bought: risk flags (low_liquidity, extreme_volatility, whale_dominated, mint_authority_active; plus freeze_authority_active on mainnet), the trenches-check signal for Degen (MODERATE or better), and exit momentum (EXIT/DERISK holds a buy). On mainnet, price impact over 3% at the intent size holds a buy. Sells run exit-signal: EXIT → PROCEED, DERISK → REDUCE (0.5), HOLD → HOLD. Season clock first: within 60 min of the season-end snapshot, sells PROCEED and buys HOLD with no upstream reads — a non-USDC wallet at the snapshot forfeits the season. A failed upstream read holds a buy (fail closed).',
       },
       'trenches-scan': {
         price: '0.08',

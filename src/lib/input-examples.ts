@@ -17,6 +17,7 @@ import { buildExampleLaunchTransaction, EXAMPLE_LAUNCH_SOL } from '../sources/la
 
 const BONK = 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263';
 const JUP = 'JUPyiwrYJFskUPiHa7hkeR8VUtAeFoSYbKedZNsDvCN';
+const USDC = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const WALLET = 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg';
 const WALLET_2 = 'BvgzoCUMgtos1KRsWwLoabt2a35ErqphzAV3xYEJzrRu';
 const ZCAT = 'HcRLc9VDgjLeK154xDawfb1dmVJ98DoSqcwTHGqiDeJR';
@@ -43,6 +44,8 @@ export const INPUT_EXAMPLES: Record<string, Record<string, unknown>> = {
   'due-diligence': { mint: BONK, format: 'json' },
   'trenches-check': { mint: BONK, format: 'json' },
   'exit-signal': { mint: BONK, entry_price_usd: 0.00002, format: 'json' },
+  // The swap-intent body an AudaceFi league agent sends: buy BONK with 25 USDC in Degen.
+  'audace-intent-check': { category: 'degen', tokenInMint: USDC, tokenOutMint: BONK, amountIn: 25, network: 'devnet', format: 'json' },
   'whale-watch': { mint: BONK, threshold_usd: 10000, lookback_hours: 24, format: 'json' },
   'token-trend': { mint: BONK, lookback: '7d', format: 'json' },
   'compare-tokens': { mints: [BONK, JUP], format: 'json' },

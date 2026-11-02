@@ -1324,6 +1324,46 @@
    "signals_firing": 4
   }
  },
+ "audace-intent-check": {
+  "intent": {
+   "category": "degen",
+   "network": "devnet",
+   "direction": "buy",
+   "token_in": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+   "token_out": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+   "amount_in": 25,
+   "size_usd": 25
+  },
+  "verdict": "HOLD",
+  "suggested_fraction": 0,
+  "codes": [
+   "SIGNAL_TOO_WEAK"
+  ],
+  "season": {
+   "ends_at": "2026-11-07T00:00:00.000Z",
+   "ends_at_source": "default_saturday",
+   "minutes_to_snapshot": 7170
+  },
+  "buy_check": {
+   "mint": "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
+   "symbol": "Bonk",
+   "allow": false,
+   "codes": [
+    "SIGNAL_TOO_WEAK"
+   ],
+   "risk_flags": [],
+   "degen_signal": "SINGLE_SIGNAL",
+   "exit_verdict": "HOLD",
+   "price_impact_pct": null
+  },
+  "sell_check": null,
+  "reasoning": "Hold: SIGNAL_TOO_WEAK. on-chain IGNITING (runner score 0.238); flags: acceler...",
+  "caveats": [
+   "seasonEndsAt not given: assumed the standard season end, the next Saturday 00...",
+   "Devnet league: the verdicts read the mainnet market for each mint identity. D...",
+   "A verdict on market signals, not a guarantee. Not financial advice."
+  ]
+ },
  "portfolio-history": {
   "address": "vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg",
   "current": {

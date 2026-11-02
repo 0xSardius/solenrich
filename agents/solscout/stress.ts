@@ -581,6 +581,21 @@ export const ENDPOINTS: Array<{
     ],
   },
   {
+    // AudaceFi intent check — a Degen buy of BONK with 25 USDC, the bazaar example.
+    // BONK's verdict varies with the tape, so checks are structural.
+    key: 'audace-intent-check',
+    input: { category: 'degen', tokenInMint: 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v', tokenOutMint: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263', amountIn: 25, format: 'both' },
+    timeout: 90000,
+    checks: [
+      { name: 'reads a buy', test: (d) => d.intent?.direction === 'buy' && d.intent?.category === 'degen' },
+      { name: 'has valid verdict', test: (d) => ['PROCEED', 'REDUCE', 'HOLD'].includes(d.verdict), detail: (d) => `verdict=${d.verdict} codes=${d.codes?.join(',')}` },
+      { name: 'buy_check ran all three legs', test: (d) => Array.isArray(d.buy_check?.risk_flags) && d.buy_check?.degen_signal != null && d.buy_check?.exit_verdict != null, detail: (d) => `codes=${d.buy_check?.codes?.join(',')}` },
+      { name: 'season clock present', test: (d) => typeof d.season?.minutes_to_snapshot === 'number' },
+      { name: 'has reasoning', test: (d) => typeof d.reasoning === 'string' && d.reasoning.length > 0 },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('AudaceFi Intent Check') },
+    ],
+  },
+  {
     // Trenches check — per-token three-signal verdict. BONK is old/quiet, so
     // expect SINGLE_SIGNAL or NO_SIGNAL with a valid runner leg — checks are
     // structural. Same fixture as the BAZAAR_INPUT_EXAMPLES entry.

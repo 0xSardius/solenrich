@@ -71,6 +71,8 @@ export const PRICING = {
   'trenches-scan': '0.08',
   'trenches-check': '0.03',
   'exit-signal': '0.04',
+  // AudaceFi league (2026-11-01): one call per swap intent; runs up to risk + trenches-check + 2× exit-signal.
+  'audace-intent-check': '0.05',
   'portfolio-history': '0.006',
   'check-alerts': '0.008',
   'gacha-ev-scan': '0.02',
@@ -101,13 +103,16 @@ export const FREE_ENDPOINTS = ['stonk-pairs'] as const;
  * These settle BEFORE the handler runs (src/lib/settle-first.ts). Measured cold
  * 2026-09-20, local vs prod upstreams: smart-money-flow 30s (60s on Railway),
  * smart-money-trenches 27s, trenches-scan 26s, trenches-check 24s. Everything
- * else is under 5s cold and keeps the stock verify → handler → settle order.
+ * else is under 5s cold and keeps the stock verify → handler → settle order
+ * (except audace-intent-check, below).
  */
 export const SETTLE_FIRST_ENDPOINTS = new Set([
   'smart-money-flow',
   'smart-money-trenches',
   'trenches-scan',
   'trenches-check',
+  // Runs trenches-check + exit-signal in parallel on a Degen buy: 28s cold, measured 2026-11-01.
+  'audace-intent-check',
 ]);
 
 /**

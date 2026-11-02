@@ -345,6 +345,20 @@ check('has reasoning', typeof ex.body?.output?.reasoning === 'string' && ex.body
 check('has llm_summary', typeof ex.body?.output?.llm_summary === 'string' && ex.body.output.llm_summary.includes('Exit Signal'));
 console.log(`  ⏱ ${ex.ms}ms\n`);
 
+// 19b. audace-intent-check — a Degen buy, then a sell inside the snapshot buffer (no upstream reads).
+console.log('━━━ 19b. audace-intent-check ━━━');
+const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
+const ai = await invoke('audace-intent-check', { category: 'degen', tokenInMint: USDC_MINT, tokenOutMint: TEST_TOKEN, amountIn: 25, format: 'both' }, 90000);
+check('returns 200', ai.status === 200, `got ${ai.status}`);
+check('reads a buy', ai.body?.output?.intent?.direction === 'buy');
+check('has valid verdict', ['PROCEED', 'REDUCE', 'HOLD'].includes(ai.body?.output?.verdict), `codes=${ai.body?.output?.codes}`);
+check('buy_check has signal and momentum', ai.body?.output?.buy_check?.degen_signal != null && ai.body?.output?.buy_check?.exit_verdict != null);
+check('has llm_summary', typeof ai.body?.output?.llm_summary === 'string' && ai.body.output.llm_summary.includes('AudaceFi Intent Check'));
+const soon = new Date(Date.now() + 20 * 60_000).toISOString();
+const as = await invoke('audace-intent-check', { category: 'degen', tokenInMint: TEST_TOKEN, tokenOutMint: USDC_MINT, amountIn: 1000000, seasonEndsAt: soon, format: 'json' });
+check('snapshot clock: sell proceeds', as.body?.output?.verdict === 'PROCEED' && as.body?.output?.codes?.[0] === 'SNAPSHOT_CLOCK');
+console.log(`  ⏱ ${ai.ms}ms / ${as.ms}ms\n`);
+
 // ============================================================
 // 20. StonkFun product line
 // ============================================================

@@ -565,6 +565,28 @@ export const MCP_TOOLS: McpToolDef[] = [
     }),
   },
   {
+    name: 'audace_intent_check',
+    title: 'AudaceFi Intent Check (Send This Swap?)',
+    description: 'For AudaceFi league agents: pass the swap intent you are about to send (category, tokenInMint, tokenOutMint, amountIn), get PROCEED / REDUCE / HOLD with reason codes. Buys check risk flags, the trenches signal (Degen) and exit momentum; sells run the exit verdict. Within 60 min of the season-end snapshot, sells proceed and buys hold, because a non-USDC wallet at the snapshot forfeits the season. NFA.',
+    inputSchema: {
+      category: z.enum(['degen', 'crypto_bro', 'crypto-bro', 'whale']).describe('League category'),
+      tokenInMint: z.string().describe('Mainnet mint identity spent (USDC for a buy)'),
+      tokenOutMint: z.string().describe('Mainnet mint identity received (USDC for a sell)'),
+      amountIn: z.number().positive().describe('Human amount of tokenInMint'),
+      seasonEndsAt: z.string().optional().describe('Season-end snapshot, ISO (season.active.endsAt). Default: next Saturday 00:00 UTC'),
+      network: z.enum(['devnet', 'mainnet']).optional().describe('devnet (default) or mainnet'),
+    },
+    handler: async (args) => invoke('audace-intent-check', {
+      category: args.category,
+      tokenInMint: args.tokenInMint,
+      tokenOutMint: args.tokenOutMint,
+      amountIn: args.amountIn,
+      ...(args.seasonEndsAt ? { seasonEndsAt: args.seasonEndsAt } : {}),
+      ...(args.network ? { network: args.network } : {}),
+      format: 'llm',
+    }),
+  },
+  {
     name: 'trenches_scan',
     title: 'Trenches Scan (Three-Signal Confluence)',
     description: 'The full memecoin pre-ape scan in one call: on-chain velocity (runner detection), proven-winner wallet buys (smart-money), and agent attention, composited into a ranked list with per-token reasoning and HIGH_CONFLUENCE / MODERATE / SINGLE_SIGNAL verdicts. Confluence across independent signals is the edge. NFA.',

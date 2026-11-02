@@ -27,7 +27,7 @@ export const ENDPOINT_SUITES: EndpointSuite[] = [
     id: 'trenches',
     title: 'Trenches (fresh-launch trade lifecycle)',
     blurb: 'Memecoins minutes to hours old: what is running, who is buying, should I enter this one, should I exit the one I hold.',
-    keys: ['runner-scan', 'smart-money-trenches', 'trenches-check', 'trenches-scan', 'exit-signal', 'attention-momentum'],
+    keys: ['runner-scan', 'smart-money-trenches', 'trenches-check', 'trenches-scan', 'exit-signal', 'audace-intent-check', 'attention-momentum'],
   },
   {
     id: 'smart-money',
