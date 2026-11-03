@@ -62,3 +62,5 @@ jobs:
       - run: bun test test/payment-guard.test.ts
       # audace-intent-check (2026-11-01): direction, snapshot clock, fail-closed buys, mainnet rules.
       - run: bun test test/audace-intent-check.test.ts
+      # Flash venue status (2026-11-02): honest unavailable reason, skip a dead source for 5 min.
+      - run: bun test test/perps-flash.test.ts

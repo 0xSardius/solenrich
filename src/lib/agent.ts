@@ -890,6 +890,16 @@ const upstreamCanary = new UpstreamCanary([
   { name: 'dexscreener', run: async () => (await new DexScreenerClient(NULL_CACHE).getTokenData(CANARY_BONK)) != null },
   { name: 'stonkfun', run: async () => (await new StonkFunClient(NULL_CACHE).getTokens({ sort: 'volume', pageSize: 1 })).tokens.length > 0 },
   ...(canaryBirdeye ? [{ name: 'birdeye', run: async () => (await canaryBirdeye.getTokenOverview(CANARY_BONK)) != null }] : []),
+  // Perps venues (2026-11-02): Flash returned nothing from 9/22 to 11/2 and every response blamed the venue.
+  { name: 'perps_jupiter', run: async () => (await new JupiterPerpsClient(NULL_CACHE).getMarketStructure()).markets.length > 0 },
+  { name: 'perps_adrena', run: async () => (await new AdrenaClient(NULL_CACHE).getMarket('SOL')) != null },
+  { name: 'perps_flash', run: async () => {
+    const c = new FlashPerpsClient(NULL_CACHE);
+    if (await c.getMarket('SOL')) return true;
+    if (c.sourceStatus() === 'unreachable') throw new Error('flashapi.trade not responding');
+    return false;
+  } },
+  { name: 'perps_hyperliquid_dydx', run: async () => { const r = await new PerpReferenceClient(NULL_CACHE).getBoth('SOL'); return r.hyperliquid != null && r.dydx != null; } },
 ]);
 if (process.env.NODE_ENV !== 'test') upstreamCanary.start();
 

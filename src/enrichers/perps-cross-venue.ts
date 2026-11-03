@@ -85,6 +85,22 @@ function classifySkew(longPct: number): VenueQuote['skew'] {
   return 'balanced';
 }
 
+/**
+ * Why Flash has no quote. Until 2026-11-02 every miss said "<market> not available on Flash", which was false:
+ * Flash lists SOL/BTC/ETH, and the miss was our data source (flashapi.trade) not answering.
+ */
+export function flashUnavailableReason(
+  market: string,
+  gotMarket: boolean,
+  source: 'ok' | 'unreachable',
+): string {
+  if (gotMarket) return 'Flash borrow-rate read failed.';
+  if (source === 'unreachable') {
+    return "Flash data unavailable: Flash's public data API is not responding. Flash itself is live; this is our data source, not the venue.";
+  }
+  return `${market} is not listed on Flash, or its data did not load in time.`;
+}
+
 function aprDelta(a: number, b: number): number {
   return Math.abs(a - b);
 }
@@ -94,7 +110,7 @@ export class PerpsCrossVenueAnalyzer {
     private jupiter: JupiterPerpsClient,
     private adrena: AdrenaClient,
     private reference: PerpReferenceClient,
-    private flash: FlashPerpsClient,
+    private flash: Pick<FlashPerpsClient, 'getMarket' | 'sourceStatus'>,
     private cache: Cache,
   ) {}
 
@@ -253,7 +269,7 @@ export class PerpsCrossVenueAnalyzer {
         utilization_pct: null,
         skew: 'unknown',
         mark_price_usd: flashMarket?.mark_price_usd ?? null,
-        unavailable_reason: flashMarket ? 'Flash borrow-rate read failed.' : `${market} not available on Flash.`,
+        unavailable_reason: flashUnavailableReason(market, flashMarket != null, this.flash.sourceStatus()),
       });
     }
 

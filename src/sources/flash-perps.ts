@@ -78,10 +78,25 @@ interface PoolDataCustody {
   totalUsdOwnedAmountUi: string;
 }
 
+/** After a failed pool-data fetch, skip the REST call for this long instead of waiting on a dead host each request. */
+export const SOURCE_RETRY_MS = 5 * 60_000;
+/** Under the analyzer's 6 s per-venue budget, so a failure is recorded before the analyzer reads sourceStatus. */
+const POOL_DATA_TIMEOUT_MS = 5000;
+
 export class FlashPerpsClient {
   private conn: Connection;
+  private sourceDownUntil = 0;
   constructor(private cache: Cache) {
     this.conn = new Connection(CONFIG.helius.rpcUrl, 'confirmed');
+  }
+
+  /**
+   * 'unreachable' while the last flashapi.trade fetch failed (for SOURCE_RETRY_MS). Lets callers tell
+   * "our data source is down" from "Flash does not list this market" when getMarket returns null.
+   * flashapi.trade stopped answering by 2026-09-22 (connects, never responds); Flash itself stayed live.
+   */
+  sourceStatus(now = Date.now()): 'ok' | 'unreachable' {
+    return now < this.sourceDownUntil ? 'unreachable' : 'ok';
   }
 
   /** Flash public pool snapshots (utilization/price/custody pubkeys), cached. */
@@ -89,12 +104,14 @@ export class FlashPerpsClient {
     const cacheKey = 'flash:pool-data';
     const cached = await this.cache.get<PoolDataCustody[]>(cacheKey);
     if (cached) return cached;
+    if (this.sourceStatus() === 'unreachable') return null;
+    const fail = () => { this.sourceDownUntil = Date.now() + SOURCE_RETRY_MS; return null; };
     try {
       const controller = new AbortController();
-      const t = setTimeout(() => controller.abort(), 6000);
+      const t = setTimeout(() => controller.abort(), POOL_DATA_TIMEOUT_MS);
       const res = await fetch('https://flashapi.trade/pool-data', { signal: controller.signal });
       clearTimeout(t);
-      if (!res.ok) { await drain(res); return null; }
+      if (!res.ok) { await drain(res); return fail(); }
       const data = (await res.json()) as any;
       const out: PoolDataCustody[] = [];
       for (const pool of data?.pools ?? []) {
@@ -108,11 +125,12 @@ export class FlashPerpsClient {
           });
         }
       }
+      this.sourceDownUntil = 0;
       await this.cache.set(cacheKey, out, CACHE_TTL.perpsMarket);
       return out;
     } catch (err) {
       console.warn('[flash] pool-data fetch failed:', (err as Error).message);
-      return null;
+      return fail();
     }
   }
 
