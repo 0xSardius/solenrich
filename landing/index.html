@@ -1578,7 +1578,7 @@
           <h3 class="persona-title">Make every venue decision one call</h3>
           <p class="persona-desc">The full perps stack: rates, sizing, basis-arb, position alerts, market trend across Jupiter, Adrena, Flash, Hyperliquid, and dYdX. Bot polls once per cycle, gets every decision it needs.</p>
           <ul class="persona-endpoints">
-            <li><code>perps-cross-venue-funding</code>rates across Jupiter, Adrena, HL, dYdX</li>
+            <li><code>perps-cross-venue-funding</code>rates across Jupiter, Adrena, Flash, HL, dYdX</li>
             <li><code>perps-venue-comparison</code>total entry cost at your size + recommendation</li>
             <li><code>perps-basis-signal</code>net-yield-after-borrow funding-arb scanner</li>
             <li><code>perps-market-trend</code>OI, skew, util, borrow direction over 7/14/30d</li>
@@ -1950,7 +1950,7 @@
                 <span class="endpoint-name">perps-cross-venue-funding</span>
                 <span class="endpoint-price">$0.015</span>
               </div>
-              <p class="endpoint-desc">Borrow / funding APR + open interest aggregated across Jupiter Perps, Adrena, Hyperliquid, and dYdX v4 in one call. Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities surfaced above 5pt spread.</p>
+              <p class="endpoint-desc">Borrow / funding APR + open interest aggregated across Jupiter Perps, Adrena, Flash, Hyperliquid, and dYdX v4 in one call. Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities surfaced above 5pt spread.</p>
               <div class="tag-row"><span class="tag">perps</span></div>
             </div>
 
@@ -2270,10 +2270,10 @@
         <div class="step reveal">
           <div class="step-number">2</div>
           <h3 class="step-title">Pay your way</h3>
-          <p class="step-desc">USDC on Solana via x402, or credit cards via MPP/Stripe. Dual-protocol — agents choose how to pay.</p>
+          <p class="step-desc">USDC on Solana or Base via x402, or credit cards via MPP/Stripe. Same price on every network — the agent picks.</p>
           <div class="step-code">
             <span style="color: var(--accent-warm);">402</span> Payment Required<br>
-            <span style="color: var(--text-muted);">x402: USDC on Solana</span><br>
+            <span style="color: var(--text-muted);">x402: USDC on Solana or Base</span><br>
             <span style="color: var(--text-muted);">MPP: Stripe cards</span>
           </div>
         </div>
@@ -2496,20 +2496,20 @@ Well-distributed supply.</span></div>
           <div class="compare-subtitle">Raw data infrastructure</div>
           <ul class="compare-rows">
             <li><span class="compare-dim">Positioning</span>You build the synthesis layer</li>
-            <li><span class="compare-dim">Pricing</span>Per-RPC subscription tiers</li>
+            <li><span class="compare-dim">Pricing</span>Monthly plans with request credits</li>
             <li><span class="compare-dim">Audience</span>Engineers shipping infra</li>
-            <li><span class="compare-dim">Agent payments</span>None — API key required</li>
+            <li><span class="compare-dim">Agent payments</span>API key and plan; no x402 listing</li>
           </ul>
         </div>
 
         <div class="compare-card reveal">
           <div class="compare-name">Nansen</div>
-          <div class="compare-subtitle">Smart-money dashboard</div>
+          <div class="compare-subtitle">Smart-money analytics</div>
           <ul class="compare-rows">
-            <li><span class="compare-dim">Positioning</span>Human-first analytics UI</li>
-            <li><span class="compare-dim">Pricing</span>$150/month subscription</li>
-            <li><span class="compare-dim">Audience</span>Traders, researchers, funds</li>
-            <li><span class="compare-dim">Agent payments</span>Agents can't sign up</li>
+            <li><span class="compare-dim">Positioning</span>Labels and analytics data; you build the verdict</li>
+            <li><span class="compare-dim">Pricing</span>$0.01 per call over x402</li>
+            <li><span class="compare-dim">Audience</span>Traders, researchers, funds, agents</li>
+            <li><span class="compare-dim">Agent payments</span>x402 on Base, Solana and other chains</li>
           </ul>
         </div>
 
@@ -2518,13 +2518,13 @@ Well-distributed supply.</span></div>
           <div class="compare-subtitle">Composed agent-native intelligence</div>
           <ul class="compare-rows">
             <li><span class="compare-dim">Positioning</span>Pre-synthesized briefings, not raw data</li>
-            <li><span class="compare-dim">Pricing</span>$0.002–$0.10 per call, pay-as-you-go</li>
+            <li><span class="compare-dim">Pricing</span>$0.001–$0.25 per call, pay-as-you-go</li>
             <li><span class="compare-dim">Audience</span>Autonomous agents &amp; LLMs</li>
-            <li><span class="compare-dim">Agent payments</span>x402, MPP, MCP — native</li>
+            <li><span class="compare-dim">Agent payments</span>x402 on Solana or Base, MPP cards, MCP</li>
           </ul>
         </div>
       </div>
-      <p class="compare-disclaimer reveal">Helius and Nansen are good products — they're just designed for different buyers. We use Helius as a data source.</p>
+      <p class="compare-disclaimer reveal">Helius and Nansen are good products. We use Helius as a data source. Checked November 2026: Nansen lists 36 paid resources at $0.01 per call in the Coinbase x402 bazaar; Helius has no x402 listing there.</p>
     </div>
   </section>
 

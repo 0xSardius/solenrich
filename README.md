@@ -91,7 +91,7 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 |----------|-------|-------|-------------|
 | `perps-market-structure` | $0.012 | `format` | Jupiter Perps OI, utilization, borrow APR, skew, health flags for SOL/BTC/ETH |
 | `perps-trader-profile` | $0.010 | `address`, `format` | Multi-venue (Jupiter + Adrena) open positions, leverage, PnL, trader classification |
-| `perps-cross-venue-funding` | $0.015 | `market`, `include_reference`, `format` | Funding/borrow APR + OI across Jupiter, Adrena, Hyperliquid, dYdX — best entry per side, arbitrage spreads |
+| `perps-cross-venue-funding` | $0.015 | `market`, `include_reference`, `format` | Funding/borrow APR + OI across Jupiter, Adrena, Flash, Hyperliquid, dYdX — best entry per side, arbitrage spreads |
 | `perps-venue-comparison` | $0.020 | `market`, `side`, `size_usd`, `format` | Where to trade at this size: slippage, fees, OI headroom, total entry cost, recommendation |
 | `perps-basis-signal` | $0.015 | `asset`, `min_yield_apr_pct`, `format` | Net-yield-after-borrow basis trade scanner — actually-earnable yield per venue |
 | `perps-market-trend` | $0.008 | `lookback`, `format` | Per-market deltas (price, OI, skew, utilization, borrow APR) over 7/14/30d — regime detection |

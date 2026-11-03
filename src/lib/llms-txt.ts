@@ -24,7 +24,8 @@ export function buildLlmsTxt(i: LlmsTxtInput): string {
   const line = (k: string) => `- [${k}](${BASE}/entrypoints/${k}/invoke) — ${i.meta[k]?.description ?? i.meta[k]?.summary ?? k} (${price(k)})`;
 
   const stonkLoop = ['stonk-gems', 'stonk-quote', 'exit-signal'];
-  const trenchLoop = ['runner-scan', 'trenches-check', 'due-diligence', 'exit-signal'];
+  // Entry calls only: exit-signal is quoted separately as a per-check cost (it was summed in twice until 2026-11-03).
+  const trenchEntry = ['runner-scan', 'trenches-check', 'due-diligence'];
 
   const suites = i.suites.map((s) => [`## ${s.title}`, '', s.blurb, '', ...s.keys.map(line), ''].join('\n')).join('\n');
 
@@ -44,7 +45,7 @@ export function buildLlmsTxt(i: LlmsTxtInput): string {
 
 - **StonkFun trade, ${money(sum(stonkLoop))} end to end:** \`stonk-pairs\` (free, the quote catalog) → \`stonk-gems\` (${price('stonk-gems')}, ranked GEM/WATCH/NOISE) → \`stonk-quote\` (${price('stonk-quote')}, cost and payback at your size) → \`exit-signal\` (${price('exit-signal')}) while holding.
 - **Watch StonkFun coins you hold:** \`stonk-alerts\` (${price('stonk-alerts')}, up to 25 coins per call: payout landed or stale, stopped trading, holders, rewards since your last check) — poll it hourly and pass \`checked_at\` back as \`since\`; \`stonk-yield-batch\` (${price('stonk-yield-batch')}) for their yields in one call.
-- **Fresh memecoin, ${money(sum(trenchLoop))} to enter and ${price('exit-signal')} per exit check:** \`runner-scan\` (${price('runner-scan')}) → \`trenches-check\` on one mint (${price('trenches-check')}) → \`due-diligence\` (${price('due-diligence')}) → \`exit-signal\` (${price('exit-signal')}).
+- **Fresh memecoin, ${money(sum(trenchEntry))} to enter, then ${price('exit-signal')} per exit check:** \`runner-scan\` (${price('runner-scan')}) → \`trenches-check\` on one mint (${price('trenches-check')}) → \`due-diligence\` (${price('due-diligence')}) → \`exit-signal\` (${price('exit-signal')}).
 - **Best perps venue at my size:** \`perps-venue-comparison\` (${price('perps-venue-comparison')}).
 - **A question in plain English:** \`query\` (${price('query')}) routes it to the right enrichers.
 
