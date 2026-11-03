@@ -975,6 +975,7 @@
       gap: 24px;
       margin-top: 48px;
     }
+    .persona-card-wide { grid-column: 1 / -1; }
     .persona-card {
       background: var(--bg-card);
       border: 1px solid var(--border-dim);
@@ -1460,24 +1461,24 @@
       <div class="hero-content">
         <div class="hero-badge">
           <span class="protocol-tag">x402</span>
-          <span>Paid per call by trading agents, every day</span>
+          <span>Paid per call by trading agents</span>
         </div>
         <h1>
-          Know which coins pay<br>
-          <span class="gradient-text">before your agent trades</span>
+          Should your agent enter, exit, or size up?<br>
+          <span class="gradient-text">One paid call each.</span>
         </h1>
         <p class="hero-sub">
-          Agents pay SolEnrich per call to watch the StonkFun coins they hold, find the ones still paying holders,
-          and price a trade after the transfer tax. The same API covers wallet risk, token due diligence,
-          smart-money flows and cross-venue perps: 51 endpoints, deterministic scoring, JSON or an LLM briefing.
+          SolEnrich turns Solana onchain data into verdicts a trading agent can act on: token risk before a swap,
+          EXIT / DERISK / HOLD on a position, the cheapest perps venue at your size, and which StonkFun coins still pay
+          their holders. 51 endpoints, deterministic scoring, JSON or an LLM briefing.
           Pay per call with USDC on Solana or Base. No keys, no subscription.
         </p>
         <div class="hero-actions">
-          <a href="/stonkfun" class="btn-primary">
-            StonkFun for agents &rarr;
+          <a href="/docs" class="btn-primary">
+            Read the docs &rarr;
           </a>
-          <a href="/docs" class="btn-secondary">
-            Read the docs
+          <a href="/stonkfun" class="btn-secondary">
+            StonkFun for agents
           </a>
         </div>
         <p class="hero-install">Claude Code, Cursor, Codex: <code>npx skills add 0xSardius/solenrich --skill solenrich</code></p>
@@ -1488,22 +1489,21 @@
           <div class="terminal-dot r"></div>
           <div class="terminal-dot y"></div>
           <div class="terminal-dot g"></div>
-          <span class="terminal-title">watch, find, price &middot; real values, trimmed</span>
+          <span class="terminal-title">enter, hold, size &middot; real values, trimmed</span>
         </div>
         <div class="terminal-body">
-<span class="dim">$</span> <span class="url">stonk-alerts</span> <span class="dim">my coins · $0.02</span><br>
-<span class="dim">{</span> <span class="key">"type"</span>: <span class="str">"payout_landed"</span>,<br>
-&nbsp;&nbsp;<span class="key">"summary"</span>: <span class="str">"$ZCAT paid holders 16.2h ago, in ZEC"</span>,<br>
-&nbsp;&nbsp;<span class="key">"payout_status"</span>: <span class="str">"PAYING"</span> <span class="dim">}</span><br>
+<span class="dim">$</span> <span class="url">enrich-token-full</span> <span class="dim">before a swap · $0.004</span><br>
+<span class="dim">{</span> <span class="key">"symbol"</span>: <span class="str">"Bonk"</span>, <span class="key">"risk_flags"</span>: [],<br>
+&nbsp;&nbsp;<span class="key">"concentration"</span>: { <span class="key">"top10_pct"</span>: <span class="val">38.93</span> },<br>
+&nbsp;&nbsp;<span class="key">"slippage_estimates"</span>: [{ <span class="key">"size_usd"</span>: <span class="val">10000</span>, <span class="key">"price_impact_pct"</span>: <span class="val">0.0037</span> }] <span class="dim">}</span><br>
 <br>
-<span class="dim">$</span> <span class="url">stonk-yield-batch</span> <span class="dim">up to 25 coins · $0.05</span><br>
-<span class="dim">{</span> <span class="key">"symbol"</span>: <span class="str">"ZCAT"</span>, <span class="key">"reward_asset"</span>: <span class="str">"ZEC"</span>,<br>
-&nbsp;&nbsp;<span class="key">"trailing_7d"</span>: { <span class="key">"yield_pct"</span>: <span class="val">1.19</span> },<br>
-&nbsp;&nbsp;<span class="key">"lifetime"</span>: { <span class="key">"yield_pct"</span>: <span class="val">12.3</span> } <span class="dim">}</span><br>
+<span class="dim">$</span> <span class="url">exit-signal</span> <span class="dim">while holding · $0.04</span><br>
+<span class="dim">{</span> <span class="key">"verdict"</span>: <span class="str">"HOLD"</span>, <span class="key">"exit_score"</span>: <span class="val">0.359</span>,<br>
+&nbsp;&nbsp;<span class="key">"flags"</span>: [<span class="str">"buying_slowing_1h"</span>, <span class="str">"volume_fading"</span>] <span class="dim">}</span><br>
 <br>
-<span class="dim">$</span> <span class="url">stonk-gems</span> <span class="dim">what to look at · $0.03</span><br>
-<span class="dim">{</span> <span class="key">"symbol"</span>: <span class="str">"Shiba"</span>, <span class="key">"stage"</span>: <span class="str">"GEM"</span>, <span class="key">"score"</span>: <span class="val">94</span>,<br>
-&nbsp;&nbsp;<span class="key">"reasons"</span>: [<span class="str">"paid holders 5.3h ago"</span>] <span class="dim">}</span>
+<span class="dim">$</span> <span class="url">perps-venue-comparison</span> <span class="dim">SOL long $5K · $0.02</span><br>
+<span class="dim">{</span> <span class="key">"venue"</span>: <span class="str">"jupiter-perps"</span>,<br>
+&nbsp;&nbsp;<span class="key">"reasoning"</span>: <span class="str">"cheapest at 0.062% total entry cost"</span> <span class="dim">}</span>
         </div>
       </div>
     </div>
@@ -1516,7 +1516,7 @@
       <div class="proof-items">
         <span class="proof-item">Real USDC settlements via Coinbase CDP</span>
         <span class="proof-divider">·</span>
-        <span class="proof-item">Listed on <a href="https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641" target="_blank" rel="noopener">x402scan</a>, <a href="https://agentic.market/services/api-solenrich-com" target="_blank" rel="noopener">agentic.market</a>, <a href="https://smithery.ai/?q=solenrich" target="_blank" rel="noopener">Smithery</a></span>
+        <span class="proof-item">Listed on <a href="https://www.x402scan.com/server/d9814c54-6fa6-4fa7-8b01-43a0ffbc7641" target="_blank" rel="noopener">x402scan</a> and <a href="https://agentic.market/services/api-solenrich-com" target="_blank" rel="noopener">agentic.market</a></span>
         <span class="proof-divider">·</span>
         <span class="proof-item">Registered on 8004-solana</span>
         <span class="proof-divider">·</span>
@@ -1530,12 +1530,10 @@
     <div class="container">
       <span class="update-tag">New</span>
       <div class="update-items">
-        <span class="update-item"><span class="check">&#10003;</span> StonkFun reward coins — a gem finder, payout status and tax cost per coin, a screener with live/paying filters, launch intel per quote asset, yield, and a launch preflight. The trenches suite now prices the transfer tax too</span>
-        <span class="update-item"><span class="check">&#10003;</span> NFT enrichment — every wallet's non-fungibles split into collected / airdropped / spam</span>
-        <span class="update-item"><span class="check">&#10003;</span> Exit-signal — sell-side verdict for any token you hold: EXIT / DERISK / HOLD with hard rug triggers</span>
-        <span class="update-item"><span class="check">&#10003;</span> Attention-momentum — where agent attention is accelerating ahead of price, from our own query stream</span>
-        <span class="update-item"><span class="check">&#10003;</span> Trenches suite — runner detection, three-signal vetting, and a ranked pre-entry scan for fresh launches</span>
-        <span class="update-item"><span class="check">&#10003;</span> Base accepted — pay with USDC on Solana or Base, same endpoints, same prices</span>
+        <span class="update-item"><span class="check">&#10003;</span> audace-intent-check — PROCEED / REDUCE / HOLD on an AudaceFi swap intent before you send it, with a season-end snapshot clock</span>
+        <span class="update-item"><span class="check">&#10003;</span> wallet-link-check — are two Solana wallets the same owner? Payout-wallet rotation vs hijack</span>
+        <span class="update-item"><span class="check">&#10003;</span> stonk-market-pulse and stonk-creator — is the StonkFun market rising or falling, and is this creator a serial launcher</span>
+        <span class="update-item"><span class="check">&#10003;</span> Perps venue health — every perps response says why a venue is missing, and each venue is checked hourly</span>
       </div>
     </div>
   </div>
@@ -1545,11 +1543,38 @@
     <div class="container">
       <div class="reveal">
         <div class="section-label">Who it's for</div>
-        <h2 class="section-title">Built for four kinds of agent</h2>
+        <h2 class="section-title">Built for five kinds of agent</h2>
         <p class="section-desc" style="max-width:560px; margin:0 auto; text-align:center;">If you're building one of these, here's where to start.</p>
       </div>
 
       <div class="personas-grid">
+        <div class="persona-card reveal">
+          <div class="persona-tag">&gt;_ trading bots on fresh launches</div>
+          <h3 class="persona-title">Enter on confluence, exit on evidence</h3>
+          <p class="persona-desc">The trade lifecycle for newly launched tokens: vet the mint before the swap, find what's accelerating, check it against three independent onchain signals, and get the sell-side verdict while you hold. Seconds-to-minutes research lane, not block-0 sniping.</p>
+          <ul class="persona-endpoints">
+            <li><code>enrich-token-full</code>holders, concentration, authorities, slippage at size, risk flags</li>
+            <li><code>runner-scan</code>which fresh tokens are accelerating right now</li>
+            <li><code>smart-money-trenches</code>proven-winner wallets buying fresh launches</li>
+            <li><code>trenches-check</code>one mint, three signals, one verdict before entry</li>
+            <li><code>exit-signal</code>EXIT / DERISK / HOLD for the token you hold</li>
+          </ul>
+        </div>
+
+        <div class="persona-card reveal">
+          <div class="persona-tag">&gt;_ perps bots</div>
+          <h3 class="persona-title">Make every venue decision one call</h3>
+          <p class="persona-desc">The full perps stack: rates, sizing, basis-arb, position alerts, market trend across Jupiter, Adrena, Flash, Hyperliquid, and dYdX. Bot polls once per cycle, gets every decision it needs.</p>
+          <ul class="persona-endpoints">
+            <li><code>perps-cross-venue-funding</code>rates across Jupiter, Adrena, Flash, HL, dYdX</li>
+            <li><code>perps-venue-comparison</code>total entry cost at your size + recommendation</li>
+            <li><code>perps-basis-signal</code>net-yield-after-borrow funding-arb scanner</li>
+            <li><code>perps-market-trend</code>OI, skew, util, borrow direction over 7/14/30d</li>
+            <li><code>perps-trader-profile</code>Jupiter + Adrena positions in one call, multi-venue tagged</li>
+            <li><code>check-alerts</code>perp position opened, closed, at-risk, near-liq, PnL swing</li>
+          </ul>
+        </div>
+
         <div class="persona-card reveal">
           <div class="persona-tag">&gt;_ research agents</div>
           <h3 class="persona-title">Bring onchain answers to chat</h3>
@@ -1573,30 +1598,13 @@
           </ul>
         </div>
 
-        <div class="persona-card reveal">
-          <div class="persona-tag">&gt;_ perps bots</div>
-          <h3 class="persona-title">Make every venue decision one call</h3>
-          <p class="persona-desc">The full perps stack: rates, sizing, basis-arb, position alerts, market trend across Jupiter, Adrena, Flash, Hyperliquid, and dYdX. Bot polls once per cycle, gets every decision it needs.</p>
+        <div class="persona-card persona-card-wide reveal">
+          <div class="persona-tag">&gt;_ agents in trading leagues</div>
+          <h3 class="persona-title">Check every swap intent before you send it</h3>
+          <p class="persona-desc">For agents competing in AudaceFi: send the swap intent you are about to submit, get PROCEED / REDUCE / HOLD with reason codes. Buys check the token's risk flags, the trenches signal and exit momentum; sells run the exit verdict. In the last hour before the season-end snapshot it sends you to USDC, because a non-USDC wallet at the snapshot forfeits the season.</p>
           <ul class="persona-endpoints">
-            <li><code>perps-cross-venue-funding</code>rates across Jupiter, Adrena, Flash, HL, dYdX</li>
-            <li><code>perps-venue-comparison</code>total entry cost at your size + recommendation</li>
-            <li><code>perps-basis-signal</code>net-yield-after-borrow funding-arb scanner</li>
-            <li><code>perps-market-trend</code>OI, skew, util, borrow direction over 7/14/30d</li>
-            <li><code>perps-trader-profile</code>Jupiter + Adrena positions in one call, multi-venue tagged</li>
-            <li><code>check-alerts</code>perp position opened, closed, at-risk, near-liq, PnL swing</li>
-          </ul>
-        </div>
-
-        <div class="persona-card reveal">
-          <div class="persona-tag">&gt;_ trading bots on fresh launches</div>
-          <h3 class="persona-title">Enter on confluence, exit on evidence</h3>
-          <p class="persona-desc">The trade lifecycle for newly launched tokens: find what's accelerating, vet it against three independent onchain signals, watch the position, and get the sell-side verdict while you hold. Seconds-to-minutes research lane, not block-0 sniping.</p>
-          <ul class="persona-endpoints">
-            <li><code>runner-scan</code>which fresh tokens are accelerating right now</li>
-            <li><code>smart-money-trenches</code>proven-winner wallets buying fresh launches</li>
-            <li><code>trenches-check</code>one mint, three signals, one verdict before entry</li>
-            <li><code>exit-signal</code>EXIT / DERISK / HOLD for the token you hold</li>
-            <li><code>due-diligence</code>structural safety: holders, authorities, rug flags</li>
+            <li><code>audace-intent-check</code>one verdict per swap intent, devnet league or mainnet</li>
+            <li><code>wallet-link-check</code>are two wallets the same owner?</li>
           </ul>
         </div>
       </div>
@@ -2254,7 +2262,7 @@
     <div class="container">
       <div class="reveal" style="text-align: center;">
         <div class="section-label">How it works</div>
-        <h2 class="section-title">Three steps. Sub-second enrichment.</h2>
+        <h2 class="section-title">Three steps. One call, one verdict.</h2>
       </div>
 
       <div class="steps">
@@ -2316,8 +2324,8 @@
         </div>
         <div class="source-card">
           <span class="source-icon">&#9737;</span>
-          <div class="source-name">Birdeye</div>
-          <div class="source-detail">OHLCV + Top Holders</div>
+          <div class="source-name">StonkFun</div>
+          <div class="source-detail">Reward Coins + Payout Ledger</div>
         </div>
         <div class="source-card">
           <span class="source-icon">&#9850;</span>
@@ -2347,7 +2355,7 @@
         <div class="source-card">
           <span class="source-icon">&#9889;</span>
           <div class="source-name">Flash Trade</div>
-          <div class="source-detail">On-chain Markets + OI</div>
+          <div class="source-detail">Borrow Rates + OI (data source down; being re-integrated)</div>
         </div>
         <div class="source-card">
           <span class="source-icon">&#9633;</span>

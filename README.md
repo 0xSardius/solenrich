@@ -241,7 +241,7 @@ Client → x402 Paywall → Entrypoint Router → Enrichment Engine → Format R
 | [DexScreener](https://dexscreener.com) | Token prices, market data, liquidity, OHLCV |
 | [DeFi Llama](https://defillama.com) | Protocol TVL, yield data |
 | [Jupiter](https://jup.ag) | Token prices (cross-reference), metadata, verification status, perps quotes |
-| [Birdeye](https://birdeye.so) | Real holder counts, daily OHLCV for volatility |
+| [Birdeye](https://birdeye.so) | Optional (`BIRDEYE_API_KEY`): holder counts, daily OHLCV. Not enabled on the hosted API since November 2026 |
 | Solana RPC | SOL balances, mint info, top 20 holders, Token-2022 transfer fees, Jupiter Perps, Adrena and Flash on-chain accounts |
 | [StonkFun](https://www.stonkfun.xyz) public API | Reward coins, payouts, launch ledger (creators), revenue history |
 | Hyperliquid + dYdX v4 | Cross-chain perps reference (funding rates, basis) |
