@@ -9,7 +9,9 @@
  * 2026-09-17; smart-money-trenches / trenches-scan / trenches-check measured
  * 26–34s, inside the window only when upstreams are fast).
  *
- * This middleware runs verify → settle → handler for a named set of routes.
+ * This middleware runs verify → input check → settle → handler for a named set
+ * of routes. The input check (opts.validate) refuses a malformed request with
+ * a 400 before any money moves (added 2026-11-04 after six paid 400s).
  * Trade-off: the buyer is charged before delivery. If the handler then fails,
  * the buyer paid for an error. That case is logged as `[settle-first-loss]`
  * and counted in /metrics so it is never silent. The four endpoints in the
@@ -39,6 +41,18 @@ export interface SettleFirstOptions {
   onLoss?: (loss: SettleFirstLoss) => void;
   /** Maps a request path to an endpoint key for logs. Default: 3rd path segment. */
   endpointKey?: (path: string) => string;
+  /**
+   * Checks the request input BEFORE settlement. Returns the validation issues,
+   * or null when the input is valid. Without it, a malformed request settles
+   * and then fails the handler's own schema check: a paid 400.
+   */
+  validate?: (key: string, input: unknown) => ValidationIssue[] | null;
+}
+
+export interface ValidationIssue {
+  path?: PropertyKey[];
+  code?: string;
+  message?: string;
 }
 
 /** Paid-then-failed counter, surfaced in /metrics. Resets daily. */
@@ -51,6 +65,10 @@ export const settleFirstStats = {
   lastAt: null as number | null,
   /** Settlements completed before the handler ran (today). */
   settledToday: 0,
+  /** Requests refused for invalid input before settlement (today). The buyer was not charged. */
+  rejectedToday: 0,
+  /** Endpoint key and failing field paths of the last refusal. Paths only, never values. */
+  lastRejected: null as { key: string; paths: string[] } | null,
 };
 
 function rollDay(): void {
@@ -59,8 +77,35 @@ function rollDay(): void {
     settleFirstStats.day = day;
     settleFirstStats.today = 0;
     settleFirstStats.settledToday = 0;
+    settleFirstStats.rejectedToday = 0;
   }
 }
+
+/** Same unwrapping as Lucid's http extension: `{ input: {...} }` or a flat body. */
+function extractInput(payload: unknown): unknown {
+  if (payload && typeof payload === 'object' && 'input' in payload) {
+    return (payload as { input?: unknown }).input ?? {};
+  }
+  return payload ?? {};
+}
+
+/**
+ * Reads the request body from a clone, as Lucid does. The clone is read to
+ * the end: on Bun an abandoned clone branch is never released (see the
+ * 2026-08-09 OOM fix). Unparseable JSON becomes undefined, as in Lucid.
+ */
+async function readInput(req: Request): Promise<unknown> {
+  let payload: unknown;
+  try {
+    const text = await req.clone().text();
+    payload = text ? JSON.parse(text) : undefined;
+  } catch {
+    payload = undefined;
+  }
+  return extractInput(payload);
+}
+
+const issuePath = (i: ValidationIssue): string => (i.path?.length ? i.path.map(String).join('.') : '(root)');
 
 function recordLoss(key: string, status: number): void {
   rollDay();
@@ -146,7 +191,23 @@ export function settleFirstMiddleware(
         : c.json((response.body as Record<string, unknown>) ?? {}, response.status as 402);
     }
 
-    // payment-verified → settle NOW, before the handler can outlive the blockhash.
+    // payment-verified → check the input first. An invalid input never
+    // settles: the buyer gets the same 400 the handler would send, unpaid.
+    if (opts.validate) {
+      const key = keyOf(c.req.path);
+      const issues = opts.validate(key, await readInput(c.req.raw));
+      if (issues && issues.length > 0) {
+        await c.req.raw.text().catch(() => {});
+        rollDay();
+        settleFirstStats.rejectedToday++;
+        const paths = issues.slice(0, 10).map(issuePath);
+        settleFirstStats.lastRejected = { key, paths };
+        console.warn(`[settle-first-invalid] key=${key} paths=${paths.join(',')} — refused before settlement, buyer not charged`);
+        return c.json({ error: { code: 'invalid_input', issues } }, 400);
+      }
+    }
+
+    // Input valid → settle NOW, before the handler can outlive the blockhash.
     const { paymentPayload, paymentRequirements, declaredExtensions } = result;
     let settle: Awaited<ReturnType<x402HTTPResourceServer['processSettlement']>>;
     try {

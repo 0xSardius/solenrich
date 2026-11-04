@@ -552,6 +552,12 @@ if (PAYMENTS_ENABLED && resourceServer) {
   const settleFirstMW = settleFirstMiddleware(x402HttpServer, {
     onLoss: ({ key, status, error }) =>
       console.warn(`[settle-first-loss] key=${key} status=${status}${error ? ` error="${error.slice(0, 160)}"` : ''} — buyer paid, handler failed`),
+    // Check the input against the entrypoint's own Zod schema before
+    // settlement, so a malformed request is refused without a charge.
+    validate: (key, input) => {
+      const parsed = agent.agent.getEntrypoint(key)?.input?.safeParse(input);
+      return parsed && !parsed.success ? parsed.error.issues : null;
+    },
   });
   const isSettleFirst = (path: string) => SETTLE_FIRST_ENDPOINTS.has(path.split('/')[2] ?? '');
 
@@ -1751,6 +1757,9 @@ app.get('/metrics', async (c) => {
       settle_first_settled_today: settleFirstStats.settledToday,
       settle_first_losses_today: settleFirstStats.today,
       settle_first_last_loss: settleFirstStats.lastKey ? { key: settleFirstStats.lastKey, status: settleFirstStats.lastStatus } : null,
+      // Invalid input refused BEFORE settlement (not charged), with the failing field paths of the last one.
+      settle_first_rejected_today: settleFirstStats.rejectedToday,
+      settle_first_last_rejected: settleFirstStats.lastRejected,
       // Demand-driven warmer (src/lib/cache-warmer.ts): default-input results
       // kept warm while the endpoint is being called.
       warmer: warmer.stats(),

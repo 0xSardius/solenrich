@@ -126,6 +126,76 @@ describe('settle-first middleware', () => {
   });
 });
 
+describe('settle-first input check (before settlement)', () => {
+  beforeEach(() => {
+    settleFirstStats.settledToday = 0;
+    settleFirstStats.rejectedToday = 0;
+    settleFirstStats.lastRejected = null;
+  });
+
+  // Stands in for the entrypoint's Zod schema: `amountIn` must be a positive number.
+  const validate = (_key: string, input: any) =>
+    typeof input?.amountIn === 'number' && input.amountIn > 0
+      ? null
+      : [{ path: ['amountIn'], code: 'invalid_type', message: 'Expected positive number' }];
+
+  function validatingApp(order: string[], seen: unknown[]) {
+    const app = new Hono();
+    app.use('/entrypoints/*', settleFirstMiddleware(fakeServer('verified', order), { validate }));
+    app.post('/entrypoints/:key/invoke', async (c) => {
+      order.push('handler');
+      seen.push(await c.req.json());
+      return c.json({ ok: true });
+    });
+    return app;
+  }
+
+  const send = (app: Hono, body: string) =>
+    app.request('http://x/entrypoints/audace-intent-check/invoke', {
+      method: 'POST',
+      headers: { 'payment-signature': 'sig', 'content-type': 'application/json' },
+      body,
+    });
+
+  test('invalid input returns 400 and never settles', async () => {
+    const order: string[] = [];
+    const res = await send(validatingApp(order, []), JSON.stringify({ amountIn: -1 }));
+    expect(res.status).toBe(400);
+    expect(order).toEqual(['verify']);
+    expect(res.headers.get('payment-response')).toBeNull();
+    const body = (await res.json()) as any;
+    expect(body.error.code).toBe('invalid_input');
+    expect(body.error.issues[0].path).toEqual(['amountIn']);
+    expect(settleFirstStats.settledToday).toBe(0);
+    expect(settleFirstStats.rejectedToday).toBe(1);
+    expect(settleFirstStats.lastRejected).toEqual({ key: 'audace-intent-check', paths: ['amountIn'] });
+  });
+
+  test('valid input settles, and the handler still reads the full body', async () => {
+    const order: string[] = [];
+    const seen: unknown[] = [];
+    const res = await send(validatingApp(order, seen), JSON.stringify({ amountIn: 5 }));
+    expect(res.status).toBe(200);
+    expect(order).toEqual(['verify', 'settle', 'handler']);
+    expect(seen).toEqual([{ amountIn: 5 }]);
+    expect(settleFirstStats.rejectedToday).toBe(0);
+  });
+
+  test('the { input: {...} } envelope is unwrapped like Lucid does', async () => {
+    const order: string[] = [];
+    const res = await send(validatingApp(order, []), JSON.stringify({ input: { amountIn: 5 } }));
+    expect(res.status).toBe(200);
+    expect(order).toEqual(['verify', 'settle', 'handler']);
+  });
+
+  test('unparseable JSON is validated as empty input and refused unpaid', async () => {
+    const order: string[] = [];
+    const res = await send(validatingApp(order, []), '{not json');
+    expect(res.status).toBe(400);
+    expect(order).toEqual(['verify']);
+  });
+});
+
 describe('cache warmer', () => {
   const mk = (runs: string[], fail = false) => {
     let t = 1_000_000;
