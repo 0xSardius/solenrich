@@ -1,0 +1,102 @@
+{
+ "marketId": 3,
+ "symbol": "ETH",
+ "rates": [
+  {
+   "timestamp": 1793664001,
+   "fundingRatePercentage": "0.001242"
+  },
+  {
+   "timestamp": 1793667601,
+   "fundingRatePercentage": "0.001284"
+  },
+  {
+   "timestamp": 1793671201,
+   "fundingRatePercentage": "0.001240"
+  },
+  {
+   "timestamp": 1793674800,
+   "fundingRatePercentage": "0.001243"
+  },
+  {
+   "timestamp": 1793678400,
+   "fundingRatePercentage": "0.001242"
+  },
+  {
+   "timestamp": 1793682001,
+   "fundingRatePercentage": "0.001240"
+  },
+  {
+   "timestamp": 1793685600,
+   "fundingRatePercentage": "0.001245"
+  },
+  {
+   "timestamp": 1793689201,
+   "fundingRatePercentage": "0.001291"
+  },
+  {
+   "timestamp": 1793692800,
+   "fundingRatePercentage": "0.001240"
+  },
+  {
+   "timestamp": 1793696401,
+   "fundingRatePercentage": "0.001240"
+  },
+  {
+   "timestamp": 1793700000,
+   "fundingRatePercentage": "0.001234"
+  },
+  {
+   "timestamp": 1793703600,
+   "fundingRatePercentage": "0.001276"
+  },
+  {
+   "timestamp": 1793707200,
+   "fundingRatePercentage": "0.001235"
+  },
+  {
+   "timestamp": 1793710800,
+   "fundingRatePercentage": "0.001270"
+  },
+  {
+   "timestamp": 1793714400,
+   "fundingRatePercentage": "0.001224"
+  },
+  {
+   "timestamp": 1793718001,
+   "fundingRatePercentage": "0.001267"
+  },
+  {
+   "timestamp": 1793721601,
+   "fundingRatePercentage": "0.001261"
+  },
+  {
+   "timestamp": 1793725201,
+   "fundingRatePercentage": "0.001218"
+  },
+  {
+   "timestamp": 1793728800,
+   "fundingRatePercentage": "0.001263"
+  },
+  {
+   "timestamp": 1793732400,
+   "fundingRatePercentage": "0.001265"
+  },
+  {
+   "timestamp": 1793736000,
+   "fundingRatePercentage": "0.001224"
+  },
+  {
+   "timestamp": 1793739600,
+   "fundingRatePercentage": "0.001266"
+  },
+  {
+   "timestamp": 1793743200,
+   "fundingRatePercentage": "0.001264"
+  },
+  {
+   "timestamp": 1793746800,
+   "fundingRatePercentage": "0.001221"
+  }
+ ]
+}

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#06060A">
   <title>SolEnrich — Onchain Intelligence for Solana Agents</title>
-  <meta name="description" content="Onchain intelligence API for Solana agents and LLMs. 51 endpoints: wallet profiling and risk scoring, token due diligence with holder concentration and slippage, whale and smart-money tracking, cross-venue perps market structure (Jupiter, Adrena, Flash, Hyperliquid, dYdX), event alerts, portfolio time-series, agent-attention signals, a fresh-launch trade-lifecycle suite, and StonkFun reward-coin intelligence (gem finder, payout status, yield, screener, launch intel, launch preflight). Deterministic scoring, JSON or LLM-ready briefings. Pay per call with USDC on Solana or Base via x402, or by card via Stripe. No API keys.">
+  <meta name="description" content="Onchain intelligence API for Solana agents and LLMs. 51 endpoints: wallet profiling and risk scoring, token due diligence with holder concentration and slippage, whale and smart-money tracking, cross-venue perps market structure (Jupiter, Adrena, Flash, Phoenix, Hyperliquid, dYdX), event alerts, portfolio time-series, agent-attention signals, a fresh-launch trade-lifecycle suite, and StonkFun reward-coin intelligence (gem finder, payout status, yield, screener, launch intel, launch preflight). Deterministic scoring, JSON or LLM-ready briefings. Pay per call with USDC on Solana or Base via x402, or by card via Stripe. No API keys.">
 
   <link rel="canonical" href="https://www.solenrich.com/">
   <link rel="icon" type="image/png" href="https://www.solenrich.com/logo.png">
@@ -1564,9 +1564,9 @@
         <div class="persona-card reveal">
           <div class="persona-tag">&gt;_ perps bots</div>
           <h3 class="persona-title">Make every venue decision one call</h3>
-          <p class="persona-desc">The full perps stack: rates, sizing, basis-arb, position alerts, market trend across Jupiter, Adrena, Flash, Hyperliquid, and dYdX. Bot polls once per cycle, gets every decision it needs.</p>
+          <p class="persona-desc">The full perps stack: rates, sizing, basis-arb, position alerts, market trend across Jupiter, Adrena, Flash, Phoenix, Hyperliquid, and dYdX. Bot polls once per cycle, gets every decision it needs.</p>
           <ul class="persona-endpoints">
-            <li><code>perps-cross-venue-funding</code>rates across Jupiter, Adrena, Flash, HL, dYdX</li>
+            <li><code>perps-cross-venue-funding</code>rates across Jupiter, Adrena, Flash, Phoenix, HL, dYdX</li>
             <li><code>perps-venue-comparison</code>total entry cost at your size + recommendation</li>
             <li><code>perps-basis-signal</code>net-yield-after-borrow funding-arb scanner</li>
             <li><code>perps-market-trend</code>OI, skew, util, borrow direction over 7/14/30d</li>
@@ -1939,7 +1939,7 @@
 
         <details class="suite" id="suite-perps" open>
           <summary class="suite-summary">
-            <h3 class="suite-title">Perps (Jupiter, Adrena, Flash, Hyperliquid, dYdX)</h3>
+            <h3 class="suite-title">Perps (Jupiter, Adrena, Flash, Phoenix, Hyperliquid, dYdX)</h3>
             <span class="suite-meta">6 calls</span>
           </summary>
           <p class="suite-blurb">Cross-venue funding, open interest, entry cost at size, basis, and trader positioning.</p>
@@ -1958,7 +1958,7 @@
                 <span class="endpoint-name">perps-cross-venue-funding</span>
                 <span class="endpoint-price">$0.015</span>
               </div>
-              <p class="endpoint-desc">Borrow / funding APR + open interest aggregated across Jupiter Perps, Adrena, Flash, Hyperliquid, and dYdX v4 in one call. Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities surfaced above 5pt spread.</p>
+              <p class="endpoint-desc">Borrow / funding APR + open interest aggregated across Jupiter Perps, Adrena, Flash, Phoenix, Hyperliquid, and dYdX v4 in one call. Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities surfaced above 5pt spread.</p>
               <div class="tag-row"><span class="tag">perps</span></div>
             </div>
 
@@ -2305,7 +2305,7 @@
     <div class="container">
       <div class="reveal" style="text-align: center;">
         <div class="section-label">Data sources</div>
-        <h2 class="section-title">Cross-referenced from 12 sources</h2>
+        <h2 class="section-title">Cross-referenced from 13 sources</h2>
         <p class="section-desc" style="margin: 16px auto 56px;">
           Prices use the median of all available sources. Every enrichment cross-references data in parallel for accuracy. Perps venues are read from on-chain accounts, not third-party summaries.
         </p>
@@ -2356,6 +2356,11 @@
           <span class="source-icon">&#9889;</span>
           <div class="source-name">Flash Trade</div>
           <div class="source-detail">Borrow Rates + OI (data source down; being re-integrated)</div>
+        </div>
+        <div class="source-card">
+          <span class="source-icon">&#9790;</span>
+          <div class="source-name">Phoenix</div>
+          <div class="source-detail">Order-book Perps: Funding + OI</div>
         </div>
         <div class="source-card">
           <span class="source-icon">&#9633;</span>

@@ -1,0 +1,102 @@
+{
+ "marketId": 1,
+ "symbol": "SOL",
+ "rates": [
+  {
+   "timestamp": 1793664001,
+   "fundingRatePercentage": "0.001304"
+  },
+  {
+   "timestamp": 1793667601,
+   "fundingRatePercentage": "0.001299"
+  },
+  {
+   "timestamp": 1793671201,
+   "fundingRatePercentage": "0.001191"
+  },
+  {
+   "timestamp": 1793674800,
+   "fundingRatePercentage": "0.001307"
+  },
+  {
+   "timestamp": 1793678400,
+   "fundingRatePercentage": "0.001194"
+  },
+  {
+   "timestamp": 1793682001,
+   "fundingRatePercentage": "0.001300"
+  },
+  {
+   "timestamp": 1793685601,
+   "fundingRatePercentage": "0.001199"
+  },
+  {
+   "timestamp": 1793689201,
+   "fundingRatePercentage": "0.001201"
+  },
+  {
+   "timestamp": 1793692800,
+   "fundingRatePercentage": "0.001302"
+  },
+  {
+   "timestamp": 1793696401,
+   "fundingRatePercentage": "0.001305"
+  },
+  {
+   "timestamp": 1793700000,
+   "fundingRatePercentage": "0.001190"
+  },
+  {
+   "timestamp": 1793703600,
+   "fundingRatePercentage": "0.001298"
+  },
+  {
+   "timestamp": 1793707200,
+   "fundingRatePercentage": "0.001188"
+  },
+  {
+   "timestamp": 1793710800,
+   "fundingRatePercentage": "0.001289"
+  },
+  {
+   "timestamp": 1793714400,
+   "fundingRatePercentage": "0.001179"
+  },
+  {
+   "timestamp": 1793718001,
+   "fundingRatePercentage": "0.001284"
+  },
+  {
+   "timestamp": 1793721601,
+   "fundingRatePercentage": "0.001280"
+  },
+  {
+   "timestamp": 1793725201,
+   "fundingRatePercentage": "0.001283"
+  },
+  {
+   "timestamp": 1793728801,
+   "fundingRatePercentage": "0.001178"
+  },
+  {
+   "timestamp": 1793732400,
+   "fundingRatePercentage": "0.001284"
+  },
+  {
+   "timestamp": 1793736000,
+   "fundingRatePercentage": "0.001287"
+  },
+  {
+   "timestamp": 1793739601,
+   "fundingRatePercentage": "0.001176"
+  },
+  {
+   "timestamp": 1793743200,
+   "fundingRatePercentage": "0.001281"
+  },
+  {
+   "timestamp": 1793746800,
+   "fundingRatePercentage": "0.001283"
+  }
+ ]
+}

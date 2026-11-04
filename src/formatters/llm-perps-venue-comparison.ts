@@ -4,6 +4,8 @@ import { formatUsd } from '../utils/normalize';
 const VENUE_LABEL: Record<string, string> = {
   'jupiter-perps': 'Jupiter Perps',
   'adrena': 'Adrena',
+  'flash': 'Flash',
+  'phoenix': 'Phoenix',
   'hyperliquid': 'Hyperliquid',
   'dydx-v4': 'dYdX v4',
 };

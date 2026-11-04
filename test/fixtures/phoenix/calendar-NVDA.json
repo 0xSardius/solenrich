@@ -1,0 +1,9 @@
+{
+ "market": "NVDA",
+ "marketCalendarId": "us_equities_extended",
+ "calendarUri": "https://phoenixcdn.trade/calendars/us_equities_extended.json",
+ "loadedAt": "2026-11-03T23:55:30.664281362Z",
+ "utcNextTransition": "2026-11-07T01:00:00Z",
+ "nextMarketState": "afterHours",
+ "currentState": "open"
+}

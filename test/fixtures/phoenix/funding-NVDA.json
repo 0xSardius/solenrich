@@ -1,0 +1,102 @@
+{
+ "marketId": 4759,
+ "symbol": "NVDA",
+ "rates": [
+  {
+   "timestamp": 1793664001,
+   "fundingRatePercentage": "0.001962"
+  },
+  {
+   "timestamp": 1793667601,
+   "fundingRatePercentage": "0.002451"
+  },
+  {
+   "timestamp": 1793671201,
+   "fundingRatePercentage": "0.003417"
+  },
+  {
+   "timestamp": 1793674800,
+   "fundingRatePercentage": "0.003424"
+  },
+  {
+   "timestamp": 1793678400,
+   "fundingRatePercentage": "0.003434"
+  },
+  {
+   "timestamp": 1793682001,
+   "fundingRatePercentage": "0.003928"
+  },
+  {
+   "timestamp": 1793685601,
+   "fundingRatePercentage": "0.004923"
+  },
+  {
+   "timestamp": 1793689201,
+   "fundingRatePercentage": "0.003938"
+  },
+  {
+   "timestamp": 1793692800,
+   "fundingRatePercentage": "0.003930"
+  },
+  {
+   "timestamp": 1793696401,
+   "fundingRatePercentage": "0.003431"
+  },
+  {
+   "timestamp": 1793700000,
+   "fundingRatePercentage": "0.004378"
+  },
+  {
+   "timestamp": 1793703600,
+   "fundingRatePercentage": "0.004384"
+  },
+  {
+   "timestamp": 1793707200,
+   "fundingRatePercentage": "0.001465"
+  },
+  {
+   "timestamp": 1793710800,
+   "fundingRatePercentage": "0.001455"
+  },
+  {
+   "timestamp": 1793714400,
+   "fundingRatePercentage": "0.000482"
+  },
+  {
+   "timestamp": 1793718001,
+   "fundingRatePercentage": "0.000962"
+  },
+  {
+   "timestamp": 1793721601,
+   "fundingRatePercentage": "0.000481"
+  },
+  {
+   "timestamp": 1793725201,
+   "fundingRatePercentage": "0.000479"
+  },
+  {
+   "timestamp": 1793728801,
+   "fundingRatePercentage": "0.000480"
+  },
+  {
+   "timestamp": 1793732400,
+   "fundingRatePercentage": "0.000962"
+  },
+  {
+   "timestamp": 1793736000,
+   "fundingRatePercentage": "0.000484"
+  },
+  {
+   "timestamp": 1793739601,
+   "fundingRatePercentage": "0.000967"
+  },
+  {
+   "timestamp": 1793743200,
+   "fundingRatePercentage": "0.002381"
+  },
+  {
+   "timestamp": 1793746800,
+   "fundingRatePercentage": "0.004289"
+  }
+ ]
+}

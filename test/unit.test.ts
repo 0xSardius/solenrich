@@ -1243,7 +1243,8 @@ describe('discovery consistency: every surface lists the same endpoints', () => 
   test('/docs endpoints block == PRICING ∪ FREE', () => {
     const agent = src('src/lib/agent.ts');
     // Each documented endpoint is `      'key': {` followed by a `price:` line.
-    const keys = new Set([...agent.matchAll(/^      '([a-z0-9-]+)': \{\n\s+price:/gm)].map((m) => m[1]));
+    // \r? so a Windows checkout (core.autocrlf=true) passes too; CI on Linux has LF.
+    const keys = new Set([...agent.matchAll(/^      '([a-z0-9-]+)': \{\r?\n\s+price:/gm)].map((m) => m[1]));
     expect(diff(expected, keys)).toEqual({ missing: [], extra: [] });
   });
 

@@ -1,0 +1,103 @@
+{
+ "symbol": "NVDA",
+ "assetId": 39,
+ "marketStatus": "active",
+ "commodityMetadata": {
+  "isCommodity": true,
+  "isReopen": false,
+  "isAfterHours": false,
+  "status": "active",
+  "afterHoursRadius": {
+   "value": 0,
+   "decimals": 3,
+   "ui": "0.000"
+  }
+ },
+ "metadata": {
+  "earningsDates": [
+   "2026-11-17T00:00:00Z"
+  ],
+  "earningsDatesV2": [
+   {
+    "date": "2026-11-17",
+    "time": "amc"
+   }
+  ],
+  "name": "NVIDIA",
+  "description": "NVDA tracks the price of 1 share of NVIDIA Corporation (NASDAQ: NVDA) common stock. This is a perpetual futures contract cash-settled against the real-time market price of NVDA. NVIDIA designs graphics processing units (GPUs) and AI computing platforms, with chips powering gaming, data centers, artificial intelligence, and advanced computing applications worldwide.",
+  "assetClass": "equities",
+  "logoUri": "https://phoenixcdn.trade/logos/NVDA/625b14891bf1562684704d0f8f2b3b536b9ca13d2d2ae96f9094f0b728259f25.svg",
+  "coinGeckoId": null,
+  "coinMarketCapId": null,
+  "tokensXyzAssetId": null,
+  "calendar": {
+   "id": "us_equities_extended",
+   "description": "us_equities_extended",
+   "calendarUri": "https://phoenixcdn.trade/calendars/us_equities_extended.json",
+   "contentSha256": "8d308a62612513793d193699742ae06d90bb8ccda487f7f1e9f535f419c3768e",
+   "nextMarketTransitionUtc": "2026-11-07T01:00:00Z"
+  },
+  "displayColor": "#76B900",
+  "circulatingSupply": 24100000000
+ },
+ "marketPubkey": "AzySnZQCNjkQMtm5ZDd2FjKYTjBoNb5Bv5Dsm3WyRkbj",
+ "splinePubkey": "2t9xoesj3HtbmfyTKgsh6F5SBUZgZKGDtL3QwmMaw7xv",
+ "tickSize": 10,
+ "baseLotsDecimals": 3,
+ "takerFee": 0.00035,
+ "makerFee": 0.00005,
+ "leverageTiers": [
+  {
+   "maxLeverage": 20,
+   "maxSizeBaseLots": 14870000,
+   "limitOrderRiskFactor": 100,
+   "limitOrderRiskFactorBps": 10000
+  },
+  {
+   "maxLeverage": 1,
+   "maxSizeBaseLots": 14871000,
+   "limitOrderRiskFactor": 100,
+   "limitOrderRiskFactorBps": 10000
+  },
+  {
+   "maxLeverage": 1,
+   "maxSizeBaseLots": 14872000,
+   "limitOrderRiskFactor": 100,
+   "limitOrderRiskFactorBps": 10000
+  },
+  {
+   "maxLeverage": 1,
+   "maxSizeBaseLots": 14873000,
+   "limitOrderRiskFactor": 100,
+   "limitOrderRiskFactorBps": 10000
+  }
+ ],
+ "riskFactors": {
+  "maintenance": 50,
+  "maintenanceBps": 5000,
+  "backstop": 20,
+  "backstopBps": 2000,
+  "highRisk": 10,
+  "highRiskBps": 1000,
+  "upnl": 100,
+  "upnlBps": 10000,
+  "upnlForWithdrawals": 1,
+  "upnlForWithdrawalsBps": 100,
+  "cancelOrder": 75,
+  "cancelOrderBps": 7500
+ },
+ "fundingIntervalSeconds": 3600,
+ "fundingPeriodSeconds": 28800,
+ "maxFundingRatePerInterval": 465,
+ "maxFundingRatePerIntervalPercentage": 0.2232035712571401,
+ "openInterestCapBaseLots": "14870000",
+ "maxLiquidationSizeBaseLots": "1490000",
+ "isolatedOnly": false,
+ "statsSnapshot": {
+  "slot": 465091294,
+  "slotIndex": 320,
+  "openInterestBaseLots": "318114",
+  "fundingStartIntervalTimestamp": "1793746800",
+  "cumulativeFundingRate": "13449"
+ }
+}

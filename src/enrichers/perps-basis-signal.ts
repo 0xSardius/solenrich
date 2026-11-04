@@ -120,7 +120,8 @@ export class PerpsBasisAnalyzer {
         ? Math.round(((mark - spot.price_usd) / spot.price_usd) * 10_000)
         : null;
 
-      const mechanism: RateMechanism = q.type === 'reference' ? 'funding-rate' : 'borrow-rate';
+      // Explicit on the quote when set (Phoenix: a Solana venue with funding); else derived from the venue type.
+      const mechanism: RateMechanism = q.rate_mechanism ?? (q.type === 'reference' ? 'funding-rate' : 'borrow-rate');
 
       // Reference venues store sign-aware funding on borrow_apr_long.
       // (Positive funding = longs pay. We mapped short to -funding in cross-venue.)

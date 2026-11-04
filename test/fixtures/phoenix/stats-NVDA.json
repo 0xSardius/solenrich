@@ -1,0 +1,16 @@
+{
+ "market_id": 4759,
+ "symbol": "NVDA",
+ "timeframe": null,
+ "stats": [
+  {
+   "open_interest": 318.114,
+   "total_maker_fees": 420.448749,
+   "total_taker_fees": 5408.127656,
+   "mark_price": 208.33,
+   "spot_price": 208.14,
+   "timestamp": "2026-11-03T23:56:00Z",
+   "slot": 465091208
+  }
+ ]
+}

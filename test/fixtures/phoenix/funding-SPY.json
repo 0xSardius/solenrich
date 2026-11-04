@@ -1,0 +1,102 @@
+{
+ "marketId": 9462,
+ "symbol": "SPY",
+ "rates": [
+  {
+   "timestamp": 1793664001,
+   "fundingRatePercentage": "0.002653"
+  },
+  {
+   "timestamp": 1793667601,
+   "fundingRatePercentage": "0.003715"
+  },
+  {
+   "timestamp": 1793671201,
+   "fundingRatePercentage": "0.002655"
+  },
+  {
+   "timestamp": 1793674800,
+   "fundingRatePercentage": "0.001594"
+  },
+  {
+   "timestamp": 1793678400,
+   "fundingRatePercentage": "0.001197"
+  },
+  {
+   "timestamp": 1793682001,
+   "fundingRatePercentage": "0.001197"
+  },
+  {
+   "timestamp": 1793685601,
+   "fundingRatePercentage": "0.000533"
+  },
+  {
+   "timestamp": 1793689201,
+   "fundingRatePercentage": "0.000666"
+  },
+  {
+   "timestamp": 1793692800,
+   "fundingRatePercentage": "0.000798"
+  },
+  {
+   "timestamp": 1793696401,
+   "fundingRatePercentage": "0.000665"
+  },
+  {
+   "timestamp": 1793700000,
+   "fundingRatePercentage": "0.002923"
+  },
+  {
+   "timestamp": 1793703600,
+   "fundingRatePercentage": "0.003590"
+  },
+  {
+   "timestamp": 1793707200,
+   "fundingRatePercentage": "0.001730"
+  },
+  {
+   "timestamp": 1793710800,
+   "fundingRatePercentage": "0.001994"
+  },
+  {
+   "timestamp": 1793714400,
+   "fundingRatePercentage": "0.001194"
+  },
+  {
+   "timestamp": 1793718001,
+   "fundingRatePercentage": "0.000928"
+  },
+  {
+   "timestamp": 1793721601,
+   "fundingRatePercentage": "0.000661"
+  },
+  {
+   "timestamp": 1793725201,
+   "fundingRatePercentage": "0.001720"
+  },
+  {
+   "timestamp": 1793728801,
+   "fundingRatePercentage": "0.001455"
+  },
+  {
+   "timestamp": 1793732400,
+   "fundingRatePercentage": "0.001321"
+  },
+  {
+   "timestamp": 1793736000,
+   "fundingRatePercentage": "0.001459"
+  },
+  {
+   "timestamp": 1793739601,
+   "fundingRatePercentage": "0.001192"
+  },
+  {
+   "timestamp": 1793743200,
+   "fundingRatePercentage": "0.003438"
+  },
+  {
+   "timestamp": 1793746800,
+   "fundingRatePercentage": "0.003172"
+  }
+ ]
+}

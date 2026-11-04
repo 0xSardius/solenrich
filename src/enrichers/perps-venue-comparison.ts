@@ -41,6 +41,7 @@ const VENUE_FEE_PCT: Record<VenueId, number> = {
   'jupiter-perps': 0.06,    // 6bps open fee
   'adrena': 0.06,           // 6bps approximation
   'flash': 0.06,            // 6bps approximation (pool perp, similar structure)
+  'phoenix': 0.035,         // 3.5bps taker (Phoenix market config takerFee 0.00035, 2026-11-03)
   'hyperliquid': 0.025,     // 2.5bps taker
   'dydx-v4': 0.05,          // 5bps taker
 };

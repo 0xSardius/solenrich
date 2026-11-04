@@ -407,7 +407,7 @@ export const MCP_TOOLS: McpToolDef[] = [
   {
     name: 'perps_cross_venue_funding',
     title: 'Cross-Venue Perps Funding',
-    description: 'Compare borrow/funding APR + OI across Solana on-chain venues (Jupiter Perps, Adrena, Flash) and cross-chain reference (Hyperliquid, dYdX v4). Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities. SOL/BTC/ETH/BONK supported (with venue-specific availability).',
+    description: 'Compare borrow/funding APR + OI across Solana on-chain venues (Jupiter Perps, Adrena, Flash, Phoenix) and cross-chain reference (Hyperliquid, dYdX v4). Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities. SOL/BTC/ETH/BONK supported (with venue-specific availability).',
     inputSchema: {
       market: z.enum(['SOL', 'BTC', 'ETH', 'BONK']).describe('Asset to query'),
       include_reference: z.boolean().default(true).describe('Include Hyperliquid + dYdX v4 reference rates'),

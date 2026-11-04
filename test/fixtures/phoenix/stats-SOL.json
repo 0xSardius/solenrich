@@ -1,0 +1,160 @@
+{
+ "market_id": 1,
+ "symbol": "SOL",
+ "timeframe": null,
+ "stats": [
+  {
+   "open_interest": 71010.1,
+   "total_maker_fees": 19813.220855,
+   "total_taker_fees": 249915.20915,
+   "mark_price": 93.18,
+   "spot_price": 93.21,
+   "timestamp": "2026-11-03T23:54:19Z",
+   "slot": 465090745
+  },
+  {
+   "open_interest": 71011.1,
+   "total_maker_fees": 19813.220855,
+   "total_taker_fees": 249915.20915,
+   "mark_price": 93.19,
+   "spot_price": 93.21,
+   "timestamp": "2026-11-03T23:54:35Z",
+   "slot": 465090823
+  },
+  {
+   "open_interest": 71010.1,
+   "total_maker_fees": 19813.311912,
+   "total_taker_fees": 249915.20915,
+   "mark_price": 93.2,
+   "spot_price": 93.22,
+   "timestamp": "2026-11-03T23:54:50Z",
+   "slot": 465090889
+  },
+  {
+   "open_interest": 71010.09,
+   "total_maker_fees": 19813.311912,
+   "total_taker_fees": 249915.822929,
+   "mark_price": 93.2,
+   "spot_price": 93.23,
+   "timestamp": "2026-11-03T23:55:01Z",
+   "slot": 465090939
+  },
+  {
+   "open_interest": 71011.09,
+   "total_maker_fees": 19813.311912,
+   "total_taker_fees": 249915.822929,
+   "mark_price": 93.19,
+   "spot_price": 93.23,
+   "timestamp": "2026-11-03T23:55:05Z",
+   "slot": 465090956
+  },
+  {
+   "open_interest": 71012.39,
+   "total_maker_fees": 19813.311912,
+   "total_taker_fees": 249915.822929,
+   "mark_price": 93.18,
+   "spot_price": 93.21,
+   "timestamp": "2026-11-03T23:55:19Z",
+   "slot": 465091023
+  },
+  {
+   "open_interest": 71013.69,
+   "total_maker_fees": 19813.311912,
+   "total_taker_fees": 249915.822929,
+   "mark_price": 93.16,
+   "spot_price": 93.2,
+   "timestamp": "2026-11-03T23:55:32Z",
+   "slot": 465091083
+  },
+  {
+   "open_interest": 71014.99,
+   "total_maker_fees": 19813.311912,
+   "total_taker_fees": 249915.822929,
+   "mark_price": 93.15,
+   "spot_price": 93.18,
+   "timestamp": "2026-11-03T23:55:36Z",
+   "slot": 465091104
+  },
+  {
+   "open_interest": 71016.29,
+   "total_maker_fees": 19813.311912,
+   "total_taker_fees": 249915.822929,
+   "mark_price": 93.15,
+   "spot_price": 93.18,
+   "timestamp": "2026-11-03T23:55:39Z",
+   "slot": 465091116
+  },
+  {
+   "open_interest": 71034.56,
+   "total_maker_fees": 19813.396987,
+   "total_taker_fees": 249915.822929,
+   "mark_price": 93.13,
+   "spot_price": 93.17,
+   "timestamp": "2026-11-03T23:55:58Z",
+   "slot": 465091200
+  },
+  {
+   "open_interest": 71045.12,
+   "total_maker_fees": 19813.396987,
+   "total_taker_fees": 249916.132684,
+   "mark_price": 93.12,
+   "spot_price": 93.15,
+   "timestamp": "2026-11-03T23:56:05Z",
+   "slot": 465091233
+  },
+  {
+   "open_interest": 71046.42,
+   "total_maker_fees": 19813.396987,
+   "total_taker_fees": 249916.132684,
+   "mark_price": 93.12,
+   "spot_price": 93.15,
+   "timestamp": "2026-11-03T23:56:09Z",
+   "slot": 465091250
+  },
+  {
+   "open_interest": 71049.91,
+   "total_maker_fees": 19813.396987,
+   "total_taker_fees": 249916.335711,
+   "mark_price": 93.12,
+   "spot_price": 93.15,
+   "timestamp": "2026-11-03T23:56:09Z",
+   "slot": 465091252
+  },
+  {
+   "open_interest": 71053.71,
+   "total_maker_fees": 19813.396987,
+   "total_taker_fees": 249916.53486,
+   "mark_price": 93.12,
+   "spot_price": 93.15,
+   "timestamp": "2026-11-03T23:56:09Z",
+   "slot": 465091253
+  },
+  {
+   "open_interest": 71055.01,
+   "total_maker_fees": 19813.396987,
+   "total_taker_fees": 249916.53486,
+   "mark_price": 93.12,
+   "spot_price": 93.15,
+   "timestamp": "2026-11-03T23:56:10Z",
+   "slot": 465091254
+  },
+  {
+   "open_interest": 71057.55,
+   "total_maker_fees": 19813.396987,
+   "total_taker_fees": 249916.705932,
+   "mark_price": 93.12,
+   "spot_price": 93.15,
+   "timestamp": "2026-11-03T23:56:10Z",
+   "slot": 465091256
+  },
+  {
+   "open_interest": 71056.97,
+   "total_maker_fees": 19813.396987,
+   "total_taker_fees": 249916.705932,
+   "mark_price": 93.09,
+   "spot_price": 93.13,
+   "timestamp": "2026-11-03T23:56:15Z",
+   "slot": 465091278
+  }
+ ]
+}

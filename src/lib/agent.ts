@@ -70,6 +70,7 @@ import { registerPerpsBasisSignalEntrypoint } from "../entrypoints/perps-basis-s
 import { AdrenaClient } from "../sources/adrena";
 import { PerpReferenceClient } from "../sources/perp-reference";
 import { FlashPerpsClient } from "../sources/flash-perps";
+import { PhoenixPerpsClient } from "../sources/phoenix-perps";
 import { HyperliquidAnalyzer } from "../enrichers/hyperliquid-analyzer";
 import { HyperliquidSmartMoneyAnalyzer } from "../enrichers/hyperliquid-smart-money";
 import { registerHyperliquidEntrypoints } from "../entrypoints/hyperliquid";
@@ -117,7 +118,7 @@ const agent = await createAgent({
   version: process.env.AGENT_VERSION ?? "1.0.0",
   description:
     process.env.AGENT_DESCRIPTION ??
-    "Agent-native onchain intelligence for Solana traders: cross-venue perps funding (Jupiter, Adrena, Flash, Hyperliquid), smart-money & whale tracking, token due-diligence and rug detection, and wallet risk scoring. Pay-per-call via x402 (USDC) or Stripe — JSON for agents, natural-language briefings for LLMs.",
+    "Agent-native onchain intelligence for Solana traders: cross-venue perps funding (Jupiter, Adrena, Flash, Phoenix, Hyperliquid), smart-money & whale tracking, token due-diligence and rug detection, and wallet risk scoring. Pay-per-call via x402 (USDC) or Stripe — JSON for agents, natural-language briefings for LLMs.",
 })
   .use(http())
   .build();
@@ -669,12 +670,14 @@ const perpReference = new PerpReferenceClient(cache);
 const flashPerps = new FlashPerpsClient(cache);
 const hyperliquidAnalyzer = new HyperliquidAnalyzer(perpReference);
 const hyperliquidSmartMoney = new HyperliquidSmartMoneyAnalyzer(perpReference, hyperliquidAnalyzer, cache);
+const phoenixPerps = new PhoenixPerpsClient(cache);
 const perpsCrossVenueAnalyzer = new PerpsCrossVenueAnalyzer(
   jupiterPerps,
   adrenaClient,
   perpReference,
   flashPerps,
   cache,
+  phoenixPerps,
 );
 const perpsVenueComparator = new PerpsVenueComparator(
   perpsCrossVenueAnalyzer,
@@ -897,6 +900,12 @@ const upstreamCanary = new UpstreamCanary([
     const c = new FlashPerpsClient(NULL_CACHE);
     if (await c.getMarket('SOL')) return true;
     if (c.sourceStatus() === 'unreachable') throw new Error('flashapi.trade not responding');
+    return false;
+  } },
+  { name: 'perps_phoenix', run: async () => {
+    const c = new PhoenixPerpsClient(NULL_CACHE);
+    if (await c.getMarket('SOL')) return true;
+    if (c.sourceStatus() === 'unreachable') throw new Error('perp-api.phoenix.trade not responding');
     return false;
   } },
   { name: 'perps_hyperliquid_dydx', run: async () => { const r = await new PerpReferenceClient(NULL_CACHE).getBoth('SOL'); return r.hyperliquid != null && r.dydx != null; } },
@@ -1241,7 +1250,7 @@ function buildDocs() {
       'perps-cross-venue-funding': {
         price: '0.015',
         input: { market: 'SOL | BTC | ETH | BONK', include_reference: 'boolean (default true)', format: 'json | llm | both' },
-        description: 'Cross-venue perps funding aggregator. Compares borrow/funding APR + open interest across Solana on-chain venues (Jupiter Perps, Adrena, Flash) and cross-chain reference venues (Hyperliquid, dYdX v4). Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities. A venue whose data cannot be read is returned with available: false and an unavailable_reason. Adrena routes SOL→jitoSOL and BTC→WBTC (wrapped). ETH not supported on Adrena. BONK not tradable on Jupiter Perps.',
+        description: 'Cross-venue perps funding aggregator. Compares borrow/funding APR + open interest across Solana on-chain venues (Jupiter Perps, Adrena, Flash, Phoenix) and cross-chain reference venues (Hyperliquid, dYdX v4). Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities. A venue whose data cannot be read is returned with available: false and an unavailable_reason. Adrena routes SOL→jitoSOL and BTC→WBTC (wrapped). ETH not supported on Adrena. BONK not tradable on Jupiter Perps.',
       },
       'perps-venue-comparison': {
         price: '0.020',
@@ -1853,7 +1862,7 @@ app.get('/.well-known/x402', (c) => {
     version: 1,
     service: {
       name: 'SolEnrich',
-      description: 'Agent-native onchain intelligence for Solana traders: cross-venue perps funding (Jupiter, Adrena, Flash, Hyperliquid), smart-money & whale tracking, token due-diligence and rug detection, and wallet risk scoring. Pay-per-call via x402 (USDC) or Stripe.',
+      description: 'Agent-native onchain intelligence for Solana traders: cross-venue perps funding (Jupiter, Adrena, Flash, Phoenix, Hyperliquid), smart-money & whale tracking, token due-diligence and rug detection, and wallet risk scoring. Pay-per-call via x402 (USDC) or Stripe.',
       provider: '@0xSardius',
       providerUrl: 'https://twitter.com/0xSardius',
       categories: ['onchain-data', 'solana', 'defi', 'risk-intelligence', 'perps'],

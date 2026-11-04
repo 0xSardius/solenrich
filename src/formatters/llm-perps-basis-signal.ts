@@ -3,6 +3,8 @@ import type { PerpsBasisSignal, BasisVenueRow } from '../enrichers/perps-basis-s
 const VENUE_LABEL: Record<string, string> = {
   'jupiter-perps': 'Jupiter Perps',
   'adrena': 'Adrena',
+  'flash': 'Flash',
+  'phoenix': 'Phoenix',
   'hyperliquid': 'Hyperliquid',
   'dydx-v4': 'dYdX v4',
 };
@@ -61,7 +63,7 @@ export function formatBasisSignalBriefing(data: PerpsBasisSignal): string {
 
   lines.push('');
   lines.push('### Notes');
-  lines.push('Solana pool perps (Jupiter, Adrena) charge borrow APR on BOTH sides — no funding-income mechanism, so a basis trade pays continuously and is not viable on its own. Reference venues (Hyperliquid, dYdX v4) use sign-aware funding: positive funding means longs pay shorts. To actually capture the rate, position must be opened on the reference venue itself.');
+  lines.push('Solana pool perps (Jupiter, Adrena, Flash) charge borrow APR on BOTH sides — no funding-income mechanism, so a basis trade pays continuously and is not viable on its own. Phoenix (a Solana order book) and the reference venues (Hyperliquid, dYdX v4) use sign-aware funding: positive funding means longs pay shorts. Phoenix is the one place to capture funding without leaving Solana; for a reference venue the position must be opened on that venue itself.');
 
   return lines.join('\n');
 }

@@ -1,7 +1,7 @@
 // Cross-venue perps funding enricher.
 //
 // Aggregates borrow/funding rates across:
-//   - Solana on-chain venues: Jupiter Perps, Adrena
+//   - Solana on-chain venues: Jupiter Perps, Adrena, Flash (pool perps, borrow) and Phoenix (order book, funding)
 //   - Cross-chain reference: Hyperliquid, dYdX v4
 //
 // Returns per-venue rates + best-entry recommendation per side + cross-chain
@@ -17,11 +17,12 @@ import type { JupiterPerpsClient } from '../sources/jupiter-perps';
 import type { AdrenaClient, AdrenaMarket } from '../sources/adrena';
 import type { PerpReferenceClient, ReferenceMarket } from '../sources/perp-reference';
 import type { FlashPerpsClient, FlashMarket } from '../sources/flash-perps';
+import type { PhoenixPerpsClient, PhoenixSnapshot } from '../sources/phoenix-perps';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 
 export type CrossVenueMarket = 'SOL' | 'BTC' | 'ETH' | 'BONK';
-export type VenueId = 'jupiter-perps' | 'adrena' | 'flash' | 'hyperliquid' | 'dydx-v4';
+export type VenueId = 'jupiter-perps' | 'adrena' | 'flash' | 'phoenix' | 'hyperliquid' | 'dydx-v4';
 
 export interface VenueQuote {
   venue: VenueId;
@@ -42,6 +43,12 @@ export interface VenueQuote {
   unavailable_reason?: string;
   /** Venue type — helps consumers reason about cross-chain vs same-chain. */
   type: 'solana-onchain' | 'reference';
+  /**
+   * How the rate is paid. Pool perps charge borrow on both sides; order-book perps pay signed funding
+   * (borrow_apr_short = −funding, so a negative value means shorts earn). Absent = derived from `type`
+   * (reference → funding-rate, solana-onchain → borrow-rate). Phoenix is the first Solana venue with funding.
+   */
+  rate_mechanism?: 'borrow-rate' | 'funding-rate';
   notes?: string[];
 }
 
@@ -55,6 +62,8 @@ export interface BasisInfo {
   jupiter_vs_hyperliquid_bps: number | null;
   /** Spread between Adrena mark and Hyperliquid mark, in basis points. */
   adrena_vs_hyperliquid_bps: number | null;
+  /** Spread between Phoenix mark and Hyperliquid mark, in basis points. */
+  phoenix_vs_hyperliquid_bps?: number | null;
   summary: string;
 }
 
@@ -101,6 +110,45 @@ export function flashUnavailableReason(
   return `${market} is not listed on Flash, or its data did not load in time.`;
 }
 
+/**
+ * Phoenix venue quote (2026-11-03). Order-book perp with signed hourly funding: borrow_apr_long = funding APR
+ * (positive = longs pay), borrow_apr_short = −funding APR (negative = shorts earn), like the reference venues.
+ */
+export function phoenixQuote(market: string, snap: PhoenixSnapshot | null, source: 'ok' | 'unreachable'): VenueQuote {
+  const base = { venue: 'phoenix' as const, type: 'solana-onchain' as const, rate_mechanism: 'funding-rate' as const, utilization_pct: null, skew: 'unknown' as const };
+  if (!snap) {
+    return {
+      ...base,
+      available: false,
+      borrow_apr_long: null,
+      borrow_apr_short: null,
+      open_interest_usd: null,
+      mark_price_usd: null,
+      unavailable_reason:
+        market === 'BONK'
+          ? 'Phoenix lists BONK as kBONK (1,000 BONK per unit); not mapped yet.'
+          : source === 'unreachable'
+            ? "Phoenix data unavailable: Phoenix's public API did not respond. This is our data source, not the venue."
+            : `${market} data from Phoenix did not load in time, or the market is not active.`,
+    };
+  }
+  const apr = Math.round(snap.funding_apr_pct * 100) / 100;
+  const notes = [
+    `Order-book perp with hourly funding (${snap.funding_hourly_pct.toFixed(5)}%/h): positive = longs pay shorts. Taker fee ${snap.taker_fee_pct.toFixed(3)}%.`,
+    `Index price ${snap.index_price_usd}; mark ${snap.mark_price_usd}.`,
+  ];
+  if (snap.oi_cap_usd != null) notes.push(`OI cap ≈ $${snap.oi_cap_usd.toLocaleString()} at the current mark.`);
+  return {
+    ...base,
+    available: true,
+    borrow_apr_long: apr,
+    borrow_apr_short: -apr,
+    open_interest_usd: snap.open_interest_usd,
+    mark_price_usd: snap.mark_price_usd,
+    notes,
+  };
+}
+
 function aprDelta(a: number, b: number): number {
   return Math.abs(a - b);
 }
@@ -112,6 +160,7 @@ export class PerpsCrossVenueAnalyzer {
     private reference: PerpReferenceClient,
     private flash: Pick<FlashPerpsClient, 'getMarket' | 'sourceStatus'>,
     private cache: Cache,
+    private phoenix?: Pick<PhoenixPerpsClient, 'getMarket' | 'sourceStatus'>,
   ) {}
 
   async analyze(
@@ -128,6 +177,10 @@ export class PerpsCrossVenueAnalyzer {
       { name: 'adrena', fn: () => this.adrena.getMarket(market as AdrenaMarket) },
       { name: 'flash', fn: () => this.flash.getMarket(market as FlashMarket) },
     ];
+    if (this.phoenix && market !== 'BONK') {
+      const phoenix = this.phoenix;
+      tasks.push({ name: 'phoenix', fn: () => phoenix.getMarket(market) as any });
+    }
     if (includeReference) {
       tasks.push(
         { name: 'reference', fn: () => this.reference.getBoth(market as ReferenceMarket) as any },
@@ -273,6 +326,11 @@ export class PerpsCrossVenueAnalyzer {
       });
     }
 
+    // --- Phoenix (order-book perp on Solana, signed funding) ---
+    if (this.phoenix) {
+      venues.push(phoenixQuote(market, (results.phoenix as PhoenixSnapshot | undefined) ?? null, this.phoenix.sourceStatus()));
+    }
+
     // --- Reference venues (Hyperliquid + dYdX v4) ---
     const refSnaps = results.reference as {
       hyperliquid: any; dydx: any;
@@ -363,6 +421,10 @@ export class PerpsCrossVenueAnalyzer {
     const adrenaVsHl = (adrenaMark && hlMark)
       ? Math.round(((adrenaMark - hlMark) / hlMark) * 10_000)
       : null;
+    const phoenixMark = venues.find(v => v.venue === 'phoenix' && v.available)?.mark_price_usd ?? null;
+    const phoenixVsHl = (phoenixMark && hlMark)
+      ? Math.round(((phoenixMark - hlMark) / hlMark) * 10_000)
+      : null;
 
     const basisLines: string[] = [];
     if (jupVsHl !== null) {
@@ -375,9 +437,15 @@ export class PerpsCrossVenueAnalyzer {
         `Adrena mark trades ${adrenaVsHl >= 0 ? '+' : ''}${adrenaVsHl}bps vs Hyperliquid`,
       );
     }
+    if (phoenixVsHl !== null) {
+      basisLines.push(
+        `Phoenix mark trades ${phoenixVsHl >= 0 ? '+' : ''}${phoenixVsHl}bps vs Hyperliquid`,
+      );
+    }
     const basis: BasisInfo = {
       jupiter_vs_hyperliquid_bps: jupVsHl,
       adrena_vs_hyperliquid_bps: adrenaVsHl,
+      phoenix_vs_hyperliquid_bps: phoenixVsHl,
       summary: basisLines.length > 0
         ? basisLines.join('. ') + '.'
         : 'Mark price comparison unavailable (one or more venue marks missing).',

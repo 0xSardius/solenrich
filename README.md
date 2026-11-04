@@ -2,7 +2,7 @@
 
 Onchain intelligence for Solana agents. An agent sends one request, pays a small amount of USDC per call over x402 (on Solana or Base, no API key, no account), and gets back a verdict with its evidence — structured JSON, or a short plain-language briefing for an LLM.
 
-Verdicts instead of raw data: SAFE / CAUTION / RISKY for a token, EXIT / DERISK / HOLD for a position, PAYING / STALE / NEVER for a StonkFun reward coin, ESTABLISHED / SERIAL_LAUNCHER for a coin's creator, RISK_ON / NEUTRAL / RISK_OFF for a market. Scoring is deterministic (no LLM in the pipeline), so the same input gives the same answer. Suites cover wallets and tokens, memecoin trenches (entry and exit), smart money, perps across five venues, and StonkFun reward coins. Every endpoint is also a tool on the MCP server.
+Verdicts instead of raw data: SAFE / CAUTION / RISKY for a token, EXIT / DERISK / HOLD for a position, PAYING / STALE / NEVER for a StonkFun reward coin, ESTABLISHED / SERIAL_LAUNCHER for a coin's creator, RISK_ON / NEUTRAL / RISK_OFF for a market. Scoring is deterministic (no LLM in the pipeline), so the same input gives the same answer. Suites cover wallets and tokens, memecoin trenches (entry and exit), smart money, perps across six venues, and StonkFun reward coins. Every endpoint is also a tool on the MCP server.
 
 **Live API:** https://api.solenrich.com/
 **Landing Page:** https://solenrich.com
@@ -91,7 +91,7 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 |----------|-------|-------|-------------|
 | `perps-market-structure` | $0.012 | `format` | Jupiter Perps OI, utilization, borrow APR, skew, health flags for SOL/BTC/ETH |
 | `perps-trader-profile` | $0.010 | `address`, `format` | Multi-venue (Jupiter + Adrena) open positions, leverage, PnL, trader classification |
-| `perps-cross-venue-funding` | $0.015 | `market`, `include_reference`, `format` | Funding/borrow APR + OI across Jupiter, Adrena, Flash, Hyperliquid, dYdX — best entry per side, arbitrage spreads |
+| `perps-cross-venue-funding` | $0.015 | `market`, `include_reference`, `format` | Funding/borrow APR + OI across Jupiter, Adrena, Flash, Phoenix, Hyperliquid, dYdX — best entry per side, arbitrage spreads |
 | `perps-venue-comparison` | $0.020 | `market`, `side`, `size_usd`, `format` | Where to trade at this size: slippage, fees, OI headroom, total entry cost, recommendation |
 | `perps-basis-signal` | $0.015 | `asset`, `min_yield_apr_pct`, `format` | Net-yield-after-borrow basis trade scanner — actually-earnable yield per venue |
 | `perps-market-trend` | $0.008 | `lookback`, `format` | Per-market deltas (price, OI, skew, utilization, borrow APR) over 7/14/30d — regime detection |

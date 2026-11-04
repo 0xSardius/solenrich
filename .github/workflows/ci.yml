@@ -64,3 +64,5 @@ jobs:
       - run: bun test test/audace-intent-check.test.ts
       # Flash venue status (2026-11-02): honest unavailable reason, skip a dead source for 5 min.
       - run: bun test test/perps-flash.test.ts
+      # Phoenix venue (2026-11-03): funding %/hour, OI base units, quiet-market window, source-down skip.
+      - run: bun test test/perps-phoenix.test.ts

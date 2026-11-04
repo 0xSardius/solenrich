@@ -4,6 +4,8 @@ import { formatUsd } from '../utils/normalize';
 const VENUE_LABEL: Record<string, string> = {
   'jupiter-perps': 'Jupiter Perps',
   'adrena': 'Adrena',
+  'flash': 'Flash',
+  'phoenix': 'Phoenix',
   'hyperliquid': 'Hyperliquid',
   'dydx-v4': 'dYdX v4',
 };
@@ -19,7 +21,8 @@ function venueLine(v: VenueQuote): string {
     return `- ${label}: unavailable — ${v.unavailable_reason ?? 'no data'}.`;
   }
   const parts: string[] = [`- ${label}`];
-  if (v.type === 'solana-onchain') {
+  const funding = (v.rate_mechanism ?? (v.type === 'reference' ? 'funding-rate' : 'borrow-rate')) === 'funding-rate';
+  if (!funding) {
     parts.push(`borrow ${fmtApr(v.borrow_apr_long)} (long/short paid)`);
   } else {
     parts.push(`funding long ${fmtApr(v.borrow_apr_long)} / short ${fmtApr(v.borrow_apr_short)}`);
@@ -64,7 +67,7 @@ export function formatCrossVenueFundingBriefing(data: CrossVenueFunding): string
 
   lines.push('### Notes');
   lines.push(
-    `Solana venues quote borrow APR (utilization-based, paid by both sides). Reference venues quote funding rate (longs pay shorts when positive). Reference rates are cross-chain context — to capture them, position must be opened on the reference venue itself.`,
+    `Solana pool venues (Jupiter, Adrena, Flash) quote borrow APR (utilization-based, paid by both sides). Phoenix (Solana order book) and the reference venues quote funding (longs pay shorts when positive; a negative short rate means shorts earn). Reference rates are cross-chain context — to capture them, position must be opened on the reference venue itself.`,
   );
   if (data.market === 'ETH') {
     lines.push(`Note: Adrena has no ETH custody on mainnet. Jupiter Perps is the only Solana venue for ${data.market}.`);

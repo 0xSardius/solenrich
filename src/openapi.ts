@@ -345,8 +345,8 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'perps-cross-venue-funding': {
-    summary: 'Compare perps funding and open interest across five venues',
-    description: 'Aggregates borrow/funding APR + open interest across Solana on-chain venues (Jupiter Perps, Adrena, Flash) and cross-chain reference venues (Hyperliquid, dYdX v4). Returns per-venue quotes, best entry per side, basis vs Hyperliquid, and arbitrage opportunities. A venue whose data cannot be read returns available: false with the reason. Adrena uses wrapped collateral (SOL via jitoSOL, BTC via WBTC); no ETH there, no BONK on Jupiter Perps.',
+    summary: 'Compare perps funding and open interest across six venues',
+    description: 'Aggregates borrow/funding APR + open interest across Solana on-chain venues (Jupiter Perps, Adrena, Flash, Phoenix) and cross-chain reference venues (Hyperliquid, dYdX v4). Returns per-venue quotes, best entry per side, basis vs Hyperliquid, and arbitrage opportunities. A venue whose data cannot be read returns available: false with the reason. Adrena uses wrapped collateral (SOL via jitoSOL, BTC via WBTC); no ETH there, no BONK on Jupiter Perps.',
     schema: {
       type: 'object',
       required: ['market'],

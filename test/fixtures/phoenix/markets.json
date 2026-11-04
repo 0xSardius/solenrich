@@ -1,0 +1,445 @@
+[
+ {
+  "symbol": "SPY",
+  "assetId": 78,
+  "marketStatus": "active",
+  "commodityMetadata": {
+   "isCommodity": true,
+   "isReopen": false,
+   "isAfterHours": false,
+   "status": "active",
+   "afterHoursRadius": {
+    "value": 0,
+    "decimals": 3,
+    "ui": "0.000"
+   }
+  },
+  "metadata": {
+   "earningsDates": [],
+   "earningsDatesV2": [],
+   "name": null,
+   "description": "SPY provides broad exposure to 500 of the largest U.S. companies by market capitalization, spanning all major sectors of the US equity market.",
+   "assetClass": "equities",
+   "logoUri": "https://phoenixcdn.trade/logos/SPY/fde6d99e1a0e6390ca20a0b088f74c5d2f870689fc13589d03f21a1cb97829bc.svg",
+   "coinGeckoId": null,
+   "coinMarketCapId": null,
+   "tokensXyzAssetId": null,
+   "calendar": {
+    "id": "us_equities_extended",
+    "description": "us_equities_extended",
+    "calendarUri": "https://phoenixcdn.trade/calendars/us_equities_extended.json",
+    "contentSha256": "8d308a62612513793d193699742ae06d90bb8ccda487f7f1e9f535f419c3768e",
+    "nextMarketTransitionUtc": "2026-11-07T01:00:00Z"
+   },
+   "displayColor": null,
+   "circulatingSupply": null
+  },
+  "marketPubkey": "FbkK74mnwf51gyccTJxDLWQNw9yN3Ff8jsUXUCEw4LPZ",
+  "splinePubkey": "57RbXMGfTw9cLu4rYLbiGzymPee2G1s46cEwG9Grw7Fk",
+  "tickSize": 10,
+  "baseLotsDecimals": 3,
+  "takerFee": 0.00035,
+  "makerFee": 0.00005,
+  "leverageTiers": [
+   {
+    "maxLeverage": 20,
+    "maxSizeBaseLots": 3920000,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 3921000,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 3922000,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 3923000,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   }
+  ],
+  "riskFactors": {
+   "maintenance": 50,
+   "maintenanceBps": 5000,
+   "backstop": 20,
+   "backstopBps": 2000,
+   "highRisk": 10,
+   "highRiskBps": 1000,
+   "upnl": 100,
+   "upnlBps": 10000,
+   "upnlForWithdrawals": 1,
+   "upnlForWithdrawalsBps": 100,
+   "cancelOrder": 75,
+   "cancelOrderBps": 7500
+  },
+  "fundingIntervalSeconds": 3600,
+  "fundingPeriodSeconds": 28800,
+  "maxFundingRatePerInterval": 1750,
+  "maxFundingRatePerIntervalPercentage": 0.23152741946153338,
+  "openInterestCapBaseLots": "3920000",
+  "maxLiquidationSizeBaseLots": "390000",
+  "isolatedOnly": false,
+  "statsSnapshot": {
+   "slot": 465091290,
+   "slotIndex": 355,
+   "openInterestBaseLots": "156916",
+   "fundingStartIntervalTimestamp": "1793746800",
+   "cumulativeFundingRate": "14792"
+  }
+ },
+ {
+  "symbol": "ETH",
+  "assetId": 2,
+  "marketStatus": "active",
+  "metadata": {
+   "earningsDates": [],
+   "earningsDatesV2": [],
+   "name": "Ethereum",
+   "description": "Ethereum is an open-source blockchain for smart contracts and decentralized applications. It was founded in 2013 by Vitalik Buterin. Users built on top of the network using smart contracts, which led to the popularization of DeFi, NFTs, DAOs, and more.",
+   "classifications": [
+    "l1"
+   ],
+   "assetClass": "crypto",
+   "logoUri": "https://phoenixcdn.trade/logos/ETH/b3e3b01e539aed5885ba95670767e8a88bb5c43f1db39c7cbeccec1aeb1899a7.svg",
+   "coinGeckoId": "ethereum",
+   "coinMarketCapId": 1027,
+   "tokensXyzAssetId": null,
+   "displayColor": "#627EEA",
+   "circulatingSupply": 122058930.79155314
+  },
+  "marketPubkey": "9u7aqptdRFbsnnoHtjK13E5JkeM14EW5fAKTRPidVF88",
+  "splinePubkey": "DN7uE4FBSs9Uy6V3GNvAbTdUMufY1hBkdy3JV1UfYdg",
+  "tickSize": 100,
+  "baseLotsDecimals": 3,
+  "takerFee": 0.00035,
+  "makerFee": 0.00005,
+  "leverageTiers": [
+   {
+    "maxLeverage": 25,
+    "maxSizeBaseLots": 24146424,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 24146425,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 24146426,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 24146427,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   }
+  ],
+  "riskFactors": {
+   "maintenance": 50,
+   "maintenanceBps": 5000,
+   "backstop": 20,
+   "backstopBps": 2000,
+   "highRisk": 10,
+   "highRiskBps": 1000,
+   "upnl": 100,
+   "upnlBps": 10000,
+   "upnlForWithdrawals": 70,
+   "upnlForWithdrawalsBps": 7000,
+   "cancelOrder": 70,
+   "cancelOrderBps": 7000
+  },
+  "fundingIntervalSeconds": 3600,
+  "fundingPeriodSeconds": 28800,
+  "maxFundingRatePerInterval": 5228,
+  "maxFundingRatePerIntervalPercentage": 0.2290470974808324,
+  "openInterestCapBaseLots": "24146424",
+  "maxLiquidationSizeBaseLots": "241464",
+  "isolatedOnly": false,
+  "statsSnapshot": {
+   "slot": 465091290,
+   "slotIndex": 355,
+   "openInterestBaseLots": "414504",
+   "fundingStartIntervalTimestamp": "1793746800",
+   "cumulativeFundingRate": "-36793"
+  }
+ },
+ {
+  "symbol": "SOL",
+  "assetId": 0,
+  "marketStatus": "active",
+  "metadata": {
+   "earningsDates": [],
+   "earningsDatesV2": [],
+   "name": "Solana",
+   "description": "Solana is a blockchain for smart contracts and decentralized applications with a focus on scalability.",
+   "classifications": [
+    "solana",
+    "l1"
+   ],
+   "assetClass": "crypto",
+   "logoUri": "https://phoenixcdn.trade/logos/SOL/b82944495839f0a92b535eaa8923ea68283b875e8c444840b9eff4fac8819c01.svg",
+   "coinGeckoId": "solana",
+   "coinMarketCapId": 5426,
+   "tokensXyzAssetId": null,
+   "displayColor": "#9945FF",
+   "circulatingSupply": 587296838.8226068
+  },
+  "marketPubkey": "71Si24E4uc3oCaPbPZTozC1ptSNNqygjjebxSmErSsC2",
+  "splinePubkey": "EVhkquLbfm5rDRXtZu9FoyDSXX5mYq2EYU6yD8zfKEqM",
+  "tickSize": 100,
+  "baseLotsDecimals": 2,
+  "takerFee": 0.00035,
+  "makerFee": 0.00005,
+  "leverageTiers": [
+   {
+    "maxLeverage": 25,
+    "maxSizeBaseLots": 32164684,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 32164685,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 32164686,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 32164687,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   }
+  ],
+  "riskFactors": {
+   "maintenance": 50,
+   "maintenanceBps": 5000,
+   "backstop": 20,
+   "backstopBps": 2000,
+   "highRisk": 10,
+   "highRiskBps": 1000,
+   "upnl": 100,
+   "upnlBps": 10000,
+   "upnlForWithdrawals": 70,
+   "upnlForWithdrawalsBps": 7000,
+   "cancelOrder": 75,
+   "cancelOrderBps": 7500
+  },
+  "fundingIntervalSeconds": 3600,
+  "fundingPeriodSeconds": 28800,
+  "maxFundingRatePerInterval": 2125,
+  "maxFundingRatePerIntervalPercentage": 0.22829823807477442,
+  "openInterestCapBaseLots": "32164684",
+  "maxLiquidationSizeBaseLots": "500000",
+  "isolatedOnly": false,
+  "statsSnapshot": {
+   "slot": 465091290,
+   "slotIndex": 355,
+   "openInterestBaseLots": "7105697",
+   "fundingStartIntervalTimestamp": "1793746800",
+   "cumulativeFundingRate": "47289"
+  }
+ },
+ {
+  "symbol": "BTC",
+  "assetId": 1,
+  "marketStatus": "active",
+  "metadata": {
+   "earningsDates": [],
+   "earningsDatesV2": [],
+   "name": "Bitcoin",
+   "description": "Bitcoin is a decentralized digital currency that allows for peer-to-peer transactions without the need for a central authority or intermediary. It operates on a blockchain that launched in 2009 and was founded by the anonymous Satoshi Nakamoto. It was the first blockchain that gained popularity.",
+   "classifications": [
+    "l1"
+   ],
+   "assetClass": "crypto",
+   "logoUri": "https://phoenixcdn.trade/logos/BTC/29e92755162f3146841609e71d09b81142196df38b3d7301c82d4cb51dd692dd.svg",
+   "coinGeckoId": "bitcoin",
+   "coinMarketCapId": 1,
+   "tokensXyzAssetId": null,
+   "displayColor": "#F7931A",
+   "circulatingSupply": 20086206
+  },
+  "marketPubkey": "AXFz1MuzMUBHi5UKJuK3FDCQ73o3rSzubGU2mPr4LLU7",
+  "splinePubkey": "Dh9NrYjzzdvcYgFSbrkATQ1rPkPjDovXWnFVhfWmD2ZF",
+  "tickSize": 100,
+  "baseLotsDecimals": 4,
+  "takerFee": 0.00035,
+  "makerFee": 0.00005,
+  "leverageTiers": [
+   {
+    "maxLeverage": 40,
+    "maxSizeBaseLots": 7350672,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 7350673,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 7350674,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 7350675,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   }
+  ],
+  "riskFactors": {
+   "maintenance": 50,
+   "maintenanceBps": 5000,
+   "backstop": 20,
+   "backstopBps": 2000,
+   "highRisk": 10,
+   "highRiskBps": 1000,
+   "upnl": 100,
+   "upnlBps": 10000,
+   "upnlForWithdrawals": 70,
+   "upnlForWithdrawalsBps": 7000,
+   "cancelOrder": 70,
+   "cancelOrderBps": 7000
+  },
+  "fundingIntervalSeconds": 3600,
+  "fundingPeriodSeconds": 28800,
+  "maxFundingRatePerInterval": 17957,
+  "maxFundingRatePerIntervalPercentage": 0.2311841800345032,
+  "openInterestCapBaseLots": "7350672",
+  "maxLiquidationSizeBaseLots": "73507",
+  "isolatedOnly": false,
+  "statsSnapshot": {
+   "slot": 465091290,
+   "slotIndex": 355,
+   "openInterestBaseLots": "232245",
+   "fundingStartIntervalTimestamp": "1793746800",
+   "cumulativeFundingRate": "18571"
+  }
+ },
+ {
+  "symbol": "NVDA",
+  "assetId": 39,
+  "marketStatus": "active",
+  "commodityMetadata": {
+   "isCommodity": true,
+   "isReopen": false,
+   "isAfterHours": false,
+   "status": "active",
+   "afterHoursRadius": {
+    "value": 0,
+    "decimals": 3,
+    "ui": "0.000"
+   }
+  },
+  "metadata": {
+   "earningsDates": [
+    "2026-11-17T00:00:00Z"
+   ],
+   "earningsDatesV2": [
+    {
+     "date": "2026-11-17",
+     "time": "amc"
+    }
+   ],
+   "name": "NVIDIA",
+   "description": "NVDA tracks the price of 1 share of NVIDIA Corporation (NASDAQ: NVDA) common stock. This is a perpetual futures contract cash-settled against the real-time market price of NVDA. NVIDIA designs graphics processing units (GPUs) and AI computing platforms, with chips powering gaming, data centers, artificial intelligence, and advanced computing applications worldwide.",
+   "assetClass": "equities",
+   "logoUri": "https://phoenixcdn.trade/logos/NVDA/625b14891bf1562684704d0f8f2b3b536b9ca13d2d2ae96f9094f0b728259f25.svg",
+   "coinGeckoId": null,
+   "coinMarketCapId": null,
+   "tokensXyzAssetId": null,
+   "calendar": {
+    "id": "us_equities_extended",
+    "description": "us_equities_extended",
+    "calendarUri": "https://phoenixcdn.trade/calendars/us_equities_extended.json",
+    "contentSha256": "8d308a62612513793d193699742ae06d90bb8ccda487f7f1e9f535f419c3768e",
+    "nextMarketTransitionUtc": "2026-11-07T01:00:00Z"
+   },
+   "displayColor": "#76B900",
+   "circulatingSupply": 24100000000
+  },
+  "marketPubkey": "AzySnZQCNjkQMtm5ZDd2FjKYTjBoNb5Bv5Dsm3WyRkbj",
+  "splinePubkey": "2t9xoesj3HtbmfyTKgsh6F5SBUZgZKGDtL3QwmMaw7xv",
+  "tickSize": 10,
+  "baseLotsDecimals": 3,
+  "takerFee": 0.00035,
+  "makerFee": 0.00005,
+  "leverageTiers": [
+   {
+    "maxLeverage": 20,
+    "maxSizeBaseLots": 14870000,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 14871000,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 14872000,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   },
+   {
+    "maxLeverage": 1,
+    "maxSizeBaseLots": 14873000,
+    "limitOrderRiskFactor": 100,
+    "limitOrderRiskFactorBps": 10000
+   }
+  ],
+  "riskFactors": {
+   "maintenance": 50,
+   "maintenanceBps": 5000,
+   "backstop": 20,
+   "backstopBps": 2000,
+   "highRisk": 10,
+   "highRiskBps": 1000,
+   "upnl": 100,
+   "upnlBps": 10000,
+   "upnlForWithdrawals": 1,
+   "upnlForWithdrawalsBps": 100,
+   "cancelOrder": 75,
+   "cancelOrderBps": 7500
+  },
+  "fundingIntervalSeconds": 3600,
+  "fundingPeriodSeconds": 28800,
+  "maxFundingRatePerInterval": 465,
+  "maxFundingRatePerIntervalPercentage": 0.2232035712571401,
+  "openInterestCapBaseLots": "14870000",
+  "maxLiquidationSizeBaseLots": "1490000",
+  "isolatedOnly": false,
+  "statsSnapshot": {
+   "slot": 465091290,
+   "slotIndex": 355,
+   "openInterestBaseLots": "318114",
+   "fundingStartIntervalTimestamp": "1793746800",
+   "cumulativeFundingRate": "13449"
+  }
+ }
+]

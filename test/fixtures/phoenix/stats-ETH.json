@@ -1,0 +1,25 @@
+{
+ "market_id": 3,
+ "symbol": "ETH",
+ "timeframe": null,
+ "stats": [
+  {
+   "open_interest": 414.506,
+   "total_maker_fees": 3043.355148,
+   "total_taker_fees": 78813.569332,
+   "mark_price": 2283.9,
+   "spot_price": 2283.5,
+   "timestamp": "2026-11-03T23:54:52Z",
+   "slot": 465090899
+  },
+  {
+   "open_interest": 414.504,
+   "total_maker_fees": 3043.449295,
+   "total_taker_fees": 78813.569332,
+   "mark_price": 2282.5,
+   "spot_price": 2282.1,
+   "timestamp": "2026-11-03T23:55:44Z",
+   "slot": 465091137
+  }
+ ]
+}
