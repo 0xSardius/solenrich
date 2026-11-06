@@ -9,7 +9,7 @@ import { http } from "@lucid-agents/http";
 // x402 payment middleware
 import { paymentMiddlewareFromHTTPServer, x402HTTPResourceServer } from "@x402/hono";
 import { x402ResourceServer } from "@x402/hono";
-import { settleFirstMiddleware, settleFirstStats } from "./settle-first";
+import { settleFirstMiddleware, settleFirstStats, rollDay as rollSettleFirstDay } from "./settle-first";
 import { CacheWarmer } from "./cache-warmer";
 import { computeStatus, type FacilitatorState } from "./status";
 import { UpstreamCanary, NULL_CACHE, canaryReasons } from "./upstream-canary";
@@ -86,6 +86,8 @@ import { TrenchesScanOrchestrator } from "../enrichers/trenches-scan";
 import { TrenchesCheckAnalyzer } from "../enrichers/trenches-check";
 import { registerExitSignalEntrypoint } from "../entrypoints/exit";
 import { ExitSignalAnalyzer } from "../enrichers/exit-analyzer";
+import { registerXstockBasisEntrypoint } from "../entrypoints/xstock-basis";
+import { XstockBasisAnalyzer } from "../enrichers/xstock-basis";
 import { registerAudaceEntrypoints } from "../entrypoints/audace";
 import { AudaceIntentChecker } from "../enrichers/audace-intent-check";
 import { StonkFunClient } from "../sources/stonkfun";
@@ -451,6 +453,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
     'perps-cross-venue-funding': ['solana', 'perps', 'funding-rate', 'cross-venue', 'arbitrage'],
     'perps-venue-comparison': ['solana', 'perps', 'venue-comparison', 'funding-rate', 'best-entry'],
     'perps-basis-signal': ['solana', 'perps', 'basis-trade', 'funding-rate', 'yield'],
+    'xstock-basis': ['xstocks', 'tokenized-stocks', 'basis-trade', 'funding-rate', 'rwa'],
     'perps-market-trend': ['solana', 'perps', 'market-trend', 'open-interest', 'funding-rate'],
     'hyperliquid-trader-profile': ['hyperliquid', 'perps', 'trader-profile', 'trader-pnl', 'smart-money'],
     'hyperliquid-smart-money': ['hyperliquid', 'smart-money', 'perps', 'positioning', 'copy-trade'],
@@ -758,6 +761,10 @@ registerPerpsVenueComparisonEntrypoint(addEntrypoint, perpsVenueComparator);
 // real yield; pool perps (Jupiter, Adrena) flagged as not viable. Returns
 // per-venue trade + filtered opportunities + best trade.
 registerPerpsBasisSignalEntrypoint(addEntrypoint, perpsBasisAnalyzer);
+
+// xStock basis — tokenized stock (Jupiter) vs its Phoenix equity perp: funding carry
+// against the real round-trip cost at size (Jupiter quotes + Phoenix book walk).
+registerXstockBasisEntrypoint(addEntrypoint, new XstockBasisAnalyzer(phoenixPerps, jupiter, cache));
 
 // Smart Money Orchestration — trending-signals + smart-money-flow
 // Composes token-discovery, whale-watch, copy-trade, graph-mapper into synthesized
@@ -1268,6 +1275,15 @@ function buildDocs() {
         input: { asset: 'SOL | BTC | ETH | BONK', min_yield_apr_pct: 'number 0-100 (default 5)', format: 'json | llm | both' },
         description: 'Net-yield-after-borrow basis trade scanner. Computes perp mark vs spot price across venues and surfaces actually-earnable yield. Funding-rate venues (Hyperliquid, dYdX v4) generate real yield; pool perps (Jupiter, Adrena) flagged as not-viable because they charge borrow on both sides. Returns per-venue trade economics, filtered opportunities above the APR threshold, and the best trade.',
       },
+      'xstock-basis': {
+        price: PRICING['xstock-basis'],
+        input: {
+          symbol: "'NVDA' | 'TSLA' | 'SPY' | 'QQQ' | 'AMZN' | 'META' | 'GOOGL' | 'MSTR' | 'COIN' | 'HOOD' | 'CRCL' (required) — the xStock is <symbol>x, the Phoenix perp is <symbol>",
+          size_usd: 'number 100-100000 (default 1000) — notional per leg',
+          format: 'json | llm | both',
+        },
+        description: 'Tokenized-stock basis trade: long the xStock on Jupiter, short the same stock\'s Phoenix perp, collect funding (positive funding = longs pay shorts). Returns xStock price, Phoenix mark and index (the real-share price), gaps in bps, funding hourly % and APR, and the real round-trip cost at size_usd: Jupiter buy + sell-back quotes for the xStock, a Phoenix order-book walk to open and close the short, and taker fees both ways. Breakeven days = round trip / current daily funding; net_7d_bps = 7 days of funding minus the round trip. Verdict: TRADE (breakeven ≤ 7 days), MARGINAL (≤ 30), NO_TRADE (> 30, or funding ≤ 0: the reverse trade needs a short xStock), TOO_THIN (no full Jupiter route, book cannot fill, or OI cap headroom under size), UNAVAILABLE (an upstream read failed; not cached, retry). Session flags: AFTER_HOURS (Phoenix prices its index from its own book), EARNINGS_SOON (≤ 7 days), next calendar change. Funding is the current rate, not a forecast; the entry gap is reported but not counted in breakeven.',
+      },
       'perps-market-trend': {
         price: '0.008',
         input: { lookback: '7d | 14d | 30d (default 7d)', format: 'json | llm | both' },
@@ -1588,6 +1604,7 @@ async function probeFacilitator(): Promise<FacilitatorState> {
 
 app.get('/status', async (c) => {
   const now = Date.now();
+  rollSettleFirstDay();
   const [facilitatorState, redisState] = await Promise.all([probeFacilitator(), cache.ping()]);
   const idx = stonkIndex.status();
   const indexLastRefreshAt = idx.lastRefreshAt ? Date.parse(idx.lastRefreshAt) : null;
@@ -1655,6 +1672,7 @@ app.get('/status', async (c) => {
 });
 
 app.get('/metrics', async (c) => {
+  rollSettleFirstDay();
   // Proprietary signal (per-endpoint traffic, top queried entities) — gated.
   // METRICS_TOKEN set → require Bearer token. Not set → only serve when
   // payments are disabled (local dev); locked in production.

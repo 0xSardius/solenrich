@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#06060A">
   <title>SolEnrich — Onchain Intelligence for Solana Agents</title>
-  <meta name="description" content="Onchain intelligence API for Solana agents and LLMs. 51 endpoints: wallet profiling and risk scoring, token due diligence with holder concentration and slippage, whale and smart-money tracking, cross-venue perps market structure (Jupiter, Adrena, Flash, Phoenix, Hyperliquid, dYdX), event alerts, portfolio time-series, agent-attention signals, a fresh-launch trade-lifecycle suite, and StonkFun reward-coin intelligence (gem finder, payout status, yield, screener, launch intel, launch preflight). Deterministic scoring, JSON or LLM-ready briefings. Pay per call with USDC on Solana or Base via x402, or by card via Stripe. No API keys.">
+  <meta name="description" content="Onchain intelligence API for Solana agents and LLMs. 52 endpoints: wallet profiling and risk scoring, token due diligence with holder concentration and slippage, whale and smart-money tracking, cross-venue perps market structure (Jupiter, Adrena, Flash, Phoenix, Hyperliquid, dYdX), event alerts, portfolio time-series, agent-attention signals, a fresh-launch trade-lifecycle suite, and StonkFun reward-coin intelligence (gem finder, payout status, yield, screener, launch intel, launch preflight). Deterministic scoring, JSON or LLM-ready briefings. Pay per call with USDC on Solana or Base via x402, or by card via Stripe. No API keys.">
 
   <link rel="canonical" href="https://www.solenrich.com/">
   <link rel="icon" type="image/png" href="https://www.solenrich.com/logo.png">
@@ -15,7 +15,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.solenrich.com/">
   <meta property="og:title" content="SolEnrich — Onchain Intelligence for Solana Agents">
-  <meta property="og:description" content="51 onchain intelligence endpoints for Solana agents:wallet risk scoring, token due diligence, whale and smart-money tracking, memecoin trenches entry and exit verdicts, cross-venue perps structure across Jupiter, Adrena, Flash, Hyperliquid and dYdX, and StonkFun reward-coin intelligence (gems, payout status, yield, launch intel). Deterministic scoring, JSON or LLM briefings. Pay USDC via x402 on Solana or Base, or cards via Stripe.">
+  <meta property="og:description" content="52 onchain intelligence endpoints for Solana agents:wallet risk scoring, token due diligence, whale and smart-money tracking, memecoin trenches entry and exit verdicts, cross-venue perps structure across Jupiter, Adrena, Flash, Hyperliquid and dYdX, and StonkFun reward-coin intelligence (gems, payout status, yield, launch intel). Deterministic scoring, JSON or LLM briefings. Pay USDC via x402 on Solana or Base, or cards via Stripe.">
   <meta property="og:image" content="https://www.solenrich.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -23,7 +23,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SolEnrich — Onchain Intelligence for Solana Agents">
-  <meta name="twitter:description" content="51 onchain intelligence endpoints for Solana agents:wallet risk scoring, token due diligence, whale and smart-money tracking, memecoin trenches entry and exit verdicts, cross-venue perps structure across Jupiter, Adrena, Flash, Hyperliquid and dYdX, and StonkFun reward-coin intelligence (gems, payout status, yield, launch intel). Deterministic scoring, JSON or LLM briefings. Pay USDC via x402 on Solana or Base, or cards via Stripe.">
+  <meta name="twitter:description" content="52 onchain intelligence endpoints for Solana agents:wallet risk scoring, token due diligence, whale and smart-money tracking, memecoin trenches entry and exit verdicts, cross-venue perps structure across Jupiter, Adrena, Flash, Hyperliquid and dYdX, and StonkFun reward-coin intelligence (gems, payout status, yield, launch intel). Deterministic scoring, JSON or LLM briefings. Pay USDC via x402 on Solana or Base, or cards via Stripe.">
   <meta name="twitter:image" content="https://www.solenrich.com/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,7 +54,7 @@
         "url": "https://www.solenrich.com/",
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "Web / API",
-        "description": "Onchain intelligence API for Solana agents — 51 pay-per-call endpoints for wallet risk scoring, token due diligence, smart-money and whale tracking, memecoin trenches entry and exit verdicts, cross-venue perps intelligence, and StonkFun reward-coin intelligence, delivered as JSON for agents or natural-language briefings for LLMs. Pay per call in USDC via x402 on Solana or Base, or by card via Stripe.",
+        "description": "Onchain intelligence API for Solana agents — 52 pay-per-call endpoints for wallet risk scoring, token due diligence, smart-money and whale tracking, memecoin trenches entry and exit verdicts, cross-venue perps intelligence, and StonkFun reward-coin intelligence, delivered as JSON for agents or natural-language briefings for LLMs. Pay per call in USDC via x402 on Solana or Base, or by card via Stripe.",
         "provider": { "@id": "https://www.solenrich.com/#org" },
         "offers": {
           "@type": "Offer",
@@ -1470,7 +1470,7 @@
         <p class="hero-sub">
           SolEnrich turns Solana onchain data into verdicts a trading agent can act on: token risk before a swap,
           EXIT / DERISK / HOLD on a position, the cheapest perps venue at your size, and which StonkFun coins still pay
-          their holders. 51 endpoints, deterministic scoring, JSON or an LLM briefing.
+          their holders. 52 endpoints, deterministic scoring, JSON or an LLM briefing.
           Pay per call with USDC on Solana or Base. No keys, no subscription.
         </p>
         <div class="hero-actions">
@@ -1569,6 +1569,7 @@
             <li><code>perps-cross-venue-funding</code>rates across Jupiter, Adrena, Flash, Phoenix, HL, dYdX</li>
             <li><code>perps-venue-comparison</code>total entry cost at your size + recommendation</li>
             <li><code>perps-basis-signal</code>net-yield-after-borrow funding-arb scanner</li>
+            <li><code>xstock-basis</code>xStock vs Phoenix stock perp: funding carry vs cost at size</li>
             <li><code>perps-market-trend</code>OI, skew, util, borrow direction over 7/14/30d</li>
             <li><code>perps-trader-profile</code>Jupiter + Adrena positions in one call, multi-venue tagged</li>
             <li><code>check-alerts</code>perp position opened, closed, at-risk, near-liq, PnL swing</li>
@@ -1593,7 +1594,7 @@
           <p class="persona-desc">Drop pre-formatted briefings straight into Claude or Cursor conversations. Deterministic templates, no inference cost, tuned for context windows.</p>
           <ul class="persona-endpoints">
             <li><code>format: "llm"</code>ready-to-paste briefings on any endpoint</li>
-            <li><code>MCP server</code>3-line config for Claude Desktop, 50 tools</li>
+            <li><code>MCP server</code>3-line config for Claude Desktop, 51 tools</li>
             <li><code>consensus-signal</code>what other agents are watching right now</li>
           </ul>
         </div>
@@ -1685,7 +1686,7 @@
     <div class="container">
       <div class="reveal">
         <div class="section-label">Endpoints</div>
-        <h2 class="section-title">51 paid endpoints and 1 free, in nine suites</h2>
+        <h2 class="section-title">52 paid endpoints and 1 free, in nine suites</h2>
         <p class="section-desc">
           Grouped by the job they do, from a quick wallet lookup to a full due diligence report.
           Every endpoint returns JSON, an LLM briefing, or both.
@@ -1940,9 +1941,9 @@
         <details class="suite" id="suite-perps" open>
           <summary class="suite-summary">
             <h3 class="suite-title">Perps (Jupiter, Adrena, Flash, Phoenix, Hyperliquid, dYdX)</h3>
-            <span class="suite-meta">6 calls</span>
+            <span class="suite-meta">7 calls</span>
           </summary>
-          <p class="suite-blurb">Cross-venue funding, open interest, entry cost at size, basis, and trader positioning.</p>
+          <p class="suite-blurb">Cross-venue funding, open interest, entry cost at size, basis (crypto and tokenized stocks), and trader positioning.</p>
           <div class="endpoint-grid">
             <div class="endpoint-card reveal">
               <div class="endpoint-header">
@@ -1978,6 +1979,15 @@
               </div>
               <p class="endpoint-desc">Net-yield-after-borrow basis trade scanner. Computes perp mark vs spot, surfaces real funding APR earnable on Hyperliquid + dYdX, correctly flags pool perps (Jupiter, Adrena) as not-viable. Returns per-venue trade + filtered opportunities + best trade.</p>
               <div class="tag-row"><span class="tag">perps</span><span class="tag">basis</span></div>
+            </div>
+
+            <div class="endpoint-card reveal">
+              <div class="endpoint-header">
+                <span class="endpoint-name">xstock-basis</span>
+                <span class="endpoint-price">$0.015</span>
+              </div>
+              <p class="endpoint-desc">Tokenized-stock basis trade: long the xStock (NVDAx, SPYx, QQQx and 8 more) on Jupiter, short its Phoenix perp, collect funding. Real round-trip cost at your size from Jupiter quotes and Phoenix's order book, breakeven days, after-hours and earnings flags. TRADE / MARGINAL / NO_TRADE / TOO_THIN.</p>
+              <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">rwa</span><span class="tag">basis</span></div>
             </div>
 
             <div class="endpoint-card reveal">
@@ -2557,7 +2567,7 @@ Well-distributed supply.</span></div>
             No cloning, no dependencies. Just paste the URL.
           </p>
           <p style="color: var(--text-muted); font-size: 13px;">
-            50 tools available — every paid endpoint has a matching MCP tool, from wallet
+            51 tools available — every paid endpoint has a matching MCP tool, from wallet
             profiling and due diligence to the trenches suite and the full perps stack.
           </p>
           <div class="mcp-tools">

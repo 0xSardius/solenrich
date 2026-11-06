@@ -61,6 +61,7 @@ export const INPUT_EXAMPLES: Record<string, Record<string, unknown>> = {
   'perps-cross-venue-funding': { market: 'SOL', include_reference: true, format: 'json' },
   'perps-venue-comparison': { market: 'SOL', size_usd: 5000, side: 'long', format: 'json' },
   'perps-basis-signal': { asset: 'SOL', min_yield_apr_pct: 5, format: 'json' },
+  'xstock-basis': { symbol: 'NVDA', size_usd: 1000, format: 'json' },
   'perps-market-trend': { lookback: '7d', format: 'json' },
   // hyperliquid
   'hyperliquid-trader-profile': { address: '0xd21d931890d27b6e7e2e668f27931e17698e90f1', format: 'json' },

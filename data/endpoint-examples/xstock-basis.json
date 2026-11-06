@@ -1,0 +1,69 @@
+{
+  "key": "xstock-basis",
+  "captured_at": "2026-11-06T00:02:16.588Z",
+  "input": {
+    "symbol": "NVDA",
+    "size_usd": 1000,
+    "format": "both"
+  },
+  "ms": 249,
+  "output": {
+    "symbol": "NVDA",
+    "size_usd": 1000,
+    "verdict": "TRADE",
+    "direction": "long_xstock_short_perp",
+    "xstock": {
+      "symbol": "NVDAx",
+      "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+      "price_usd": 181.37949638512805,
+      "round_trip_cost_bps": 2.4
+    },
+    "perp": {
+      "venue": "phoenix",
+      "symbol": "NVDA",
+      "mark_price_usd": 181.38,
+      "index_price_usd": 181.27,
+      "book_mid_usd": 181.67,
+      "funding_hourly_pct": 0.003319,
+      "funding_apr_pct": 29.07,
+      "open_interest_usd": 99488,
+      "oi_cap_headroom_usd": 2597633,
+      "taker_fee_pct": 0.035,
+      "entry_slippage_bps": 3.9,
+      "exit_slippage_bps": 3.9,
+      "round_trip_cost_bps": 14.8
+    },
+    "basis": {
+      "xstock_vs_index_bps": 6,
+      "perp_vs_index_bps": 6.1,
+      "perp_vs_xstock_bps": 0
+    },
+    "economics": {
+      "round_trip_cost_bps": 17.2,
+      "funding_daily_bps": 7.97,
+      "breakeven_days": 2.2,
+      "net_7d_bps": 38.6
+    },
+    "session": {
+      "after_hours": false,
+      "phoenix_status": "active",
+      "next_transition_utc": "2026-11-07T01:00:00Z",
+      "next_earnings": {
+        "date": "2026-11-17",
+        "time": "amc",
+        "days_until": 11
+      }
+    },
+    "codes": [
+      "FUNDING_PAYS"
+    ],
+    "reasoning": "Long NVDAx / short Phoenix NVDA: funding 29.1% APR (7.97 bps/day) against a 17.2 bps round trip at $1,000 → breakeven in 2.2 days at the current rate.",
+    "caveats": [
+      "Funding is the current hourly rate, not a forecast. It changes every hour and can turn negative.",
+      "xStocks are Backed share tokens: you hold issuer and redemption risk on top of the share price.",
+      "Breakeven ignores the entry gap between the perp and the xStock, so it is conservative."
+    ],
+    "fetched_at": "2026-11-06T00:02:16.575Z",
+    "llm_summary": "## xStock Basis — NVDAx vs Phoenix NVDA perp at $1,000.00\n\n**🟢 TRADE — current funding repays the round trip within 7 days**\n\nLong NVDAx / short Phoenix NVDA: funding 29.1% APR (7.97 bps/day) against a 17.2 bps round trip at $1,000 → breakeven in 2.2 days at the current rate.\n\n| | Price | vs index |\n|---|---|---|\n| NVDAx (Jupiter) | $181.38 | 6 bps |\n| Phoenix NVDA mark | $181.38 | 6.1 bps |\n| Phoenix index (real share) | $181.27 | — |\n\n**Carry:** funding 29.07% APR (7.97 bps/day; positive = longs pay, so the short perp earns). Perp above xStock by 0 bps at entry (not counted).\n**Round trip at size:** 17.2 bps = NVDAx on Jupiter 2.4 bps + perp 14.8 bps (book 3.9/3.9 bps in/out, taker 0.035% × 2).\n**Breakeven:** 2.2 days · net after 7 days: 38.6 bps\nOI $99,488.00, cap headroom $2,597,633.00.\n**Session:** regular session · next session change 2026-11-07T01:00:00Z · earnings 2026-11-17 amc (in 11 days)\nCodes: FUNDING_PAYS\n\n_Funding is the current hourly rate, not a forecast. It changes every hour and can turn negative._\n_xStocks are Backed share tokens: you hold issuer and redemption risk on top of the share price._\n_Breakeven ignores the entry gap between the perp and the xStock, so it is conservative._"
+  }
+}

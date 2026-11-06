@@ -319,6 +319,19 @@ export const ENDPOINT_META: Record<string, {
       },
     },
   },
+  'xstock-basis': {
+    summary: 'Price an xStock vs Phoenix perp basis trade at your size',
+    description: 'Long the xStock (NVDAx, SPYx, QQQx, …) on Jupiter, short its Phoenix perp, collect funding. Returns prices vs the real-share index, funding APR, real round-trip cost at size (Jupiter quotes both ways, Phoenix book walk, fees), breakeven days, after-hours and earnings flags. TRADE / MARGINAL / NO_TRADE / TOO_THIN. NFA.',
+    schema: {
+      type: 'object',
+      required: ['symbol'],
+      properties: {
+        symbol: { type: 'string', enum: ['NVDA', 'TSLA', 'SPY', 'QQQ', 'AMZN', 'META', 'GOOGL', 'MSTR', 'COIN', 'HOOD', 'CRCL'], description: 'Stock ticker; the xStock is <symbol>x, the Phoenix perp is <symbol>' },
+        size_usd: { type: 'number', minimum: 100, maximum: 100000, default: 1000, description: 'Notional per leg in USD' },
+        format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
+      },
+    },
+  },
   'perps-market-trend': {
     summary: 'Track Jupiter Perps market trends for SOL, BTC, and ETH',
     description: 'Per-symbol deltas for mark price, total OI, long/short skew, utilization, and borrow APR over 7/14/30 days. Direction indicators per metric and per market. Overall direction excludes mark price (price moves are not health signals). Required for regime-detection strategies and any bot that adjusts behavior based on whether markets are growing, stressed, or rebalancing. Mirror of token-trend for perps.',

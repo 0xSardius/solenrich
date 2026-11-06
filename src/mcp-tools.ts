@@ -377,6 +377,20 @@ export const MCP_TOOLS: McpToolDef[] = [
     }),
   },
   {
+    name: 'xstock_basis',
+    title: 'xStock vs Phoenix Perp Basis Trade',
+    description: 'Tokenized-stock basis trade: long the xStock (NVDAx, TSLAx, SPYx, QQQx and 7 more) on Jupiter, short its Phoenix perp, collect funding. Returns prices and gaps vs the real-share index, funding APR, the real round-trip cost at your size (Jupiter quotes both ways + Phoenix order-book walk + fees), breakeven days, after-hours and earnings flags. Verdict TRADE / MARGINAL / NO_TRADE / TOO_THIN. Use for "is the NVDA basis worth it at $10K?". NFA.',
+    inputSchema: {
+      symbol: z.enum(['NVDA', 'TSLA', 'SPY', 'QQQ', 'AMZN', 'META', 'GOOGL', 'MSTR', 'COIN', 'HOOD', 'CRCL']).describe('Stock ticker; the xStock is <symbol>x'),
+      size_usd: z.number().min(100).max(100000).optional().describe('Notional per leg in USD (default 1000)'),
+    },
+    handler: async (args) => invoke('xstock-basis', {
+      symbol: args.symbol,
+      ...(args.size_usd != null ? { size_usd: args.size_usd } : {}),
+      format: 'llm',
+    }),
+  },
+  {
     name: 'perps_market_trend',
     title: 'Jupiter Perps Market Trend',
     description: 'Per-symbol (SOL/BTC/ETH) deltas for mark price, total open interest, long/short skew, utilization, and borrow APR over 7/14/30 days. Direction indicators per metric and per market. Overall direction excludes mark price. Use for regime detection — bots that adjust behavior based on whether markets are growing, stressed, or rebalancing.',

@@ -195,6 +195,32 @@ export class JupiterClient {
     return results;
   }
 
+  /**
+   * One Jupiter Quote v1 swap quote. `amount` is in raw base units of inputMint.
+   * Returns the raw output amount, or null when Jupiter has no route or did not answer.
+   * Cached for the price TTL: a quote at the same size is reused across calls.
+   */
+  async getQuote(inputMint: string, outputMint: string, amount: number): Promise<{ outAmount: number } | null> {
+    const raw = Math.floor(amount);
+    if (raw <= 0) return null;
+    const cacheKey = `jupiter:quote:${inputMint}:${outputMint}:${raw}`;
+    const cached = await this.cache.get<{ outAmount: number }>(cacheKey);
+    if (cached) return cached;
+    try {
+      const url = `${this.baseUrl}/swap/v1/quote?inputMint=${inputMint}&outputMint=${outputMint}&amount=${raw}&slippageBps=50`;
+      const res = await this.fetchWithKey(url, AbortSignal.timeout(4_000));
+      if (!res.ok) { await drain(res); return null; }
+      const quote: any = await res.json();
+      const outAmount = Number(quote.outAmount ?? 0);
+      if (!(outAmount > 0)) return null;
+      const result = { outAmount };
+      await this.cache.set(cacheKey, result, CACHE_TTL.jupiterPrice);
+      return result;
+    } catch {
+      return null;
+    }
+  }
+
   private fetchWithKey(url: string, signal?: AbortSignal): Promise<Response> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (this.apiKey) headers['x-api-key'] = this.apiKey;

@@ -534,6 +534,21 @@ export const ENDPOINTS: Array<{
       { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.length > 50 },
     ],
   },
+  {
+    // xStock basis — NVDAx vs the Phoenix NVDA perp at $1,000, the bazaar example. Funding moves hourly,
+    // so the verdict varies; checks are structural. UNAVAILABLE (upstream rate limit) fails the check.
+    key: 'xstock-basis',
+    input: { symbol: 'NVDA', size_usd: 1000, format: 'both' },
+    timeout: 30000,
+    checks: [
+      { name: 'echoes symbol and size', test: (d) => d.symbol === 'NVDA' && d.size_usd === 1000 },
+      { name: 'has a priced verdict', test: (d) => ['TRADE', 'MARGINAL', 'NO_TRADE', 'TOO_THIN'].includes(d.verdict), detail: (d) => `verdict=${d.verdict} codes=${d.codes?.join(',')}` },
+      { name: 'has prices', test: (d) => d.xstock?.price_usd > 0 && d.perp?.mark_price_usd > 0 && d.perp?.index_price_usd > 0 },
+      { name: 'has funding and round trip', test: (d) => typeof d.perp?.funding_apr_pct === 'number' && typeof d.economics?.round_trip_cost_bps === 'number' },
+      { name: 'has session', test: (d) => typeof d.session?.after_hours === 'boolean' },
+      { name: 'has llm_summary', test: (d) => typeof d.llm_summary === 'string' && d.llm_summary.includes('xStock Basis') },
+    ],
+  },
   // --- Hyperliquid (first first-class off-Solana venue) ---
   {
     key: 'hyperliquid-trader-profile',

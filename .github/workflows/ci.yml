@@ -66,3 +66,5 @@ jobs:
       - run: bun test test/perps-flash.test.ts
       # Phoenix venue (2026-11-03): funding %/hour, OI base units, quiet-market window, source-down skip.
       - run: bun test test/perps-phoenix.test.ts
+      # xstock-basis (2026-11-05): book walk, round-trip cost, breakeven verdicts, session flags, Phoenix 429 retry.
+      - run: bun test test/xstock-basis.test.ts

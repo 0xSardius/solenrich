@@ -39,7 +39,7 @@ export const ENDPOINT_SUITES: EndpointSuite[] = [
     id: 'perps',
     title: 'Perps (Jupiter, Adrena, Flash, Phoenix, Hyperliquid, dYdX)',
     blurb: 'Cross-venue funding, open interest, entry cost at size, basis, and trader positioning.',
-    keys: ['perps-venue-comparison', 'perps-cross-venue-funding', 'perps-market-structure', 'perps-basis-signal', 'perps-market-trend', 'perps-trader-profile'],
+    keys: ['perps-venue-comparison', 'perps-cross-venue-funding', 'perps-market-structure', 'perps-basis-signal', 'xstock-basis', 'perps-market-trend', 'perps-trader-profile'],
   },
   {
     id: 'core',

@@ -71,7 +71,8 @@ export const settleFirstStats = {
   lastRejected: null as { key: string; paths: string[] } | null,
 };
 
-function rollDay(): void {
+/** Resets the daily counters at the UTC day change. /metrics calls it too, so a quiet day reads 0, not yesterday. */
+export function rollDay(): void {
   const day = new Date().toISOString().slice(0, 10);
   if (day !== settleFirstStats.day) {
     settleFirstStats.day = day;

@@ -359,6 +359,17 @@ const as = await invoke('audace-intent-check', { category: 'degen', tokenInMint:
 check('snapshot clock: sell proceeds', as.body?.output?.verdict === 'PROCEED' && as.body?.output?.codes?.[0] === 'SNAPSHOT_CLOCK');
 console.log(`  ⏱ ${ai.ms}ms / ${as.ms}ms\n`);
 
+// 19c. xstock-basis — NVDAx vs the Phoenix NVDA perp at $1,000, then a size the book cannot fill.
+console.log('━━━ 19c. xstock-basis ━━━');
+const xb = await invoke('xstock-basis', { symbol: 'NVDA', size_usd: 1000, format: 'both' }, 30000);
+check('returns 200', xb.status === 200, `got ${xb.status}`);
+check('has a priced verdict', ['TRADE', 'MARGINAL', 'NO_TRADE', 'TOO_THIN'].includes(xb.body?.output?.verdict), `codes=${xb.body?.output?.codes}`);
+check('has funding and round trip', typeof xb.body?.output?.perp?.funding_apr_pct === 'number' && typeof xb.body?.output?.economics?.round_trip_cost_bps === 'number');
+check('has llm_summary', typeof xb.body?.output?.llm_summary === 'string' && xb.body.output.llm_summary.includes('xStock Basis'));
+const xbi = await invoke('xstock-basis', { symbol: 'NOPE', format: 'json' });
+check('unknown symbol → 400', xbi.status === 400, `got ${xbi.status}`);
+console.log(`  ⏱ ${xb.ms}ms\n`);
+
 // ============================================================
 // 20. StonkFun product line
 // ============================================================

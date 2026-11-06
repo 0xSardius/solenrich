@@ -18,6 +18,7 @@ const TIMEOUT_MS = 5000;
 /** After a failed request, skip Phoenix for this long instead of waiting on it each call. */
 export const PHOENIX_RETRY_MS = 5 * 60_000;
 const CONFIG_TTL_S = 3600;
+const FUNDING_TTL_S = 300;
 
 export type PhoenixMarket = 'SOL' | 'BTC' | 'ETH';
 
@@ -57,6 +58,33 @@ export interface PhoenixSnapshot {
   stats_at: string;
 }
 
+/** Pure: retry-after (seconds) → ms, clamped to 1–60 s. Missing or invalid → 10 s. */
+export function retryAfterMs(header: string | null): number {
+  const s = Number(header);
+  return Number.isFinite(s) && s > 0 ? Math.min(60, Math.max(1, s)) * 1000 : 10_000;
+}
+
+/** GET /v1/view/orderbook/{symbol}. Levels are [price USD, size in base units (shares for equities)]. */
+export interface PhoenixOrderbook {
+  symbol: string;
+  slot: number;
+  bids: [number, number][];
+  asks: [number, number][];
+  mid: number | null;
+}
+
+/** The session fields of GET /v1/view/exchange/market/{symbol} this code reads. */
+export interface PhoenixMarketView {
+  symbol: string;
+  marketStatus: string;
+  commodityMetadata?: { isAfterHours?: boolean; status?: string } | null;
+  metadata?: {
+    assetClass?: string;
+    earningsDatesV2?: { date: string; time?: string }[];
+    calendar?: { nextMarketTransitionUtc?: string } | null;
+  } | null;
+}
+
 /** Pure: the newest point by timestamp (Phoenix does not document the sort order). */
 export function latestPoint<T extends { timestamp: string | number }>(points: T[] | undefined): T | null {
   if (!points?.length) return null;
@@ -93,14 +121,25 @@ export class PhoenixPerpsClient {
     return now < this.downUntil ? 'unreachable' : 'ok';
   }
 
-  private async get<T>(path: string): Promise<T | null> {
+  private async get<T>(path: string, retried = false): Promise<T | null> {
     if (this.sourceStatus() === 'unreachable') return null;
     try {
       const res = await fetch(BASE + path, { signal: AbortSignal.timeout(TIMEOUT_MS) });
       if (!res.ok) {
         await drain(res);
-        // A 404 for one symbol is not an outage; anything else is.
-        if (res.status !== 404) this.downUntil = Date.now() + PHOENIX_RETRY_MS;
+        // A 429 is a rate limit, not an outage. Phoenix allows ~3 quick requests per route and then
+        // answers Retry-After: 2 (measured 2026-11-05), so wait once and retry. The limit is per
+        // route, so a second 429 fails this request only and does not mark Phoenix down.
+        if (res.status === 429) {
+          const wait = retryAfterMs(res.headers.get('retry-after'));
+          if (!retried && wait <= 3000) {
+            await new Promise((r) => setTimeout(r, wait));
+            return this.get<T>(path, true);
+          }
+        } else if (res.status !== 404) {
+          // A 404 for one symbol is not an outage; anything else is.
+          this.downUntil = Date.now() + PHOENIX_RETRY_MS;
+        }
         return null;
       }
       const body = (await res.json()) as T;
@@ -137,10 +176,56 @@ export class PhoenixPerpsClient {
   }
 
   private async latestFundingPct(symbol: string): Promise<number | null> {
+    // Phoenix writes one funding rate per hour, so a 5-minute cache loses nothing and keeps
+    // the funding route under its rate limit when agents scan many symbols.
+    const key = `phoenix:funding:${symbol}`;
+    const cached = await this.cache.get<number>(key);
+    if (cached != null) return cached;
     const body = await this.get<{ rates?: { timestamp: number; fundingRatePercentage: string }[] }>(`/v1/funding/${symbol}/rates?limit=2`);
     const p = latestPoint(body?.rates);
     const v = p ? Number(p.fundingRatePercentage) : NaN;
-    return Number.isFinite(v) ? v : null;
+    if (!Number.isFinite(v)) return null;
+    await this.cache.set(key, v, FUNDING_TTL_S);
+    return v;
+  }
+
+  /** Order book for one symbol (public today; the docs mark it bearer-auth). Cached 15 s. */
+  async getOrderbook(symbol: string): Promise<PhoenixOrderbook | null> {
+    const key = `phoenix:book:${symbol}`;
+    const cached = await this.cache.get<PhoenixOrderbook>(key);
+    if (cached) return cached;
+    const book = await this.get<PhoenixOrderbook>(`/v1/view/orderbook/${symbol}`);
+    if (!book || !Array.isArray(book.bids) || !Array.isArray(book.asks)) return null;
+    const slim: PhoenixOrderbook = { symbol: book.symbol, slot: book.slot, bids: book.bids, asks: book.asks, mid: book.mid ?? null };
+    await this.cache.set(key, slim, 15);
+    return slim;
+  }
+
+  /**
+   * Session state for one symbol (after-hours flag, earnings dates, next calendar change), read from
+   * the all-markets list cached 60 s. One list call serves every symbol: the per-symbol view route
+   * shares Phoenix's tight rate limit with stats (~4 quick requests, measured 2026-11-05).
+   */
+  async getMarketView(symbol: string): Promise<PhoenixMarketView | null> {
+    const key = 'phoenix:sessions';
+    let sessions = await this.cache.get<PhoenixMarketView[]>(key);
+    if (!sessions) {
+      const list = await this.get<PhoenixMarketView[] | { markets: PhoenixMarketView[] }>('/exchange/markets');
+      const markets = Array.isArray(list) ? list : list?.markets;
+      if (!markets?.length) return null;
+      sessions = markets.map((v) => ({
+        symbol: v.symbol,
+        marketStatus: v.marketStatus,
+        commodityMetadata: v.commodityMetadata ? { isAfterHours: v.commodityMetadata.isAfterHours, status: v.commodityMetadata.status } : null,
+        metadata: {
+          assetClass: v.metadata?.assetClass,
+          earningsDatesV2: v.metadata?.earningsDatesV2 ?? [],
+          calendar: { nextMarketTransitionUtc: v.metadata?.calendar?.nextMarketTransitionUtc },
+        },
+      }));
+      await this.cache.set(key, sessions, 60);
+    }
+    return sessions.find((s) => s.symbol === symbol) ?? null;
   }
 
   /** Live snapshot for one symbol, or null when Phoenix does not list it or did not answer. */

@@ -969,6 +969,56 @@
    "net_yield_pct": 12.085
   }
  },
+ "xstock-basis": {
+  "symbol": "NVDA",
+  "size_usd": 1000,
+  "verdict": "TRADE",
+  "direction": "long_xstock_short_perp",
+  "xstock": {
+   "symbol": "NVDAx",
+   "mint": "Xsc9qvGR1efVDFGLrVsmkzv3qi45LTBjeUKSPmx9qEh",
+   "price_usd": 181.38,
+   "round_trip_cost_bps": 2.4
+  },
+  "perp": {
+   "venue": "phoenix",
+   "symbol": "NVDA",
+   "mark_price_usd": 181.38,
+   "index_price_usd": 181.27,
+   "book_mid_usd": 181.67,
+   "funding_hourly_pct": 0.003319,
+   "funding_apr_pct": 29.07,
+   "open_interest_usd": 99488,
+   "oi_cap_headroom_usd": 2597633,
+   "taker_fee_pct": 0.035,
+   "entry_slippage_bps": 3.9
+  },
+  "basis": {
+   "xstock_vs_index_bps": 6,
+   "perp_vs_index_bps": 6.1,
+   "perp_vs_xstock_bps": 0
+  },
+  "economics": {
+   "round_trip_cost_bps": 17.2,
+   "funding_daily_bps": 7.97,
+   "breakeven_days": 2.2,
+   "net_7d_bps": 38.6
+  },
+  "session": {
+   "after_hours": false,
+   "phoenix_status": "active",
+   "next_transition_utc": "2026-11-07T01:00:00Z",
+   "next_earnings": {
+    "date": "2026-11-17",
+    "time": "amc",
+    "days_until": 11
+   }
+  },
+  "codes": [
+   "FUNDING_PAYS"
+  ],
+  "reasoning": "Long NVDAx / short Phoenix NVDA: funding 29.1% APR (7.97 bps/day) against a 1..."
+ },
  "perps-market-trend": {
   "pool": "5BUwFW4nRbftYTDMbgxykoFWqWHPzahFSNAaaaJtVKsq",
   "lookback_days": 7,

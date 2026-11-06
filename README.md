@@ -17,7 +17,7 @@ curl https://api.solenrich.com/health
 # Agent card (A2A discovery)
 curl https://api.solenrich.com/.well-known/agent.json
 
-# List all 51 endpoints (50 paid + 1 free)
+# List all 53 endpoints (52 paid + 1 free)
 curl https://api.solenrich.com/entrypoints
 
 # Full API documentation (agent-readable JSON)
@@ -94,6 +94,7 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 | `perps-cross-venue-funding` | $0.015 | `market`, `include_reference`, `format` | Funding/borrow APR + OI across Jupiter, Adrena, Flash, Phoenix, Hyperliquid, dYdX — best entry per side, arbitrage spreads |
 | `perps-venue-comparison` | $0.020 | `market`, `side`, `size_usd`, `format` | Where to trade at this size: slippage, fees, OI headroom, total entry cost, recommendation |
 | `perps-basis-signal` | $0.015 | `asset`, `min_yield_apr_pct`, `format` | Net-yield-after-borrow basis trade scanner — actually-earnable yield per venue |
+| `xstock-basis` | $0.015 | `symbol`, `size_usd`, `format` | Tokenized-stock basis: long the xStock (NVDAx, TSLAx, SPYx, QQQx, AMZNx, METAx, GOOGLx, MSTRx, COINx, HOODx, CRCLx) on Jupiter, short its Phoenix perp. Funding APR vs the real round-trip cost at size (Jupiter quotes + Phoenix order book + fees), breakeven days, after-hours and earnings flags. TRADE / MARGINAL / NO_TRADE / TOO_THIN |
 | `perps-market-trend` | $0.008 | `lookback`, `format` | Per-market deltas (price, OI, skew, utilization, borrow APR) over 7/14/30d — regime detection |
 | `hyperliquid-trader-profile` | $0.012 | `address` (0x), `format` | Hyperliquid live positions, leverage, liquidation distance, risk flags, week/month/all-time PnL |
 | `hyperliquid-smart-money` | $0.05 | `market`, `top_traders`, `format` | Leaderboard funnel → consistency-gated traders → per-coin positioning consensus + top-trader drill-down |
@@ -294,7 +295,7 @@ SolEnrich exposes an MCP endpoint for Claude Desktop, Claude Code, and Cursor. *
 }
 ```
 
-50 tools — every endpoint is exposed as an MCP tool (wallet/token light+full variants fold into `depth`/`include_holders` toggles). Highlights: `enrich_wallet`, `enrich_token`, `due_diligence`, `whale_watch`, `perps_cross_venue_funding`, `trending_signals`, `smart_money_flow`, `check_alerts`.
+51 tools — every endpoint is exposed as an MCP tool (wallet/token light+full variants fold into `depth`/`include_holders` toggles). Highlights: `enrich_wallet`, `enrich_token`, `due_diligence`, `whale_watch`, `perps_cross_venue_funding`, `trending_signals`, `smart_money_flow`, `check_alerts`.
 
 ## Free Demo
 
