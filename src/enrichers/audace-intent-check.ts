@@ -108,6 +108,18 @@ export function nextSaturdayUtc(now: number): string {
   return new Date(midnight + days * 86_400_000).toISOString();
 }
 
+/**
+ * Season 1 runs Monday 2026-11-09 00:00 UTC → Saturday 2026-11-14 00:00 UTC, then weekly on the same slot
+ * (AudaceFi, 2026-11-07). Before it ends, the default is that date; the next Saturday alone said 2026-11-07.
+ */
+export const SEASON_1_ENDS_AT = '2026-11-14T00:00:00.000Z';
+
+/** Default season-end snapshot: the next Saturday 00:00 UTC, never earlier than the end of Season 1. */
+export function defaultSeasonEndUtc(now: number): string {
+  const next = nextSaturdayUtc(now);
+  return Date.parse(next) < Date.parse(SEASON_1_ENDS_AT) ? SEASON_1_ENDS_AT : next;
+}
+
 /** Price impact at `sizeUsd`: the estimate at the smallest probed size that covers it (else the largest). */
 export function impactAtSize(estimates: TokenEnrichment['slippage_estimates'], sizeUsd: number | null): number | null {
   if (!estimates?.length || sizeUsd == null) return null;
@@ -187,11 +199,11 @@ export function decideIntent(
   const category = normalizeCategory(input.category);
   const network = input.network;
   const direction = intentDirection(input.tokenInMint, input.tokenOutMint);
-  const endsAt = input.seasonEndsAt ?? nextSaturdayUtc(now);
+  const endsAt = input.seasonEndsAt ?? defaultSeasonEndUtc(now);
   const minutes = Math.floor((Date.parse(endsAt) - now) / 60_000);
   const caveats: string[] = [];
   if (!input.seasonEndsAt) {
-    caveats.push('seasonEndsAt not given: assumed the standard season end, the next Saturday 00:00 UTC. Pass season.active.endsAt from GET /v1/me/state for the real date.');
+    caveats.push('seasonEndsAt not given: assumed the league schedule (Season 1 ends Saturday 2026-11-14 00:00 UTC, then weekly, Monday 00:00 → Saturday 00:00 UTC). Pass season.active.endsAt from GET /v1/me/state for the real date.');
   }
 
   const inPrice = direction === 'buy' ? 1 : legs.sellExit?.price_usd ?? legs.risk?.price_usd ?? null;

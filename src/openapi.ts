@@ -462,7 +462,7 @@ export const ENDPOINT_META: Record<string, {
         tokenInMint: { type: 'string', description: 'Mainnet mint identity spent (USDC for a buy)', minLength: 32, maxLength: 44 },
         tokenOutMint: { type: 'string', description: 'Mainnet mint identity received (USDC for a sell)', minLength: 32, maxLength: 44 },
         amountIn: { type: 'number', description: 'Human amount of tokenInMint, as in the swap intent' },
-        seasonEndsAt: { type: 'string', format: 'date-time', description: 'Season-end snapshot (season.active.endsAt). Default: next Saturday 00:00 UTC' },
+        seasonEndsAt: { type: 'string', format: 'date-time', description: 'Season-end snapshot (season.active.endsAt). Default: league schedule (Season 1 ends 2026-11-14 00:00 UTC, then weekly Saturday 00:00 UTC)' },
         network: { type: 'string', enum: ['devnet', 'mainnet'], default: 'devnet' },
         format: { type: 'string', enum: ['json', 'llm', 'both'], default: 'json' },
       },

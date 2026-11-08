@@ -587,7 +587,7 @@ export const MCP_TOOLS: McpToolDef[] = [
       tokenInMint: z.string().describe('Mainnet mint identity spent (USDC for a buy)'),
       tokenOutMint: z.string().describe('Mainnet mint identity received (USDC for a sell)'),
       amountIn: z.number().positive().describe('Human amount of tokenInMint'),
-      seasonEndsAt: z.string().optional().describe('Season-end snapshot, ISO (season.active.endsAt). Default: next Saturday 00:00 UTC'),
+      seasonEndsAt: z.string().optional().describe('Season-end snapshot, ISO (season.active.endsAt). Default: league schedule (Season 1 ends 2026-11-14 00:00 UTC, then weekly Saturday 00:00 UTC)'),
       network: z.enum(['devnet', 'mainnet']).optional().describe('devnet (default) or mainnet'),
     },
     handler: async (args) => invoke('audace-intent-check', {

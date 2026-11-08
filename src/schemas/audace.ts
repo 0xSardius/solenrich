@@ -14,7 +14,7 @@ export const AudaceIntentCheckInput = z.object({
   tokenOutMint: SolanaAddressSchema,
   /** Human amount of tokenInMint, as in the swap intent. */
   amountIn: z.number().positive().max(1e12),
-  /** Season-end snapshot time (GET /v1/me/state → season.active.endsAt). Default: the next Saturday 00:00 UTC. */
+  /** Season-end snapshot time (GET /v1/me/state → season.active.endsAt). Default: the league schedule (Season 1 ends 2026-11-14 00:00 UTC, then the next Saturday 00:00 UTC). */
   seasonEndsAt: z.string().datetime().optional(),
   /** 'devnet' (the Season 1 sandbox) or 'mainnet'. Mainnet also blocks freeze authority and high price impact at size. */
   network: z.enum(['devnet', 'mainnet']).default('devnet'),

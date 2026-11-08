@@ -1336,7 +1336,7 @@ function buildDocs() {
           tokenInMint: 'string (required) — mainnet mint identity spent; USDC for a buy',
           tokenOutMint: 'string (required) — mainnet mint identity received; USDC for a sell',
           amountIn: 'number (required) — human amount of tokenInMint, as in the swap intent',
-          seasonEndsAt: 'ISO datetime (optional) — season.active.endsAt from GET /v1/me/state; default the next Saturday 00:00 UTC',
+          seasonEndsAt: 'ISO datetime (optional) — season.active.endsAt from GET /v1/me/state; default the league schedule: Season 1 ends 2026-11-14 00:00 UTC, then the next Saturday 00:00 UTC',
           network: "'devnet' (default, Season 1 sandbox) | 'mainnet'",
           format: 'json | llm | both',
         },

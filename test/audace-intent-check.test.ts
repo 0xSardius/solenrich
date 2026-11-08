@@ -4,7 +4,7 @@
  */
 import { describe, test, expect } from 'bun:test';
 import {
-  decideIntent, intentDirection, legsNeeded, nextSaturdayUtc, impactAtSize, USDC_MINT,
+  decideIntent, intentDirection, legsNeeded, nextSaturdayUtc, defaultSeasonEndUtc, impactAtSize, USDC_MINT,
   AudaceIntentChecker, type IntentLegs,
 } from '../src/enrichers/audace-intent-check';
 import { AudaceIntentCheckInput } from '../src/schemas/audace';
@@ -33,6 +33,16 @@ describe('direction and clock helpers', () => {
     expect(nextSaturdayUtc(NOW)).toBe(ENDS);
     expect(nextSaturdayUtc(Date.parse('2026-11-14T00:00:00.000Z'))).toBe('2026-11-21T00:00:00.000Z');
     expect(nextSaturdayUtc(Date.parse('2026-11-13T23:59:00.000Z'))).toBe(ENDS);
+  });
+
+  test('default season end follows the league schedule: Season 1 ends 2026-11-14, then weekly — AudaceFi report', () => {
+    expect(defaultSeasonEndUtc(Date.parse('2026-11-04T20:00:00.000Z'))).toBe('2026-11-14T00:00:00.000Z'); // was 11-07
+    expect(defaultSeasonEndUtc(Date.parse('2026-11-08T12:00:00.000Z'))).toBe('2026-11-14T00:00:00.000Z');
+    expect(defaultSeasonEndUtc(NOW)).toBe('2026-11-14T00:00:00.000Z');
+    expect(defaultSeasonEndUtc(Date.parse('2026-11-14T00:00:00.000Z'))).toBe('2026-11-21T00:00:00.000Z');
+    expect(defaultSeasonEndUtc(Date.parse('2026-11-16T09:00:00.000Z'))).toBe('2026-11-21T00:00:00.000Z');
+    const r = decideIntent(input({ seasonEndsAt: undefined }), cleanBuy, Date.parse('2026-11-04T20:00:00.000Z'));
+    expect(r.season).toMatchObject({ ends_at: '2026-11-14T00:00:00.000Z', ends_at_source: 'default_saturday' });
   });
 
   test('legsNeeded: no reads inside the buffer; trenches only for Degen buys', () => {
