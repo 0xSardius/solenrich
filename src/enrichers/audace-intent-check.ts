@@ -131,6 +131,9 @@ function buyCheck(mint: string, legs: IntentLegs, category: string, network: Net
   let flags: string[] | null = null;
   if (legs.risk) {
     flags = legs.risk.risk_flags ?? [];
+    // No price or no liquidity = no market to read (an unknown or dead mint). The checks
+    // cannot run, so the buy holds (fail closed), like a failed read.
+    if (!(legs.risk.price_usd > 0) || !(legs.risk.liquidity > 0)) codes.push('TOKEN_NO_MARKET');
     const block = new Set<string>(BLOCK_FLAGS[network]);
     for (const f of flags) if (block.has(f)) codes.push(`RISK_${f.toUpperCase()}`);
   } else codes.push('RISK_UNAVAILABLE');
@@ -147,6 +150,8 @@ function buyCheck(mint: string, legs: IntentLegs, category: string, network: Net
   if (legs.buyMomentum) {
     momentum = legs.buyMomentum.verdict;
     if (momentum === 'EXIT' || momentum === 'DERISK') codes.push(`MOMENTUM_${momentum}`);
+    // No tape to read is a check that could not run: hold the buy.
+    else if (momentum === 'INSUFFICIENT_DATA') codes.push('MOMENTUM_INSUFFICIENT_DATA');
   } else codes.push('MOMENTUM_UNAVAILABLE');
 
   let impact: number | null = null;

@@ -17,7 +17,7 @@ const ENDS = '2026-11-14T00:00:00.000Z';
 const input = (over: Record<string, unknown> = {}) =>
   AudaceIntentCheckInput.parse({ category: 'degen', tokenInMint: USDC_MINT, tokenOutMint: BONK, amountIn: 25, seasonEndsAt: ENDS, ...over });
 
-const risk = (flags: string[] = [], extra: Record<string, unknown> = {}) => ({ symbol: 'Bonk', price_usd: 0.00002, risk_flags: flags, ...extra }) as any;
+const risk = (flags: string[] = [], extra: Record<string, unknown> = {}) => ({ symbol: 'Bonk', price_usd: 0.00002, liquidity: 500_000, risk_flags: flags, ...extra }) as any;
 const signal = (verdict: string) => ({ symbol: 'Bonk', verdict, reasoning: 'sig' }) as any;
 const exit = (verdict: string, price = 0.00002) => ({ symbol: 'Bonk', verdict, exit_score: 0.4, price_usd: price, reasoning: 'tape' }) as any;
 const cleanBuy: IntentLegs = { risk: risk(['unverified']), signal: signal('HIGH_CONFLUENCE'), buyMomentum: exit('HOLD') };
@@ -53,6 +53,18 @@ describe('direction and clock helpers', () => {
 });
 
 describe('buys', () => {
+  test('an unknown mint (no price, no liquidity, no tape) holds with TOKEN_NO_MARKET — AudaceFi report 2026-11-04', () => {
+    const unknown: IntentLegs = { risk: risk(['unverified'], { symbol: null, price_usd: 0, liquidity: 0 }), buyMomentum: exit('INSUFFICIENT_DATA', 0) };
+    const r = decideIntent(input({ category: 'crypto_bro', network: 'mainnet' }), unknown, NOW);
+    expect([r.verdict, r.suggested_fraction]).toEqual(['HOLD', 0]);
+    expect(r.codes).toEqual(['TOKEN_NO_MARKET', 'MOMENTUM_INSUFFICIENT_DATA']);
+  });
+
+  test('a priced token with no liquidity holds; INSUFFICIENT_DATA momentum alone holds', () => {
+    expect(decideIntent(input({ category: 'whale' }), { risk: risk([], { liquidity: 0 }), buyMomentum: exit('HOLD') }, NOW).codes).toEqual(['TOKEN_NO_MARKET']);
+    expect(decideIntent(input({ category: 'whale' }), { risk: risk(), buyMomentum: exit('INSUFFICIENT_DATA') }, NOW).codes).toEqual(['MOMENTUM_INSUFFICIENT_DATA']);
+  });
+
   test('all checks pass → PROCEED', () => {
     const r = decideIntent(input(), cleanBuy, NOW);
     expect([r.verdict, r.suggested_fraction, r.codes]).toEqual(['PROCEED', 1, []]);
