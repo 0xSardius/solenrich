@@ -118,12 +118,18 @@ describe('buys', () => {
 
 describe('sells', () => {
   const sell = (over = {}) => input({ tokenInMint: BONK, tokenOutMint: USDC_MINT, amountIn: 1_000_000, ...over });
-  test('EXIT → PROCEED 1, DERISK → REDUCE 0.5, HOLD → HOLD 0, unavailable → HOLD', () => {
-    for (const [v, verdict, fraction, code] of [['EXIT', 'PROCEED', 1, 'EXIT_EXIT'], ['DERISK', 'REDUCE', 0.5, 'EXIT_DERISK'], ['HOLD', 'HOLD', 0, 'EXIT_HOLD'], ['INSUFFICIENT_DATA', 'HOLD', 0, 'EXIT_INSUFFICIENT_DATA']] as const) {
+  test('EXIT → PROCEED 1, DERISK → REDUCE 0.5; no exit signal → PROCEED 1 with NO_EXIT_SIGNAL (sells are never blocked)', () => {
+    for (const [v, verdict, fraction, codes] of [
+      ['EXIT', 'PROCEED', 1, ['EXIT_EXIT']],
+      ['DERISK', 'REDUCE', 0.5, ['EXIT_DERISK']],
+      ['HOLD', 'PROCEED', 1, ['EXIT_HOLD', 'NO_EXIT_SIGNAL']],
+      ['INSUFFICIENT_DATA', 'PROCEED', 1, ['EXIT_INSUFFICIENT_DATA', 'NO_EXIT_SIGNAL']],
+    ] as const) {
       const r = decideIntent(sell(), { sellExit: exit(v) }, NOW);
-      expect([r.verdict, r.suggested_fraction, r.codes]).toEqual([verdict, fraction, [code]]);
+      expect([r.verdict, r.suggested_fraction, r.codes]).toEqual([verdict, fraction, [...codes]]);
     }
-    expect(decideIntent(sell(), {}, NOW).codes).toEqual(['EXIT_UNAVAILABLE']);
+    const failed = decideIntent(sell(), {}, NOW);
+    expect([failed.verdict, failed.codes]).toEqual(['PROCEED', ['EXIT_UNAVAILABLE', 'NO_EXIT_SIGNAL']]);
   });
 
   test('size_usd uses the exit read price', () => {

@@ -233,12 +233,15 @@ export function decideIntent(
     sell = sellCheck(input.tokenInMint, legs);
     codes = [...sell.codes];
     const v = sell.exit_verdict;
-    verdict = v === 'EXIT' ? 'PROCEED' : v === 'DERISK' ? 'REDUCE' : 'HOLD';
-    fraction = verdict === 'PROCEED' ? 1 : verdict === 'REDUCE' ? DERISK_FRACTION : 0;
+    // A sell moves the League Wallet to USDC, the safe asset at the snapshot, so a sell is never
+    // blocked (changed 2026-11-08 after AudaceFi saw most sells held). No exit signal = no objection.
+    verdict = v === 'DERISK' ? 'REDUCE' : 'PROCEED';
+    fraction = verdict === 'REDUCE' ? DERISK_FRACTION : 1;
+    if (v !== 'EXIT' && v !== 'DERISK') codes.push('NO_EXIT_SIGNAL');
     if (v === 'EXIT') why.push('Exit verdict EXIT: the tape says get out.');
     else if (v === 'DERISK') why.push(`Exit verdict DERISK: momentum is deteriorating; sell ${DERISK_FRACTION * 100}% and keep the rest under watch.`);
-    else if (v === 'HOLD') why.push('Exit verdict HOLD: no exit case in the current tape. Sell anyway if your own plan says so.');
-    else why.push('No exit verdict available: SolEnrich sees no basis to sell. Your own plan decides.');
+    else if (v === 'HOLD') why.push('Exit verdict HOLD: no exit case in the current tape. No objection to the sell; your own plan decides.');
+    else why.push('No exit verdict available. No objection to the sell; your own plan decides.');
     if (legs.sellExit?.reasoning) why.push(legs.sellExit.reasoning);
   } else {
     buy = buyCheck(input.tokenOutMint, legs, category, network, direction === 'buy' ? input.amountIn : sizeUsd);
