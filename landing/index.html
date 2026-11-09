@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#06060A">
   <title>SolEnrich — Onchain Intelligence for Solana Agents</title>
-  <meta name="description" content="Onchain intelligence API for Solana agents and LLMs. 52 endpoints: wallet profiling and risk scoring, token due diligence with holder concentration and slippage, whale and smart-money tracking, cross-venue perps market structure (Jupiter, Adrena, Flash, Phoenix, Hyperliquid, dYdX), event alerts, portfolio time-series, agent-attention signals, a fresh-launch trade-lifecycle suite, and StonkFun reward-coin intelligence (gem finder, payout status, yield, screener, launch intel, launch preflight). Deterministic scoring, JSON or LLM-ready briefings. Pay per call with USDC on Solana or Base via x402, or by card via Stripe. No API keys.">
+  <meta name="description" content="Onchain intelligence API for Solana agents and LLMs. 52 endpoints: wallet profiling and risk scoring, token due diligence with holder concentration and slippage, whale and smart-money tracking, cross-venue perps market structure (Jupiter, Adrena, Flash, Phoenix, Hyperliquid, dYdX), tokenized-stock (xStock) basis vs Phoenix perps, event alerts, portfolio time-series, agent-attention signals, a fresh-launch trade-lifecycle suite, and StonkFun reward-coin intelligence (gem finder, payout status, yield, screener, launch intel, launch preflight). Deterministic scoring, JSON or LLM-ready briefings. Pay per call with USDC on Solana or Base via x402, or by card via Stripe. No API keys.">
 
   <link rel="canonical" href="https://www.solenrich.com/">
   <link rel="icon" type="image/png" href="https://www.solenrich.com/logo.png">
@@ -15,7 +15,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.solenrich.com/">
   <meta property="og:title" content="SolEnrich — Onchain Intelligence for Solana Agents">
-  <meta property="og:description" content="52 onchain intelligence endpoints for Solana agents:wallet risk scoring, token due diligence, whale and smart-money tracking, memecoin trenches entry and exit verdicts, cross-venue perps structure across Jupiter, Adrena, Flash, Hyperliquid and dYdX, and StonkFun reward-coin intelligence (gems, payout status, yield, launch intel). Deterministic scoring, JSON or LLM briefings. Pay USDC via x402 on Solana or Base, or cards via Stripe.">
+  <meta property="og:description" content="52 onchain intelligence endpoints for Solana agents: wallet risk scoring, token due diligence, whale and smart-money tracking, memecoin trenches entry and exit verdicts, cross-venue perps structure across Jupiter, Adrena, Flash, Phoenix, Hyperliquid and dYdX, tokenized-stock (xStock) basis vs Phoenix perps, and StonkFun reward-coin intelligence (gems, payout status, yield, launch intel). Deterministic scoring, JSON or LLM briefings. Pay USDC via x402 on Solana or Base, or cards via Stripe.">
   <meta property="og:image" content="https://www.solenrich.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
@@ -23,7 +23,7 @@
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="SolEnrich — Onchain Intelligence for Solana Agents">
-  <meta name="twitter:description" content="52 onchain intelligence endpoints for Solana agents:wallet risk scoring, token due diligence, whale and smart-money tracking, memecoin trenches entry and exit verdicts, cross-venue perps structure across Jupiter, Adrena, Flash, Hyperliquid and dYdX, and StonkFun reward-coin intelligence (gems, payout status, yield, launch intel). Deterministic scoring, JSON or LLM briefings. Pay USDC via x402 on Solana or Base, or cards via Stripe.">
+  <meta name="twitter:description" content="52 onchain intelligence endpoints for Solana agents: wallet risk scoring, token due diligence, whale and smart-money tracking, memecoin trenches entry and exit verdicts, cross-venue perps structure across Jupiter, Adrena, Flash, Phoenix, Hyperliquid and dYdX, tokenized-stock (xStock) basis vs Phoenix perps, and StonkFun reward-coin intelligence (gems, payout status, yield, launch intel). Deterministic scoring, JSON or LLM briefings. Pay USDC via x402 on Solana or Base, or cards via Stripe.">
   <meta name="twitter:image" content="https://www.solenrich.com/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -1530,11 +1530,10 @@
     <div class="container">
       <span class="update-tag">New</span>
       <div class="update-items">
+        <span class="update-item"><span class="check">&#10003;</span> xstock-basis — long the xStock, short its Phoenix perp: funding carry vs the real round-trip cost at your size</span>
         <span class="update-item"><span class="check">&#10003;</span> audace-intent-check — PROCEED / REDUCE / HOLD on an AudaceFi swap intent before you send it, with a season-end snapshot clock</span>
         <span class="update-item"><span class="check">&#10003;</span> wallet-link-check — are two Solana wallets the same owner? Payout-wallet rotation vs hijack</span>
-        <span class="update-item"><span class="check">&#10003;</span> stonk-market-pulse and stonk-creator — is the StonkFun market rising or falling, and is this creator a serial launcher</span>
-        <span class="update-item"><span class="check">&#10003;</span> Perps venue health — every perps response says why a venue is missing, and each venue is checked hourly</span>
-      </div>
+        <span class="update-item"><span class="check">&#10003;</span> stonk-market-pulse and stonk-creator — is the StonkFun market rising or falling, and is this creator a serial launcher</span>      </div>
     </div>
   </div>
 
@@ -1602,7 +1601,7 @@
         <div class="persona-card persona-card-wide reveal">
           <div class="persona-tag">&gt;_ agents in trading leagues</div>
           <h3 class="persona-title">Check every swap intent before you send it</h3>
-          <p class="persona-desc">For agents competing in AudaceFi: send the swap intent you are about to submit, get PROCEED / REDUCE / HOLD with reason codes. Buys check the token's risk flags, the trenches signal and exit momentum; sells run the exit verdict. In the last hour before the season-end snapshot it sends you to USDC, because a non-USDC wallet at the snapshot forfeits the season.</p>
+          <p class="persona-desc">For agents competing in AudaceFi: send the swap intent you are about to submit, get PROCEED / REDUCE / HOLD with reason codes. Buys check the token's risk flags, the trenches signal and exit momentum, and a token with no market holds. Sells are never blocked; the exit verdict says sell all or half. In the last hour before the season-end snapshot it sends you to USDC, because a non-USDC wallet at the snapshot forfeits the season.</p>
           <ul class="persona-endpoints">
             <li><code>audace-intent-check</code>one verdict per swap intent, devnet league or mainnet</li>
             <li><code>wallet-link-check</code>are two wallets the same owner?</li>
@@ -1869,7 +1868,7 @@
                 <span class="endpoint-name">audace-intent-check</span>
                 <span class="endpoint-price">$0.05</span>
               </div>
-              <p class="endpoint-desc">For agents in the AudaceFi trading league. Send the swap intent you are about to submit and get PROCEED / REDUCE / HOLD with reason codes. Buys check the token&rsquo;s risk flags, the trenches signal and exit momentum; sells run the exit verdict. In the last hour before the season-end snapshot it sends you to USDC, because a non-USDC wallet at the snapshot forfeits the season. Devnet or mainnet.</p>
+              <p class="endpoint-desc">For agents in the AudaceFi trading league. Send the swap intent you are about to submit and get PROCEED / REDUCE / HOLD with reason codes. Buys check the token&rsquo;s risk flags, the trenches signal and exit momentum, and a token with no market holds. Sells are never blocked; the exit verdict says sell all or half. In the last hour before the season-end snapshot it sends you to USDC, because a non-USDC wallet at the snapshot forfeits the season. Devnet or mainnet.</p>
               <div class="tag-row"><span class="tag" style="background: rgba(20, 241, 149, 0.08); color: var(--sol-blue); border-color: rgba(20, 241, 149, 0.15);">new</span><span class="tag">trenches</span><span class="tag">trading league</span></div>
             </div>
 
