@@ -1,13 +1,14 @@
 // Token-core data fidelity (audit 2026-11-14): missing data is null with a source, never a plausible fake value.
-import { describe, expect, test, afterEach } from 'bun:test';
+import { describe, expect, test, afterEach, beforeEach } from 'bun:test';
 import { DexScreenerClient } from '../src/sources/dexscreener';
-import { JupiterClient } from '../src/sources/jupiter';
+import { JupiterClient, jupiterLimiter } from '../src/sources/jupiter';
 import { TokenAnalyzer } from '../src/enrichers/token-analyzer';
 import { scoreTokenRisk } from '../src/enrichers/risk-scorer';
 
 const noCache = { get: async () => null, set: async () => {}, mget: async (k: string[]) => k.map(() => null) } as any;
 const realFetch = globalThis.fetch;
 afterEach(() => { globalThis.fetch = realFetch; });
+beforeEach(() => jupiterLimiter.reset()); // mocked calls must not use up the real Free-plan budget model
 const mockFetch = (body: unknown, status = 200) => {
   globalThis.fetch = (async () => new Response(JSON.stringify(body), { status })) as any;
 };
@@ -148,6 +149,7 @@ describe('Slippage cache age is tiered by token age', () => {
     const reuse = await j.getSlippage('M', 300);
     expect(calls).toBe(4);
     expect(reuse.age_s).toBeGreaterThanOrEqual(199);
+    jupiterLimiter.reset(); // 8 quotes exceed the 6-per-10 s quote share; this test is about cache age only
     const refetch = await j.getSlippage('M', 120); // fresh token: 200 s is too old
     expect(calls).toBe(8);
     expect(refetch.age_s).toBe(0);

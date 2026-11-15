@@ -72,3 +72,5 @@ jobs:
       - run: bun test test/token-fidelity.test.ts
       # Upstream usage counters (2026-11-15): Jupiter requests/429s, degraded token reads, batched Redis flush.
       - run: bun test test/upstream-stats.test.ts
+      # Shared Jupiter limiter (2026-11-15): two priorities in a sliding window; quotes yield to core lookups.
+      - run: bun test test/sliding-limiter.test.ts

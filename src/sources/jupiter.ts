@@ -2,6 +2,7 @@ import { CONFIG, CACHE_TTL } from '../config';
 import type { Cache } from '../cache';
 import { drain } from '../utils/drain';
 import { upstreamStats } from '../utils/upstream-stats';
+import { SlidingLimiter, type Priority } from '../utils/sliding-limiter';
 
 // --- Types ---
 
@@ -37,6 +38,26 @@ export interface SlippageEstimate {
   price_impact_pct: number;
   output_amount: number;
   input_amount: number;
+}
+
+/**
+ * One limiter for every keyed Jupiter call in the process (all JupiterClient instances), per ACCOUNT budget.
+ * Measured 2026-11-15 on the Free plan: response headers report a limit of 10 (x-ratelimit-current /
+ * -remaining); 10 simultaneous requests pass, 15 at 1/s pass, at 2/s the 11th fails — so it is ~10 requests per
+ * ~10 s, NOT a burstable 60 per 60 s. We use 9 per 10 s (1 spare for local runs and skew). Slippage quotes ('low')
+ * may use 6, so 3 slots per window always remain for token lookups and single quotes.
+ * On a paid plan (Developer = 10 RPS) re-measure the headers and raise these together.
+ */
+export const JUPITER_WINDOW_MS = 10_000;
+export const JUPITER_BUDGET_PER_WINDOW = 9;
+export const JUPITER_LOW_RESERVE = 3;
+const LOW_MAX_WAIT_MS = 2_000;
+// Core calls wait for a slot rather than go out into a known-full window (that always returns 429). 8 s stays
+// inside token-analyzer's 15 s task timeout; getQuote's own 4 s abort still bounds single quotes.
+const HIGH_MAX_WAIT_MS = 8_000;
+export const jupiterLimiter = new SlidingLimiter({ windowMs: JUPITER_WINDOW_MS, capacity: JUPITER_BUDGET_PER_WINDOW, lowReserve: JUPITER_LOW_RESERVE });
+export class JupiterSlotSkipped extends Error {
+  constructor() { super('Jupiter request skipped: Free-plan budget in use'); }
 }
 
 /** Slippage cache: 5 min by default; token-analyzer asks for 2 min on tokens younger than 24h. */
@@ -203,7 +224,9 @@ export class JupiterClient {
         const timer = setTimeout(() => controller.abort(), PER_CALL_TIMEOUT_MS);
         try {
           const url = `${this.baseUrl}/swap/v1/quote?inputMint=${USDC_MINT}&outputMint=${mint}&amount=${size.amount}&slippageBps=50`;
-          const res = await this.fetchWithKey(url, controller.signal);
+          // Low priority: slippage quotes yield to token lookups and single quotes, and are skipped (not sent)
+          // when no slot frees within 2 s. A skipped size is simply absent; all skipped = jupiter_quote unavailable.
+          const res = await this.fetchWithKey(url, controller.signal, 'low');
           if (!res.ok) { await drain(res); return null; }
           const quote: any = await res.json();
           // Jupiter's priceImpactPct is a FRACTION despite its name (0.909 = 90.9%): verified 2026-11-14 — a $100K
@@ -260,19 +283,28 @@ export class JupiterClient {
 
   /** One retry on 429 after a short wait. Under load Jupiter rate-limits bursts; before this, a 429 silently
    *  turned into "unverified", no holder count and no slippage (seen in prod 2026-11-14 on BONK). */
-  private async fetchWithKey(url: string, signal?: AbortSignal): Promise<Response> {
+  private async fetchWithKey(url: string, signal?: AbortSignal, priority: Priority = 'high'): Promise<Response> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (this.apiKey) headers['x-api-key'] = this.apiKey;
     const kind = url.includes('/tokens/') ? 'token' : 'quote';
+    await this.takeSlot(priority);
     upstreamStats.inc(`jupiter_${kind}_requests`);
     const res = await fetch(url, { headers, signal });
     if (res.status !== 429 || signal?.aborted) return res;
     upstreamStats.inc(`jupiter_${kind}_429`);
     await drain(res);
     await new Promise((r) => setTimeout(r, 700));
+    await this.takeSlot(priority);
     upstreamStats.inc(`jupiter_${kind}_requests`);
     const retry = await fetch(url, { headers, signal });
     if (retry.status === 429) upstreamStats.inc(`jupiter_${kind}_429_after_retry`);
     return retry;
+  }
+
+  /** Wait for a slot in the shared Free-plan budget. Throws JupiterSlotSkipped for a skipped low-priority call. */
+  private async takeSlot(priority: Priority): Promise<void> {
+    const r = await jupiterLimiter.acquire(priority, priority === 'low' ? LOW_MAX_WAIT_MS : HIGH_MAX_WAIT_MS);
+    if (r === 'waited' || r === 'forced') upstreamStats.inc('limiter_waited');
+    if (r === 'skip') { upstreamStats.inc('limiter_skipped'); throw new JupiterSlotSkipped(); }
   }
 }
