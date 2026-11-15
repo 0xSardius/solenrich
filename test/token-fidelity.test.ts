@@ -56,11 +56,11 @@ describe('Jupiter slippage is reported in percent', () => {
 });
 
 // TokenAnalyzer with stub sources
-function analyzer(o: { dex?: any; dexThrows?: boolean; jup?: any; jupThrows?: boolean; largest?: any[] }) {
+function analyzer(o: { dex?: any; dexThrows?: boolean; jup?: any; jupThrows?: boolean; largest?: any[]; lastMaxAge?: number }) {
   const dexscreener = { getTokenData: async () => { if (o.dexThrows) throw new Error('429'); return o.dex ?? null; } };
   const jupiter = {
     getTokenInfo: async () => { if (o.jupThrows) throw new Error('429'); return o.jup ?? null; },
-    getSlippageEstimates: async () => [],
+    getSlippage: async (_m: string, maxAge: number) => { o.lastMaxAge = maxAge; return { estimates: [], age_s: null }; },
   };
   const rpc = {
     getMintInfo: async () => ({ decimals: 6, supply: 1_000_000_000_000, mintAuthority: null, freezeAuthority: null }),
@@ -120,6 +120,37 @@ describe('TokenAnalyzer: fidelity of core fields', () => {
     expect(t.volatility!.daily_std_7d).toBeNull();
     expect(t.volatility!.high_7d).toBeNull();
     expect(t.volatility!.range_pct_24h).toBeGreaterThan(0);
+  });
+});
+
+describe('Slippage cache age is tiered by token age', () => {
+  test('token < 24h old (or unknown age) asks for quotes at most 120 s old; older tokens 300 s', async () => {
+    const fresh: any = { dex: dex({ pairCreatedAt: Date.now() - 3 * 3_600_000 }), jup: { verified: true } };
+    await analyzer(fresh).enrich('M');
+    expect(fresh.lastMaxAge).toBe(120);
+    const unknown: any = { dex: dex({ pairCreatedAt: null }), jup: { verified: true } };
+    await analyzer(unknown).enrich('M');
+    expect(unknown.lastMaxAge).toBe(120);
+    const old: any = { dex: dex({ pairCreatedAt: Date.now() - 30 * 86_400_000 }), jup: { verified: true } };
+    await analyzer(old).enrich('M');
+    expect(old.lastMaxAge).toBe(300);
+  });
+  test('JupiterClient.getSlippage reuses a cached entry within maxAge and refetches when older', async () => {
+    const store = new Map<string, any>();
+    const cache = { get: async (k: string) => store.get(k) ?? null, set: async (k: string, v: any) => { store.set(k, v); } } as any;
+    let calls = 0;
+    globalThis.fetch = (async () => { calls++; return new Response(JSON.stringify({ priceImpactPct: '0.01', outAmount: '1' }), { status: 200 }); }) as any;
+    const j = new JupiterClient(cache);
+    const first = await j.getSlippage('M', 300);
+    expect(first.age_s).toBe(0);
+    expect(calls).toBe(4);
+    store.get('jupiter:slippage:v2:M').fetched_at = Date.now() - 200_000; // 200 s old
+    const reuse = await j.getSlippage('M', 300);
+    expect(calls).toBe(4);
+    expect(reuse.age_s).toBeGreaterThanOrEqual(199);
+    const refetch = await j.getSlippage('M', 120); // fresh token: 200 s is too old
+    expect(calls).toBe(8);
+    expect(refetch.age_s).toBe(0);
   });
 });
 

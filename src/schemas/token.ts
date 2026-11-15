@@ -51,6 +51,7 @@ export const TokenEnrichmentSchema = z.object({
     output_amount: z.number(),
     input_amount: z.number(),
   })).optional(),
+  slippage_age_s: z.number().optional().describe('Age of the price-impact quotes in seconds (≤120 for tokens < 24h old, else ≤300)'),
   transfer_tax: z.object({
     program: z.enum(['token-2022', 'spl-token', 'other']).nullable(),
     bps: z.number(),

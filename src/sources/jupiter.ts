@@ -39,6 +39,10 @@ export interface SlippageEstimate {
   input_amount: number;
 }
 
+/** Slippage cache: 5 min by default; token-analyzer asks for 2 min on tokens younger than 24h. */
+export const SLIPPAGE_MAX_AGE_S = 300;
+export const SLIPPAGE_MAX_AGE_FRESH_S = 120;
+
 // USDC mint on Solana mainnet
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 
@@ -159,11 +163,31 @@ export class JupiterClient {
    * Queries run in parallel with a per-call abort timeout so a single slow
    * Jupiter response cannot starve the rest. Partial results are still cached.
    */
-  async getSlippageEstimates(mint: string): Promise<SlippageEstimate[]> {
-    const cacheKey = `jupiter:slippage:${mint}`;
-    const cached = await this.cache.get<SlippageEstimate[]>(cacheKey);
-    if (cached) return cached;
+  async getSlippageEstimates(mint: string, maxAgeSeconds = SLIPPAGE_MAX_AGE_S): Promise<SlippageEstimate[]> {
+    return (await this.getSlippage(mint, maxAgeSeconds)).estimates;
+  }
 
+  /**
+   * Slippage estimates plus their age. One cached entry (5 min TTL) serves every caller; `maxAgeSeconds` lets a
+   * caller demand fresher data (fresh tokens move fast: token-analyzer asks for 2 min on tokens < 24h old).
+   * The 4 quotes cost 4 of the Free plan's 60 requests/minute, so reuse matters (2026-11-15).
+   */
+  async getSlippage(mint: string, maxAgeSeconds = SLIPPAGE_MAX_AGE_S): Promise<{ estimates: SlippageEstimate[]; age_s: number | null }> {
+    const cacheKey = `jupiter:slippage:v2:${mint}`;
+    const cached = await this.cache.get<{ estimates: SlippageEstimate[]; fetched_at: number }>(cacheKey);
+    if (cached && Array.isArray(cached.estimates)) {
+      const age = Math.max(0, Math.round((Date.now() - cached.fetched_at) / 1000));
+      if (age <= maxAgeSeconds) return { estimates: cached.estimates, age_s: age };
+    }
+    const estimates = await this.fetchSlippage(mint);
+    if (estimates.length > 0) {
+      await this.cache.set(cacheKey, { estimates, fetched_at: Date.now() }, SLIPPAGE_MAX_AGE_S);
+      return { estimates, age_s: 0 };
+    }
+    return { estimates, age_s: null };
+  }
+
+  private async fetchSlippage(mint: string): Promise<SlippageEstimate[]> {
     const sizes = [
       { usd: 100, amount: 100_000_000 },
       { usd: 1_000, amount: 1_000_000_000 },
@@ -204,10 +228,6 @@ export class JupiterClient {
     const results: SlippageEstimate[] = settled
       .map((s) => (s.status === 'fulfilled' ? s.value : null))
       .filter((r): r is SlippageEstimate => r !== null);
-
-    if (results.length > 0) {
-      await this.cache.set(cacheKey, results, CACHE_TTL.jupiterPrice);
-    }
 
     return results;
   }

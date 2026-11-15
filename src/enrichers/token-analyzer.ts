@@ -1,7 +1,7 @@
 import type { HeliusClient } from '../sources/helius';
 import type { DexScreenerClient } from '../sources/dexscreener';
 import type { SolanaRpcClient } from '../sources/solana-rpc';
-import type { JupiterClient, JupiterToken, SlippageEstimate } from '../sources/jupiter';
+import { SLIPPAGE_MAX_AGE_S, SLIPPAGE_MAX_AGE_FRESH_S, type JupiterClient, type JupiterToken, type SlippageEstimate } from '../sources/jupiter';
 import type { BirdeyeClient, OHLCV, TokenOverview } from '../sources/birdeye';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
@@ -69,6 +69,8 @@ export interface TokenEnrichment {
   concentration?: HolderConcentration;
   holders_source?: 'rpc' | 'birdeye' | 'unavailable';
   slippage_estimates?: SlippageEstimate[];
+  /** Age of the slippage quotes in seconds (cached up to 2 min for tokens < 24h old, else 5 min). */
+  slippage_age_s?: number;
   /** Token-2022 transfer tax as a trading cost. Null = no fee. Absent when the read was unavailable. */
   transfer_tax?: TransferTax | null;
   /** USD liquidity. Null when no source reported it (not zero). */
@@ -126,11 +128,21 @@ export class TokenAnalyzer {
     // and was the dominant cost on cold-cache light enrichments. Birdeye
     // overview supplies holder_count for the light path; full-path callers
     // still pay the cost because top-N holder resolution requires the addresses.
+    // One DexScreener request feeds both the market data and the slippage cache age: a token younger than 24h
+    // (or of unknown age) accepts slippage at most 2 min old; older tokens accept 5 min.
+    const dexPromise = this.dexscreener.getTokenData(mint);
+    dexPromise.catch(() => {}); // the dexData task reports the failure; this only prevents an unhandled rejection
+    const slippageTask = async () => {
+      const d = await dexPromise.catch(() => null);
+      const ageH = d?.pairCreatedAt != null ? (Date.now() - d.pairCreatedAt) / 3_600_000 : null;
+      const maxAge = ageH != null && ageH >= 24 ? SLIPPAGE_MAX_AGE_S : SLIPPAGE_MAX_AGE_FRESH_S;
+      return this.jupiter.getSlippage(mint, maxAge);
+    };
     const tasks: ParallelTask<any>[] = [
-      { name: 'dexData', fn: () => this.dexscreener.getTokenData(mint) },
+      { name: 'dexData', fn: () => dexPromise },
       { name: 'mintInfo', fn: () => this.solanaRpc.getMintInfo(mint) },
       { name: 'jupiterToken', fn: () => this.jupiter.getTokenInfo(mint) },
-      { name: 'slippage', fn: () => this.jupiter.getSlippageEstimates(mint) },
+      { name: 'slippage', fn: slippageTask },
     ];
 
     if (includeHolders) {
@@ -165,7 +177,8 @@ export class TokenAnalyzer {
       }
     }
     const largestAccounts = (fetched.largestAccounts as Awaited<ReturnType<SolanaRpcClient['getTokenLargestAccounts']>>) ?? [];
-    const slippageEstimates = (fetched.slippage as SlippageEstimate[] | null) ?? [];
+    const slippage = fetched.slippage as { estimates: SlippageEstimate[]; age_s: number | null } | null;
+    const slippageEstimates = slippage?.estimates ?? [];
     const birdeyeOverview = (fetched.birdeyeOverview as TokenOverview | null) ?? null;
     const birdeyeCandles = (fetched.birdeyeCandles as OHLCV[] | null) ?? null;
     const transferTax = this.taxReader ? ((fetched.transferTax as TransferTax | null) ?? null) : undefined;
@@ -429,6 +442,7 @@ export class TokenAnalyzer {
       concentration,
       holders_source: holdersSource,
       slippage_estimates: slippageEstimates.length > 0 ? slippageEstimates : undefined,
+      ...(slippageEstimates.length > 0 && slippage?.age_s != null ? { slippage_age_s: slippage.age_s } : {}),
       ...(transferTax !== undefined ? { transfer_tax: transferTax } : {}),
       liquidity,
       liquidity_source: liquiditySource,
