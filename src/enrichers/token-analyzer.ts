@@ -5,7 +5,7 @@ import type { JupiterClient, JupiterToken, SlippageEstimate } from '../sources/j
 import type { BirdeyeClient, OHLCV, TokenOverview } from '../sources/birdeye';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
-import { parallelFetch, type ParallelTask } from '../utils/parallel';
+import { parallelFetchDetailed, type ParallelTask } from '../utils/parallel';
 import { formatTimestamp } from '../utils/normalize';
 import type { SnapshotStore } from './snapshot-store';
 import type { TransferTax, TransferTaxReader } from '../sources/token-2022';
@@ -20,11 +20,27 @@ export interface HolderConcentration {
 }
 
 export interface PriceVolatility {
-  daily_std_7d: number;      // std dev of daily returns (%)
-  high_7d: number;           // highest price in 7d
-  low_7d: number;            // lowest price in 7d
-  range_pct_7d: number;      // (high-low)/low as %
+  /** '7d' = real daily candles (Birdeye). '24h' = estimated from DexScreener's 1h/6h/24h changes; the *_7d
+   *  fields are null then, because three intraday points cannot describe 7 days. */
+  window: '7d' | '24h';
+  source: 'birdeye_daily' | 'dexscreener_intraday';
+  daily_std_7d: number | null;   // std dev of daily returns (%)
+  high_7d: number | null;        // highest price in 7d
+  low_7d: number | null;         // lowest price in 7d
+  range_pct_7d: number | null;   // (high-low)/low as %
+  /** 24h-window fields, set when window = '24h'. */
+  intraday_std_pct?: number;
+  high_24h?: number;
+  low_24h?: number;
+  range_pct_24h?: number;
   classification: 'LOW' | 'MODERATE' | 'HIGH' | 'EXTREME';
+}
+
+/** Which upstream reads failed for this response. degraded = a core source (DexScreener, Jupiter token,
+ *  mint info) did not answer, so null fields may mean "not read" rather than "does not exist". */
+export interface DataQuality {
+  degraded: boolean;
+  unavailable: string[];
 }
 
 export interface TokenEnrichment {
@@ -33,11 +49,16 @@ export interface TokenEnrichment {
   name: string;
   decimals: number;
   supply: number;
-  holder_count: number;
-  price_usd: number;
-  market_cap: number;
-  volume_24h: number;
+  /** Null when no source reported a count. Never the length of the top-20 holder list. */
+  holder_count: number | null;
+  holder_count_source: 'birdeye' | 'jupiter' | null;
+  price_usd: number | null;
+  price_source: 'dexscreener' | 'jupiter' | 'birdeye' | null;
+  market_cap: number | null;
+  volume_24h: number | null;
   price_change_24h: number;
+  /** True when the token still trades on a pump.fun bonding curve (pre-migration). */
+  bonding_curve: boolean;
   volatility?: PriceVolatility;
   top_holders?: Array<{
     address: string;
@@ -49,13 +70,31 @@ export interface TokenEnrichment {
   slippage_estimates?: SlippageEstimate[];
   /** Token-2022 transfer tax as a trading cost. Null = no fee. Absent when the read was unavailable. */
   transfer_tax?: TransferTax | null;
-  liquidity: number;
+  /** USD liquidity. Null when no source reported it (not zero). */
+  liquidity: number | null;
+  liquidity_source: 'dexscreener' | 'jupiter' | 'birdeye' | null;
   risk_flags: string[];
-  verified: boolean;
+  /** Jupiter verified status. Null when Jupiter's token API did not answer. */
+  verified: boolean | null;
   mint_authority: string | null;
   freeze_authority: string | null;
+  data_quality: DataQuality;
   last_updated: string;
 }
+
+/** Cache TTL for a degraded result: short, so one upstream hiccup is not served to every caller for a minute. */
+const DEGRADED_TTL_SECONDS = 10;
+const CORE_SOURCES = ['dexData', 'jupiterToken', 'mintInfo'];
+const SOURCE_LABELS: Record<string, string> = {
+  dexData: 'dexscreener',
+  jupiterToken: 'jupiter_token',
+  mintInfo: 'mint_info',
+  slippage: 'jupiter_quote',
+  largestAccounts: 'holders_rpc',
+  transferTax: 'transfer_tax',
+  birdeyeOverview: 'birdeye',
+  birdeyeCandles: 'birdeye_candles',
+};
 
 // --- Class ---
 
@@ -108,18 +147,20 @@ export class TokenAnalyzer {
       );
     }
 
-    const fetched = await parallelFetch(tasks, 15_000);
+    const { results: fetched, failed } = await parallelFetchDetailed(tasks, 15_000);
+    const unavailable = new Set(failed);
 
     let dexData = fetched.dexData as Awaited<ReturnType<DexScreenerClient['getTokenData']>>;
     const mintInfo = fetched.mintInfo as Awaited<ReturnType<SolanaRpcClient['getMintInfo']>>;
     const jupiterToken = fetched.jupiterToken as JupiterToken | null;
 
     // Retry DexScreener once if it failed — price data is critical
-    if (!dexData) {
+    if (unavailable.has('dexData')) {
       try {
         dexData = await this.dexscreener.getTokenData(mint);
+        unavailable.delete('dexData');
       } catch {
-        // Still failed — proceed with zeros
+        // Still failed — fields that depend on it stay null and data_quality says so
       }
     }
     const largestAccounts = (fetched.largestAccounts as Awaited<ReturnType<SolanaRpcClient['getTokenLargestAccounts']>>) ?? [];
@@ -128,7 +169,15 @@ export class TokenAnalyzer {
     const birdeyeCandles = (fetched.birdeyeCandles as OHLCV[] | null) ?? null;
     const transferTax = this.taxReader ? ((fetched.transferTax as TransferTax | null) ?? null) : undefined;
 
-    const price = dexData?.price ?? birdeyeOverview?.price ?? 0;
+    // Price: DexScreener, then Jupiter's token API (covers pairs that report only priceNative), then Birdeye.
+    const positive = (v: number | null | undefined): number | null => (typeof v === 'number' && v > 0 && isFinite(v) ? v : null);
+    const dexPrice = positive(dexData?.price);
+    const jupPrice = positive(jupiterToken?.usdPrice);
+    const bePrice = positive(birdeyeOverview?.price);
+    const priceUsd = dexPrice ?? jupPrice ?? bePrice;
+    const priceSource: TokenEnrichment['price_source'] =
+      dexPrice != null ? 'dexscreener' : jupPrice != null ? 'jupiter' : bePrice != null ? 'birdeye' : null;
+    const price = priceUsd ?? 0; // numeric helper for the arithmetic below; output uses priceUsd
     const decimals = mintInfo?.decimals ?? jupiterToken?.decimals ?? birdeyeOverview?.decimals ?? 0;
     const rawSupply = mintInfo?.supply ?? 0;
     const supply = decimals > 0 ? rawSupply / 10 ** decimals : rawSupply;
@@ -158,6 +207,8 @@ export class TokenAnalyzer {
           std > 15 ? 'EXTREME' : std > 8 ? 'HIGH' : std > 3 ? 'MODERATE' : 'LOW';
 
         volatility = {
+          window: '7d',
+          source: 'birdeye_daily',
           daily_std_7d: Math.round(std * 100) / 100,
           high_7d: Math.round(high7d * 1e8) / 1e8,
           low_7d: Math.round(low7d * 1e8) / 1e8,
@@ -167,7 +218,7 @@ export class TokenAnalyzer {
       }
     }
 
-    if (!volatility && dexData && price > 0) {
+    if (!volatility && dexData && dexPrice != null) {
       const h1 = dexData.priceChange1h;
       const h6 = dexData.priceChange6h;
       const h24 = dexData.priceChange24h;
@@ -189,19 +240,25 @@ export class TokenAnalyzer {
         const variance = returns.reduce((s, r) => s + (r - mean) ** 2, 0) / returns.length;
         const std = Math.sqrt(variance);
 
-        const allPrices = prices;
-        const high7d = Math.max(...allPrices);
-        const low7d = Math.min(...allPrices);
-        const rangePct = low7d > 0 ? ((high7d - low7d) / low7d) * 100 : 0;
+        // Four points inside the last 24h: this is a 24h estimate, so the 7d fields stay null.
+        const high24h = Math.max(...prices);
+        const low24h = Math.min(...prices);
+        const rangePct = low24h > 0 ? ((high24h - low24h) / low24h) * 100 : 0;
 
         const classification: PriceVolatility['classification'] =
           std > 15 ? 'EXTREME' : std > 8 ? 'HIGH' : std > 3 ? 'MODERATE' : 'LOW';
 
         volatility = {
-          daily_std_7d: Math.round(std * 100) / 100,
-          high_7d: Math.round(high7d * 1e8) / 1e8,
-          low_7d: Math.round(low7d * 1e8) / 1e8,
-          range_pct_7d: Math.round(rangePct * 100) / 100,
+          window: '24h',
+          source: 'dexscreener_intraday',
+          daily_std_7d: null,
+          high_7d: null,
+          low_7d: null,
+          range_pct_7d: null,
+          intraday_std_pct: Math.round(std * 100) / 100,
+          high_24h: Math.round(high24h * 1e8) / 1e8,
+          low_24h: Math.round(low24h * 1e8) / 1e8,
+          range_pct_24h: Math.round(rangePct * 100) / 100,
           classification,
         };
       }
@@ -281,10 +338,33 @@ export class TokenAnalyzer {
       };
     }
 
+    // --- Liquidity, holder count, market cap: first source that reported a value; null when none did ---
+    const nonNeg = (v: number | null | undefined): number | null => (typeof v === 'number' && v >= 0 && isFinite(v) ? v : null);
+    const dexLiq = nonNeg(dexData?.liquidity);
+    const jupLiq = nonNeg(jupiterToken?.liquidity);
+    const beLiq = nonNeg(birdeyeOverview?.liquidity);
+    const liquidity = dexLiq ?? jupLiq ?? beLiq;
+    const liquiditySource: TokenEnrichment['liquidity_source'] =
+      dexLiq != null ? 'dexscreener' : jupLiq != null ? 'jupiter' : beLiq != null ? 'birdeye' : null;
+
+    // Birdeye first, then Jupiter's token API. Never the top-20 holder list length: that is a cap, not a count.
+    const beHolders = nonNeg(birdeyeOverview?.holder);
+    const jupHolders = nonNeg(jupiterToken?.holderCount);
+    const holderCount = beHolders ?? jupHolders;
+    const holderCountSource: TokenEnrichment['holder_count_source'] =
+      beHolders != null ? 'birdeye' : jupHolders != null ? 'jupiter' : null;
+
+    const marketCap = positive(dexData?.marketCap) ?? positive(jupiterToken?.mcap) ?? positive(birdeyeOverview?.marketCap)
+      ?? (priceUsd != null && supply > 0 ? priceUsd * supply : null);
+    const volume24h = dexData ? dexData.volume24h : (nonNeg(birdeyeOverview?.volume24h));
+    const verified: boolean | null = jupiterToken ? jupiterToken.verified === true : null;
+    const bondingCurve = dexData?.bondingCurve === true;
+
     // --- Risk flags ---
     const riskFlags: string[] = [];
 
-    if (dexData && dexData.liquidity < 50_000) {
+    // Only from a measured value: unknown liquidity is reported as null + data_quality, not as low.
+    if (liquidity != null && liquidity < 50_000) {
       riskFlags.push('low_liquidity');
     }
     if (mintInfo && mintInfo.mintAuthority !== null) {
@@ -293,7 +373,7 @@ export class TokenAnalyzer {
     if (mintInfo && mintInfo.freezeAuthority !== null) {
       riskFlags.push('freeze_authority_active');
     }
-    if (jupiterToken?.verified !== true) {
+    if (verified === false) {
       riskFlags.push('unverified');
     }
     if (volatility && volatility.classification === 'EXTREME') {
@@ -319,6 +399,15 @@ export class TokenAnalyzer {
       riskFlags.push('transfer_tax');
     }
 
+    // --- Data quality ---
+    // Birdeye is optional (free credits ran out 2026-10-08), so its absence is listed but does not mark degraded.
+    if (this.birdeye && !birdeyeOverview) unavailable.add('birdeyeOverview');
+    if (slippageEstimates.length === 0) unavailable.add('slippage'); // no quote answered (or no route)
+    const dataQuality: DataQuality = {
+      degraded: CORE_SOURCES.some((s) => unavailable.has(s)),
+      unavailable: [...unavailable].map((s) => SOURCE_LABELS[s] ?? s).sort(),
+    };
+
     // --- Assemble ---
     const enrichment: TokenEnrichment = {
       mint,
@@ -326,30 +415,33 @@ export class TokenAnalyzer {
       name: dexData?.name ?? jupiterToken?.name ?? birdeyeOverview?.name ?? '',
       decimals,
       supply,
-      // Birdeye first; Jupiter's token API when Birdeye is unavailable (its free compute units ran out on 2026-10-08,
-      // which made the light path report 0 holders for BONK); the top-20 list length only as a last resort.
-      holder_count: birdeyeOverview?.holder ?? jupiterToken?.holderCount ?? largestAccounts.length,
-      price_usd: price,
-      market_cap: dexData?.marketCap ?? birdeyeOverview?.marketCap ?? (price * supply),
-      volume_24h: dexData?.volume24h ?? birdeyeOverview?.volume24h ?? 0,
+      holder_count: holderCount,
+      holder_count_source: holderCountSource,
+      price_usd: priceUsd,
+      price_source: priceSource,
+      market_cap: marketCap,
+      volume_24h: volume24h,
       price_change_24h: dexData?.priceChange24h ?? birdeyeOverview?.priceChange24h ?? 0,
+      bonding_curve: bondingCurve,
       volatility,
       top_holders: topHolders,
       concentration,
       holders_source: holdersSource,
       slippage_estimates: slippageEstimates.length > 0 ? slippageEstimates : undefined,
       ...(transferTax !== undefined ? { transfer_tax: transferTax } : {}),
-      liquidity: dexData?.liquidity ?? birdeyeOverview?.liquidity ?? 0,
+      liquidity,
+      liquidity_source: liquiditySource,
       risk_flags: riskFlags,
-      verified: jupiterToken?.verified === true,
+      verified,
       mint_authority: mintInfo?.mintAuthority ?? null,
       freeze_authority: mintInfo?.freezeAuthority ?? null,
+      data_quality: dataQuality,
       last_updated: formatTimestamp(),
     };
 
-    // Only cache if we got meaningful data — don't cache failures
+    // Only cache if we got meaningful data — don't cache failures. A degraded result gets a short TTL.
     if (price > 0 || enrichment.symbol) {
-      await this.cache.set(cacheKey, enrichment, CACHE_TTL.tokenPrice);
+      await this.cache.set(cacheKey, enrichment, dataQuality.degraded ? DEGRADED_TTL_SECONDS : CACHE_TTL.tokenPrice);
     }
 
     // Fire-and-forget snapshot capture (one per day per mint)

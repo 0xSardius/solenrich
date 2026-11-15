@@ -103,12 +103,13 @@ function pickSlippageTier(
   const sorted = [...estimates].sort((a, b) => a.size_usd - b.size_usd);
   for (const tier of sorted) {
     if (tier.size_usd >= size_usd) {
-      return { pct: tier.price_impact_pct * 100, tier_used: tier.size_usd };
+      // price_impact_pct is already a percent (JupiterClient converts Jupiter's fraction).
+      return { pct: tier.price_impact_pct, tier_used: tier.size_usd };
     }
   }
   // size exceeds all tiers — use largest, flag as underestimate downstream
   const largest = sorted[sorted.length - 1];
-  return { pct: largest.price_impact_pct * 100, tier_used: largest.size_usd };
+  return { pct: largest.price_impact_pct, tier_used: largest.size_usd };
 }
 
 function deriveOiCapHeadroom(

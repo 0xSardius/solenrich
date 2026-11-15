@@ -89,10 +89,12 @@ export function scoreWalletRisk(data: RiskInput): RiskResult {
 
 export interface TokenRiskInput {
   risk_flags_count: number;
-  verified: boolean;
+  /** null = Jupiter did not answer; no penalty for an unread value. */
+  verified: boolean | null;
   mint_authority_active: boolean;
   freeze_authority_active: boolean;
-  liquidity: number;
+  /** null = no source reported liquidity; no penalty for an unread value. */
+  liquidity: number | null;
   holder_concentration_top1?: number;
   holder_concentration_top5?: number;
   herfindahl_index?: number;
@@ -111,7 +113,7 @@ export function scoreTokenRisk(data: TokenRiskInput): RiskResult {
   }
 
   // Not verified on Jupiter
-  if (!data.verified) {
+  if (data.verified === false) {
     score += 0.15;
     factors.push('Not verified on Jupiter');
   }
@@ -129,7 +131,9 @@ export function scoreTokenRisk(data: TokenRiskInput): RiskResult {
   }
 
   // Low liquidity
-  if (data.liquidity < 10_000) {
+  if (data.liquidity == null) {
+    // unknown — reported via data_quality, not scored
+  } else if (data.liquidity < 10_000) {
     score += 0.20;
     factors.push('Very low liquidity (< $10K)');
   } else if (data.liquidity < 50_000) {

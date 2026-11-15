@@ -1,8 +1,8 @@
 import type { TokenEnrichment } from '../enrichers/token-analyzer';
 import { formatUsd, formatNumber } from '../utils/normalize';
 
-function liquidityAssessment(liquidity: number, marketCap: number): string {
-  if (marketCap <= 0) return 'Unknown';
+function liquidityAssessment(liquidity: number | null, marketCap: number | null): string {
+  if (liquidity == null || marketCap == null || marketCap <= 0) return 'Unknown';
   const ratio = liquidity / marketCap;
   if (ratio > 0.1) return 'Deep';
   if (ratio > 0.03) return 'Moderate';
@@ -32,7 +32,8 @@ export function formatTokenBriefing(data: TokenEnrichment): string {
 
   // Liquidity
   const assessment = liquidityAssessment(data.liquidity, data.market_cap);
-  lines.push(`Liquidity: ${formatUsd(data.liquidity)}. ${assessment} relative to market cap.`);
+  lines.push(`Liquidity: ${formatUsd(data.liquidity)}. ${assessment} relative to market cap.${data.bonding_curve ? ' Still on the pump.fun bonding curve (not migrated to a pool).' : ''}`);
+  if (data.holder_count != null) lines.push(`Holders: ${formatNumber(data.holder_count).replace(/\.00$/, '')}.`);
 
   // Slippage estimates
   if (data.slippage_estimates && data.slippage_estimates.length > 0) {
@@ -57,7 +58,11 @@ export function formatTokenBriefing(data: TokenEnrichment): string {
   // Volatility
   if (data.volatility) {
     const v = data.volatility;
-    lines.push(`7d volatility: ${v.daily_std_7d}% daily std (${v.classification}). Range: ${formatUsd(v.low_7d)} — ${formatUsd(v.high_7d)} (${v.range_pct_7d}%).`);
+    if (v.window === '7d') {
+      lines.push(`7d volatility: ${v.daily_std_7d}% daily std (${v.classification}). Range: ${formatUsd(v.low_7d)} — ${formatUsd(v.high_7d)} (${v.range_pct_7d}%).`);
+    } else {
+      lines.push(`24h volatility (estimate from 1h/6h/24h changes): ${v.intraday_std_pct}% (${v.classification}). 24h range: ${formatUsd(v.low_24h)} — ${formatUsd(v.high_24h)} (${v.range_pct_24h}%).`);
+    }
   }
   lines.push('');
 
@@ -86,10 +91,15 @@ export function formatTokenBriefing(data: TokenEnrichment): string {
   }
 
   // Verification
-  if (data.verified) {
+  if (data.verified === true) {
     lines.push('Verified on Jupiter.');
-  } else {
+  } else if (data.verified === false) {
     lines.push('Not verified on Jupiter -- exercise caution.');
+  } else {
+    lines.push('Jupiter verification status unknown (Jupiter did not answer).');
+  }
+  if (data.data_quality?.degraded) {
+    lines.push(`⚠ Partial data: ${data.data_quality.unavailable.join(', ')} did not answer — "unknown" fields were not read.`);
   }
 
   // Authorities

@@ -33,7 +33,7 @@ export class TokenComparator {
     const rankings: TokenRanking[] = [];
 
     // Price
-    rankings.push(rank('price', tokens, (t) => t.price_usd, 'high', (t) => `$${t.price_usd}`));
+    rankings.push(rank('price', tokens, (t) => t.price_usd, 'high', (t) => (t.price_usd == null ? 'unknown' : `$${t.price_usd}`)));
 
     // Market cap
     rankings.push(rank('market_cap', tokens, (t) => t.market_cap, 'high', (t) => `$${fmt(t.market_cap)}`));
@@ -53,19 +53,24 @@ export class TokenComparator {
       rankings.push(rank('holder_concentration_hhi', tokens, (t) => t.concentration!.herfindahl_index, 'low', (t) => `HHI ${t.concentration!.herfindahl_index}`));
     }
 
-    // Volatility — lower = more stable
-    const withVol = tokens.filter((t) => t.volatility);
-    if (withVol.length === tokens.length) {
-      rankings.push(rank('volatility', tokens, (t) => t.volatility!.daily_std_7d, 'low', (t) => `${t.volatility!.daily_std_7d}% daily`));
+    // Volatility — lower = more stable. Only ranked when every token has the same window (7d daily
+    // candles vs a 24h intraday estimate are not comparable).
+    const volValue = (t: TokenEnrichment): number | null => t.volatility?.daily_std_7d ?? t.volatility?.intraday_std_pct ?? null;
+    const windows = new Set(tokens.map((t) => t.volatility?.window ?? 'none'));
+    const sameWindow = windows.size === 1 && !windows.has('none');
+    if (sameWindow) {
+      const label = tokens[0].volatility!.window === '7d' ? 'daily (7d)' : 'intraday (24h)';
+      rankings.push(rank('volatility', tokens, volValue, 'low', (t) => `${volValue(t)}% ${label}`));
     }
 
     // Summary picks
     const safest = [...tokens].sort((a, b) => a.risk_flags.length - b.risk_flags.length)[0];
-    const mostLiquid = [...tokens].sort((a, b) => b.liquidity - a.liquidity)[0];
+    const mostLiquid = [...tokens].sort((a, b) => (b.liquidity ?? -1) - (a.liquidity ?? -1))[0];
     const bestDistributed = tokens.filter((t) => t.concentration)
       .sort((a, b) => (a.concentration?.herfindahl_index ?? 9999) - (b.concentration?.herfindahl_index ?? 9999))[0] ?? tokens[0];
-    const lowestVol = tokens.filter((t) => t.volatility)
-      .sort((a, b) => (a.volatility?.daily_std_7d ?? 999) - (b.volatility?.daily_std_7d ?? 999))[0];
+    const lowestVol = sameWindow
+      ? [...tokens].sort((a, b) => (volValue(a) ?? 999) - (volValue(b) ?? 999))[0]
+      : undefined;
 
     return {
       tokens,
@@ -154,7 +159,8 @@ export class WalletComparator {
 
 // --- Helpers ---
 
-function fmt(n: number): string {
+function fmt(n: number | null): string {
+  if (n == null) return 'unknown';
   if (n >= 1e9) return `${(n / 1e9).toFixed(2)}B`;
   if (n >= 1e6) return `${(n / 1e6).toFixed(2)}M`;
   if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
@@ -164,13 +170,16 @@ function fmt(n: number): string {
 function rank(
   metric: string,
   tokens: TokenEnrichment[],
-  getValue: (t: TokenEnrichment) => number,
+  getValue: (t: TokenEnrichment) => number | null,
   direction: 'high' | 'low',
   formatValue: (t: TokenEnrichment) => string,
 ): TokenRanking {
-  const sorted = [...tokens].sort((a, b) =>
-    direction === 'high' ? getValue(b) - getValue(a) : getValue(a) - getValue(b),
-  );
+  // Unknown values (null) never win: they sort last in either direction.
+  const sorted = [...tokens].sort((a, b) => {
+    const va = getValue(a), vb = getValue(b);
+    if (va == null || vb == null) return (va == null ? 1 : 0) - (vb == null ? 1 : 0);
+    return direction === 'high' ? vb - va : va - vb;
+  });
   const values: Record<string, string> = {};
   for (const t of tokens) values[t.mint] = formatValue(t);
   return { metric, winner: sorted[0].mint, values };

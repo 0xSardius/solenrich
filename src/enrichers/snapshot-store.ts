@@ -9,10 +9,11 @@ import type { PerpsTraderProfile, PerpsMarketStructure } from '../sources/jupite
 export interface TokenSnapshot {
   date: string;
   price_usd: number;
-  market_cap: number;
-  volume_24h: number;
-  liquidity: number;
-  holder_count: number;
+  /** Null = not read that day (older snapshots may hold 0 or a top-20 cap of 20 for holder_count). */
+  market_cap: number | null;
+  volume_24h: number | null;
+  liquidity: number | null;
+  holder_count: number | null;
   concentration_hhi: number | null;
   top1_pct: number | null;
   top5_pct: number | null;
@@ -81,6 +82,7 @@ export class SnapshotStore {
     const date = todayUTC();
     const key = `snapshot:token:${enrichment.mint}:${date}`;
 
+    if (enrichment.price_usd == null) return; // no price read = nothing worth a daily snapshot
     const snapshot: TokenSnapshot = {
       date,
       price_usd: enrichment.price_usd,
@@ -91,7 +93,7 @@ export class SnapshotStore {
       concentration_hhi: enrichment.concentration?.herfindahl_index ?? null,
       top1_pct: enrichment.concentration?.top1_pct ?? null,
       top5_pct: enrichment.concentration?.top5_pct ?? null,
-      volatility_std: enrichment.volatility?.daily_std_7d ?? null,
+      volatility_std: enrichment.volatility?.daily_std_7d ?? null, // 7d candles only; a 24h estimate is not stored
       risk_flag_count: enrichment.risk_flags.length,
     };
 

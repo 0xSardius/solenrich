@@ -68,3 +68,5 @@ jobs:
       - run: bun test test/perps-phoenix.test.ts
       # xstock-basis (2026-11-05): book walk, round-trip cost, breakeven verdicts, session flags, Phoenix 429 retry.
       - run: bun test test/xstock-basis.test.ts
+      # Token-core data fidelity (2026-11-14 audit): null + source instead of fake values, slippage in percent.
+      - run: bun test test/token-fidelity.test.ts

@@ -41,10 +41,15 @@ export function formatDueDiligenceBriefing(data: DueDiligenceEnrichment): string
 
   // Security
   lines.push('### Security Assessment');
-  if (t.verified) {
+  if (t.verified === true) {
     lines.push('Verified on Jupiter.');
-  } else {
+  } else if (t.verified === false) {
     lines.push('Not verified on Jupiter — exercise caution.');
+  } else {
+    lines.push('Jupiter verification status unknown (Jupiter did not answer).');
+  }
+  if (t.data_quality?.degraded) {
+    lines.push(`⚠ Partial data: ${t.data_quality.unavailable.join(', ')} did not answer — the verdict uses what was read.`);
   }
   if (t.mint_authority) {
     lines.push('Mint authority is **active** — token supply can be inflated.');

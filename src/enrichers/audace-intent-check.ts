@@ -145,7 +145,9 @@ function buyCheck(mint: string, legs: IntentLegs, category: string, network: Net
     flags = legs.risk.risk_flags ?? [];
     // No price or no liquidity = no market to read (an unknown or dead mint). The checks
     // cannot run, so the buy holds (fail closed), like a failed read.
-    if (!(legs.risk.price_usd > 0) || !(legs.risk.liquidity > 0)) codes.push('TOKEN_NO_MARKET');
+    // A degraded read (DexScreener/Jupiter did not answer) is a failed read, not proof that there is no market.
+    const noMarket = !((legs.risk.price_usd ?? 0) > 0) || !((legs.risk.liquidity ?? 0) > 0);
+    if (noMarket) codes.push(legs.risk.data_quality?.degraded ? 'RISK_UNAVAILABLE' : 'TOKEN_NO_MARKET');
     const block = new Set<string>(BLOCK_FLAGS[network]);
     for (const f of flags) if (block.has(f)) codes.push(`RISK_${f.toUpperCase()}`);
   } else codes.push('RISK_UNAVAILABLE');

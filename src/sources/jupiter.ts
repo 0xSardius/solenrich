@@ -14,6 +14,13 @@ export interface JupiterToken {
   verified?: boolean;
   /** Holders, from Jupiter's token API (2026-10-08). Null when Jupiter does not report it. */
   holderCount?: number | null;
+  /** USD price, liquidity and market cap from the token API. Null when absent. Jupiter reports these for
+   *  pump.fun bonding-curve tokens too, which DexScreener does not (no `liquidity` on dexId "pumpfun"). */
+  usdPrice?: number | null;
+  liquidity?: number | null;
+  mcap?: number | null;
+  /** Launchpad name, e.g. "pump.fun". */
+  launchpad?: string | null;
 }
 
 export interface JupiterPrice {
@@ -133,6 +140,10 @@ export class JupiterClient {
       logoURI: raw.icon,
       verified: raw.isVerified === true,
       holderCount: typeof raw.holderCount === 'number' ? raw.holderCount : null,
+      usdPrice: typeof raw.usdPrice === 'number' && raw.usdPrice > 0 ? raw.usdPrice : null,
+      liquidity: typeof raw.liquidity === 'number' && raw.liquidity >= 0 ? raw.liquidity : null,
+      mcap: typeof raw.mcap === 'number' && raw.mcap > 0 ? raw.mcap : null,
+      launchpad: typeof raw.launchpad === 'string' ? raw.launchpad : null,
     };
 
     await this.cache.set(cacheKey, token, CACHE_TTL.tokenMetadata);
@@ -168,11 +179,14 @@ export class JupiterClient {
           const res = await this.fetchWithKey(url, controller.signal);
           if (!res.ok) { await drain(res); return null; }
           const quote: any = await res.json();
-          const priceImpact = parseFloat(quote.priceImpactPct ?? '0');
+          // Jupiter's priceImpactPct is a FRACTION despite its name (0.909 = 90.9%): verified 2026-11-14 — a $100K
+          // buy of a $34K-mcap token returned 0.909 and an output worth ~$9.7K. We report a percent.
+          const priceImpact = parseFloat(quote.priceImpactPct);
+          if (!Number.isFinite(priceImpact)) return null;
           const outAmount = Number(quote.outAmount ?? 0);
           return {
             size_usd: size.usd,
-            price_impact_pct: Math.round(priceImpact * 10000) / 10000,
+            price_impact_pct: Math.round(priceImpact * 100 * 10000) / 10000,
             output_amount: outAmount,
             input_amount: size.amount,
           };
@@ -221,9 +235,15 @@ export class JupiterClient {
     }
   }
 
-  private fetchWithKey(url: string, signal?: AbortSignal): Promise<Response> {
+  /** One retry on 429 after a short wait. Under load Jupiter rate-limits bursts; before this, a 429 silently
+   *  turned into "unverified", no holder count and no slippage (seen in prod 2026-11-14 on BONK). */
+  private async fetchWithKey(url: string, signal?: AbortSignal): Promise<Response> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (this.apiKey) headers['x-api-key'] = this.apiKey;
+    const res = await fetch(url, { headers, signal });
+    if (res.status !== 429 || signal?.aborted) return res;
+    await drain(res);
+    await new Promise((r) => setTimeout(r, 700));
     return fetch(url, { headers, signal });
   }
 }

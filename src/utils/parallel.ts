@@ -27,20 +27,34 @@ export async function parallelFetch<T>(
   tasks: ParallelTask<T>[],
   timeout = DEFAULT_TIMEOUT,
 ): Promise<Record<string, T | null>> {
-  const results = await Promise.allSettled(
+  return (await parallelFetchDetailed(tasks, timeout)).results;
+}
+
+/**
+ * Same as parallelFetch, and also names the tasks that FAILED (threw or timed out).
+ * A task that resolved to null (for example a 404 for an unknown mint) is not a failure.
+ * Callers use `failed` to tell "the source said nothing" apart from "the source did not answer".
+ */
+export async function parallelFetchDetailed<T>(
+  tasks: ParallelTask<T>[],
+  timeout = DEFAULT_TIMEOUT,
+): Promise<{ results: Record<string, T | null>; failed: string[] }> {
+  const settled = await Promise.allSettled(
     tasks.map((task) => withTimeout(task.fn, timeout)),
   );
 
-  const out: Record<string, T | null> = {};
+  const results: Record<string, T | null> = {};
+  const failed: string[] = [];
   for (let i = 0; i < tasks.length; i++) {
     const task = tasks[i];
-    const result = results[i];
+    const result = settled[i];
     if (result.status === 'fulfilled') {
-      out[task.name] = result.value;
+      results[task.name] = result.value;
     } else {
       console.warn(`[parallelFetch] ${task.name} failed: ${result.reason}`);
-      out[task.name] = task.fallback ?? null;
+      results[task.name] = task.fallback ?? null;
+      failed.push(task.name);
     }
   }
-  return out;
+  return { results, failed };
 }

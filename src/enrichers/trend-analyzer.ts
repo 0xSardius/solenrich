@@ -126,13 +126,17 @@ export class TrendAnalyzer {
 
     if (snapshots.length > 0) {
       const oldest = snapshots[0];
-      deltas = [
-        computeDelta('price', current.price_usd, oldest.price_usd, true),
-        computeDelta('market_cap', current.market_cap, oldest.market_cap, true),
-        computeDelta('volume_24h', current.volume_24h, oldest.volume_24h, true),
-        computeDelta('liquidity', current.liquidity, oldest.liquidity, true),
-        computeDelta('risk_flags', current.risk_flags.length, oldest.risk_flag_count, false),
+      // A delta needs both ends measured: null (not read) is skipped, never compared as 0.
+      const pairs: Array<[string, number | null, number | null]> = [
+        ['price', current.price_usd, oldest.price_usd],
+        ['market_cap', current.market_cap, oldest.market_cap],
+        ['volume_24h', current.volume_24h, oldest.volume_24h],
+        ['liquidity', current.liquidity, oldest.liquidity],
       ];
+      deltas = pairs
+        .filter((p): p is [string, number, number] => p[1] != null && p[2] != null)
+        .map(([m, cur, old]) => computeDelta(m, cur, old, true));
+      deltas.push(computeDelta('risk_flags', current.risk_flags.length, oldest.risk_flag_count, false));
 
       if (current.concentration && oldest.concentration_hhi !== null) {
         deltas.push(computeDelta('concentration_hhi', current.concentration.herfindahl_index, oldest.concentration_hhi, false));

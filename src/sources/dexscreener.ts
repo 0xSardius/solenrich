@@ -40,13 +40,19 @@ export interface DexPair {
 }
 
 export interface DexTokenData {
-  price: number;
+  /** USD price. Null when no pair carries `priceUsd` (some pairs return only `priceNative`). */
+  price: number | null;
   priceChange1h: number;
   priceChange6h: number;
   priceChange24h: number;
   volume24h: number;
-  marketCap: number;
-  liquidity: number;
+  /** Null when no pair carries `marketCap` or `fdv`. */
+  marketCap: number | null;
+  /** USD liquidity summed over pairs that report it. Null when NO pair reports it — pump.fun bonding-curve
+   *  pairs (dexId "pumpfun") never carry a `liquidity` object, so 0 here would be a fabricated value. */
+  liquidity: number | null;
+  /** True when the main pair is a pump.fun bonding curve (pre-migration). */
+  bondingCurve: boolean;
   symbol: string;
   name: string;
   pairs: DexPair[];
@@ -83,26 +89,33 @@ export class DexScreenerClient {
     const pairs: DexPair[] = await res.json();
     if (!pairs || pairs.length === 0) return null;
 
-    // Use the highest-liquidity pair as the primary source
-    const sorted = [...pairs].sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0));
+    // Primary pair = highest liquidity, then highest 24h volume (curve pairs carry no liquidity, so ties are common).
+    const sorted = [...pairs].sort((a, b) =>
+      ((b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0)) || ((b.volume?.h24 ?? 0) - (a.volume?.h24 ?? 0)));
     const primary = sorted[0];
+    // Price source: the primary pair if it carries priceUsd, else the first pair that does.
+    const priced = sorted.find((p) => Number(p.priceUsd) > 0);
 
-    // Aggregate liquidity across all pairs
-    const totalLiquidity = pairs.reduce((sum, p) => sum + (p.liquidity?.usd ?? 0), 0);
+    // Aggregate liquidity across the pairs that report it. None reporting = unknown, not zero.
+    const withLiquidity = pairs.filter((p) => typeof p.liquidity?.usd === 'number');
+    const totalLiquidity = withLiquidity.length > 0 ? withLiquidity.reduce((sum, p) => sum + p.liquidity.usd, 0) : null;
     const totalVolume24h = pairs.reduce((sum, p) => sum + (p.volume?.h24 ?? 0), 0);
+    const capPair = sorted.find((p) => Number(p.marketCap ?? p.fdv) > 0);
 
     // Earliest pair creation across all pairs = launch-time proxy (original LP is oldest).
     const createdTimes = pairs.map((p) => p.pairCreatedAt).filter((t): t is number => typeof t === 'number' && t > 0);
     const pairCreatedAt = createdTimes.length > 0 ? Math.min(...createdTimes) : null;
 
+    const src = priced ?? primary;
     const data: DexTokenData = {
-      price: parseFloat(primary.priceUsd) || 0,
-      priceChange1h: primary.priceChange?.h1 ?? 0,
-      priceChange6h: primary.priceChange?.h6 ?? 0,
-      priceChange24h: primary.priceChange?.h24 ?? 0,
+      price: priced ? parseFloat(priced.priceUsd) : null,
+      priceChange1h: src.priceChange?.h1 ?? 0,
+      priceChange6h: src.priceChange?.h6 ?? 0,
+      priceChange24h: src.priceChange?.h24 ?? 0,
       volume24h: totalVolume24h,
-      marketCap: primary.marketCap ?? primary.fdv ?? 0,
+      marketCap: capPair ? Number(capPair.marketCap ?? capPair.fdv) : null,
       liquidity: totalLiquidity,
+      bondingCurve: primary.dexId === 'pumpfun',
       symbol: primary.baseToken.symbol,
       name: primary.baseToken.name,
       pairs: sorted.slice(0, 5),
@@ -116,7 +129,7 @@ export class DexScreenerClient {
   /** Get just the price for a token (lightweight) */
   async getTokenPrice(mint: string): Promise<number> {
     const data = await this.getTokenData(mint);
-    return data?.price ?? 0;
+    return data?.price ?? 0; // legacy contract: callers treat 0 as "no price"
   }
 
   /**
@@ -268,7 +281,7 @@ export class DexScreenerClient {
     }
 
     // Fallback: synthesize from current data
-    const price = tokenData.price;
+    const price = tokenData.price ?? 0;
     const h24Change = tokenData.priceChange24h / 100;
     if (price > 0 && h24Change !== 0) {
       const yesterdayPrice = price / (1 + h24Change);

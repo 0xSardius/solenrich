@@ -8,15 +8,15 @@ export interface TrendingTokenSignal {
   mint: string;
   symbol: string;
   name: string;
-  price_usd: number;
-  market_cap: number;
-  liquidity: number;
-  volume_24h: number;
+  price_usd: number | null;
+  market_cap: number | null;
+  liquidity: number | null;
+  volume_24h: number | null;
   risk_score: number;
   risk_level: string;
   risk_flags: string[];
-  verified: boolean;
-  holder_count: number;
+  verified: boolean | null;
+  holder_count: number | null;
   concentration_hhi: number | null;
   // Whale signal (optional, set when include_whale_watch=true)
   whale_net_flow?: 'accumulating' | 'distributing' | 'neutral';
@@ -144,9 +144,11 @@ function buildSignal(t: DiscoveredToken, w?: WhaleWatchEnrichment): TrendingToke
   else if (t.risk_score < 0.5) reasoning.push(`moderate risk (score ${t.risk_score.toFixed(2)})`);
 
   // 2. Liquidity health — log-scale, normalized to 0-1 (caps at $1M)
-  const liqSignal = Math.min(1, Math.log10(Math.max(t.liquidity, 1)) / 6);
-  if (t.liquidity > 100_000) reasoning.push(`healthy liquidity ($${Math.round(t.liquidity / 1000)}k)`);
-  else if (t.liquidity > 10_000) reasoning.push(`thin liquidity ($${Math.round(t.liquidity / 1000)}k)`);
+  // (new-tokens only passes tokens with measured liquidity, so null here is not expected; treat it as none.)
+  const liq = t.liquidity ?? 0;
+  const liqSignal = Math.min(1, Math.log10(Math.max(liq, 1)) / 6);
+  if (liq > 100_000) reasoning.push(`healthy liquidity ($${Math.round(liq / 1000)}k)`);
+  else if (liq > 10_000) reasoning.push(`thin liquidity ($${Math.round(liq / 1000)}k)`);
 
   // 3. Holder concentration — inverted HHI, normalized (<2500 = good, >5000 = concerning)
   let concSignal = 0.5;

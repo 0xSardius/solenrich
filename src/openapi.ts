@@ -42,7 +42,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'enrich-token-light': {
     summary: 'Analyze a Solana token: price, liquidity, and risk flags',
-    description: 'Price (median of 3 sources), market cap, volume, liquidity, slippage estimates at 4 position sizes, risk flags, verification status.',
+    description: 'Price, market cap, volume, liquidity (incl. pump.fun bonding-curve tokens), holder count, price impact % at 4 sizes, risk flags, Jupiter verification. Each value names its source; unread values are null, never 0, and data_quality lists sources that did not answer.',
     schema: {
       type: 'object',
       required: ['mint'],
@@ -54,7 +54,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'enrich-token-full': {
     summary: 'Analyze a Solana token in depth: holders, concentration, risk',
-    description: 'Adds top 20 holders, HHI concentration index, volatility metrics, slippage estimates to light token analysis.',
+    description: 'Adds top 20 holders, HHI concentration index and volatility (window 7d from daily candles, or a labeled 24h estimate) to light token analysis. holder_count is a real count or null, never the top-20 list length.',
     schema: {
       type: 'object',
       required: ['mint'],

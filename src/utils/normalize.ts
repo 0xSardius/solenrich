@@ -5,7 +5,8 @@ export function shortenAddress(addr: string): string {
 }
 
 /** Locale-formatted USD with $ prefix — handles fractional token prices */
-export function formatUsd(value: number): string {
+export function formatUsd(value: number | null | undefined): string {
+  if (value == null || !Number.isFinite(value)) return 'unknown';
   if (value === 0) return '$0.00';
   const abs = Math.abs(value);
   if (abs < 0.01) {
@@ -17,7 +18,8 @@ export function formatUsd(value: number): string {
 }
 
 /** Humanize with K/M/B suffixes */
-export function formatNumber(value: number): string {
+export function formatNumber(value: number | null | undefined): string {
+  if (value == null || !Number.isFinite(value)) return 'unknown';
   const abs = Math.abs(value);
   if (abs >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(2)}B`;
   if (abs >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}M`;

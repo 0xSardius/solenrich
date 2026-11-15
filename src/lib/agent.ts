@@ -1163,12 +1163,12 @@ function buildDocs() {
       'enrich-token-light': {
         price: '0.002',
         input: { mint: 'string (token mint address)', format: 'json | llm | both' },
-        description: 'Token analysis: price (median of 3 sources), market cap, volume, liquidity, slippage estimates at 4 position sizes ($100/$1K/$10K/$100K via Jupiter Quote), risk flags',
+        description: 'Token analysis: price (DexScreener, else Jupiter, else Birdeye; price_source says which), market cap, volume, liquidity (pump.fun bonding-curve tokens: from Jupiter; bonding_curve flag), holder count (holder_count_source), price impact in percent at 4 sizes ($100/$1K/$10K/$100K via Jupiter Quote), risk flags. Unread fields are null, never 0; data_quality names sources that did not answer.',
       },
       'enrich-token-full': {
         price: '0.004',
         input: { mint: 'string', format: 'json | llm | both' },
-        description: 'Full token analysis: adds top 20 holders, HHI concentration, volatility metrics, slippage estimates at 4 position sizes',
+        description: 'Full token analysis: adds top 20 holders, HHI concentration, volatility (window 7d from daily candles or 24h estimate), price impact at 4 sizes. holder_count is a real count from Birdeye/Jupiter or null — never the length of the top-20 list.',
       },
       'parse-transaction': {
         price: '0.001',
@@ -1451,14 +1451,17 @@ function buildDocs() {
       token_risk_score: {
         description: 'Token risk score from 0.0 to 1.0 used in due-diligence. Combines risk flags, holder concentration, and whale activity.',
         factors: [
-          'Risk flags count — each adds 0.1',
-          'Not verified on Jupiter — +0.1',
-          'Mint authority still active — +0.15',
+          'Risk flags count — +0.08 each, max +0.3',
+          'Not verified on Jupiter — +0.15 (no penalty when Jupiter did not answer: verified is null)',
+          'Mint authority still active — +0.2',
           'Freeze authority active — +0.1',
-          'Top holder > 50% supply — +0.15',
-          'Top 5 holders > 80% supply — +0.1',
-          'Whale distribution activity detected — +0.05',
+          'Liquidity < $10K — +0.2; < $50K — +0.1 (no penalty when liquidity is null = not reported)',
+          'Top holder > 50% supply — +0.2; > 25% — +0.1',
+          'Top 5 holders > 80% supply — +0.15',
+          'HHI > 2500 — +0.15; > 1500 — +0.05',
+          'Whale distribution activity detected — +0.1',
         ],
+        missing_data: 'Unread values are null, not 0, and are not scored. data_quality.degraded = true when DexScreener, the Jupiter token API or the mint read did not answer; data_quality.unavailable names the sources.',
         verdicts: {
           SAFE: 'risk_score < 0.3',
           CAUTION: 'risk_score 0.3 - 0.6',
@@ -1474,7 +1477,7 @@ function buildDocs() {
         },
       },
       volatility: {
-        description: 'Price volatility computed from DexScreener multi-timeframe data (1h, 6h, 24h price changes). No extra API calls.',
+        description: 'window "7d" = std of daily returns from Birdeye daily candles (7d fields filled). window "24h" = estimate from DexScreener 1h/6h/24h price changes: the *_7d fields are null and intraday_std_pct / high_24h / low_24h / range_pct_24h are set. Classification uses the same thresholds on either window.',
         classifications: {
           LOW: 'daily std < 3%',
           MODERATE: 'daily std 3-8%',

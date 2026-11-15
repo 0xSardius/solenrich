@@ -207,19 +207,20 @@ export function detectTokenAlerts(
   }
 
   if (priorSnap) {
-    // Price change
+    // Price change — only when the current price was read (null = no source answered, not a -100% move)
+    const currentPrice = current.price_usd;
     const priceChangePct =
-      priorSnap.price_usd > 0
-        ? ((current.price_usd - priorSnap.price_usd) / priorSnap.price_usd) * 100
+      priorSnap.price_usd > 0 && currentPrice != null
+        ? ((currentPrice - priorSnap.price_usd) / priorSnap.price_usd) * 100
         : 0;
-    if (Math.abs(priceChangePct) >= c.min_price_change_pct) {
+    if (currentPrice != null && Math.abs(priceChangePct) >= c.min_price_change_pct) {
       const type: AlertType = priceChangePct > 0 ? 'price_spike' : 'price_drop';
       alerts.push({
         type,
         severity: severityFromPct(Math.abs(priceChangePct), [20, 50, 100]),
         entity: ent,
-        summary: `${shorten(mint)} ${type === 'price_spike' ? 'up' : 'down'} ${priceChangePct.toFixed(1)}% since ${priorSnap.date} (${formatUsdSmall(priorSnap.price_usd)} → ${formatUsdSmall(current.price_usd)})`,
-        data: { prior_price_usd: priorSnap.price_usd, current_price_usd: current.price_usd, pct_change: priceChangePct, since_date: priorSnap.date },
+        summary: `${shorten(mint)} ${type === 'price_spike' ? 'up' : 'down'} ${priceChangePct.toFixed(1)}% since ${priorSnap.date} (${formatUsdSmall(priorSnap.price_usd)} → ${formatUsdSmall(currentPrice)})`,
+        data: { prior_price_usd: priorSnap.price_usd, current_price_usd: currentPrice, pct_change: priceChangePct, since_date: priorSnap.date },
         detected_at: now,
       });
     }

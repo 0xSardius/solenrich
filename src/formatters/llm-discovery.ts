@@ -24,9 +24,9 @@ export function formatDiscoveryBriefing(data: TokenDiscoveryResult): string {
       out += `\n**${name}** (${shortenAddress(t.mint)})\n`;
       out += `- Price: ${formatUsd(t.price_usd)} | Market cap: ${formatUsd(t.market_cap)}\n`;
       out += `- Liquidity: ${formatUsd(t.liquidity)} | 24h volume: ${formatUsd(t.volume_24h)}\n`;
-      out += `- Holders: ${t.holder_count}${t.concentration_hhi ? ` | HHI: ${t.concentration_hhi}` : ''}\n`;
+      out += `- Holders: ${t.holder_count ?? 'unknown'}${t.concentration_hhi ? ` | HHI: ${t.concentration_hhi}` : ''}\n`;
       out += `- Risk: ${(t.risk_score * 100).toFixed(0)}% (${t.risk_level})${t.risk_flags.length > 0 ? ` — ${t.risk_flags.join(', ')}` : ''}\n`;
-      out += `- Verified: ${t.verified ? 'Yes' : 'No'} | Verdict: **${t.recommendation}**\n`;
+      out += `- Verified: ${t.verified === true ? 'Yes' : t.verified === false ? 'No' : 'Unknown'} | Verdict: **${t.recommendation}**\n`;
     }
   }
 

@@ -20,7 +20,10 @@ export function formatTokenComparisonBriefing(data: TokenComparison): string {
   // Volatility
   const allVol = tokens.every((t) => t.volatility);
   if (allVol) {
-    out += `| Volatility | ${tokens.map((t) => `${t.volatility!.daily_std_7d}% (${t.volatility!.classification})`).join(' | ')} |\n`;
+    out += `| Volatility | ${tokens.map((t) => {
+      const v = t.volatility!;
+      return v.window === '7d' ? `${v.daily_std_7d}% daily, 7d (${v.classification})` : `${v.intraday_std_pct}% est., 24h (${v.classification})`;
+    }).join(' | ')} |\n`;
   }
 
   // Concentration
@@ -31,7 +34,7 @@ export function formatTokenComparisonBriefing(data: TokenComparison): string {
   }
 
   out += `| Risk Flags | ${tokens.map((t) => t.risk_flags.length === 0 ? 'None' : t.risk_flags.join(', ')).join(' | ')} |\n`;
-  out += `| Verified | ${tokens.map((t) => t.verified ? 'Yes' : 'No').join(' | ')} |\n`;
+  out += `| Verified | ${tokens.map((t) => (t.verified === true ? 'Yes' : t.verified === false ? 'No' : 'Unknown')).join(' | ')} |\n`;
 
   // Rankings
   out += '\n### Rankings\n';

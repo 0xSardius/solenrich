@@ -11,16 +11,16 @@ export interface DiscoveredToken {
   mint: string;
   symbol: string;
   name: string;
-  price_usd: number;
-  market_cap: number;
-  liquidity: number;
-  volume_24h: number;
+  price_usd: number | null;
+  market_cap: number | null;
+  liquidity: number | null;
+  volume_24h: number | null;
   risk_score: number;
   risk_level: RiskLevel;
   risk_flags: string[];
   recommendation: 'SAFE' | 'CAUTION' | 'RISKY';
-  verified: boolean;
-  holder_count: number;
+  verified: boolean | null;
+  holder_count: number | null;
   concentration_hhi: number | null;
 }
 
@@ -82,7 +82,8 @@ export class TokenDiscovery {
 
     // Step 3: Score and filter
     const scored: DiscoveredToken[] = enriched
-      .filter(t => t.liquidity >= minLiquidityUsd)
+      // A minimum-liquidity screen needs a measured value: unknown liquidity does not pass.
+      .filter(t => t.liquidity != null && t.liquidity >= minLiquidityUsd)
       .map(t => {
         const riskResult = scoreTokenRisk({
           risk_flags_count: t.risk_flags.length,
