@@ -70,3 +70,5 @@ jobs:
       - run: bun test test/xstock-basis.test.ts
       # Token-core data fidelity (2026-11-14 audit): null + source instead of fake values, slippage in percent.
       - run: bun test test/token-fidelity.test.ts
+      # Upstream usage counters (2026-11-15): Jupiter requests/429s, degraded token reads, batched Redis flush.
+      - run: bun test test/upstream-stats.test.ts

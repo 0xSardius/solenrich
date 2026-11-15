@@ -6,6 +6,7 @@ import type { BirdeyeClient, OHLCV, TokenOverview } from '../sources/birdeye';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { parallelFetchDetailed, type ParallelTask } from '../utils/parallel';
+import { upstreamStats } from '../utils/upstream-stats';
 import { formatTimestamp } from '../utils/normalize';
 import type { SnapshotStore } from './snapshot-store';
 import type { TransferTax, TransferTaxReader } from '../sources/token-2022';
@@ -438,6 +439,9 @@ export class TokenAnalyzer {
       data_quality: dataQuality,
       last_updated: formatTimestamp(),
     };
+
+    upstreamStats.inc('token_responses');
+    if (dataQuality.degraded) upstreamStats.inc('token_degraded');
 
     // Only cache if we got meaningful data — don't cache failures. A degraded result gets a short TTL.
     if (price > 0 || enrichment.symbol) {

@@ -199,6 +199,26 @@ export class Cache {
     }
   }
 
+  /** Increment a counter key by `by`. Sets the TTL when the key is new. Used to flush batched counters. */
+  async incrby(key: string, by: number, ttlSeconds?: number): Promise<number> {
+    const prefixed = KEY_PREFIX + key;
+    try {
+      if (this.redis) {
+        const val = await this.redis.incrby(prefixed, by);
+        if (ttlSeconds && val === by) await this.redis.expire(prefixed, ttlSeconds);
+        return val;
+      }
+      const entry = this.memory.get(prefixed);
+      const current = entry && Date.now() < entry.expiry ? parseInt(entry.value, 10) || 0 : 0;
+      const next = current + by;
+      this.memory.set(prefixed, { value: String(next), expiry: Date.now() + (ttlSeconds ?? 86400) * 1000 });
+      return next;
+    } catch (err) {
+      console.warn(`[cache] incrby(${key}) failed:`, err);
+      return 0;
+    }
+  }
+
   /** Add a member to a set, refreshing the TTL. Used for distinct-caller tracking. */
   async sadd(key: string, member: string, ttlSeconds?: number): Promise<void> {
     const prefixed = KEY_PREFIX + key;

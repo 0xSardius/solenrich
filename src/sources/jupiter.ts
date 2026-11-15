@@ -1,6 +1,7 @@
 import { CONFIG, CACHE_TTL } from '../config';
 import type { Cache } from '../cache';
 import { drain } from '../utils/drain';
+import { upstreamStats } from '../utils/upstream-stats';
 
 // --- Types ---
 
@@ -104,7 +105,9 @@ export class JupiterClient {
   private async fetchPrices(mints: string[]): Promise<Record<string, JupiterPrice>> {
     if (mints.length === 0) return {};
     const url = `https://lite-api.jup.ag/price/v3?ids=${mints.join(',')}`;
+    upstreamStats.inc('jupiter_price_requests');
     const res = await fetch(url);
+    if (res.status === 429) upstreamStats.inc('jupiter_price_429'); // lite-api is being phased out with falling limits
     if (!res.ok) throw new Error(`Jupiter Price HTTP ${res.status}: ${await res.text()}`);
     const raw: Record<string, { usdPrice?: number; decimals?: number } | null> = await res.json();
     const out: Record<string, JupiterPrice> = {};
@@ -240,10 +243,16 @@ export class JupiterClient {
   private async fetchWithKey(url: string, signal?: AbortSignal): Promise<Response> {
     const headers: Record<string, string> = { Accept: 'application/json' };
     if (this.apiKey) headers['x-api-key'] = this.apiKey;
+    const kind = url.includes('/tokens/') ? 'token' : 'quote';
+    upstreamStats.inc(`jupiter_${kind}_requests`);
     const res = await fetch(url, { headers, signal });
     if (res.status !== 429 || signal?.aborted) return res;
+    upstreamStats.inc(`jupiter_${kind}_429`);
     await drain(res);
     await new Promise((r) => setTimeout(r, 700));
-    return fetch(url, { headers, signal });
+    upstreamStats.inc(`jupiter_${kind}_requests`);
+    const retry = await fetch(url, { headers, signal });
+    if (retry.status === 429) upstreamStats.inc(`jupiter_${kind}_429_after_retry`);
+    return retry;
   }
 }

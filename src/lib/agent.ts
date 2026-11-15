@@ -646,6 +646,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
 // --- Dependency injection ---
 
 import { PriceAggregator } from "../utils/price-aggregator";
+import { upstreamStats } from "../utils/upstream-stats";
 
 import { SnapshotStore } from '../enrichers/snapshot-store';
 import { TrendAnalyzer } from '../enrichers/trend-analyzer';
@@ -940,6 +941,9 @@ import { formatTokenBriefing } from '../formatters/llm-token';
 
 const TOKEN_PROGRAM_ID = 'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA';
 const TOKEN_2022_PROGRAM_ID = 'TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb';
+
+// Upstream usage counters (src/utils/upstream-stats.ts): flush deltas to Redis every 15 min.
+setInterval(() => { upstreamStats.flush(cache).catch((e) => console.warn('[upstream-stats] flush failed:', e)); }, 15 * 60_000).unref?.();
 
 // In-memory rate limiter: IP → { count, resetAt }
 const demoRateLimits = new Map<string, { count: number; resetAt: number }>();
@@ -1784,6 +1788,10 @@ app.get('/metrics', async (c) => {
       // Demand-driven warmer (src/lib/cache-warmer.ts): default-input results
       // kept warm while the endpoint is being called.
       warmer: warmer.stats(),
+      // Jupiter Free-plan pressure (1 RPS per account) and degraded token reads, per UTC day, last 7 days.
+      // token_responses counts fresh (uncached) token reads. Developer-plan triggers: degraded > 5% over 7 d,
+      // or outside revenue ≥ $50 / 30 d (see docs/CHECKPOINT.md).
+      upstream: await upstreamStats.history(cache, 7),
       redis: {
         ...cache.stats(),
         per_call_avg_by_endpoint: Object.fromEntries(
