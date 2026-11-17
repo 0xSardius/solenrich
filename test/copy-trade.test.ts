@@ -1,6 +1,18 @@
 // Copy-trade PnL (audit 2026-11-17): each swap priced from its own quote leg; no current-price PnL, no units-as-USD.
 import { describe, expect, test } from 'bun:test';
-import { extractSwapLeg, matchTrades, consistencyScore, type SwapLeg } from '../src/enrichers/copy-trade-analyzer';
+import { extractSwapLeg, matchTrades, consistencyScore, recentBuysFromTxs, type SwapLeg } from '../src/enrichers/copy-trade-analyzer';
+
+describe('recentBuysFromTxs (trenches live overlay)', () => {
+  test('finds a buy whose delivered token is missing from tokenTransfers; ignores sells', () => {
+    const buys = recentBuysFromTxs([
+      tx({ timestamp: 10, tokenTransfers: [tt(W, 'router', WSOL, 0.05)], accountData: acct(-0.05 * 1e9, [bc(W, MEME, 1000)]) }),
+      tx({ timestamp: 20, accountData: acct(0.03 * 1e9, [bc(W, MEME, -500)]) }),
+    ], W, 150);
+    expect(buys.length).toBe(1);
+    expect(buys[0]).toMatchObject({ mint: MEME, timestamp: 10, token_units: 1000 });
+    expect(buys[0].spent_usd).toBeCloseTo(7.5, 6);
+  });
+});
 
 describe('copy-trade briefing', () => {
   test('says the covered days, not the requested lookback, when history is incomplete', async () => {

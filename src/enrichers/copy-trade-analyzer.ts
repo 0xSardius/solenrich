@@ -59,7 +59,6 @@ export interface CopyTradeEnrichment {
 /** Signature pages (100 each) read per wallet. Caps Helius cost on very active wallets. */
 const MAX_SIG_PAGES = 3;
 
-const SWAP_TYPES = new Set(['SWAP', 'TOKEN_SWAP', 'EXCHANGE']);
 
 // Quote assets — the leg a wallet *pays with* in a swap, never the token it "bought".
 const WSOL_MINT = 'So11111111111111111111111111111111111111112';
@@ -222,6 +221,21 @@ export function consistencyScore(pnls: number[]): number {
 }
 export const CONSISTENT_TRADER_MIN = 0.5;
 
+/**
+ * Buys from enhanced transactions, read with extractSwapLeg (the wallet's balance changes). Before 2026-11-17 this
+ * read the token received from tokenTransfers, which can omit a router's delivery leg — those buys were missed. Pure.
+ */
+export function recentBuysFromTxs(txs: EnhancedTransaction[], address: string, solPrice: number): RecentBuy[] {
+  const buys: RecentBuy[] = [];
+  for (const tx of txs) {
+    const leg = extractSwapLeg(tx, address);
+    if (leg.kind !== 'buy' || !leg.mint) continue;
+    const spentUsd = leg.quote_usd != null ? leg.quote_usd : leg.quote_sol != null && solPrice > 0 ? leg.quote_sol * solPrice : null;
+    buys.push({ mint: leg.mint, timestamp: tx.timestamp, token_units: leg.units, spent_usd: spentUsd });
+  }
+  return buys;
+}
+
 /** A token a wallet acquired recently. Light — no PnL, for the trenches live overlay. */
 export interface RecentBuy {
   mint: string;
@@ -262,30 +276,7 @@ export class CopyTradeAnalyzer {
       return [];
     }
 
-    // Price SOL once to convert SOL-denominated spend to USD.
-    const solPrice = await this.dexscreener.getTokenPrice(WSOL_MINT).catch(() => 0);
-
-    const buys: RecentBuy[] = [];
-    for (const tx of txs) {
-      if (!SWAP_TYPES.has(tx.type.toUpperCase())) continue;
-      const transfers = tx.tokenTransfers ?? [];
-      // The token the wallet received that is NOT a quote asset = what it bought.
-      const received = transfers.find((t) => t.toUserAccount === address && !QUOTE_MINTS.has(t.mint));
-      if (!received) continue;
-      // The quote asset the wallet sent = its spend.
-      const spent = transfers.find((t) => t.fromUserAccount === address && QUOTE_MINTS.has(t.mint));
-      let spentUsd: number | null = null;
-      if (spent) {
-        if (spent.mint === WSOL_MINT && solPrice > 0) spentUsd = spent.tokenAmount * solPrice;
-        else if (spent.mint === USDC_MINT || spent.mint === USDT_MINT) spentUsd = spent.tokenAmount;
-      }
-      buys.push({
-        mint: received.mint,
-        timestamp: tx.timestamp,
-        token_units: received.tokenAmount,
-        spent_usd: spentUsd,
-      });
-    }
+    const buys = recentBuysFromTxs(txs, address, await this.dexscreener.getTokenPrice(WSOL_MINT).catch(() => 0));
 
     await this.cache.set(cacheKey, buys, CACHE_TTL.copyTrade);
     return buys;
