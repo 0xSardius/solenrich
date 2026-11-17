@@ -131,17 +131,20 @@ export class WalletComparator {
     // Risk score (lower = better)
     rankings.push(rankW('risk_score', wallets, (w) => w.risk_score, 'low', (w) => `${w.risk_score.toFixed(2)} (${w.risk_level})`));
 
-    // Wallet age (older = more established)
-    const withDates = wallets.filter((w) => w.first_tx_date);
+    // Wallet age (older = more established). A busy wallet's first tx may be beyond the pages read: then its
+    // oldest-seen date is a lower bound on age ("before" that date), which still orders it correctly as old.
+    const ageAnchor = (w: WalletEnrichment) => w.first_tx_date ?? w.first_seen_at_least ?? null;
+    const withDates = wallets.filter((w) => ageAnchor(w));
     if (withDates.length === wallets.length) {
-      rankings.push(rankW('wallet_age', wallets, (w) => new Date(w.first_tx_date!).getTime(), 'low', (w) => w.first_tx_date!.split('T')[0]));
+      rankings.push(rankW('wallet_age', wallets, (w) => new Date(ageAnchor(w)!).getTime(), 'low',
+        (w) => (w.first_tx_date ? w.first_tx_date.split('T')[0] : `before ${ageAnchor(w)!.split('T')[0]}`)));
     }
 
     // Summary picks
     const highestValue = [...wallets].sort((a, b) => b.portfolio_value_usd - a.portfolio_value_usd)[0];
     const mostActive = [...wallets].sort((a, b) => b.tx_count_30d - a.tx_count_30d)[0];
     const lowestRisk = [...wallets].sort((a, b) => a.risk_score - b.risk_score)[0];
-    const oldest = withDates.sort((a, b) => new Date(a.first_tx_date!).getTime() - new Date(b.first_tx_date!).getTime())[0];
+    const oldest = withDates.sort((a, b) => new Date(ageAnchor(a)!).getTime() - new Date(ageAnchor(b)!).getTime())[0];
 
     return {
       wallets,

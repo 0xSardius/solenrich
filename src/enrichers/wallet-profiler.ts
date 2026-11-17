@@ -5,7 +5,7 @@ import type { PriceAggregator } from '../utils/price-aggregator';
 import type { SnapshotStore } from './snapshot-store';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
-import { parallelFetch, type ParallelTask } from '../utils/parallel';
+import { parallelFetchDetailed, type ParallelTask } from '../utils/parallel';
 import { formatTimestamp } from '../utils/normalize';
 import { labelWallet, type WalletData } from './labeler';
 import { scoreWalletRisk } from './risk-scorer';
@@ -65,13 +65,64 @@ export interface WalletEnrichment {
     value_usd: number;
   }>;
   tx_count_30d: number;
+  /** True when tx_count_30d is a lower bound (more 30-day transactions than the pages read). */
+  tx_count_30d_capped: boolean;
+  /** The wallet's first transaction. null when its history is longer than the pages read (see first_seen_at_least). */
   first_tx_date: string | null;
+  /** Oldest transaction read: the wallet is at least this old. Equals first_tx_date when history_complete. */
+  first_seen_at_least: string | null;
+  last_tx_date: string | null;
+  history_complete: boolean;
   labels: string[];
   risk_score: number;
   risk_level: string;
   risk_factors: string[];
   connected_wallets: Array<{ address: string; entity_label?: string; entity_type?: string }>;
+  /** Reads that failed. degraded = balances, assets or signatures did not answer (zeros there are not measured). */
+  data_quality: { degraded: boolean; unavailable: string[] };
   last_updated: string;
+}
+
+type Sig = { signature: string; slot?: number; blockTime: number | null };
+
+/** Signature pages read per wallet (100 each). A complete first-tx date is cached, so later calls read less. */
+export const WALLET_SIG_MAX_PAGES = 5;
+
+export interface WalletHistory {
+  first_tx_date: string | null;
+  first_seen_at_least: string | null;
+  last_tx_date: string | null;
+  history_complete: boolean;
+  tx_count_30d: number;
+  tx_count_30d_capped: boolean;
+  /** null when the first transaction is unknown. */
+  wallet_age_days: number | null;
+}
+
+/**
+ * Wallet history from newest-first signatures. `complete` = the pages reached the wallet's first transaction.
+ * `knownFirstTx` = a first-tx date cached from an earlier complete read (it never changes). Pure.
+ * Before (2026-11-17), first_tx_date was the oldest of the newest 100 signatures, so an active multi-year wallet
+ * was "created" days ago: labeled new_wallet and charged +0.20 age risk.
+ */
+export function walletHistory(sigs: Sig[], complete: boolean, nowSec: number, knownFirstTx: string | null = null): WalletHistory {
+  const times = sigs.map((s) => s.blockTime).filter((t): t is number => typeof t === 'number' && t > 0);
+  const iso = (t: number) => new Date(t * 1000).toISOString();
+  const oldest = times.length ? Math.min(...times) : null;
+  const newest = times.length ? Math.max(...times) : null;
+  const firstTx = knownFirstTx ?? (complete && oldest != null ? iso(oldest) : null);
+  const cutoff = nowSec - THIRTY_DAYS_S;
+  const txCount30d = times.filter((t) => t > cutoff).length;
+  return {
+    first_tx_date: firstTx,
+    first_seen_at_least: firstTx ?? (oldest != null ? iso(oldest) : null),
+    last_tx_date: newest != null ? iso(newest) : null,
+    history_complete: firstTx != null || (complete && times.length === 0),
+    tx_count_30d: txCount30d,
+    // Capped when the read stopped while still inside the 30-day window.
+    tx_count_30d_capped: !complete && oldest != null && oldest > cutoff,
+    wallet_age_days: firstTx ? Math.floor((nowSec * 1000 - new Date(firstTx).getTime()) / 86_400_000) : null,
+  };
 }
 
 // --- Class ---
@@ -100,30 +151,26 @@ export class WalletProfiler {
     const tasks: ParallelTask<any>[] = [
       { name: 'sol_balance', fn: () => this.solanaRpc.getBalance(address) },
       { name: 'assets', fn: () => this.helius.getAssetsByOwner(address) },
-      { name: 'signatures', fn: () => this.helius.getSignaturesForAddress(address, 100) },
+      { name: 'signatures', fn: () => this.readHistory(address) },
     ];
 
-    const fetched = await parallelFetch(tasks);
+    const { results: fetched, failed } = await parallelFetchDetailed(tasks);
+    const unavailable = new Set<string>(failed);
 
     const solBalance = (fetched.sol_balance as number) ?? 0;
     const assets = fetched.assets as HeliusAssetList | null;
-    const signatures = (fetched.signatures as Array<{ signature: string; slot: number; blockTime: number | null }>) ?? [];
+    const read = fetched.signatures as { sigs: Sig[]; complete: boolean; knownFirstTx: string | null } | null;
+    const signatures = read?.sigs ?? [];
+    // Newest 100 for the behaviour and enhanced-tx paths (unchanged scope; age/count use every page read).
+    const recent100 = signatures.slice(0, 100);
 
-    // Fetch enhanced txs for full depth — batch in chunks of 100 (Helius limit)
-    let enhancedTxs: EnhancedTransaction[] = [];
-    if (depth === 'full' && signatures.length > 0) {
-      const allSigs = signatures.map((s) => s.signature);
-      const chunks: string[][] = [];
-      for (let i = 0; i < allSigs.length; i += 100) {
-        chunks.push(allSigs.slice(i, i + 100));
-      }
-      const chunkResults = await Promise.allSettled(
-        chunks.map((chunk) => this.helius.getEnhancedTransactions(chunk)),
-      );
-      for (const result of chunkResults) {
-        if (result.status === 'fulfilled') {
-          enhancedTxs.push(...result.value);
-        }
+    // Fetch enhanced txs for full depth — the newest 100 (one Helius batch)
+    const enhancedTxs: EnhancedTransaction[] = [];
+    if (depth === 'full' && recent100.length > 0) {
+      try {
+        enhancedTxs.push(...await this.helius.getEnhancedTransactions(recent100.map((s) => s.signature)));
+      } catch {
+        unavailable.add('enhanced_tx');
       }
     }
 
@@ -224,12 +271,11 @@ export class WalletProfiler {
     const thirtyDaysAgo = now - THIRTY_DAYS_S;
 
     const recentSigs = signatures.filter((s) => s.blockTime && s.blockTime > thirtyDaysAgo);
-    const txCount30d = recentSigs.length;
-
-    const oldestSig = signatures[signatures.length - 1];
-    const firstTxDate = oldestSig?.blockTime
-      ? new Date(oldestSig.blockTime * 1000).toISOString()
-      : null;
+    const history = read
+      ? walletHistory(signatures, read.complete, now, read.knownFirstTx)
+      : walletHistory([], false, now, null); // signature read failed: everything unknown
+    const txCount30d = history.tx_count_30d;
+    const firstTxDate = history.first_tx_date;
 
     // Daily tx counts over 30d
     const dailyCounts = new Array(30).fill(0);
@@ -297,12 +343,10 @@ export class WalletProfiler {
     }
 
     // Step 7: labels
-    const walletAgeDays = firstTxDate
-      ? Math.floor((Date.now() - new Date(firstTxDate).getTime()) / (24 * 60 * 60 * 1000))
-      : 0;
+    const walletAgeDays = history.wallet_age_days; // null = unknown → no age risk factor
 
-    // Behavioral signal data: tx timestamps + type counts
-    const txTimestamps = signatures
+    // Behavioral signal data: tx timestamps + type counts (newest 100, as before)
+    const txTimestamps = recent100
       .map((s) => s.blockTime)
       .filter((t): t is number => t !== null && t > 0);
 
@@ -322,6 +366,7 @@ export class WalletProfiler {
       nft_collected_count: nftSummary.collected,
       tx_count_30d: txCount30d,
       first_tx_date: firstTxDate,
+      last_tx_date: history.last_tx_date,
       defi_positions: defiPositions,
       top_holdings: topHoldings.map((h) => ({
         symbol: h.symbol,
@@ -343,13 +388,15 @@ export class WalletProfiler {
       ? (holdingsRaw[0].usd_value / portfolioValueUsd) * 100
       : 0;
 
+    // Diversity and protocol breadth need enhanced transactions (full depth). Unmeasured = not scored.
+    const measuredActivity = depth === 'full' && enhancedTxs.length > 0;
     const uniqueProgramCount = new Set(enhancedTxs.flatMap((tx) => tx.accountData.map((a) => a.account))).size;
-    const txDiversity = enhancedTxs.length > 0 ? uniqueProgramCount / enhancedTxs.length : 0;
+    const txDiversity = measuredActivity ? uniqueProgramCount / enhancedTxs.length : null;
 
     const riskResult = scoreWalletRisk({
       wallet_age_days: walletAgeDays,
       tx_diversity: txDiversity,
-      protocol_breadth: protocolsInteracted.length,
+      protocol_breadth: measuredActivity ? protocolsInteracted.length : null,
       concentration: topHoldingPct,
       flagged_associations: 0,
       labels,
@@ -384,22 +431,59 @@ export class WalletProfiler {
       nft_collections: nftCollections,
       defi_positions: defiPositions,
       tx_count_30d: txCount30d,
+      tx_count_30d_capped: history.tx_count_30d_capped,
       first_tx_date: firstTxDate,
+      first_seen_at_least: history.first_seen_at_least,
+      last_tx_date: history.last_tx_date,
+      history_complete: history.history_complete,
       labels,
       risk_score: riskResult.score,
       risk_level: riskResult.risk_level,
       risk_factors: riskResult.factors,
       connected_wallets: connectedWallets,
+      data_quality: {
+        degraded: ['sol_balance', 'assets', 'signatures'].some((s) => unavailable.has(s)),
+        unavailable: [...unavailable].sort(),
+      },
       last_updated: formatTimestamp(),
     };
 
-    await this.cache.set(cacheKey, enrichment, CACHE_TTL.walletProfile);
+    // A partial read is cached briefly and never becomes the day's snapshot.
+    const degraded = enrichment.data_quality.degraded;
+    await this.cache.set(cacheKey, enrichment, degraded ? 15 : CACHE_TTL.walletProfile);
 
     // Fire-and-forget snapshot capture (one per day per address)
-    if (this.snapshotStore) {
+    if (this.snapshotStore && !degraded) {
       this.snapshotStore.captureWalletSnapshot(enrichment).catch(() => {});
     }
 
     return enrichment;
+  }
+
+  /**
+   * Signatures newest-first, paged back to the wallet's first transaction (complete) or WALLET_SIG_MAX_PAGES.
+   * A complete first-tx date is cached for 30 days (it never changes); with it, reading stops once the 30-day
+   * window is covered.
+   */
+  private async readHistory(address: string): Promise<{ sigs: Sig[]; complete: boolean; knownFirstTx: string | null }> {
+    const firstKey = `wallet:firsttx:${address}`;
+    const knownFirstTx = await this.cache.get<string>(firstKey);
+    const cutoff = Math.floor(Date.now() / 1000) - THIRTY_DAYS_S;
+    const sigs: Sig[] = [];
+    let before: string | undefined;
+    let complete = false;
+    for (let page = 0; page < WALLET_SIG_MAX_PAGES; page++) {
+      const batch = await this.helius.getSignaturesForAddress(address, 100, before);
+      sigs.push(...batch);
+      if (batch.length < 100) { complete = true; break; }
+      const oldest = batch[batch.length - 1].blockTime ?? 0;
+      if (knownFirstTx && oldest > 0 && oldest < cutoff) break; // age known, 30-day window covered
+      before = batch[batch.length - 1].signature;
+    }
+    if (complete && !knownFirstTx) {
+      const times = sigs.map((s) => s.blockTime).filter((t): t is number => typeof t === 'number' && t > 0);
+      if (times.length) await this.cache.set(firstKey, new Date(Math.min(...times) * 1000).toISOString(), 30 * 86400);
+    }
+    return { sigs, complete, knownFirstTx };
   }
 }

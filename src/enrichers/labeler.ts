@@ -12,7 +12,10 @@ export interface WalletData {
    */
   nft_collected_count?: number;
   tx_count_30d: number;
+  /** null when unknown (history longer than the pages read). new_wallet needs a known date. */
   first_tx_date: string | null;
+  /** Newest transaction. dormant uses it; older callers without it fall back to first_tx_date. */
+  last_tx_date?: string | null;
   defi_positions: { protocol: string; type: string; value_usd: number }[];
   top_holdings: { symbol: string; usd_value: number; pct_portfolio: number }[];
   swap_count_30d: number;
@@ -65,10 +68,10 @@ export function labelWallet(data: WalletData): string[] {
     }
   }
 
-  // dormant: no txs in 30d and last tx > 90 days ago
-  if (data.tx_count_30d === 0 && data.first_tx_date) {
-    const firstTxTime = new Date(data.first_tx_date).getTime();
-    if (now - firstTxTime > NINETY_DAYS_MS) {
+  // dormant: no txs in 30d and LAST tx > 90 days ago (was compared against the first tx, 2026-11-17)
+  const lastTx = data.last_tx_date !== undefined ? data.last_tx_date : data.first_tx_date;
+  if (data.tx_count_30d === 0 && lastTx) {
+    if (now - new Date(lastTx).getTime() > NINETY_DAYS_MS) {
       labels.push('dormant');
     }
   }

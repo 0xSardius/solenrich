@@ -647,6 +647,7 @@ if (PAYMENTS_ENABLED && resourceServer) {
 
 import { PriceAggregator } from "../utils/price-aggregator";
 import { upstreamStats } from "../utils/upstream-stats";
+import { WALLET_RISK_WEIGHTS, TOKEN_RISK_WEIGHTS, riskLevelRanges } from "../enrichers/risk-scorer";
 
 import { SnapshotStore } from '../enrichers/snapshot-store';
 import { TrendAnalyzer } from '../enrichers/trend-analyzer';
@@ -1157,7 +1158,7 @@ function buildDocs() {
       'enrich-wallet-light': {
         price: '0.002',
         input: { address: 'string (Solana base58)', format: 'json | llm | both' },
-        description: 'Light wallet profile: SOL balance, token holdings, NFT breakdown (collected vs airdropped vs suspected spam), labels (including behavioral flags regular_intervals/high_frequency/24_7_active/repetitive_actions), risk score',
+        description: 'Light wallet profile: SOL balance, token holdings, NFT breakdown (collected vs airdropped vs suspected spam), labels (including behavioral flags regular_intervals/high_frequency/24_7_active/repetitive_actions), risk score. Wallet age reads up to 500 transactions: first_tx_date is null when the history is longer (first_seen_at_least = a lower bound, history_complete false) and then no age factor is scored; tx_count_30d_capped marks a lower-bound count. Factors that need enhanced transactions (diversity, protocol breadth) are scored at full depth only. data_quality lists reads that failed.',
       },
       'enrich-wallet-full': {
         price: '0.005',
@@ -1433,38 +1434,35 @@ function buildDocs() {
       },
     },
     methodology: {
+      // Built from the scorer's constants (src/enrichers/risk-scorer.ts) so the published numbers cannot drift
+      // from the code again (2026-11-17: /docs listed weights and level bounds the code never used).
       risk_score: {
-        description: 'Wallet risk score from 0.0 (safe) to 1.0 (critical). Pure on-chain, deterministic.',
+        description: 'Wallet risk score from 0.0 (safe) to 1.0 (critical). Pure on-chain, deterministic, clamped to 0–1. Factors that were not measured are not scored: wallet age when the history is longer than the pages read (first_tx_date null), tx diversity and protocol breadth at depth light.',
         factors: [
-          'High transaction concentration (few counterparties) — +0.15',
-          'Low transaction diversity — +0.1',
-          'New wallet (< 30 days old) — +0.15',
-          'Bot-like patterns (high frequency, repetitive) — +0.2',
-          'Interactions with known risky programs — +0.15',
-          'Airdrop farming signals (many small token accounts) — +0.1',
-          'Low protocol diversity (< 2 protocols) — +0.1',
+          `Wallet less than 7 days old — +${WALLET_RISK_WEIGHTS.age_lt_7d}; less than 30 days — +${WALLET_RISK_WEIGHTS.age_lt_30d}`,
+          `Over 80% of portfolio in one holding — +${WALLET_RISK_WEIGHTS.concentration_gt_80}; over 50% — +${WALLET_RISK_WEIGHTS.concentration_gt_50}`,
+          `Transactions with flagged addresses — +${WALLET_RISK_WEIGHTS.flagged_association}`,
+          `bot_suspect label — +${WALLET_RISK_WEIGHTS.bot_suspect}`,
+          `airdrop_farmer label — +${WALLET_RISK_WEIGHTS.airdrop_farmer}`,
+          `Low transaction diversity (< 0.1, full depth only) — +${WALLET_RISK_WEIGHTS.low_tx_diversity}`,
+          `Fewer than 2 protocols (full depth only) — +${WALLET_RISK_WEIGHTS.low_protocol_breadth}`,
         ],
-        levels: {
-          LOW: '< 0.25',
-          MODERATE: '0.25 - 0.50',
-          ELEVATED: '0.50 - 0.65',
-          HIGH: '0.65 - 0.80',
-          CRITICAL: '> 0.80',
-        },
+        levels: riskLevelRanges(),
       },
       token_risk_score: {
         description: 'Token risk score from 0.0 to 1.0 used in due-diligence. Combines risk flags, holder concentration, and whale activity.',
         factors: [
-          'Risk flags count — +0.08 each, max +0.3',
-          'Not verified on Jupiter — +0.15 (no penalty when Jupiter did not answer: verified is null)',
-          'Mint authority still active — +0.2',
-          'Freeze authority active — +0.1',
-          'Liquidity < $10K — +0.2; < $50K — +0.1 (no penalty when liquidity is null = not reported)',
-          'Top holder > 50% supply — +0.2; > 25% — +0.1',
-          'Top 5 holders > 80% supply — +0.15',
-          'HHI > 2500 — +0.15; > 1500 — +0.05',
-          'Whale distribution activity detected — +0.1',
+          `Risk flags count — +${TOKEN_RISK_WEIGHTS.per_risk_flag} each, max +${TOKEN_RISK_WEIGHTS.risk_flags_max}`,
+          `Not verified on Jupiter — +${TOKEN_RISK_WEIGHTS.unverified} (no penalty when Jupiter did not answer: verified is null)`,
+          `Mint authority still active — +${TOKEN_RISK_WEIGHTS.mint_authority}`,
+          `Freeze authority active — +${TOKEN_RISK_WEIGHTS.freeze_authority}`,
+          `Liquidity < $10K — +${TOKEN_RISK_WEIGHTS.liquidity_lt_10k}; < $50K — +${TOKEN_RISK_WEIGHTS.liquidity_lt_50k} (no penalty when liquidity is null = not reported)`,
+          `Top holder > 50% supply — +${TOKEN_RISK_WEIGHTS.top1_gt_50}; > 25% — +${TOKEN_RISK_WEIGHTS.top1_gt_25}`,
+          `Top 5 holders > 80% supply — +${TOKEN_RISK_WEIGHTS.top5_gt_80}`,
+          `HHI > 2500 — +${TOKEN_RISK_WEIGHTS.hhi_gt_2500}; > 1500 — +${TOKEN_RISK_WEIGHTS.hhi_gt_1500}`,
+          `Whale distribution activity detected — +${TOKEN_RISK_WEIGHTS.whale_distributing}`,
         ],
+        levels: riskLevelRanges(),
         missing_data: 'Unread values are null, not 0, and are not scored. data_quality.degraded = true when DexScreener, the Jupiter token API or the mint read did not answer; data_quality.unavailable names the sources.',
         verdicts: {
           SAFE: 'risk_score < 0.3',

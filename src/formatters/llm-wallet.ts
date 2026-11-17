@@ -1,15 +1,15 @@
 import type { WalletEnrichment } from '../enrichers/wallet-profiler';
 import { shortenAddress, formatUsd, formatNumber } from '../utils/normalize';
 
-function riskLevel(score: number): string {
-  if (score < 0.2) return 'low';
-  if (score < 0.5) return 'moderate';
-  if (score < 0.75) return 'elevated';
-  return 'high';
-}
-
-function walletAge(firstTxDate: string | null): string {
-  if (!firstTxDate) return 'Unknown-age';
+function walletAge(firstTxDate: string | null, firstSeenAtLeast?: string | null): string {
+  if (!firstTxDate) {
+    // History longer than the pages read: we know only a lower bound on age.
+    if (firstSeenAtLeast) {
+      const seen = new Date(firstSeenAtLeast);
+      return `Busy (history longer than read; active since at least ${seen.toLocaleString('en-US', { month: 'long' })} ${seen.getFullYear()})`;
+    }
+    return 'Unknown-age';
+  }
 
   const first = new Date(firstTxDate);
   const daysOld = Math.floor((Date.now() - first.getTime()) / (24 * 60 * 60 * 1000));
@@ -28,7 +28,7 @@ export function formatWalletBriefing(data: WalletEnrichment): string {
   lines.push('');
 
   // Overview
-  const age = walletAge(data.first_tx_date);
+  const age = walletAge(data.first_tx_date, data.first_seen_at_least);
   lines.push(
     `${age} Solana wallet. Holds ${data.sol_balance.toFixed(2)} SOL and ${data.token_count} SPL tokens.`,
   );
@@ -109,10 +109,14 @@ export function formatWalletBriefing(data: WalletEnrichment): string {
   }
 
   // Activity and risk
-  const level = riskLevel(data.risk_score);
+  // Same level as the JSON risk_level (the briefing used its own, different boundaries before 2026-11-17).
+  const level = String(data.risk_level ?? '').toLowerCase() || 'unknown';
   lines.push(
-    `${data.tx_count_30d} transactions in 30 days. Risk score: ${data.risk_score.toFixed(2)}/1.0 (${level}).`,
+    `${data.tx_count_30d}${data.tx_count_30d_capped ? '+' : ''} transactions in 30 days. Risk score: ${data.risk_score.toFixed(2)}/1.0 (${level}).`,
   );
+  if (data.data_quality?.degraded) {
+    lines.push(`⚠ Partial data: ${data.data_quality.unavailable.join(', ')} did not answer — balances or history may be incomplete.`);
+  }
 
   if (data.risk_factors.length > 0) {
     lines.push(`Key risk factors: ${data.risk_factors.slice(0, 3).join('; ')}.`);

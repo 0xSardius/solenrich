@@ -76,3 +76,5 @@ jobs:
       - run: bun test test/sliding-limiter.test.ts
       # Copy-trade PnL (2026-11-17 audit): swaps read from wallet balance changes, priced by their own quote leg.
       - run: bun test test/copy-trade.test.ts
+      # Wallet profile fidelity (2026-11-17 audit): real wallet age, no unmeasured risk, docs levels match code.
+      - run: bun test test/wallet-fidelity.test.ts
