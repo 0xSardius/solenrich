@@ -2,6 +2,17 @@
 import { describe, expect, test } from 'bun:test';
 import { extractSwapLeg, matchTrades, consistencyScore, type SwapLeg } from '../src/enrichers/copy-trade-analyzer';
 
+describe('copy-trade briefing', () => {
+  test('says the covered days, not the requested lookback, when history is incomplete', async () => {
+    const { formatCopyTradeBriefing } = await import('../src/formatters/llm-copy-trade');
+    const base = { address: 'Wallet1111111111111111111111111111111111111', lookback_days: 7, trades_analyzed: 37, win_rate: 0.081, total_pnl_usd: -104.38,
+      avg_pnl_per_trade_usd: -2.82, avg_hold_time_days: 0.1, consistency_score: 0, trade_frequency_per_day: 102, top_performing_pairs: [], labels: [],
+      swaps_seen: 119, unpriced_swaps: 4, unmatched_sells: 31, coverage_days: 1.2, pnl_basis: 'quote_leg' as const, last_updated: 'x' };
+    expect(formatCopyTradeBriefing({ ...base, history_complete: false })).toContain('over the last 1.2 day(s) of history read');
+    expect(formatCopyTradeBriefing({ ...base, history_complete: true })).toContain('over 7 days');
+  });
+});
+
 describe('consistencyScore', () => {
   test('a losing wallet scores 0 (old formula gave 0.84 to −$104 at an 8% win rate)', () => {
     expect(consistencyScore([-5, -3, -4, 1, -6, -2])).toBe(0);

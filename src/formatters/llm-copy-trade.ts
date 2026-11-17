@@ -19,7 +19,7 @@ export function formatCopyTradeBriefing(data: CopyTradeEnrichment): string {
 
   // Overview
   lines.push(
-    `${data.trades_analyzed} closed trade(s) over ${data.lookback_days} days. Win rate: **${formatPercent(data.win_rate * 100)}**.`,
+    `${data.trades_analyzed} closed trade(s) over ${data.history_complete === false ? `the last ${data.coverage_days} day(s) of history read` : `${data.lookback_days} days`}. Win rate: **${formatPercent(data.win_rate * 100)}**.`,
   );
   lines.push(
     `Total PnL: ${formatUsd(data.total_pnl_usd)}. Average PnL per trade: ${formatUsd(data.avg_pnl_per_trade_usd)}.`,
