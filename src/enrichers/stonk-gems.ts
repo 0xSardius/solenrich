@@ -43,7 +43,9 @@ export function hoursSince(iso: string | null, now: number): number | null {
 }
 
 /** Payout status: the thing a holder observes. */
-export type PayoutStatus = 'PAYING' | 'STALE' | 'NEVER' | 'NOT_REWARD';
+/** UNKNOWN (2026-11-17): StonkFun's record could not be read (timeout / 5xx), or a fresh launch is not listed yet —
+ *  never reported as NEVER or NOT_REWARD, which are claims about the coin. */
+export type PayoutStatus = 'PAYING' | 'STALE' | 'NEVER' | 'NOT_REWARD' | 'UNKNOWN';
 
 export function payoutStatus(row: Pick<StonkIndexRow, 'mode' | 'payoutCount' | 'lastPayoutAt'>, now: number): PayoutStatus {
   if (row.mode !== 'reward') return 'NOT_REWARD';

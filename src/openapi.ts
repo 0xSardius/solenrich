@@ -575,7 +575,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'stonk-reward-risk': {
     summary: 'Payout status + trading cost for a StonkFun reward coin',
-    description: 'Payout status for a StonkFun reward coin — what a holder observes: PAYING (payout in the last 24h), STALE, NEVER, or NOT_REWARD — plus trading cost (tax bps, round-trip %) and a 0-100 health score read from the chain: fee bps and cap, withdraw authority (must be StonkFun\'s distributor), fee mutability, distributions and recency, flywheel, holders and concentration, quote category, age. Call before sizing a reward-coin position.',
+    description: 'Payout status for a StonkFun reward coin: PAYING (payout in the last 24h), STALE, NEVER, NOT_REWARD, or UNKNOWN (StonkFun did not answer) — plus trading cost (tax bps, round-trip %) and a 0-100 health score from the chain: fee bps and cap, withdraw authority (must be StonkFun\'s distributor), mutability, distributions, flywheel, holders, quote, age. Levels HEALTHY/MIXED/WEAK/BROKEN, PENDING_ADOPTION (new launch, not listed yet), UNKNOWN.',
     schema: {
       type: 'object',
       required: ['mint'],

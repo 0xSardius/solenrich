@@ -32,6 +32,7 @@ const PAYOUT_LINE: Record<RewardRiskResult['payout_status'], string> = {
   STALE: '🟡 STALE — has paid before, nothing in the last 24h',
   NEVER: '🟠 NEVER PAID — adopted, but no payout has happened yet',
   NOT_REWARD: '🔴 NOT PAYING — nothing on this mint pays holders',
+  UNKNOWN: '⚪ UNKNOWN — StonkFun\'s payout record could not be read right now',
 };
 
 const LEVEL_LINE: Record<RewardRiskResult['level'], string> = {
@@ -39,6 +40,8 @@ const LEVEL_LINE: Record<RewardRiskResult['level'], string> = {
   MIXED: '🟡 MIXED — mechanism works, but track record or distribution is thin',
   WEAK: '🟠 WEAK — mechanism works on paper; little evidence holders are being paid',
   BROKEN: '🔴 BROKEN — the holder tax does not reach holders',
+  PENDING_ADOPTION: '⚪ PENDING ADOPTION — tax withheld to StonkFun\'s distributor, but StonkFun has not listed the mint yet',
+  UNKNOWN: '⚪ UNKNOWN — StonkFun did not answer; adoption and payouts could not be checked',
 };
 
 export function formatStonkRewardRiskBriefing(d: Omit<RewardRiskResult, 'llm_brief'>): string {

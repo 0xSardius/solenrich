@@ -276,6 +276,40 @@ describe('reward risk: scoreRewardRisk', () => {
     expect(r.adoption.listed_on_stonkfun).toBe(false);
   });
 
+  // --- unread StonkFun data is UNKNOWN, never BROKEN (audit 2026-11-17) ---
+  test('StonkFun timeout on a paying coin → UNKNOWN, not BROKEN / NOT_REWARD', () => {
+    const r = scoreRewardRisk({ ...base(), listed: false, tokenRead: 'failed', rewardsRead: 'failed', token: null, launch: null, rewards: null, rewardsQuote: null });
+    expect(r.level).toBe('UNKNOWN');
+    expect(r.payout_status).toBe('UNKNOWN');
+    expect(r.reasons.some((x) => x.includes('not adopted'))).toBe(false);
+    expect(r.data_quality).toEqual({ degraded: true, unavailable: ['stonkfun_token', 'stonkfun_rewards'] });
+  });
+  test('listed coin whose rewards read failed → payout UNKNOWN, not NEVER', () => {
+    const r = scoreRewardRisk({ ...base(), rewards: null, rewardsQuote: null, rewardsRead: 'failed' });
+    expect(r.payout_status).toBe('UNKNOWN');
+    expect(r.warnings.some((w) => w.includes('did not load'))).toBe(true);
+  });
+  test('an on-chain BROKEN stands even when StonkFun is down', () => {
+    const onchain = parseMintAccount(mintZcat);
+    onchain.transferFee!.bps = 0;
+    const r = scoreRewardRisk({ ...base(), onchain, listed: false, tokenRead: 'failed', token: null, launch: null, rewards: null, rewardsQuote: null });
+    expect(r.level).toBe('BROKEN');
+  });
+  test('unlisted fresh mint with StonkFun-shaped tax → PENDING_ADOPTION; same mint 3 days old → BROKEN with the age', () => {
+    const unlisted = { ...base(), listed: false, tokenRead: 'missing' as const, token: null, launch: null, rewards: null, rewardsQuote: null, onchain: parseMintAccount(mintNcat) };
+    const fresh = scoreRewardRisk({ ...unlisted, mintAgeHours: 0.5 });
+    expect(fresh.level).toBe('PENDING_ADOPTION');
+    expect(fresh.payout_status).toBe('UNKNOWN');
+    const old = scoreRewardRisk({ ...unlisted, mintAgeHours: 72 });
+    expect(old.level).toBe('BROKEN');
+    expect(old.reasons.some((x) => x.includes('not adopted by StonkFun 3 days after launch'))).toBe(true);
+  });
+  test('holders.count is StonkFun\'s count or null — never the top-20 accounts length', () => {
+    const r = scoreRewardRisk({ ...base(), rewards: { ...zcatRewards.rewards, holderCount: 0 } });
+    expect(r.holders.count).toBeNull();
+    expect(r.holders.source).toBe('none');
+  });
+
   test('withdraw authority that is not StonkFun scores under 20', () => {
     const onchain = parseMintAccount(mintZcat);
     onchain.transferFee!.withdrawWithheldAuthority = 'WLHv2UAZm6z4KyaaELi5pjdbJh6RESMva1Rnn8pJVVh';

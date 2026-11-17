@@ -4,6 +4,7 @@ import type { Cache } from '../cache';
 import type { SolanaRpcClient } from '../sources/solana-rpc';
 import type { StonkFunClient, StonkToken, StonkLaunch, StonkRewardTotals } from '../sources/stonkfun';
 import { readMintInfo, type MintInfo } from '../sources/token-2022';
+import { PublicKey } from '@solana/web3.js';
 import { normalizeCategory, type StonkCategory } from './stonk-index';
 
 // Reward-coin health score (0-100, higher = the holder tax reaches holders
@@ -15,11 +16,19 @@ import { normalizeCategory, type StonkCategory } from './stonk-index';
 export const STONKFUN_WITHDRAW_AUTHORITY = '5KXDF6QnqhBj72hDtJNkkpFaQVUfbFXNybMsp3DiK6tD';
 
 export type RewardMechanism = 'transfer_tax' | 'legacy_fee_share' | 'none';
-export type RewardRiskLevel = 'HEALTHY' | 'MIXED' | 'WEAK' | 'BROKEN';
+/** UNKNOWN: StonkFun did not answer, so adoption cannot be judged. PENDING_ADOPTION: StonkFun has no listing (404)
+ *  but the mint's tax is withheld to StonkFun's own distributor — a fresh launch the list has not picked up yet. */
+export type RewardRiskLevel = 'HEALTHY' | 'MIXED' | 'WEAK' | 'BROKEN' | 'PENDING_ADOPTION' | 'UNKNOWN';
+
+/** 'ok' = StonkFun answered with a record; 'missing' = StonkFun answered 404; 'failed' = no answer (timeout, 5xx, 429). */
+export type ReadState = 'ok' | 'missing' | 'failed';
 
 export interface RewardRiskInput {
   mint: string;
   listed: boolean;
+  /** How the StonkFun token read went. Defaults from `listed` when absent (older callers / fixtures). */
+  tokenRead?: ReadState;
+  rewardsRead?: ReadState;
   token: StonkToken | null;
   launch: StonkLaunch | null;
   rewards: StonkRewardTotals | null;
@@ -27,9 +36,16 @@ export interface RewardRiskInput {
   onchain: MintInfo;
   expectedWithdrawAuthority: string;
   top10Pct: number | null;
-  holderCountRpc: number;
+  /** @deprecated ignored since 2026-11-17: the top-20 largest-accounts length is a cap, not a holder count. */
+  holderCountRpc?: number;
+  /** Hours since the mint's first transaction, read only for unlisted StonkFun-shaped mints. null/absent = unknown. */
+  mintAgeHours?: number | null;
   now: number;
 }
+
+/** An unlisted mint whose tax goes to StonkFun's distributor is PENDING_ADOPTION while younger than this; after that,
+ *  StonkFun has had time to list it, and it is BROKEN (not adopted). */
+export const PENDING_ADOPTION_MAX_AGE_H = 6;
 
 export interface RewardRiskResult {
   mint: string;
@@ -70,7 +86,10 @@ export interface RewardRiskResult {
     hours_since_last_payout: number | null;
   };
   flywheel_active: boolean;
+  /** count: StonkFun's reward-receiving holder count, or null. ('rpc' is no longer produced.) */
   holders: { count: number | null; top10_pct: number | null; source: 'stonkfun' | 'rpc' | 'none' };
+  /** StonkFun reads that failed. degraded = adoption or payout status could not be judged. */
+  data_quality: { degraded: boolean; unavailable: string[] };
   quote: { mint: string | null; symbol: string | null; category: StonkCategory | null; category_raw: string | null };
   market: { price_usd: number | null; market_cap_usd: number | null; volume_24h_usd: number | null; price_change_24h_pct: number | null };
   age_days: number | null;
@@ -92,7 +111,13 @@ export function scoreRewardRisk(input: RewardRiskInput): Omit<RewardRiskResult, 
   const capTo = (n: number, why: string) => { cap = Math.min(cap, n); reasons.push(why); };
 
   const listedReward = input.listed && token?.mode === 'reward';
+  const tokenRead: ReadState = input.tokenRead ?? (input.listed ? 'ok' : 'missing');
+  const rewardsRead: ReadState = input.rewardsRead ?? (rewards ? 'ok' : 'missing');
   const fee = onchain.transferFee;
+  // Withheld to StonkFun's own distributor, with a non-zero rate and cap: the on-chain shape of a StonkFun reward coin.
+  const stonkfunShapedFee = !!fee && fee.withdrawWithheldAuthority === input.expectedWithdrawAuthority && fee.bps > 0
+    && BigInt(fee.maximumFeeRaw || '0') > 0n;
+  let pendingAdoption = false;
   const supply = onchain.supplyRaw ? BigInt(onchain.supplyRaw) : null;
   const maxFee = fee ? BigInt(fee.maximumFeeRaw || '0') : null;
 
@@ -110,8 +135,16 @@ export function scoreRewardRisk(input: RewardRiskInput): Omit<RewardRiskResult, 
     if (token?.launchpad) score += 5;
   } else if (input.listed && token?.mode === 'standard') {
     capTo(BROKEN_CAP, 'listed on StonkFun as a STANDARD launch — no holder rewards; the creator earns the trade fee instead');
+  } else if (tokenRead === 'failed') {
+    // StonkFun did not answer: adoption is unknown, not refused. No cap; the level becomes UNKNOWN below.
+    warnings.push('StonkFun did not answer for this mint (timeout or error) — adoption and payouts could not be checked; retry in a minute');
+  } else if (fee && stonkfunShapedFee && input.mintAgeHours != null && input.mintAgeHours < PENDING_ADOPTION_MAX_AGE_H) {
+    // 404, but the tax is withheld to StonkFun's distributor and the mint is new: StonkFun has not listed it yet.
+    pendingAdoption = true;
+    warnings.push(`StonkFun has no listing for this ${input.mintAgeHours.toFixed(1)}h-old mint yet, but its transfer tax is withheld to StonkFun's distributor — a new launch usually appears within minutes; check again before relying on payouts`);
   } else if (fee) {
-    capTo(BROKEN_CAP, 'not adopted by StonkFun — a transfer tax is configured but no platform distributes it, so the tax reaches nobody');
+    const age = input.mintAgeHours != null ? ` ${input.mintAgeHours >= 48 ? `${(input.mintAgeHours / 24).toFixed(0)} days` : `${input.mintAgeHours.toFixed(0)}h`} after launch` : '';
+    capTo(BROKEN_CAP, `not adopted by StonkFun${age} — a transfer tax is configured but no platform distributes it, so the tax reaches nobody`);
   } else {
     capTo(BROKEN_CAP, 'not a StonkFun coin and no transfer tax on the mint — nothing pays holders');
   }
@@ -167,6 +200,8 @@ export function scoreRewardRisk(input: RewardRiskInput): Omit<RewardRiskResult, 
       else warnings.push(`last payout ${(hoursSince / 24).toFixed(0)} days ago — distributions have gone quiet`);
     }
     if (rewards.payoutCount >= 100) score += 4;
+  } else if (listedReward && rewardsRead === 'failed') {
+    warnings.push('StonkFun\'s rewards record did not load (timeout or error) — payout status is unknown, not "never paid"');
   } else if (listedReward) {
     warnings.push('StonkFun returned no rewards record for this coin');
   }
@@ -176,9 +211,11 @@ export function scoreRewardRisk(input: RewardRiskInput): Omit<RewardRiskResult, 
   if (flywheel) { score += 5; reasons.push('flywheel active — in the platform buyback rankings'); }
 
   // --- holders (max 15) ----------------------------------------------------
+  // StonkFun's reward-receiving holder count only. The top-20 largest-accounts length used to fill in here: a cap
+  // reported as a count (always ≤ 20, and +3 score for "≥ 20" when there were exactly 20 accounts).
   const stonkHolders = rewards?.holderCount ?? 0;
-  const holderCount = stonkHolders > 0 ? stonkHolders : input.holderCountRpc > 0 ? input.holderCountRpc : null;
-  const holderSource: RewardRiskResult['holders']['source'] = stonkHolders > 0 ? 'stonkfun' : input.holderCountRpc > 0 ? 'rpc' : 'none';
+  const holderCount = stonkHolders > 0 ? stonkHolders : null;
+  const holderSource: RewardRiskResult['holders']['source'] = stonkHolders > 0 ? 'stonkfun' : 'none';
   if (holderCount != null) {
     if (holderCount >= 1000) score += 10;
     else if (holderCount >= 100) score += 6;
@@ -211,17 +248,30 @@ export function scoreRewardRisk(input: RewardRiskInput): Omit<RewardRiskResult, 
   else if (ageDays != null) warnings.push(`launched ${ageDays < 1 ? `${(ageDays * 24).toFixed(1)}h` : `${ageDays.toFixed(1)}d`} ago — thin track record`);
 
   score = Math.max(0, Math.min(cap, Math.round(score)));
-  const level: RewardRiskLevel = score >= 70 ? 'HEALTHY' : score >= 45 ? 'MIXED' : score >= 20 ? 'WEAK' : 'BROKEN';
+  const scoredLevel: RewardRiskLevel = score >= 70 ? 'HEALTHY' : score >= 45 ? 'MIXED' : score >= 20 ? 'WEAK' : 'BROKEN';
+  // A hard on-chain BROKEN (zero rate, zero cap, foreign withdraw authority, mint missing) stands even when StonkFun
+  // is down. Otherwise a failed StonkFun read means the coin cannot be judged.
+  const hardBroken = cap <= BROKEN_CAP;
+  const level: RewardRiskLevel = hardBroken ? scoredLevel
+    : tokenRead === 'failed' ? 'UNKNOWN'
+    : pendingAdoption ? 'PENDING_ADOPTION'
+    : scoredLevel;
 
   const nextSteps = level === 'BROKEN'
     ? ['Do not buy for the holder yield — the tax does not reach holders.', 'If you own it, exit-signal gives the sell-side read.']
+    : level === 'UNKNOWN' ? ['Retry stonk-reward-risk in a minute — StonkFun did not answer.', 'due-diligence for structural safety meanwhile.']
+    : level === 'PENDING_ADOPTION' ? ['Check again in a few minutes, once StonkFun lists the launch.', 'stonk-launch-preflight validates a launch before it is sent.']
     : ['stonk-yield for the realized 7d/30d holder yield on this coin.', 'due-diligence for structural safety (authorities, liquidity, rug flags).', 'exit-signal while you hold it.'];
 
   const payout: PayoutStatus =
     level === 'BROKEN' || mechanism === 'none' ? 'NOT_REWARD'
+    : level === 'UNKNOWN' || level === 'PENDING_ADOPTION' ? 'UNKNOWN'
+    : !rewards && rewardsRead === 'failed' ? 'UNKNOWN'
     : !rewards || rewards.payoutCount <= 0 ? 'NEVER'
     : hoursSince != null && hoursSince <= 24 ? 'PAYING'
     : 'STALE';
+  const unavailable = [tokenRead === 'failed' ? 'stonkfun_token' : null, rewardsRead === 'failed' ? 'stonkfun_rewards' : null]
+    .filter((s): s is string => s != null);
 
   return {
     mint: input.mint,
@@ -265,6 +315,7 @@ export function scoreRewardRisk(input: RewardRiskInput): Omit<RewardRiskResult, 
     },
     flywheel_active: flywheel,
     holders: { count: holderCount, top10_pct: input.top10Pct, source: holderSource },
+    data_quality: { degraded: unavailable.length > 0, unavailable },
     quote: { mint: token?.quote?.mint ?? launch?.quote?.mint ?? null, symbol: token?.quote?.symbol ?? launch?.quote?.symbol ?? null, category: quoteCategory, category_raw: quoteCategoryRaw },
     market: {
       price_usd: token?.market?.priceUsd ?? null,
@@ -307,8 +358,12 @@ export class StonkRewardRiskAnalyzer {
       this.rpc.getTokenLargestAccounts(mint),
     ]);
 
+    // getToken / getTokenRewards return null for a 404 and throw for anything else (timeout, 5xx, second 429).
+    // Before 2026-11-17 both became null, so a StonkFun timeout read as "not adopted" → BROKEN for a paying coin.
     const tokenData = tokenRes.status === 'fulfilled' ? tokenRes.value : null;
     const rewardsData = rewardsRes.status === 'fulfilled' ? rewardsRes.value : null;
+    const tokenRead: ReadState = tokenRes.status === 'rejected' ? 'failed' : tokenData ? 'ok' : 'missing';
+    const rewardsRead: ReadState = rewardsRes.status === 'rejected' ? 'failed' : rewardsData ? 'ok' : 'missing';
     if (onchainRes.status === 'rejected') throw new Error(`on-chain mint read failed: ${onchainRes.reason instanceof Error ? onchainRes.reason.message : String(onchainRes.reason)}`);
     const onchain = onchainRes.value;
     const largest = holdersRes.status === 'fulfilled' ? holdersRes.value : [];
@@ -331,9 +386,23 @@ export class StonkRewardRiskAnalyzer {
       } catch { /* keep the constant */ }
     }
 
+    // Age only matters for an unlisted mint (PENDING_ADOPTION vs not adopted): one signatures read, newest 1,000.
+    // Fewer than 1,000 = the oldest is the mint's first tx; a full page = a busy mint, not a fresh launch.
+    let mintAgeHours: number | null = null;
+    if (tokenRead === 'missing' && onchain.transferFee) {
+      try {
+        const sigs = await this.rpc.getConnection().getSignaturesForAddress(new PublicKey(mint), { limit: 1000 });
+        const oldest = sigs.length > 0 && sigs.length < 1000 ? sigs[sigs.length - 1].blockTime : null;
+        mintAgeHours = oldest ? (now / 1000 - oldest) / 3600 : null;
+      } catch { /* unknown age → treated as not fresh */ }
+    }
+
     const scored = scoreRewardRisk({
       mint,
       listed: tokenData != null,
+      mintAgeHours,
+      tokenRead,
+      rewardsRead,
       token: tokenData?.token ?? null,
       launch: tokenData?.launch ?? null,
       rewards: rewardsData?.rewards ?? null,
@@ -341,11 +410,12 @@ export class StonkRewardRiskAnalyzer {
       onchain,
       expectedWithdrawAuthority: expectedAuthority,
       top10Pct,
-      holderCountRpc: largest.length,
       now,
     });
     const result: RewardRiskResult = { ...scored, llm_brief: this.brief(scored) };
-    await this.cache.set(cacheKey, result, CACHE_TTL.stonkRewardRisk);
+    // A failed StonkFun read is cached briefly (retry soon); a pending listing for a minute; the rest as before.
+    const ttl = scored.data_quality.degraded ? 15 : scored.level === 'PENDING_ADOPTION' ? 60 : CACHE_TTL.stonkRewardRisk;
+    await this.cache.set(cacheKey, result, ttl);
     return result;
   }
 }

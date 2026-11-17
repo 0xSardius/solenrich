@@ -198,7 +198,9 @@ export function buildStonkQuote(i: QuoteInputs): StonkQuoteResult {
     warnings.push(risk.payout_status === 'NEVER' ? 'This coin has never paid holders — the tax is a pure cost today.' : 'Nothing on this mint pays holders — the round trip is a pure cost.');
   } else if (usdOverHold == null) {
     verdict = 'UNKNOWN';
+    if (risk.payout_status === 'UNKNOWN') warnings.push('StonkFun\'s payout record could not be read right now — retry before trading on this quote.');
   } else {
+    if (risk.payout_status === 'UNKNOWN') warnings.push('StonkFun\'s payout record could not be read right now — the projection uses indexed history only; retry to confirm payouts are live.');
     netUsd = round2(usdOverHold - rtUsd);
     netPct = round2((netUsd / i.sizeUsd) * 100);
     breakevenDays = usdPerWeek && usdPerWeek > 0 ? round2((rtUsd / usdPerWeek) * 7) : null;
