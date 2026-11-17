@@ -60,6 +60,16 @@ const LOW_MAX_WAIT_MS = 2_000;
 // inside token-analyzer's 15 s task timeout; getQuote's own 4 s abort still bounds single quotes.
 const HIGH_MAX_WAIT_MS = 8_000;
 export const jupiterLimiter = new SlidingLimiter({ windowMs: JUPITER_WINDOW_MS, capacity: JUPITER_BUDGET_PER_WINDOW, lowReserve: JUPITER_LOW_RESERVE });
+/** Keyless price host (lite-api.jup.ag): its own bucket, measured at 5 requests per ~10 s. */
+export const PRICE_WINDOW_MS = 10_000;
+export const PRICE_BUDGET_PER_WINDOW = 5;
+const PRICE_LOW_MAX_WAIT_MS = 30_000;
+export const priceLimiter = new SlidingLimiter({ windowMs: PRICE_WINDOW_MS, capacity: PRICE_BUDGET_PER_WINDOW, lowReserve: 0 });
+/** Lookups arriving within this window share one request (see JupiterClient.coalescedPrices). */
+const PRICE_COALESCE_MS = 25;
+const priceQueue: Array<{ mints: string[]; resolve: (r: Record<string, JupiterPrice>) => void; reject: (e: unknown) => void }> = [];
+let priceTimer: ReturnType<typeof setTimeout> | null = null;
+
 export class JupiterSlotSkipped extends Error {
   constructor() { super('Jupiter request skipped: Free-plan budget in use'); }
 }
@@ -111,7 +121,7 @@ export class JupiterClient {
 
     if (misses.length === 0) return result;
 
-    const fetched = await this.fetchPrices(misses);
+    const fetched = await this.coalescedPrices(misses);
     for (const [mint, price] of Object.entries(fetched)) {
       result[mint] = price;
       await this.cache.set(`jupiter:price:${mint}`, price, CACHE_TTL.jupiterPrice);
@@ -127,16 +137,67 @@ export class JupiterClient {
    * Redis commands. Upstream cost is identical (one Jupiter request per ≤50
    * mints either way).
    */
-  async getPriceUncached(mints: string[]): Promise<Record<string, JupiterPrice>> {
-    return this.fetchPrices(mints);
+  async getPriceUncached(mints: string[], priority: Priority = 'low'): Promise<Record<string, JupiterPrice>> {
+    return this.fetchPrices(mints, priority);
   }
 
-  private async fetchPrices(mints: string[]): Promise<Record<string, JupiterPrice>> {
+  /**
+   * Coalesce price lookups that arrive within PRICE_COALESCE_MS into one request of up to 50 mints (process-wide).
+   * Measured 2026-11-17: 12 simultaneous single-mint lookups = 12 requests against a 5-per-10 s host → 7 failed.
+   * Coalesced they cost 1 request. Each caller gets back only the mints it asked for.
+   */
+  private coalescedPrices(mints: string[]): Promise<Record<string, JupiterPrice>> {
+    return new Promise((resolve, reject) => {
+      priceQueue.push({ mints, resolve, reject });
+      if (!priceTimer) priceTimer = setTimeout(() => { void this.flushPriceQueue(); }, PRICE_COALESCE_MS);
+    });
+  }
+
+  private async flushPriceQueue(): Promise<void> {
+    const waiters = priceQueue.splice(0);
+    priceTimer = null;
+    const all = [...new Set(waiters.flatMap((w) => w.mints))];
+    const merged: Record<string, JupiterPrice> = {};
+    let error: unknown = null;
+    for (let i = 0; i < all.length; i += 50) {
+      try {
+        Object.assign(merged, await this.fetchPrices(all.slice(i, i + 50)));
+      } catch (e) { error = e; }
+    }
+    for (const w of waiters) {
+      const mine: Record<string, JupiterPrice> = {};
+      for (const m of w.mints) if (merged[m]) mine[m] = merged[m];
+      // A failed batch fails only the callers that got nothing back, as before.
+      if (Object.keys(mine).length === 0 && error) w.reject(error); else w.resolve(mine);
+    }
+  }
+
+  /**
+   * Keyless price lookups. lite-api.jup.ag has its OWN limit, separate from the keyed account budget — measured
+   * 2026-11-17: 5 requests per ~10 s (x-ratelimit headers), and 38% of prod price requests that day got 429
+   * because callers sent bursts. All price calls go through priceLimiter: user-facing lookups ('high') wait up
+   * to 8 s; background refreshes (the StonkFun index, 'low') wait up to 30 s. One retry on 429.
+   */
+  private async fetchPrices(mints: string[], priority: Priority = 'high'): Promise<Record<string, JupiterPrice>> {
     if (mints.length === 0) return {};
     const url = `https://lite-api.jup.ag/price/v3?ids=${mints.join(',')}`;
+    const wait = priority === 'low' ? PRICE_LOW_MAX_WAIT_MS : HIGH_MAX_WAIT_MS;
+    const take = async () => {
+      const r = await priceLimiter.acquire('high', wait); // one class inside the bucket; priority sets the wait only
+      if (r === 'waited' || r === 'forced') upstreamStats.inc('limiter_waited');
+    };
+    await take();
     upstreamStats.inc('jupiter_price_requests');
-    const res = await fetch(url);
-    if (res.status === 429) upstreamStats.inc('jupiter_price_429'); // lite-api is being phased out with falling limits
+    let res = await fetch(url);
+    if (res.status === 429) {
+      upstreamStats.inc('jupiter_price_429'); // lite-api is being phased out with falling limits
+      await drain(res);
+      await new Promise((r) => setTimeout(r, 1_000));
+      await take();
+      upstreamStats.inc('jupiter_price_requests');
+      res = await fetch(url);
+      if (res.status === 429) upstreamStats.inc('jupiter_price_429_after_retry');
+    }
     if (!res.ok) throw new Error(`Jupiter Price HTTP ${res.status}: ${await res.text()}`);
     const raw: Record<string, { usdPrice?: number; decimals?: number } | null> = await res.json();
     const out: Record<string, JupiterPrice> = {};

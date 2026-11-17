@@ -60,6 +60,50 @@ describe('SlidingLimiter', () => {
       jupiterLimiter.reset();
     }
   });
+  test('JupiterClient prices: every keyless call takes a slot in the 5-per-10 s bucket; a 429 is retried once', async () => {
+    const { JupiterClient, priceLimiter } = await import('../src/sources/jupiter');
+    const { upstreamStats } = await import('../src/utils/upstream-stats');
+    const realFetch = globalThis.fetch;
+    priceLimiter.reset();
+    const before = upstreamStats.snapshotToday();
+    let n = 0;
+    globalThis.fetch = (async () => (n++ === 0 ? new Response('busy', { status: 429 })
+      : new Response(JSON.stringify({ M: { usdPrice: 2 } }), { status: 200 }))) as any;
+    try {
+      const j = new JupiterClient({ get: async () => null, set: async () => {}, mget: async (k: string[]) => k.map(() => null) } as any);
+      const p = await j.getPriceUncached(['M'], 'high');
+      expect(p.M.price).toBe(2);
+      expect(priceLimiter.used()).toBe(2);           // first try + retry
+      const after = upstreamStats.snapshotToday();
+      expect((after.jupiter_price_429 ?? 0) - (before.jupiter_price_429 ?? 0)).toBe(1);
+      expect((after.jupiter_price_429_after_retry ?? 0) - (before.jupiter_price_429_after_retry ?? 0)).toBe(0);
+    } finally {
+      globalThis.fetch = realFetch;
+      priceLimiter.reset();
+    }
+  });
+  test('JupiterClient.getPrice coalesces simultaneous lookups into one request; each caller gets its own mints', async () => {
+    const { JupiterClient, priceLimiter } = await import('../src/sources/jupiter');
+    const realFetch = globalThis.fetch;
+    priceLimiter.reset();
+    const urls: string[] = [];
+    globalThis.fetch = (async (url: string) => {
+      urls.push(String(url));
+      const ids = new URL(String(url)).searchParams.get('ids')!.split(',');
+      return new Response(JSON.stringify(Object.fromEntries(ids.map((m, i) => [m, { usdPrice: i + 1 }]))), { status: 200 });
+    }) as any;
+    try {
+      const j = new JupiterClient({ get: async () => null, set: async () => {}, mget: async (k: string[]) => k.map(() => null) } as any);
+      const out = await Promise.all(['A', 'B', 'C', 'A'].map((m) => j.getPrice([m])));
+      expect(urls.length).toBe(1);
+      expect(new URL(urls[0]).searchParams.get('ids')).toBe('A,B,C');
+      expect(Object.keys(out[1])).toEqual(['B']);
+      expect(out[0].A.price).toBe(out[3].A.price);
+    } finally {
+      globalThis.fetch = realFetch;
+      priceLimiter.reset();
+    }
+  });
   test('the window slides: slots free after 60 s', async () => {
     const c = fakeClock(); const l = make(c);
     for (let i = 0; i < 3; i++) await l.acquire('low', 0);

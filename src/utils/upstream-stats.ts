@@ -8,7 +8,7 @@ import type { Cache } from '../cache';
 export const UPSTREAM_COUNTERS = [
   'jupiter_token_requests', 'jupiter_token_429', 'jupiter_token_429_after_retry',
   'jupiter_quote_requests', 'jupiter_quote_429', 'jupiter_quote_429_after_retry',
-  'jupiter_price_requests', 'jupiter_price_429',
+  'jupiter_price_requests', 'jupiter_price_429', 'jupiter_price_429_after_retry',
   'token_responses', 'token_degraded',
   'limiter_waited', 'limiter_skipped',
 ] as const;
