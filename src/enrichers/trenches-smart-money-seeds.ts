@@ -50,18 +50,16 @@ export interface ConvictionHolder {
 export const TRENCHES_SEEDS_DERIVED_AT = '2026-11-17';
 
 export const TRENCHES_SMART_MONEY_SEEDS: readonly TrenchesSeed[] = [
-  // --- 2026-11-17 on-chain rebuild (test/trenches-onchain-seeds.ts): 10 wallets passed 10+ closed trades, ≥ 50% win, PnL > 0 over 14 d (quote-leg PnL),
+  // --- 2026-11-17 on-chain rebuild (test/trenches-onchain-seeds.ts): 8 wallets passed 10+ closed trades, ≥ 50% win, PnL > 0 over 14 d (quote-leg PnL),
   //     human cadence (< 15 tx/h, no bot flags), active in the last 7 d. Sorted by 14-day PnL.
-  { address: '2QKECLPQWM4CRHaY55WKPFYD9YU9XzgXgK5cJYi5T51d', realized_1w_usd: null, win_rate: 0.645, tx_per_h: 1.8, pnl_14d_usd: 1337.82, closed_trades_14d: 124, vetted_at: '2026-11-17', note: 're-vetted current seed' },
-  { address: '7Xi2DmJ6hkkAUfD1N5cdDEJvrsbhPn5NQ8CjyxfAUfFH', realized_1w_usd: null, win_rate: 0.7, tx_per_h: 0.1, pnl_14d_usd: 166.5, closed_trades_14d: 10, vetted_at: '2026-11-17' },
-  { address: 'ChvCxU19v5nnTe5v74qAFs7UBnMWY1GBDPMnDU9WmbvN', realized_1w_usd: null, win_rate: 0.846, tx_per_h: 0.2, pnl_14d_usd: 115.53, closed_trades_14d: 13, vetted_at: '2026-11-17' },
-  { address: 'H2oTjpoEeuUHGdSc9n9SBMBjZvGZFafbLGjiytTi6X3q', realized_1w_usd: null, win_rate: 0.508, tx_per_h: 4.3, pnl_14d_usd: 28.57, closed_trades_14d: 128, vetted_at: '2026-11-17' },
-  { address: '6zAVeuGe3LmtyAvFZ6TXGcqXoYyawBu6voM48cH5HP8T', realized_1w_usd: null, win_rate: 0.5, tx_per_h: 0.2, pnl_14d_usd: 15.95, closed_trades_14d: 12, vetted_at: '2026-11-17' },
-  { address: '5p7asYyBQMSLB4HLDBnJ239VjSD9RXiCrVkLgdDKD1FG', realized_1w_usd: null, win_rate: 0.667, tx_per_h: 5.3, pnl_14d_usd: 14.52, closed_trades_14d: 42, vetted_at: '2026-11-17' },
-  { address: '61fp83ibmAxPKANgsJ1EQY1BtGPqRqde5BxF4k35gvzY', realized_1w_usd: null, win_rate: 0.583, tx_per_h: 0.1, pnl_14d_usd: 13.58, closed_trades_14d: 12, vetted_at: '2026-11-17' },
-  { address: '3oqaJrdUPkxHq62yuBVh4xmD9WAPMSSxdsbyVcXaMmJr', realized_1w_usd: null, win_rate: 1, tx_per_h: 11.1, pnl_14d_usd: 7.58, closed_trades_14d: 10, vetted_at: '2026-11-17' },
-  { address: '2wufv3UHD448V22Bdh48HCSUoCVRTueZg8AQNQy1x6ZP', realized_1w_usd: null, win_rate: 0.513, tx_per_h: 2, pnl_14d_usd: 3.56, closed_trades_14d: 39, vetted_at: '2026-11-17' },
-  { address: '3bbvvmVsZuQK2Akr4jHPHw11EweujssbRAnaU7FZccy8', realized_1w_usd: null, win_rate: 0.5, tx_per_h: 0.1, pnl_14d_usd: 0.19, closed_trades_14d: 12, vetted_at: '2026-11-17' },
+  { address: '7CW5UAwob1uSKXfgqjm8GyjuB5GZnN3XeXFtGvk1n6aq', realized_1w_usd: null, win_rate: 0.879, tx_per_h: 9.8, pnl_14d_usd: 2455.55, closed_trades_14d: 165, vetted_at: '2026-11-17' },
+  { address: '2QKECLPQWM4CRHaY55WKPFYD9YU9XzgXgK5cJYi5T51d', realized_1w_usd: null, win_rate: 0.65, tx_per_h: 0.6, pnl_14d_usd: 1436.39, closed_trades_14d: 123, vetted_at: '2026-11-17', note: 're-vetted current seed' },
+  { address: 'EibS7GnCDvo3mJYWEZdGsGUX9cDZiMi9ubFas4FSfM8X', realized_1w_usd: null, win_rate: 0.792, tx_per_h: 0.9, pnl_14d_usd: 272.06, closed_trades_14d: 48, vetted_at: '2026-11-17' },
+  { address: '77qkxnstrFZY62hh2puqSNcnUwVFun8pMWqVAqcVBMYW', realized_1w_usd: null, win_rate: 0.667, tx_per_h: 1.9, pnl_14d_usd: 126.02, closed_trades_14d: 69, vetted_at: '2026-11-17' },
+  { address: 'H2oTjpoEeuUHGdSc9n9SBMBjZvGZFafbLGjiytTi6X3q', realized_1w_usd: null, win_rate: 0.535, tx_per_h: 4.7, pnl_14d_usd: 33.7, closed_trades_14d: 129, vetted_at: '2026-11-17', note: 're-vetted current seed' },
+  { address: 'CQFZyWn4QQiEjz4bXs6gUAGndJ6Hj6PaSTwezaHJnfyh', realized_1w_usd: null, win_rate: 0.5, tx_per_h: 1.1, pnl_14d_usd: 10.12, closed_trades_14d: 20, vetted_at: '2026-11-17' },
+  { address: '3oqaJrdUPkxHq62yuBVh4xmD9WAPMSSxdsbyVcXaMmJr', realized_1w_usd: null, win_rate: 0.864, tx_per_h: 5.7, pnl_14d_usd: 8.69, closed_trades_14d: 22, vetted_at: '2026-11-17', note: 're-vetted current seed' },
+  { address: '5p7asYyBQMSLB4HLDBnJ239VjSD9RXiCrVkLgdDKD1FG', realized_1w_usd: null, win_rate: 0.513, tx_per_h: 4.4, pnl_14d_usd: 7.23, closed_trades_14d: 80, vetted_at: '2026-11-17', note: 're-vetted current seed' },
 ];
 
 // Tracked separately from active traders: their signal is holding through
