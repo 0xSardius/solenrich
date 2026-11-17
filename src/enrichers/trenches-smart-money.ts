@@ -272,7 +272,7 @@ export class TrenchesSmartMoneyAnalyzer {
         derived_at: TRENCHES_SEEDS_DERIVED_AT,
         active_traders: TRENCHES_SMART_MONEY_SEEDS.length,
         conviction_holders: TRENCHES_CONVICTION_HOLDERS.length,
-        source: 'birdeye-leaderboard-realized-pnl + known-runner-miners, vetted via cadence/bot-detection/copy-trade',
+        source: 'on-chain: traders of the busiest trending tokens + re-vetted prior seeds; gates: active 7d, human cadence, 14d quote-leg PnL (>=10 closed, >=50% win, PnL>0); conviction holders of known runners',
       },
       last_updated: formatTimestamp(),
     };
