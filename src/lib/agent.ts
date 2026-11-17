@@ -1202,7 +1202,7 @@ function buildDocs() {
       'copy-trade-signals': {
         price: '0.010',
         input: { address: 'string', lookback_days: 'number (default 30)', format: 'json | llm | both' },
-        description: 'Trading PnL, win rate, Sharpe/Sortino ratios, max drawdown, profit factor',
+        description: 'Trading PnL, win rate, Sharpe/Sortino ratios, max drawdown, profit factor. Each swap is valued by the SOL/USDC/USDT the wallet paid or received in that transaction (pnl_basis quote_leg; SOL at the current price), read from the wallet\'s balance changes. Sells of tokens bought before the window are excluded (unmatched_sells); token-to-token swaps are not priced (unpriced_swaps). Reads up to 300 transactions: coverage_days / history_complete say how much of the lookback that covered. consistency_score = s/(1+s), s = mean/stddev of per-trade PnL when the mean is positive, else 0.',
       },
       'due-diligence': {
         price: '0.020',

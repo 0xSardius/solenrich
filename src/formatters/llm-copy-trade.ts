@@ -9,6 +9,9 @@ export function formatCopyTradeBriefing(data: CopyTradeEnrichment): string {
 
   if (data.trades_analyzed === 0) {
     lines.push(`No closed trades found in the last ${data.lookback_days} days.`);
+    if (data.swaps_seen > 0) {
+      lines.push(`${data.swaps_seen} swap(s) seen, but none closed inside the window (${data.unmatched_sells} sell(s) of earlier buys, ${data.unpriced_swaps} unpriced).`);
+    }
     lines.push('');
     lines.push(`Data as of: ${data.last_updated}`);
     return lines.join('\n');
@@ -28,6 +31,12 @@ export function formatCopyTradeBriefing(data: CopyTradeEnrichment): string {
     `Average hold time: ${data.avg_hold_time_days} days. Consistency: ${formatPercent(data.consistency_score * 100)} (higher = more stable).`,
   );
   lines.push(`Trade frequency: ${data.trade_frequency_per_day} trades/day.`);
+  if (data.swaps_seen != null) {
+    const notes: string[] = [];
+    if (data.unmatched_sells > 0) notes.push(`${data.unmatched_sells} sell(s) of tokens bought before the window (excluded)`);
+    if (data.unpriced_swaps > 0) notes.push(`${data.unpriced_swaps} token-to-token swap(s) (not priced)`);
+    lines.push(`Based on ${data.swaps_seen} swaps over ${data.coverage_days} day(s)${data.history_complete ? '' : ' — the most recent 300 transactions, not the full lookback'}. Each trade is valued by the SOL/USDC it paid or received.${notes.length ? ` Not in PnL: ${notes.join('; ')}.` : ''}`);
+  }
   lines.push('');
 
   // Risk-adjusted returns

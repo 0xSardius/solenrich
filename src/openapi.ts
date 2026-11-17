@@ -135,7 +135,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'copy-trade-signals': {
     summary: 'Score a Solana wallet trading PnL, win rate, and consistency',
-    description: 'Trading PnL, win rate, Sharpe/Sortino ratios, max drawdown, profit factor.',
+    description: 'Trading PnL, win rate, Sharpe/Sortino, max drawdown, profit factor. Each swap valued by the SOL/USDC/USDT paid or received in that tx; unmatched sells and token-to-token swaps are counted, not guessed; coverage_days says how much history was read.',
     schema: {
       type: 'object',
       required: ['address'],

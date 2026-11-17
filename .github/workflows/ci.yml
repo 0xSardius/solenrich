@@ -74,3 +74,5 @@ jobs:
       - run: bun test test/upstream-stats.test.ts
       # Shared Jupiter limiter (2026-11-15): two priorities in a sliding window; quotes yield to core lookups.
       - run: bun test test/sliding-limiter.test.ts
+      # Copy-trade PnL (2026-11-17 audit): swaps read from wallet balance changes, priced by their own quote leg.
+      - run: bun test test/copy-trade.test.ts

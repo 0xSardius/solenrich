@@ -5,15 +5,6 @@ import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { formatTimestamp } from '../utils/normalize';
 
-interface TradeEntry {
-  mint: string;
-  symbol: string;
-  side: 'buy' | 'sell';
-  amount_units: number;
-  amount_usd: number;
-  timestamp: number;
-}
-
 interface ClosedTrade {
   buy_token: string;
   sell_token: string;
@@ -51,8 +42,22 @@ export interface CopyTradeEnrichment {
   trade_frequency_per_day: number;
   top_performing_pairs: TopPair[];
   labels: string[];
+  /** Buy and sell legs read in the covered window. */
+  swaps_seen: number;
+  /** Token-to-token swaps, or SOL legs when the SOL price was unavailable: not in PnL. */
+  unpriced_swaps: number;
+  /** Sells of tokens bought before the window: cost unknown, not in PnL. */
+  unmatched_sells: number;
+  /** Days of history actually read (≤ lookback_days when the wallet has more than 300 txs in the window). */
+  coverage_days: number;
+  history_complete: boolean;
+  /** 'quote_leg': each trade valued by the SOL/USDC/USDT paid or received in that tx; SOL at the current price. */
+  pnl_basis: 'quote_leg';
   last_updated: string;
 }
+
+/** Signature pages (100 each) read per wallet. Caps Helius cost on very active wallets. */
+const MAX_SIG_PAGES = 3;
 
 const SWAP_TYPES = new Set(['SWAP', 'TOKEN_SWAP', 'EXCHANGE']);
 
@@ -61,6 +66,161 @@ const WSOL_MINT = 'So11111111111111111111111111111111111111112';
 const USDC_MINT = 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v';
 const USDT_MINT = 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB';
 const QUOTE_MINTS = new Set([WSOL_MINT, USDC_MINT, USDT_MINT]);
+
+// --- Swap legs (2026-11-17 audit fix) ---
+// Each swap is read from the WALLET'S OWN balance changes in that transaction: the non-quote token it received or
+// sent, and the quote asset (SOL / USDC / USDT) it paid or received. That prices both legs at the trade itself.
+// Before, every leg of every mint got ONE current price, so buy cost = sell proceeds and PnL ≈ 0; unpriced legs
+// counted raw token units as USD; and any transfer not sent TO the wallet counted as a wallet sell.
+
+/** One wallet-side swap read from a transaction. Quote amounts are positive magnitudes. */
+export interface SwapLeg {
+  kind: 'buy' | 'sell' | 'token_to_token' | 'none';
+  mint: string | null;
+  units: number;
+  quote_usd: number | null;  // USDC/USDT paid or received (1:1)
+  quote_sol: number | null;  // SOL paid or received (native + wrapped, net of wrap/unwrap moves)
+  timestamp: number;
+}
+
+const FUNGIBLE = new Set(['Fungible', 'FungibleAsset']);
+const LAMPORTS = 1e9;
+/** SOL moves below this are fees/rent, not a trade leg. */
+const MIN_SOL_LEG = 0.001;
+
+interface TokenBalanceChange {
+  userAccount: string;
+  tokenAccount: string;
+  mint: string;
+  rawTokenAmount: { tokenAmount: string; decimals: number };
+}
+
+/** Net change per mint of the wallet's token accounts. Prefers accountData.tokenBalanceChanges (actual balance
+ *  deltas — Helius's tokenTransfers list can omit the leg a router delivers, seen 2026-11-17 on OKX DEX Router
+ *  swaps); falls back to tokenTransfers when a tx carries no balance changes at all. */
+function walletTokenDeltas(tx: EnhancedTransaction, wallet: string): Map<string, number> {
+  const deltas = new Map<string, number>();
+  const changes = (tx.accountData ?? []).flatMap((a) => (a.tokenBalanceChanges ?? []) as TokenBalanceChange[]);
+  if (changes.length > 0) {
+    for (const c of changes) {
+      if (c.userAccount !== wallet || !c.rawTokenAmount) continue;
+      const { tokenAmount, decimals } = c.rawTokenAmount;
+      if (decimals === 0 && c.mint !== WSOL_MINT) continue; // NFTs / non-fungible
+      const v = Number(tokenAmount) / 10 ** decimals;
+      if (Number.isFinite(v) && v !== 0) deltas.set(c.mint, (deltas.get(c.mint) ?? 0) + v);
+    }
+    return deltas;
+  }
+  for (const t of tx.tokenTransfers ?? []) {
+    const sign = t.toUserAccount === wallet ? 1 : t.fromUserAccount === wallet ? -1 : 0;
+    if (sign === 0) continue;                               // vault-to-vault / fee legs: not the wallet's
+    if (t.tokenStandard && !FUNGIBLE.has(t.tokenStandard)) continue;
+    deltas.set(t.mint, (deltas.get(t.mint) ?? 0) + sign * t.tokenAmount);
+  }
+  return deltas;
+}
+
+const SWAP_LIKE = new Set(['SWAP', 'TOKEN_SWAP', 'EXCHANGE', 'BUY', 'SELL']);
+
+export function extractSwapLeg(tx: EnhancedTransaction, wallet: string): SwapLeg {
+  const none: SwapLeg = { kind: 'none', mint: null, units: 0, quote_usd: null, quote_sol: null, timestamp: tx.timestamp };
+  if (tx.transactionError) return none;                     // failed txs (Helius labels them UNKNOWN) move nothing
+
+  const deltas = walletTokenDeltas(tx, wallet);
+  const stableNet = (deltas.get(USDC_MINT) ?? 0) + (deltas.get(USDT_MINT) ?? 0);
+  // SOL = the wallet's native balance change + its wrapped-SOL accounts' change. A wrap (native → own WSOL account)
+  // and an unwrap (close → native) cancel out inside this sum, so neither is counted twice. Includes the tx fee.
+  const nativeChange = (tx.accountData?.find((a) => a.account === wallet)?.nativeBalanceChange ?? 0) / LAMPORTS;
+  const solNet = nativeChange + (deltas.get(WSOL_MINT) ?? 0);
+
+  const moved = [...deltas].filter(([mint, v]) => !QUOTE_MINTS.has(mint) && Math.abs(v) > 0);
+  if (moved.length === 0) return none;
+  const swapLike = SWAP_LIKE.has(String(tx.type).toUpperCase());
+  if (moved.length > 1) {
+    // Token-to-token swap (or a multi-token tx): no quote leg to price it with.
+    return swapLike ? { ...none, kind: 'token_to_token' } : none;
+  }
+  const [mint, net] = moved[0];
+  const quoteUsd = Math.abs(stableNet) > 0 ? Math.abs(stableNet) : null;
+  const quoteSol = Math.abs(solNet) >= MIN_SOL_LEG ? Math.abs(solNet) : null;
+  if (net > 0 && (stableNet < 0 || (quoteUsd == null && solNet < 0 && quoteSol != null))) {
+    return { kind: 'buy', mint, units: net, quote_usd: stableNet < 0 ? quoteUsd : null, quote_sol: stableNet < 0 ? null : quoteSol, timestamp: tx.timestamp };
+  }
+  if (net < 0 && (stableNet > 0 || (quoteUsd == null && solNet > 0 && quoteSol != null))) {
+    return { kind: 'sell', mint, units: -net, quote_usd: stableNet > 0 ? quoteUsd : null, quote_sol: stableNet > 0 ? null : quoteSol, timestamp: tx.timestamp };
+  }
+  // A token moved but no quote leg moved the other way. In a swap that is a token-to-token trade (unpriced);
+  // outside a swap it is a transfer or an airdrop, not a trade.
+  return swapLike ? { ...none, kind: 'token_to_token', mint } : none;
+}
+
+export interface MatchedTrades {
+  closed: ClosedTrade[];
+  swaps_seen: number;       // buy + sell legs read
+  unpriced_swaps: number;   // token-to-token, or a SOL leg with no SOL price
+  unmatched_sells: number;  // sells of a token bought before the window: cost unknown, excluded from PnL
+}
+
+/** Average-cost matching of wallet swap legs. SOL legs convert at `solUsd` (current SOL price). Pure. */
+export function matchTrades(legs: SwapLeg[], solUsd: number | null): MatchedTrades {
+  const sorted = [...legs].sort((a, b) => a.timestamp - b.timestamp);
+  const positions = new Map<string, { units: number; cost_usd: number; first_buy_ts: number }>();
+  const closed: ClosedTrade[] = [];
+  let swaps = 0, unpriced = 0, unmatched = 0;
+  const usdOf = (l: SwapLeg): number | null =>
+    l.quote_usd != null ? l.quote_usd : l.quote_sol != null && solUsd != null && solUsd > 0 ? l.quote_sol * solUsd : null;
+
+  for (const l of sorted) {
+    if (l.kind === 'token_to_token') { unpriced++; continue; }
+    if (l.kind !== 'buy' && l.kind !== 'sell') continue;
+    swaps++;
+    const usd = usdOf(l);
+    if (usd == null || !l.mint) { unpriced++; continue; }
+    const pos = positions.get(l.mint) ?? { units: 0, cost_usd: 0, first_buy_ts: l.timestamp };
+    if (l.kind === 'buy') {
+      if (pos.units === 0) pos.first_buy_ts = l.timestamp;
+      pos.units += l.units;
+      pos.cost_usd += usd;
+      positions.set(l.mint, pos);
+      continue;
+    }
+    if (pos.units <= 0) { unmatched++; continue; }
+    // Sell more than was bought in the window: only the matched part has a known cost.
+    const sellUnits = Math.min(l.units, pos.units);
+    const proceeds = usd * (sellUnits / l.units);
+    const avgCost = pos.cost_usd / pos.units;
+    const costOfSold = sellUnits * avgCost;
+    closed.push({
+      buy_token: l.mint,
+      sell_token: l.mint,
+      entry_usd: costOfSold,
+      exit_usd: proceeds,
+      pnl_usd: proceeds - costOfSold,
+      hold_time_days: Math.max(0, (l.timestamp - pos.first_buy_ts) / 86400),
+    });
+    pos.units -= sellUnits;
+    pos.cost_usd -= costOfSold;
+    if (pos.units <= 1e-12) { pos.units = 0; pos.cost_usd = 0; }
+    positions.set(l.mint, pos);
+  }
+  return { closed, swaps_seen: swaps, unpriced_swaps: unpriced, unmatched_sells: unmatched };
+}
+
+/**
+ * Consistency of PROFITABLE returns, 0–1: s / (1 + s) with s = mean / stddev of per-trade PnL, when the mean is
+ * positive; 0 otherwise. 0.5 = per-trade Sharpe of 1. Replaces 1 − stddev / max|pnl| (2026-11-17), which stayed
+ * high for almost any wallet — a wallet with an 8% win rate and −$104 scored 0.84 and got consistent_trader.
+ */
+export function consistencyScore(pnls: number[]): number {
+  if (pnls.length < 2) return 0;
+  const mean = pnls.reduce((s, r) => s + r, 0) / pnls.length;
+  if (!(mean > 0)) return 0;
+  const std = Math.sqrt(pnls.reduce((s, r) => s + (r - mean) ** 2, 0) / pnls.length);
+  if (std === 0) return 1;
+  const s = mean / std;
+  return s / (1 + s);
+}
+export const CONSISTENT_TRADER_MIN = 0.5;
 
 /** A token a wallet acquired recently. Light — no PnL, for the trenches live overlay. */
 export interface RecentBuy {
@@ -136,112 +296,44 @@ export class CopyTradeAnalyzer {
     const cached = await this.cache.get<CopyTradeEnrichment>(cacheKey);
     if (cached) return cached;
 
-    // Fetch recent transactions
-    const sigs = await this.helius.getSignaturesForAddress(address, 100);
+    // Signatures back to the lookback cutoff, newest first, up to MAX_SIG_PAGES × 100.
     const cutoff = Date.now() / 1000 - lookbackDays * 86400;
-    const recentSigs = sigs.filter((s) => (s.blockTime ?? 0) >= cutoff);
-    const sigStrings = recentSigs.map((s) => s.signature);
+    const sigStrings: string[] = [];
+    let before: string | undefined;
+    let historyComplete = false;
+    let oldestSeen: number | null = null;
+    for (let page = 0; page < MAX_SIG_PAGES; page++) {
+      const sigs = await this.helius.getSignaturesForAddress(address, 100, before);
+      for (const s of sigs) {
+        if ((s.blockTime ?? 0) < cutoff) { historyComplete = true; break; }
+        sigStrings.push(s.signature);
+        oldestSeen = s.blockTime ?? oldestSeen;
+      }
+      if (historyComplete || sigs.length < 100) { historyComplete = true; break; }
+      before = sigs[sigs.length - 1].signature;
+    }
+    // Days actually covered: the whole lookback when complete, else back to the oldest signature read.
+    const coverageDays = historyComplete || oldestSeen == null
+      ? lookbackDays
+      : Math.max(0, (Date.now() / 1000 - oldestSeen) / 86400);
 
     let txs: EnhancedTransaction[] = [];
-    if (sigStrings.length > 0) {
+    for (let i = 0; i < sigStrings.length; i += 100) {
       try {
-        txs = await this.helius.getEnhancedTransactions(sigStrings);
+        txs.push(...await this.helius.getEnhancedTransactions(sigStrings.slice(i, i + 100)));
       } catch {
-        // Graceful degradation
+        // A failed batch is reported through history_complete below
+        historyComplete = false;
       }
     }
 
-    // Collect unique mints from swaps for batch pricing
-    const swapMints = new Set<string>();
-    for (const tx of txs) {
-      if (!SWAP_TYPES.has(tx.type.toUpperCase())) continue;
-      for (const transfer of tx.tokenTransfers ?? []) {
-        swapMints.add(transfer.mint);
-      }
-    }
-
-    // Multi-source price aggregation (DexScreener + Jupiter median)
-    const mintList = [...swapMints];
-    const mintPrices = new Map<string, number>();
-    if (this.priceAggregator && mintList.length > 0) {
-      const agg = await this.priceAggregator.getBatchPrices(mintList);
-      for (const [mint, data] of agg) {
-        mintPrices.set(mint, data.price);
-      }
-    } else {
-      const priceResults = await Promise.allSettled(
-        mintList.map((mint) => this.dexscreener.getTokenPrice(mint)),
-      );
-      for (let i = 0; i < mintList.length; i++) {
-        const result = priceResults[i];
-        mintPrices.set(mintList[i], result.status === 'fulfilled' ? result.value : 0);
-      }
-    }
-
-    // Extract swap trades
-    const trades: TradeEntry[] = [];
-    for (const tx of txs) {
-      if (!SWAP_TYPES.has(tx.type.toUpperCase())) continue;
-      if (!tx.tokenTransfers || tx.tokenTransfers.length < 2) continue;
-
-      for (const transfer of tx.tokenTransfers) {
-        const price = mintPrices.get(transfer.mint) ?? 0;
-        const amountUsd = price > 0 ? transfer.tokenAmount * price : transfer.tokenAmount;
-
-        const side: 'buy' | 'sell' =
-          transfer.toUserAccount === address ? 'buy' : 'sell';
-
-        trades.push({
-          mint: transfer.mint,
-          symbol: transfer.mint.slice(0, 6),
-          side,
-          amount_units: transfer.tokenAmount,
-          amount_usd: amountUsd,
-          timestamp: tx.timestamp,
-        });
-      }
-    }
-
-    // Average cost basis matching — more accurate than FIFO
-    trades.sort((a, b) => a.timestamp - b.timestamp);
-
-    const positions = new Map<string, { units: number; cost_usd: number; first_buy_ts: number }>();
-    const closedTrades: ClosedTrade[] = [];
-
-    for (const trade of trades) {
-      const pos = positions.get(trade.mint) ?? { units: 0, cost_usd: 0, first_buy_ts: trade.timestamp };
-
-      if (trade.side === 'buy') {
-        pos.units += trade.amount_units;
-        pos.cost_usd += trade.amount_usd;
-        positions.set(trade.mint, pos);
-      } else if (trade.side === 'sell' && pos.units > 0) {
-        const avgCost = pos.cost_usd / pos.units;
-        const sellUnits = Math.min(trade.amount_units, pos.units);
-        const costOfSold = sellUnits * avgCost;
-        const pnl = trade.amount_usd - costOfSold;
-        const holdDays = Math.max(0, (trade.timestamp - pos.first_buy_ts) / 86400);
-
-        closedTrades.push({
-          buy_token: trade.mint,
-          sell_token: trade.mint,
-          entry_usd: costOfSold,
-          exit_usd: trade.amount_usd,
-          pnl_usd: pnl,
-          hold_time_days: holdDays,
-        });
-
-        // Reduce position proportionally
-        pos.units -= sellUnits;
-        pos.cost_usd -= costOfSold;
-        if (pos.units <= 0) {
-          pos.units = 0;
-          pos.cost_usd = 0;
-          pos.first_buy_ts = trade.timestamp;
-        }
-        positions.set(trade.mint, pos);
-      }
-    }
+    // Each swap priced from its own quote leg; SOL legs convert at the current SOL price.
+    const legs = txs.map((tx) => extractSwapLeg(tx, address));
+    const solUsd = legs.some((l) => l.quote_sol != null)
+      ? await this.dexscreener.getTokenPrice(WSOL_MINT).catch(() => 0)
+      : 0;
+    const matched = matchTrades(legs, solUsd > 0 ? solUsd : null);
+    const closedTrades = matched.closed;
 
     // Compute metrics
     const totalTrades = closedTrades.length;
@@ -253,18 +345,10 @@ export class CopyTradeAnalyzer {
       ? closedTrades.reduce((sum, t) => sum + t.hold_time_days, 0) / totalTrades
       : 0;
 
-    // Consistency: 1 - normalized stddev of returns
-    let consistency = 0;
-    if (totalTrades >= 2) {
-      const returns = closedTrades.map((t) => t.pnl_usd);
-      const mean = totalPnl / totalTrades;
-      const variance = returns.reduce((sum, r) => sum + (r - mean) ** 2, 0) / totalTrades;
-      const stddev = Math.sqrt(variance);
-      const maxAbsReturn = Math.max(...returns.map(Math.abs), 1);
-      consistency = Math.max(0, Math.min(1, 1 - stddev / maxAbsReturn));
-    }
+    const consistency = consistencyScore(closedTrades.map((t) => t.pnl_usd));
 
-    const tradeFrequency = lookbackDays > 0 ? trades.length / lookbackDays : 0;
+    // Swaps per day over the days actually covered (not the requested lookback).
+    const tradeFrequency = coverageDays > 0 ? matched.swaps_seen / coverageDays : 0;
 
     // Risk-adjusted returns
     let riskAdjusted: RiskAdjustedReturns | undefined;
@@ -340,7 +424,7 @@ export class CopyTradeAnalyzer {
       labels.push('smart_money');
     }
     if (tradeFrequency > 5) labels.push('high_frequency');
-    if (consistency > 0.7) labels.push('consistent_trader');
+    if (consistency >= CONSISTENT_TRADER_MIN && totalPnl > 0) labels.push('consistent_trader');
     if (riskAdjusted && riskAdjusted.max_drawdown_pct > 50) labels.push('high_risk');
     if (riskAdjusted && riskAdjusted.profit_factor > 2.0) labels.push('strong_edge');
 
@@ -357,6 +441,12 @@ export class CopyTradeAnalyzer {
       trade_frequency_per_day: Math.round(tradeFrequency * 100) / 100,
       top_performing_pairs: topPairs,
       labels,
+      swaps_seen: matched.swaps_seen,
+      unpriced_swaps: matched.unpriced_swaps,
+      unmatched_sells: matched.unmatched_sells,
+      coverage_days: Math.round(coverageDays * 10) / 10,
+      history_complete: historyComplete,
+      pnl_basis: 'quote_leg',
       last_updated: formatTimestamp(),
     };
 
