@@ -35,7 +35,7 @@ describe('SlidingLimiter', () => {
     expect(l.used()).toBe(5);
     expect(await l.acquire('high', 3000)).toBe('waited'); // t0 stamp expires 1 s later
   });
-  test('JupiterClient: slippage quotes yield — a 7th quote in the window is skipped, a token lookup still goes', async () => {
+  test('JupiterClient: two full token calls (lookup + 4 quotes) fit one window; a third call\'s quotes are skipped', async () => {
     const { JupiterClient, jupiterLimiter } = await import('../src/sources/jupiter');
     const realFetch = globalThis.fetch;
     jupiterLimiter.reset();
@@ -47,13 +47,14 @@ describe('SlidingLimiter', () => {
     }) as any;
     try {
       const j = new JupiterClient({ get: async () => null, set: async () => {} } as any);
-      await j.getSlippage('A');                 // 4 quotes
-      const second = await j.getSlippage('B');  // 2 fit in the quote share (6), 2 skipped after 2 s
-      expect(second.estimates.length).toBe(2);
-      expect(sent).toBe(6);
-      const tok = await j.getTokenInfo('M');    // core lookup uses the reserved slots
-      expect(tok?.verified).toBe(true);
-      expect(sent).toBe(7);
+      for (const mint of ['A', 'B']) {          // one token call = 1 lookup + 4 quotes
+        expect((await j.getTokenInfo('M'))?.verified).toBe(true);
+        expect((await j.getSlippage(mint)).estimates.length).toBe(4);
+      }
+      expect(sent).toBe(10);
+      const third = await j.getSlippage('C');   // window full, no slot within 2 s: skipped, nothing sent
+      expect(third.estimates.length).toBe(0);
+      expect(sent).toBe(10);
     } finally {
       globalThis.fetch = realFetch;
       jupiterLimiter.reset();

@@ -44,13 +44,17 @@ export interface SlippageEstimate {
  * One limiter for every keyed Jupiter call in the process (all JupiterClient instances), per ACCOUNT budget.
  * Measured 2026-11-15 on the Free plan: response headers report a limit of 10 (x-ratelimit-current /
  * -remaining); 10 simultaneous requests pass, 15 at 1/s pass, at 2/s the 11th fails — so it is ~10 requests per
- * ~10 s, NOT a burstable 60 per 60 s. We use 9 per 10 s (1 spare for local runs and skew). Slippage quotes ('low')
- * may use 6, so 3 slots per window always remain for token lookups and single quotes.
+ * ~10 s, NOT a burstable 60 per 60 s. We use the full 10 per 10 s with no reserve (tuned 2026-11-17): two full
+ * token calls (1 lookup + 4 quotes each) need all 10 slots, and any reserve cut price-impact sizes at 1 call per
+ * 6 s (measured: reserve 2 → every second call got 2 of 4 sizes). Priority works through waiting instead: when
+ * the window is full, slippage quotes ('low') are skipped after 2 s; token lookups and single quotes ('high') wait
+ * up to 8 s for the next slot. No spare slot: a canary probe or local run can cause an occasional 429, which the
+ * client retries once.
  * On a paid plan (Developer = 10 RPS) re-measure the headers and raise these together.
  */
 export const JUPITER_WINDOW_MS = 10_000;
-export const JUPITER_BUDGET_PER_WINDOW = 9;
-export const JUPITER_LOW_RESERVE = 3;
+export const JUPITER_BUDGET_PER_WINDOW = 10;
+export const JUPITER_LOW_RESERVE = 0;
 const LOW_MAX_WAIT_MS = 2_000;
 // Core calls wait for a slot rather than go out into a known-full window (that always returns 429). 8 s stays
 // inside token-analyzer's 15 s task timeout; getQuote's own 4 s abort still bounds single quotes.
