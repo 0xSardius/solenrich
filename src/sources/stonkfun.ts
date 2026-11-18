@@ -1,11 +1,13 @@
 import { CACHE_TTL } from '../config';
 import type { Cache } from '../cache';
 import { drain } from '../utils/drain';
+import { SlidingLimiter, type Priority } from '../utils/sliding-limiter';
 
 // StonkFun public API — quote-paired coin launches on Solana (stonkfun.xyz).
 // Base: https://www.stonkfun.xyz/api/public/v1 (OpenAPI at /openapi.json).
-// No API key. Reads are rate-limited to 300 calls/min per IP; a 429 carries
-// Retry-After. Errors come back as `{ error: { code, message } }`.
+// No API key. Reads are rate-limited to 60 calls per fixed minute window (measured 2026-11-17 from
+// x-ratelimit-limit / -reset; this comment said 300/min before); a 429 carries Retry-After.
+// Errors come back as `{ error: { code, message } }`.
 //
 // Every StonkFun coin is priced against a quote asset (xStocks, Backpack
 // pre-stocks, currencies, custom mints). Two launch modes:
@@ -27,6 +29,24 @@ const LEDGER_CONCURRENCY = 4;
 /** 300,000 rows — far above the ~60,000+ reward launches of 2026-11. A guard against a page loop, not a cap. */
 const LEDGER_MAX_PAGES = 300;
 const MAX_RETRY_AFTER_MS = 5_000;
+
+/**
+ * One budget for every StonkFun call in the process (2026-11-17). MEASURED: StonkFun sends x-ratelimit-limit: 60
+ * with resets on whole minutes — 60 requests per fixed 1-minute window (not the 300/min this file used to say).
+ * At boot the index walk (~115 pages), the rewards ledger (~78 pages, 4 in parallel), the population job and user
+ * calls ran uncoordinated: a cold refresh hit 429 after 68 requests in 15 s and ended with 0 rows.
+ * We use 55/min: background walks ('low': /tokens pages, ledger pages) may use 45 and wait up to 2 min for a slot;
+ * user-facing reads ('high': single token, rewards, launches, pricing) keep 10/min and wait at most 5 s.
+ * On top, the server's own x-ratelimit-remaining/reset is honoured (stonkGate): at 0 remaining, calls wait for the
+ * reset. A cold refresh therefore takes ~4–5 min instead of failing.
+ */
+export const STONK_BUDGET_PER_MIN = 55;
+export const STONK_HIGH_RESERVE = 10;
+/** Last rate-limit state StonkFun reported. */
+const stonkGate = { remaining: Infinity, resetAtMs: 0 };
+const STONK_LOW_MAX_WAIT_MS = 120_000;
+const STONK_HIGH_MAX_WAIT_MS = 5_000;
+export const stonkLimiter = new SlidingLimiter({ windowMs: 60_000, capacity: STONK_BUDGET_PER_MIN, lowReserve: STONK_HIGH_RESERVE });
 
 export type StonkMode = 'standard' | 'reward';
 export type StonkLaunchpad = 'raydium' | 'launchlab' | 'pump' | string;
@@ -246,7 +266,8 @@ export class StonkFunClient {
       if (v !== undefined && v !== null && v !== '') params.set(k, String(v));
     }
     const qs = params.toString();
-    const data = await this.request<StonkTokensPage>(`/tokens${qs ? `?${qs}` : ''}`, timeoutMs);
+    // Background priority: every caller is a scheduled walk (index refresh, population job) or the canary.
+    const data = await this.request<StonkTokensPage>(`/tokens${qs ? `?${qs}` : ''}`, timeoutMs, 0, 'low');
     return {
       tokens: Array.isArray(data.tokens) ? data.tokens : [],
       pagination: data.pagination ?? { page: query.page ?? 1, pageSize: data.tokens?.length ?? 0, total: data.tokens?.length ?? 0, totalPages: 1 },
@@ -305,9 +326,9 @@ export class StonkFunClient {
       const path = `/rewards?pageSize=${LEDGER_PAGE_SIZE}&page=${page}`;
       let data: { launches?: StonkRewardsLedgerEntry[] };
       try {
-        data = await this.request(path, LEDGER_TIMEOUT_MS);
+        data = await this.request(path, LEDGER_TIMEOUT_MS, 0, 'low');
       } catch {
-        data = await this.request(path, LEDGER_TIMEOUT_MS);
+        data = await this.request(path, LEDGER_TIMEOUT_MS, 0, 'low');
       }
       return Array.isArray(data.launches) ? data.launches : [];
     };
@@ -374,7 +395,15 @@ export class StonkFunClient {
 
   // --- transport -----------------------------------------------------------
 
-  private async request<T>(path: string, timeoutMs = DEFAULT_TIMEOUT_MS, attempt = 0): Promise<T> {
+  private async request<T>(path: string, timeoutMs = DEFAULT_TIMEOUT_MS, attempt = 0, priority: Priority = 'high'): Promise<T> {
+    // Shared budget, before the timeout starts: a wait for a slot is not counted as upstream slowness.
+    // A 'skip' (background call, no slot in 2 min) still proceeds: for a walk, a late page beats a lost one.
+    await stonkLimiter.acquire(priority, priority === 'low' ? STONK_LOW_MAX_WAIT_MS : STONK_HIGH_MAX_WAIT_MS);
+    // The server's own count wins: at 0 remaining, wait for its reset (user calls at most 5 s).
+    if (stonkGate.remaining <= 0 && Date.now() < stonkGate.resetAtMs) {
+      const wait = stonkGate.resetAtMs - Date.now() + 200;
+      await new Promise((r) => setTimeout(r, priority === 'low' ? wait : Math.min(wait, STONK_HIGH_MAX_WAIT_MS)));
+    }
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
@@ -382,6 +411,12 @@ export class StonkFunClient {
         headers: { Accept: 'application/json', 'User-Agent': 'SolEnrich/1.0 (+https://www.solenrich.com)' },
         signal: controller.signal,
       });
+      const rem = Number(res.headers.get('x-ratelimit-remaining'));
+      const reset = Number(res.headers.get('x-ratelimit-reset'));
+      if (Number.isFinite(rem) && Number.isFinite(reset) && reset > 0) {
+        stonkGate.remaining = res.status === 429 ? 0 : rem;
+        stonkGate.resetAtMs = reset * 1000;
+      }
 
       if (res.status === 429 && attempt === 0) {
         const retryAfter = Number(res.headers.get('retry-after') ?? '1');
@@ -389,7 +424,7 @@ export class StonkFunClient {
         const waitMs = Math.min(Math.max(retryAfter, 0.5) * 1000, MAX_RETRY_AFTER_MS);
         await new Promise((r) => setTimeout(r, waitMs));
         clearTimeout(timer);
-        return this.request<T>(path, timeoutMs, 1);
+        return this.request<T>(path, timeoutMs, 1, priority);
       }
 
       if (!res.ok) {

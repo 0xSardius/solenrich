@@ -104,6 +104,24 @@ describe('SlidingLimiter', () => {
       priceLimiter.reset();
     }
   });
+  test('StonkFunClient: walk pages and single-token reads share one budget; walks cannot use the user reserve', async () => {
+    const { StonkFunClient, stonkLimiter, STONK_BUDGET_PER_MIN, STONK_HIGH_RESERVE } = await import('../src/sources/stonkfun');
+    const realFetch = globalThis.fetch;
+    stonkLimiter.reset();
+    globalThis.fetch = (async (url: string) => new Response(JSON.stringify({ data: String(url).includes('/tokens/')
+      ? { token: { mint: 'M' } } : { tokens: [], pagination: { page: 1, pageSize: 0, total: 0, totalPages: 1 } } }), { status: 200 })) as any;
+    try {
+      const c = new StonkFunClient({ get: async () => null, set: async () => {} } as any);
+      await c.getTokens({ mode: 'reward', page: 1 });   // background
+      await c.getToken('M');                           // user-facing
+      expect(stonkLimiter.used()).toBe(2);
+      expect(STONK_BUDGET_PER_MIN - STONK_HIGH_RESERVE).toBeLessThan(300); // walks alone stay under StonkFun's 300/min
+      expect(STONK_BUDGET_PER_MIN).toBeLessThan(300);
+    } finally {
+      globalThis.fetch = realFetch;
+      stonkLimiter.reset();
+    }
+  });
   test('the window slides: slots free after 60 s', async () => {
     const c = fakeClock(); const l = make(c);
     for (let i = 0; i < 3; i++) await l.acquire('low', 0);
