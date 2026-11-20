@@ -47,19 +47,32 @@ export interface ConvictionHolder {
   runners: string[];
 }
 
-export const TRENCHES_SEEDS_DERIVED_AT = '2026-11-17';
+export const TRENCHES_SEEDS_DERIVED_AT = '2026-11-20';
 
 export const TRENCHES_SMART_MONEY_SEEDS: readonly TrenchesSeed[] = [
-  // --- 2026-11-17 on-chain rebuild (test/trenches-onchain-seeds.ts): 8 wallets passed 10+ closed trades, ≥ 50% win, PnL > 0 over 14 d (quote-leg PnL),
+  // --- 2026-11-20 on-chain rebuild (test/trenches-onchain-seeds.ts): 21 wallets passed 10+ closed trades, ≥ 50% win, PnL > 0 over 14 d (quote-leg PnL),
   //     human cadence (< 15 tx/h, no bot flags), active in the last 7 d. Sorted by 14-day PnL.
-  { address: '7CW5UAwob1uSKXfgqjm8GyjuB5GZnN3XeXFtGvk1n6aq', realized_1w_usd: null, win_rate: 0.879, tx_per_h: 9.8, pnl_14d_usd: 2455.55, closed_trades_14d: 165, vetted_at: '2026-11-17' },
-  { address: '2QKECLPQWM4CRHaY55WKPFYD9YU9XzgXgK5cJYi5T51d', realized_1w_usd: null, win_rate: 0.65, tx_per_h: 0.6, pnl_14d_usd: 1436.39, closed_trades_14d: 123, vetted_at: '2026-11-17', note: 're-vetted current seed' },
-  { address: 'EibS7GnCDvo3mJYWEZdGsGUX9cDZiMi9ubFas4FSfM8X', realized_1w_usd: null, win_rate: 0.792, tx_per_h: 0.9, pnl_14d_usd: 272.06, closed_trades_14d: 48, vetted_at: '2026-11-17' },
-  { address: '77qkxnstrFZY62hh2puqSNcnUwVFun8pMWqVAqcVBMYW', realized_1w_usd: null, win_rate: 0.667, tx_per_h: 1.9, pnl_14d_usd: 126.02, closed_trades_14d: 69, vetted_at: '2026-11-17' },
-  { address: 'H2oTjpoEeuUHGdSc9n9SBMBjZvGZFafbLGjiytTi6X3q', realized_1w_usd: null, win_rate: 0.535, tx_per_h: 4.7, pnl_14d_usd: 33.7, closed_trades_14d: 129, vetted_at: '2026-11-17', note: 're-vetted current seed' },
-  { address: 'CQFZyWn4QQiEjz4bXs6gUAGndJ6Hj6PaSTwezaHJnfyh', realized_1w_usd: null, win_rate: 0.5, tx_per_h: 1.1, pnl_14d_usd: 10.12, closed_trades_14d: 20, vetted_at: '2026-11-17' },
-  { address: '3oqaJrdUPkxHq62yuBVh4xmD9WAPMSSxdsbyVcXaMmJr', realized_1w_usd: null, win_rate: 0.864, tx_per_h: 5.7, pnl_14d_usd: 8.69, closed_trades_14d: 22, vetted_at: '2026-11-17', note: 're-vetted current seed' },
-  { address: '5p7asYyBQMSLB4HLDBnJ239VjSD9RXiCrVkLgdDKD1FG', realized_1w_usd: null, win_rate: 0.513, tx_per_h: 4.4, pnl_14d_usd: 7.23, closed_trades_14d: 80, vetted_at: '2026-11-17', note: 're-vetted current seed' },
+  { address: '2QKECLPQWM4CRHaY55WKPFYD9YU9XzgXgK5cJYi5T51d', realized_1w_usd: null, win_rate: 0.649, tx_per_h: 0.4, pnl_14d_usd: 1356.59, closed_trades_14d: 111, vetted_at: '2026-11-20', note: 're-vetted current seed' },
+  { address: 'BHEdepwWgQjcFbW25moXbSEvW14PNzLVaT4oD77xKgkD', realized_1w_usd: null, win_rate: 0.923, tx_per_h: 2.2, pnl_14d_usd: 1273.92, closed_trades_14d: 39, vetted_at: '2026-11-20' },
+  { address: 'B41RZUtDerYNCivP3Yddyxj2Qa9rtDoj9PE64RJFCSbi', realized_1w_usd: null, win_rate: 0.588, tx_per_h: 4.7, pnl_14d_usd: 593.7, closed_trades_14d: 17, vetted_at: '2026-11-20' },
+  { address: 'EibS7GnCDvo3mJYWEZdGsGUX9cDZiMi9ubFas4FSfM8X', realized_1w_usd: null, win_rate: 0.757, tx_per_h: 5.7, pnl_14d_usd: 307.68, closed_trades_14d: 37, vetted_at: '2026-11-20', note: 're-vetted current seed' },
+  { address: 'CrVYou9maQdsJ8w1aweJ55r28ahPTJhUZQ8DaCFdFX1W', realized_1w_usd: null, win_rate: 0.632, tx_per_h: 6.1, pnl_14d_usd: 253.02, closed_trades_14d: 57, vetted_at: '2026-11-20' },
+  { address: '58j7NgrbdgmXH99JZtN2R1D3HsaW2nPnhDwMHcy533Q9', realized_1w_usd: null, win_rate: 0.818, tx_per_h: 0.2, pnl_14d_usd: 233.83, closed_trades_14d: 11, vetted_at: '2026-11-20' },
+  { address: '8PBvJGA6bBw3tNVu79mB2nujV16yhZHpTmh8Fx1waxQM', realized_1w_usd: null, win_rate: 0.933, tx_per_h: 2.2, pnl_14d_usd: 178.77, closed_trades_14d: 15, vetted_at: '2026-11-20' },
+  { address: 'FKCszxXJtrqWdG2jfQuq7Z2cEA4BxxHSZpGUYgUh7WWv', realized_1w_usd: null, win_rate: 0.857, tx_per_h: 0.2, pnl_14d_usd: 126.59, closed_trades_14d: 14, vetted_at: '2026-11-20' },
+  { address: '5To3WPivEc8qVRMZB83ghVLAGZY8gFPMiCqrD2bae21L', realized_1w_usd: null, win_rate: 0.929, tx_per_h: 9.7, pnl_14d_usd: 42.55, closed_trades_14d: 28, vetted_at: '2026-11-20' },
+  { address: '6VzAGvdhP2ycigEs9xDuhahhKqZrfgMa17ebb2hMa9r9', realized_1w_usd: null, win_rate: 1, tx_per_h: 3.5, pnl_14d_usd: 33.37, closed_trades_14d: 15, vetted_at: '2026-11-20' },
+  { address: '9DbNS1FGeotzxfAH8HmbV6JPWjoNThusy74CPgJVL8AC', realized_1w_usd: null, win_rate: 0.737, tx_per_h: 10.1, pnl_14d_usd: 17.32, closed_trades_14d: 19, vetted_at: '2026-11-20' },
+  { address: '4SnZt81C7FxAg8Z4NCV1srGf9BW4Tgeyy5row69iDSvo', realized_1w_usd: null, win_rate: 0.643, tx_per_h: 6.3, pnl_14d_usd: 10.65, closed_trades_14d: 14, vetted_at: '2026-11-20' },
+  { address: '27tVYARg4tLR3Cw5mHVW2d15ebvSm92pCa5ZGEDkpjQG', realized_1w_usd: null, win_rate: 0.706, tx_per_h: 8.8, pnl_14d_usd: 8.48, closed_trades_14d: 17, vetted_at: '2026-11-20' },
+  { address: '3oqaJrdUPkxHq62yuBVh4xmD9WAPMSSxdsbyVcXaMmJr', realized_1w_usd: null, win_rate: 0.864, tx_per_h: 5.7, pnl_14d_usd: 8.46, closed_trades_14d: 22, vetted_at: '2026-11-20', note: 're-vetted current seed' },
+  { address: 'G3yc6fe3i7YBZjghWZdPUqBi973jVyvKbM5sBjtFe8JP', realized_1w_usd: null, win_rate: 0.7, tx_per_h: 0.6, pnl_14d_usd: 8.25, closed_trades_14d: 20, vetted_at: '2026-11-20' },
+  { address: 'GDFfadJuwkQ1LkjyP4KFNd4N1PHvQi55CHCvQ9NoWnVP', realized_1w_usd: null, win_rate: 0.692, tx_per_h: 9.4, pnl_14d_usd: 5.12, closed_trades_14d: 13, vetted_at: '2026-11-20' },
+  { address: 'G3PLPWfufXio2VY2ydb7wNYerU89TPH9oTkLtBiQg52F', realized_1w_usd: null, win_rate: 0.75, tx_per_h: 8.6, pnl_14d_usd: 5.04, closed_trades_14d: 36, vetted_at: '2026-11-20' },
+  { address: '7pbnXYFZoXbfojtHD3bVpv9vbTbAcBn21bmAQ3qG3y53', realized_1w_usd: null, win_rate: 0.625, tx_per_h: 4.1, pnl_14d_usd: 3.84, closed_trades_14d: 24, vetted_at: '2026-11-20' },
+  { address: '45VtDLDDWEyAU7imesaPv11mW89vE62fnVExrfdmnQA7', realized_1w_usd: null, win_rate: 0.667, tx_per_h: 0.1, pnl_14d_usd: 3.1, closed_trades_14d: 12, vetted_at: '2026-11-20' },
+  { address: '3Nz5nYsNskZSDQQzCbhob8fPgks2kwXdvWK9fsdu7cG1', realized_1w_usd: null, win_rate: 0.595, tx_per_h: 6.9, pnl_14d_usd: 3.08, closed_trades_14d: 37, vetted_at: '2026-11-20' },
+  { address: '425srLLJnQzMgW8q79Yun9Ukb8YdV6XtJwNYg45AvrjP', realized_1w_usd: null, win_rate: 0.778, tx_per_h: 4.1, pnl_14d_usd: 1.92, closed_trades_14d: 18, vetted_at: '2026-11-20' },
 ];
 
 // Tracked separately from active traders: their signal is holding through
