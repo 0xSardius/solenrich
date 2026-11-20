@@ -82,3 +82,5 @@ jobs:
       - run: bun test test/whale-fidelity.test.ts
       # Trenches fidelity (2026-11-17 audit): null for unread DexScreener values, exit INSUFFICIENT_DATA, liquidity_unknown.
       - run: bun test test/trenches-fidelity.test.ts
+      # Perps + protocol fidelity (2026-11-17 audit): short borrow = stablecoin custody rate; activity rate in seconds.
+      - run: bun test test/perps-protocol-fidelity.test.ts

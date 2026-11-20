@@ -242,6 +242,33 @@ export class AdrenaClient {
   }
 
   /**
+   * Borrow APR (%) of Adrena's USDC custody — what a SHORT pays: shorts borrow the stablecoin, not the asset
+   * (2026-11-17: shorts were reported at the asset custody's rate). Same decoding as getMarket. Null if unreadable.
+   */
+  async getStableBorrowAprPct(): Promise<{ apr_pct: number; utilization_pct: number; last_update: string | null } | null> {
+    const cacheKey = 'adrena:custody:USDC:apr:v2';
+    const cached = await this.cache.get<{ apr_pct: number; utilization_pct: number; last_update: string | null }>(cacheKey);
+    if (cached != null) return cached;
+    const info = await this.conn.getAccountInfo(ADRENA_CUSTODY.USDC);
+    if (!info) return null;
+    const buf = info.data;
+    const currentRateRaw = readU64(buf, OFF.currentRate);
+    const aprPct = Number((currentRateRaw * 24n * 365n * 10_000n) / RATE_POWER) / 100;
+    if (!Number.isFinite(aprPct) || aprPct < 0) return null;
+    const owned = readU64(buf, OFF.assetsOwned);
+    const locked = readU64(buf, OFF.assetsLocked);
+    const lastUpdate = Number(readI64(buf, OFF.lastUpdate));
+    const out = {
+      apr_pct: aprPct,
+      // Measured 2026-11-17: 5,845 USDC owned, all locked → 100% → rate at its max (80.59%), last update 2026-10-20.
+      utilization_pct: owned > 0n ? Number((locked * 10_000n) / owned) / 100 : 0,
+      last_update: lastUpdate > 0 ? new Date(lastUpdate * 1000).toISOString() : null,
+    };
+    await this.cache.set(cacheKey, out, CACHE_TTL.perpsMarket);
+    return out;
+  }
+
+  /**
    * Get Adrena custody state for a user-facing market.
    * Returns null if the market is not supported on Adrena (e.g. ETH).
    */

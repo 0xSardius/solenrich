@@ -1248,7 +1248,7 @@ function buildDocs() {
       'perps-market-structure': {
         price: '0.012',
         input: { format: 'json | llm | both' },
-        description: 'Jupiter Perps market structure — per-market OI, utilization, borrow APR, skew, OI caps, and health flags for SOL/BTC/ETH. Reads on-chain Anchor accounts directly (no REST API).',
+        description: 'Jupiter Perps market structure — per-market OI, utilization, borrow APR by side, skew, OI caps, and health flags for SOL/BTC/ETH. borrow_rate = the LONG side (longs borrow the asset from its custody); borrow_rate_short = the SHORT side (shorts borrow USDC; USDC custody rate, USDT alongside). Reads on-chain Anchor accounts directly (no REST API).',
       },
       'perps-trader-profile': {
         price: '0.010',
@@ -1268,7 +1268,7 @@ function buildDocs() {
       'perps-cross-venue-funding': {
         price: '0.015',
         input: { market: 'SOL | BTC | ETH | BONK', include_reference: 'boolean (default true)', format: 'json | llm | both' },
-        description: 'Cross-venue perps funding aggregator. Compares borrow/funding APR + open interest across Solana on-chain venues (Jupiter Perps, Adrena, Flash, Phoenix) and cross-chain reference venues (Hyperliquid, dYdX v4). Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities. A venue whose data cannot be read is returned with available: false and an unavailable_reason. Adrena routes SOL→jitoSOL and BTC→WBTC (wrapped). ETH not supported on Adrena. BONK not tradable on Jupiter Perps.',
+        description: 'Cross-venue perps funding aggregator. Compares borrow/funding APR + open interest across Solana on-chain venues (Jupiter Perps, Adrena, Flash, Phoenix) and cross-chain reference venues (Hyperliquid, dYdX v4). Returns best entry per side, basis vs Hyperliquid, and arbitrage opportunities. A venue whose data cannot be read is returned with available: false and an unavailable_reason. On pool venues (Jupiter Perps, Adrena, Flash) longs pay the borrow rate of the asset custody and shorts pay that of the stablecoin (USDC) custody — borrow_apr_short is that rate, or null when it cannot be read (the Flash source does not expose it). Adrena routes SOL→jitoSOL and BTC→WBTC (wrapped). ETH not supported on Adrena. BONK not tradable on Jupiter Perps.',
       },
       'perps-venue-comparison': {
         price: '0.020',

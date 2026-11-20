@@ -87,11 +87,20 @@ export interface PerpsMarketSnapshot {
     net_skew: 'long' | 'short' | 'balanced';
   };
   utilization_pct: number;
+  /** LONG-side borrow rate: longs borrow the asset from its own custody (SOL/BTC/ETH). */
   borrow_rate: {
     hourly_pct: number;
     annualized_pct: number;
     model: 'jump' | 'linear';
   };
+  /** SHORT-side borrow rate: shorts borrow the stablecoin collateral (2026-11-17: was reported as = long; measured
+   *  SOL long 13.24% vs USDC short 1.80%). USDC custody rate, with USDT alongside. Null if the custody read failed. */
+  borrow_rate_short: {
+    hourly_pct: number;
+    annualized_pct: number;
+    custody: 'USDC';
+    usdt_annualized_pct: number | null;
+  } | null;
   pool_assets: {
     owned_tokens: number;
     locked_tokens: number;
@@ -271,10 +280,16 @@ export class JupiterPerpsClient {
     const cached = await this.cache.get<PerpsMarketStructure>(cacheKey);
     if (cached) return cached;
 
-    // Fetch all 3 custodies in parallel
-    const custodies = await Promise.all(
-      TRADABLE_MARKETS.map(m => this.perps.account.custody.fetch(m.custody)),
-    );
+    // Fetch all 3 custodies in parallel, plus the USDC/USDT custodies shorts borrow from (best-effort)
+    const [custodies, stableRes] = await Promise.all([
+      Promise.all(TRADABLE_MARKETS.map(m => this.perps.account.custody.fetch(m.custody))),
+      Promise.allSettled([this.perps.account.custody.fetch(CUSTODY_PUBKEY.USDC), this.perps.account.custody.fetch(CUSTODY_PUBKEY.USDT)]),
+    ]);
+    const usdcRate = stableRes[0].status === 'fulfilled' ? computeBorrowRate(stableRes[0].value) : null;
+    const usdtRate = stableRes[1].status === 'fulfilled' ? computeBorrowRate(stableRes[1].value) : null;
+    const shortRate: PerpsMarketSnapshot['borrow_rate_short'] = usdcRate
+      ? { hourly_pct: usdcRate.hourly_pct, annualized_pct: usdcRate.annualized_pct, custody: 'USDC', usdt_annualized_pct: usdtRate?.annualized_pct ?? null }
+      : null;
 
     // Fetch oracle prices (best-effort — if Doves fails, mark stays null)
     const oraclePrices = await Promise.all(
@@ -321,6 +336,7 @@ export class JupiterPerpsClient {
           annualized_pct: rate.annualized_pct,
           model: rate.model,
         },
+        borrow_rate_short: shortRate,
         pool_assets: {
           owned_tokens,
           locked_tokens,

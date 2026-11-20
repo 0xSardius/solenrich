@@ -262,7 +262,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'perps-market-structure': {
     summary: 'Read Jupiter Perps market structure: OI, borrow APR, health',
-    description: 'Per-market open interest, utilization, borrow APR, skew, OI caps, and health flags across Jupiter Perps SOL/BTC/ETH markets. Reads on-chain Anchor accounts directly.',
+    description: 'Per-market open interest, utilization, borrow APR by side (longs: asset custody; shorts: USDC custody), skew, OI caps, and health flags across Jupiter Perps SOL/BTC/ETH markets. Reads on-chain Anchor accounts directly.',
     schema: {
       type: 'object',
       properties: {

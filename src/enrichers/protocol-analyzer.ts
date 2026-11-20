@@ -65,6 +65,10 @@ export interface ProtocolProfileEnrichment {
     tx_types: Record<string, number>;
     avg_tx_per_hour: number;
     sample_window_minutes: number;
+    /** Window covered by the signature sample, in seconds (1-s resolution). */
+    sample_window_seconds: number;
+    /** True when 200 signatures fit in under 2 minutes: the program is at least this busy; the rate is a floor. */
+    sample_saturated: boolean;
     automated_activity_pct: number; // % of signers showing automated behavior (regular_intervals or high_frequency)
   } | null;
   health_signals: {
@@ -73,6 +77,27 @@ export interface ProtocolProfileEnrichment {
     activity_level: 'very_high' | 'high' | 'moderate' | 'low' | null;
   };
   last_updated: string;
+}
+
+/**
+ * Activity rate from a signature sample, in SECONDS (2026-11-17). Busy programs fill 200 signatures in seconds; the
+ * old minute rounding gave a 0-minute window → 0 tx/h → "low" for Raydium, or a ×60 jump at 1 minute. blockTime has
+ * 1-second resolution, so a window under 1 s counts as 1 s (the rate is then a floor). A full sample (≥ 200) inside
+ * 2 minutes is `sampleSaturated`: the program is at least this busy. Pure.
+ */
+export function sampleActivity(blockTimes: number[]): { sampleWindowSeconds: number; sampleWindowMinutes: number; avgTxPerHour: number; sampleSaturated: boolean } {
+  let sampleWindowSeconds = 0;
+  let avgTxPerHour = 0;
+  if (blockTimes.length >= 2) {
+    sampleWindowSeconds = Math.max(...blockTimes) - Math.min(...blockTimes);
+    avgTxPerHour = Math.round((blockTimes.length / Math.max(sampleWindowSeconds, 1)) * 3600);
+  }
+  return {
+    sampleWindowSeconds,
+    sampleWindowMinutes: Math.round((sampleWindowSeconds / 60) * 10) / 10,
+    avgTxPerHour,
+    sampleSaturated: blockTimes.length >= 200 && sampleWindowSeconds < 120,
+  };
 }
 
 // --- Enricher ---
@@ -252,16 +277,7 @@ export class ProtocolAnalyzer {
       .map((s) => s.blockTime)
       .filter((t): t is number => t !== null && t > 0);
 
-    let sampleWindowMinutes = 0;
-    let avgTxPerHour = 0;
-    if (blockTimes.length >= 2) {
-      const newest = Math.max(...blockTimes);
-      const oldest = Math.min(...blockTimes);
-      sampleWindowMinutes = Math.round((newest - oldest) / 60);
-      if (sampleWindowMinutes > 0) {
-        avgTxPerHour = Math.round((allTxs.length / sampleWindowMinutes) * 60);
-      }
-    }
+    const { sampleWindowSeconds, sampleWindowMinutes, avgTxPerHour, sampleSaturated } = sampleActivity(blockTimes);
 
     // Behavioral analysis: what % of signers show automated patterns?
     let automatedSignerCount = 0;
@@ -282,6 +298,8 @@ export class ProtocolAnalyzer {
       tx_types: txTypes,
       avg_tx_per_hour: avgTxPerHour,
       sample_window_minutes: sampleWindowMinutes,
+      sample_window_seconds: sampleWindowSeconds,
+      sample_saturated: sampleSaturated,
       automated_activity_pct: automatedActivityPct,
     };
   }

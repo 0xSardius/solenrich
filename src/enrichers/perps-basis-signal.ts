@@ -126,7 +126,9 @@ export class PerpsBasisAnalyzer {
       // Reference venues store sign-aware funding on borrow_apr_long.
       // (Positive funding = longs pay. We mapped short to -funding in cross-venue.)
       // For trade math we want the raw funding rate, so derive it from long APR.
-      const rate_apr_pct = q.borrow_apr_long;
+      // Pool venues (borrow-rate): the basis trade SHORTS the perp, so its cost is the SHORT borrow rate (the
+      // stablecoin custody's), not the asset custody's long rate (2026-11-17). Null when that rate is unknown.
+      const rate_apr_pct = mechanism === 'borrow-rate' ? q.borrow_apr_short : q.borrow_apr_long;
 
       const trade = this.computeTrade(q, mechanism, rate_apr_pct);
 
@@ -211,14 +213,15 @@ export class PerpsBasisAnalyzer {
     }
 
     if (mechanism === 'borrow-rate') {
-      // Solana pool perps: both sides pay borrow. No funding income.
+      // Solana pool perps: every position pays borrow (longs on the asset custody, shorts on the stablecoin
+      // custody). No funding income. rate_apr_pct here is the short-side rate.
       return {
         direction: null,
         expected_yield_pct: 0,
         cost_pct: Math.abs(rate_apr_pct),
         net_yield_pct: -Math.abs(rate_apr_pct),
         viable: false,
-        reasoning: `Pool perps charge ${rate_apr_pct.toFixed(2)}% APR borrow on both sides. No funding-income mechanism — basis trade not viable on its own.`,
+        reasoning: `Pool perp: the short leg pays ${rate_apr_pct.toFixed(2)}% APR borrow (stablecoin custody) and earns no funding — basis trade not viable on its own.`,
       };
     }
 

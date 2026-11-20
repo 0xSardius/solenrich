@@ -47,8 +47,9 @@ export function formatProtocolBriefing(data: ProtocolProfileEnrichment): string 
   if (data.activity) {
     const a = data.activity;
     lines.push('### Recent On-Chain Activity');
-    lines.push(`${formatNumber(a.recent_tx_count)} transactions from ${formatNumber(a.unique_signers)} unique signers (last ${a.sample_window_minutes} min)`);
-    lines.push(`Rate: ~${formatNumber(a.avg_tx_per_hour)} tx/hour | Activity level: **${data.health_signals.activity_level}**`);
+    const window = a.sample_window_seconds != null && a.sample_window_seconds < 120 ? `${a.sample_window_seconds} s` : `${a.sample_window_minutes} min`;
+    lines.push(`${formatNumber(a.recent_tx_count)} transactions from ${formatNumber(a.unique_signers)} unique signers (last ${window})`);
+    lines.push(`Rate: ${a.sample_saturated ? 'at least ' : '~'}${formatNumber(a.avg_tx_per_hour)} tx/hour${a.sample_saturated ? ' (sample filled in under 2 min — busier than the sample can measure)' : ''} | Activity level: **${data.health_signals.activity_level}**`);
 
     const topTypes = Object.entries(a.tx_types)
       .sort(([, a], [, b]) => b - a)

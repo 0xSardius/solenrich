@@ -15,7 +15,7 @@ function skewLabel(longPct: number): string {
 
 function marketLine(m: EnrichedMarketSnapshot): string {
   const mark = m.mark_price_usd !== null ? `$${m.mark_price_usd.toFixed(2)}` : 'unknown';
-  return `${m.symbol} @ ${mark} — ${skewLabel(m.open_interest.long_pct)}. OI: ${formatUsd(m.open_interest.total_usd)}. Util: ${m.utilization_pct.toFixed(1)}%. Borrow: ${m.borrow_rate.annualized_pct.toFixed(1)}% APR (${m.borrow_rate.hourly_pct.toFixed(4)}%/hr). Health: ${m.health}.`;
+  return `${m.symbol} @ ${mark} — ${skewLabel(m.open_interest.long_pct)}. OI: ${formatUsd(m.open_interest.total_usd)}. Util: ${m.utilization_pct.toFixed(1)}%. Borrow: longs ${m.borrow_rate.annualized_pct.toFixed(1)}% APR (${m.borrow_rate.hourly_pct.toFixed(4)}%/hr), shorts ${m.borrow_rate_short ? `${m.borrow_rate_short.annualized_pct.toFixed(1)}% APR (USDC custody)` : 'unknown'}. Health: ${m.health}.`;
 }
 
 export function formatPerpsMarketBriefing(data: EnrichedMarketStructure): string {

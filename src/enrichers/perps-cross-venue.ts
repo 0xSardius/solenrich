@@ -175,6 +175,7 @@ export class PerpsCrossVenueAnalyzer {
     const tasks = [
       { name: 'jupiter', fn: () => this.jupiter.getMarketStructure() },
       { name: 'adrena', fn: () => this.adrena.getMarket(market as AdrenaMarket) },
+      { name: 'adrenaStable', fn: () => this.adrena.getStableBorrowAprPct() as any },
       { name: 'flash', fn: () => this.flash.getMarket(market as FlashMarket) },
     ];
     if (this.phoenix && market !== 'BONK') {
@@ -195,14 +196,15 @@ export class PerpsCrossVenueAnalyzer {
     const jupiterMarket = results.jupiter?.markets?.find((m: any) => m.symbol === market);
     if (jupiterMarket) {
       const longApr = jupiterMarket.borrow_rate.annualized_pct;
-      // Jupiter uses single borrow APR per pool — same for long and short directionally
-      // (utilization-based; both sides pay it). Use the same value for both.
+      // Longs borrow the asset (its custody's rate); shorts borrow the stablecoin collateral (USDC custody rate).
+      // Before 2026-11-17 the asset rate was used for both sides (SOL short shown 13.27%; USDC custody 1.80%).
+      const shortApr: number | null = jupiterMarket.borrow_rate_short?.annualized_pct ?? null;
       venues.push({
         venue: 'jupiter-perps',
         available: true,
         type: 'solana-onchain',
         borrow_apr_long: longApr,
-        borrow_apr_short: longApr,
+        borrow_apr_short: shortApr,
         open_interest_usd: jupiterMarket.open_interest.total_usd,
         utilization_pct: jupiterMarket.utilization_pct,
         skew: classifySkew(jupiterMarket.open_interest.long_pct),
@@ -257,17 +259,23 @@ export class PerpsCrossVenueAnalyzer {
         : market === 'BTC'
           ? 'Adrena BTC exposure is via WBTC custody.'
           : undefined;
+      const adrenaStable = results.adrenaStable as { apr_pct: number; utilization_pct: number; last_update: string | null } | null;
+      // A fully lent-out USDC custody puts shorts at the maximum rate, and a new short may not fill at all.
+      const stableNote = adrenaStable && adrenaStable.utilization_pct >= 95
+        ? `Adrena USDC custody is ${adrenaStable.utilization_pct.toFixed(0)}% utilized: shorts pay the maximum borrow rate and a new short may not fill${adrenaStable.last_update ? ` (rate last updated ${adrenaStable.last_update.slice(0, 10)})` : ''}.`
+        : undefined;
       venues.push({
         venue: 'adrena',
         available: true,
         type: 'solana-onchain',
         borrow_apr_long: adrenaState.borrow_rate.apr_pct,
-        borrow_apr_short: adrenaState.borrow_rate.apr_pct,
+        // Shorts borrow from the USDC custody (not the asset custody's rate).
+        borrow_apr_short: adrenaStable ? adrenaStable.apr_pct : null,
         open_interest_usd: adrenaState.open_interest.total_usd,
         utilization_pct: adrenaState.utilization_pct,
         skew: classifySkew(adrenaState.open_interest.long_pct),
         mark_price_usd: null, // Adrena oracle not yet wired — would need separate oracle read
-        notes: wrappedNote ? [wrappedNote] : undefined,
+        notes: [wrappedNote, stableNote].filter((n): n is string => !!n).length ? [wrappedNote, stableNote].filter((n): n is string => !!n) : undefined,
       });
     } else {
       venues.push({
@@ -297,9 +305,10 @@ export class PerpsCrossVenueAnalyzer {
         venue: 'flash',
         available: true,
         type: 'solana-onchain',
-        // Pool perp — both sides pay the same utilization-based borrow rate.
+        // Pool perp: longs pay the asset custody's rate; shorts pay the stablecoin custody's, which this source
+        // does not expose — so the short rate is unknown (null), not a copy of the long rate.
         borrow_apr_long: flashMarket.borrow_apr_pct,
-        borrow_apr_short: flashMarket.borrow_apr_pct,
+        borrow_apr_short: null,
         open_interest_usd: flashOiTotal !== null ? Math.round(flashOiTotal) : null,
         utilization_pct: flashMarket.utilization_pct,
         skew: flashLongPct !== null ? classifySkew(flashLongPct) : 'unknown',

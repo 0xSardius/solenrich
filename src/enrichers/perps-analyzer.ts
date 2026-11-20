@@ -138,7 +138,7 @@ function analyzeMarketSnapshot(m: PerpsMarketSnapshot): EnrichedMarketSnapshot {
   if (flags.near_long_oi_cap) notes.push(`${m.symbol} near long OI cap (${long_headroom_usd.toLocaleString(undefined, { maximumFractionDigits: 0 })} USD left)`);
   if (flags.near_short_oi_cap) notes.push(`${m.symbol} near short OI cap (${short_headroom_usd.toLocaleString(undefined, { maximumFractionDigits: 0 })} USD left)`);
   if (flags.high_utilization) notes.push(`${m.symbol} pool utilization ${m.utilization_pct.toFixed(1)}%`);
-  if (flags.elevated_borrow_rate) notes.push(`${m.symbol} elevated borrow: ${m.borrow_rate.annualized_pct.toFixed(1)}% APR`);
+  if (flags.elevated_borrow_rate) notes.push(`${m.symbol} elevated long-side borrow: ${m.borrow_rate.annualized_pct.toFixed(1)}% APR`);
 
   let health: MarketHealth = 'HEALTHY';
   const flagCount =
