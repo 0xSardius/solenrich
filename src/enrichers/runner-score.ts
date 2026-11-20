@@ -23,7 +23,8 @@ export interface RunnerScoreInput {
   txns: { m5: WindowTxns; h1: WindowTxns; h6: WindowTxns; h24: WindowTxns };
   volume: { m5: number; h1: number; h6: number; h24: number };
   price_change: { m5: number; h1: number; h6: number; h24: number };
-  liquidity_usd: number;
+  /** Null when no pair reports liquidity (bonding curve): flagged liquidity_unknown, not low_liquidity. */
+  liquidity_usd: number | null;
   age_hours: number;
   /** % change in liquidity since our prior snapshot. Null on first sight of this mint. */
   liquidity_change_pct: number | null;
@@ -197,7 +198,8 @@ export function assessRunner(input: RunnerScoreInput): RunnerAssessment {
   if (m.holder_growth_pct != null && m.holder_growth_pct <= -2) flags.push('holders_shrinking');
   if (m.liquidity_change_pct != null && m.liquidity_change_pct >= 10) flags.push('liquidity_added');
   if (input.age_hours < 1) flags.push('thin_history');
-  if (input.liquidity_usd < 15_000) flags.push('low_liquidity');
+  if (input.liquidity_usd == null) flags.push('liquidity_unknown');
+  else if (input.liquidity_usd < 15_000) flags.push('low_liquidity');
 
   // Wash-trading smell: lots of transactions, trivial size each. On-chain counts
   // are cheap to fake; this is the cross-check the scope demands.

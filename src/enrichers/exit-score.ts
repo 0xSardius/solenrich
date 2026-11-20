@@ -35,7 +35,8 @@ export interface ExitScoreInput {
   txns: { m5: WindowTxns; h1: WindowTxns; h6: WindowTxns; h24: WindowTxns };
   volume: { m5: number; h1: number; h6: number; h24: number };
   price_change: { m5: number; h1: number; h6: number; h24: number };
-  liquidity_usd: number;
+  /** Null when no pair reports liquidity (pump.fun bonding-curve pairs never do). */
+  liquidity_usd: number | null;
   /** % change in liquidity since our prior snapshot. Null on first sight of this mint. */
   liquidity_change_pct: number | null;
   /** % change in holder count since prior snapshot. Null when unavailable. */
@@ -226,7 +227,7 @@ export function assessExit(input: ExitScoreInput): ExitAssessment {
     flags.push('liquidity_declining');
   }
   if (whale && whale.net_flow_direction === 'distributing') flags.push('whales_distributing');
-  if (input.liquidity_usd < 15_000) flags.push('thin_exit_liquidity');
+  if (input.liquidity_usd != null && input.liquidity_usd < 15_000) flags.push('thin_exit_liquidity');
 
   // Positive flags — a HOLD needs stated reasons too.
   if (m.sell_pressure_h1 != null && m.sell_pressure_h1 <= 0.4) flags.push('buyers_in_control');
@@ -264,8 +265,13 @@ export function assessExit(input: ExitScoreInput): ExitAssessment {
   // --- Verdict ---
   const noMarketRead =
     m.sell_pressure_h1 == null && m.sell_pressure_h6 == null && momentumLoss == null;
+  // A whale block counts as data only when it holds measured flow. It exists whenever the largest accounts were
+  // read, even with no price (flow 'unknown') or no transfer over the floor ($0) — before 2026-11-17 that empty
+  // block turned a dead token into HOLD "momentum intact" instead of INSUFFICIENT_DATA.
+  const whaleMeasured = whale != null && whale.net_flow_direction !== 'unknown'
+    && (whale.total_buy_volume_usd + whale.total_sell_volume_usd) > 0;
   let verdict: ExitVerdict;
-  if (noMarketRead && whale == null) {
+  if (noMarketRead && !whaleMeasured) {
     verdict = 'INSUFFICIENT_DATA';
   } else if (lpPulled || dumping || score >= EXIT_SCORE_THRESHOLD) {
     verdict = 'EXIT';

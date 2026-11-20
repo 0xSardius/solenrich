@@ -13,9 +13,10 @@ export interface RunnerCandidate {
   symbol: string | null;
   name: string | null;
   age_hours: number;
-  price_usd: number;
-  market_cap_usd: number;
-  liquidity_usd: number;
+  /** Null when DexScreener did not report it (bonding-curve pairs never report liquidity). */
+  price_usd: number | null;
+  market_cap_usd: number | null;
+  liquidity_usd: number | null;
   volume_h1_usd: number;
   volume_h24_usd: number;
   price_change_h1_pct: number;
@@ -52,7 +53,8 @@ export interface RunnerScanResult {
 
 export interface Snapshot {
   t: number;
-  liquidity_usd: number;
+  /** Null when liquidity was not reported; a delta needs both ends measured. */
+  liquidity_usd: number | null;
   holder_count: number | null;
 }
 
@@ -61,9 +63,11 @@ export interface Aggregated {
   mint: string;
   symbol: string | null;
   name: string | null;
-  price_usd: number;
-  market_cap_usd: number;
-  liquidity_usd: number;
+  /** Null when no pair reports priceUsd / marketCap / liquidity (2026-11-17: these were 0, read as measured —
+   *  pump.fun bonding-curve pairs never carry a liquidity object). */
+  price_usd: number | null;
+  market_cap_usd: number | null;
+  liquidity_usd: number | null;
   age_hours: number | null;
   volume: { m5: number; h1: number; h6: number; h24: number };
   price_change: { m5: number; h1: number; h6: number; h24: number };
@@ -139,7 +143,9 @@ export class RunnerDetector {
       (a) =>
         a.age_hours != null &&
         a.age_hours <= maxTokenAgeHours &&
-        a.liquidity_usd >= minLiquidityUsd &&
+        // Unknown liquidity passes (flagged liquidity_unknown), as in trenches-scan: pump.fun bonding-curve pairs
+        // never report liquidity, and a fake 0 here used to drop every curve token — the freshest launches.
+        (a.liquidity_usd == null || a.liquidity_usd >= minLiquidityUsd) &&
         a.volume.h1 >= minVolumeH1Usd,
     );
 
@@ -174,7 +180,7 @@ export class RunnerDetector {
       const useDelta = prior != null && priorAgeMs != null && priorAgeMs >= MIN_SNAPSHOT_AGE_MS;
 
       const liquidity_change_pct =
-        useDelta && prior!.liquidity_usd > 0
+        useDelta && a.liquidity_usd != null && prior!.liquidity_usd != null && prior!.liquidity_usd > 0
           ? ((a.liquidity_usd - prior!.liquidity_usd) / prior!.liquidity_usd) * 100
           : null;
 
@@ -202,8 +208,8 @@ export class RunnerDetector {
         name: a.name,
         age_hours: Math.round(a.age_hours! * 10) / 10,
         price_usd: a.price_usd,
-        market_cap_usd: Math.round(a.market_cap_usd),
-        liquidity_usd: Math.round(a.liquidity_usd),
+        market_cap_usd: a.market_cap_usd != null ? Math.round(a.market_cap_usd) : null,
+        liquidity_usd: a.liquidity_usd != null ? Math.round(a.liquidity_usd) : null,
         volume_h1_usd: Math.round(a.volume.h1),
         volume_h24_usd: Math.round(a.volume.h24),
         price_change_h1_pct: a.price_change.h1,
@@ -335,9 +341,13 @@ export function aggregatePairs(pairs: DexPair[]): Aggregated[] {
 
   const out: Aggregated[] = [];
   for (const [mint, ps] of byMint) {
-    // Percentages and price can't be summed — take them from the deepest pair.
-    const primary = [...ps].sort((a, b) => (b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0))[0];
+    // Percentages and price can't be summed — take them from the deepest pair (then the busiest, for curve pairs).
+    const primary = [...ps].sort((a, b) =>
+      ((b.liquidity?.usd ?? 0) - (a.liquidity?.usd ?? 0)) || ((b.volume?.h24 ?? 0) - (a.volume?.h24 ?? 0)))[0];
     const sum = (fn: (p: DexPair) => number) => ps.reduce((s, p) => s + (fn(p) || 0), 0);
+    const priced = [primary, ...ps].find((p) => Number(p.priceUsd) > 0);
+    const capped = [primary, ...ps].find((p) => Number(p.marketCap ?? p.fdv) > 0);
+    const withLiq = ps.filter((p) => typeof p.liquidity?.usd === 'number');
 
     const created = ps
       .map((p) => p.pairCreatedAt)
@@ -347,9 +357,9 @@ export function aggregatePairs(pairs: DexPair[]): Aggregated[] {
       mint,
       symbol: primary.baseToken?.symbol ?? null,
       name: primary.baseToken?.name ?? null,
-      price_usd: parseFloat(primary.priceUsd) || 0,
-      market_cap_usd: primary.marketCap ?? primary.fdv ?? 0,
-      liquidity_usd: sum((p) => p.liquidity?.usd ?? 0),
+      price_usd: priced ? parseFloat(priced.priceUsd) : null,
+      market_cap_usd: capped ? Number(capped.marketCap ?? capped.fdv) : null,
+      liquidity_usd: withLiq.length > 0 ? withLiq.reduce((s, p) => s + p.liquidity.usd, 0) : null,
       age_hours: created.length > 0 ? (Date.now() - Math.min(...created)) / 3_600_000 : null,
       volume: {
         m5: sum((p) => p.volume?.m5 ?? 0),

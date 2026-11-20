@@ -127,7 +127,7 @@ export class TrenchesCheckAnalyzer {
           : null;
 
       const liquidity_change_pct =
-        useDelta && prior!.liquidity_usd > 0
+        useDelta && agg.liquidity_usd != null && prior!.liquidity_usd != null && prior!.liquidity_usd > 0
           ? Math.round(((agg.liquidity_usd - prior!.liquidity_usd) / prior!.liquidity_usd) * 1000) / 10
           : null;
       const holder_growth_pct =
@@ -243,8 +243,8 @@ export class TrenchesCheckAnalyzer {
       name: agg?.name ?? null,
       age_hours: agg?.age_hours != null ? Math.round(agg.age_hours * 10) / 10 : null,
       price_usd: agg?.price_usd ?? null,
-      liquidity_usd: agg ? Math.round(agg.liquidity_usd) : null,
-      market_cap_usd: agg ? Math.round(agg.market_cap_usd) : null,
+      liquidity_usd: agg?.liquidity_usd != null ? Math.round(agg.liquidity_usd) : null,
+      market_cap_usd: agg?.market_cap_usd != null ? Math.round(agg.market_cap_usd) : null,
       composite_score: composite,
       confluence,
       verdict,

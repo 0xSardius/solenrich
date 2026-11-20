@@ -128,7 +128,7 @@ export class ExitSignalAnalyzer {
         : null;
 
     const liquidity_change_pct =
-      useDelta && agg && prior!.liquidity_usd > 0
+      useDelta && agg && agg.liquidity_usd != null && prior!.liquidity_usd != null && prior!.liquidity_usd > 0
         ? Math.round(((agg.liquidity_usd - prior!.liquidity_usd) / prior!.liquidity_usd) * 1000) / 10
         : null;
     const holder_growth_pct =
@@ -177,7 +177,7 @@ export class ExitSignalAnalyzer {
       },
       volume: agg?.volume ?? { m5: 0, h1: 0, h6: 0, h24: 0 },
       price_change: agg?.price_change ?? { m5: 0, h1: 0, h6: 0, h24: 0 },
-      liquidity_usd: agg?.liquidity_usd ?? 0,
+      liquidity_usd: agg?.liquidity_usd ?? null,
       liquidity_change_pct,
       holder_growth_pct,
       whale: whales
@@ -207,8 +207,8 @@ export class ExitSignalAnalyzer {
       symbol: agg?.symbol ?? null,
       name: agg?.name ?? null,
       price_usd: agg?.price_usd ?? null,
-      liquidity_usd: agg ? Math.round(agg.liquidity_usd) : null,
-      market_cap_usd: agg ? Math.round(agg.market_cap_usd) : null,
+      liquidity_usd: agg?.liquidity_usd != null ? Math.round(agg.liquidity_usd) : null,
+      market_cap_usd: agg?.market_cap_usd != null ? Math.round(agg.market_cap_usd) : null,
       price_change_h1_pct: agg?.price_change.h1 ?? null,
       price_change_h24_pct: agg?.price_change.h24 ?? null,
       buys_h1: agg?.txns.h1.buys ?? null,

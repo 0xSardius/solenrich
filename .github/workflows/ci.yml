@@ -80,3 +80,5 @@ jobs:
       - run: bun test test/wallet-fidelity.test.ts
       # Whale-watch fidelity (2026-11-17 audit): pool vaults are not whales; unknown flow; check-alerts whale alerts.
       - run: bun test test/whale-fidelity.test.ts
+      # Trenches fidelity (2026-11-17 audit): null for unread DexScreener values, exit INSUFFICIENT_DATA, liquidity_unknown.
+      - run: bun test test/trenches-fidelity.test.ts
