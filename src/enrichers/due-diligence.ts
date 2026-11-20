@@ -65,10 +65,12 @@ export class DueDiligenceAnalyzer {
       threshold_usd: 10000,
       lookback_hours: 72,
       whales: [],
+      program_accounts: [],
       total_whale_volume_usd: 0,
-      net_flow_direction: 'neutral',
+      net_flow_direction: 'unknown', // whale-watch failed: flow not measured (was reported as 'neutral')
       whale_count: 0,
       holders_source: 'unavailable',
+      data_quality: { degraded: true, unavailable: ['whale_watch'] },
       last_updated: formatTimestamp(),
     };
 

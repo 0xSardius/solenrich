@@ -8,6 +8,7 @@ import { CACHE_TTL } from '../config';
 import { parallelFetch, type ParallelTask } from '../utils/parallel';
 import { formatTimestamp } from '../utils/normalize';
 import { lookupEntity } from '../utils/entities';
+import { PublicKey } from '@solana/web3.js';
 
 export interface WhaleActivity {
   address: string;
@@ -20,21 +21,45 @@ export interface WhaleActivity {
   avg_transaction_usd: number;
   buy_volume_usd: number;
   sell_volume_usd: number;
-  flow_direction: 'accumulating' | 'distributing' | 'neutral';
+  /** 'unknown' when the token price or the transaction read was unavailable (volumes are then not measured). */
+  flow_direction: FlowDirection;
   last_activity: string;
+}
+
+export type FlowDirection = 'accumulating' | 'distributing' | 'neutral' | 'unknown';
+
+/** A large holder owned by a program (AMM pool vault, bonding curve, locker), not a wallet. Its transfers are
+ *  retail trading against the pool, so they are NOT counted as whale flow (2026-11-17: they were, sign inverted). */
+export interface ProgramAccountHolder {
+  owner: string;
+  token_account: string;
+  pct_supply: number;
+  balance_usd: number;
+  entity_label?: string;
 }
 
 export interface WhaleWatchEnrichment {
   mint: string;
   threshold_usd: number;
   lookback_hours: number;
+  /** Wallet-owned top holders only (owner on the ed25519 curve). */
   whales: WhaleActivity[];
+  /** Program-owned large holders (owner is a PDA): pools, curves, lockers. Listed, not counted in flow. */
+  program_accounts: ProgramAccountHolder[];
   total_whale_volume_usd: number;
-  net_flow_direction: 'accumulating' | 'distributing' | 'neutral';
+  net_flow_direction: FlowDirection;
   whale_count: number;
   holders_source: 'rpc' | 'birdeye' | 'unavailable';
+  data_quality: { degraded: boolean; unavailable: string[] };
   last_updated: string;
 }
+
+/** True for a normal wallet address (on the ed25519 curve); false for a program-derived address (PDA). */
+export function isWalletAddress(address: string): boolean {
+  try { return PublicKey.isOnCurve(new PublicKey(address).toBytes()); } catch { return true; }
+}
+
+const WHALES_MAX = 10;
 
 export class WhaleWatcher {
   constructor(
@@ -75,23 +100,30 @@ export class WhaleWatcher {
     // Path A — Helius RPC's largestAccounts (fast for sub-500K-holder tokens)
     // Path B — Birdeye fallback when Helius hits "Too many accounts" limit
     let holders: Array<{ walletAddress: string; tokenAccount: string; balance: number; pctSupply: number }> = [];
+    const programAccounts: ProgramAccountHolder[] = [];
     let holdersSource: 'rpc' | 'birdeye' | 'unavailable' = 'unavailable';
 
     if (largestAccounts.length > 0) {
-      // Path A — RPC. Resolve token-account → owner.
-      const topN = largestAccounts.slice(0, 10);
+      // Path A — RPC. Resolve token-account → owner for all (≤ 20) largest accounts, then keep the first
+      // WHALES_MAX wallet-owned ones as whales; program-owned ones (pools, curves, lockers) are listed apart.
+      const topN = largestAccounts.slice(0, 20);
       let ownerMap: Array<{ tokenAccount: string; owner: string | null }> = [];
       try {
         ownerMap = await this.solanaRpc.resolveTokenAccountOwners(topN.map((a) => a.address));
       } catch {
         ownerMap = topN.map((a) => ({ tokenAccount: a.address, owner: null }));
       }
-      holders = topN.map((account, i) => ({
-        walletAddress: ownerMap[i]?.owner ?? account.address,
-        tokenAccount: account.address,
-        balance: account.uiAmount,
-        pctSupply: supply > 0 ? (account.uiAmount / supply) * 100 : 0,
-      }));
+      topN.forEach((account, i) => {
+        const owner = ownerMap[i]?.owner ?? null;
+        const pctSupply = supply > 0 ? (account.uiAmount / supply) * 100 : 0;
+        if (owner && !isWalletAddress(owner)) {
+          const entity = lookupEntity(owner);
+          programAccounts.push({ owner, token_account: account.address, pct_supply: Math.round(pctSupply * 100) / 100,
+            balance_usd: account.uiAmount * tokenPrice, ...(entity ? { entity_label: entity.label } : {}) });
+        } else if (holders.length < WHALES_MAX) {
+          holders.push({ walletAddress: owner ?? account.address, tokenAccount: account.address, balance: account.uiAmount, pctSupply });
+        }
+      });
       holdersSource = 'rpc';
     } else if (this.birdeye) {
       // Path B — Birdeye. Returns owner + token_account directly.
@@ -113,8 +145,10 @@ export class WhaleWatcher {
     }
 
     if (holders.length === 0) {
-      return this.emptyResult(mint, thresholdUsd, lookbackHours);
+      return { ...this.emptyResult(mint, thresholdUsd, lookbackHours), program_accounts: programAccounts, holders_source: holdersSource };
     }
+    const unavailable: string[] = [];
+    if (!(tokenPrice > 0)) unavailable.push('price');
 
     // Phase 3: Get recent signatures for each top holder's token account
     const sigTasks: ParallelTask<any>[] = holders.map((h) => ({
@@ -144,9 +178,11 @@ export class WhaleWatcher {
       try {
         txs = await this.helius.getEnhancedTransactions(sigStrings);
       } catch {
-        // Graceful degradation
+        unavailable.push('enhanced_tx'); // flows not read: direction becomes 'unknown'
       }
     }
+    // Without a price the USD threshold cannot apply, and without transactions there is nothing to count.
+    const flowsUnknown = unavailable.length > 0;
 
     // Phase 5: Aggregate per-wallet volumes for our target mint
     const walletVolumes = new Map<string, { buy: number; sell: number; count: number; lastTime: number }>();
@@ -190,7 +226,7 @@ export class WhaleWatcher {
       const sellVol = vol?.sell ?? 0;
       const totalVolume = buyVol + sellVol;
 
-      const direction: WhaleActivity['flow_direction'] =
+      const direction: WhaleActivity['flow_direction'] = flowsUnknown ? 'unknown' :
         buyVol > sellVol * 1.2 ? 'accumulating' :
         sellVol > buyVol * 1.2 ? 'distributing' : 'neutral';
 
@@ -216,7 +252,7 @@ export class WhaleWatcher {
     // Sort by balance (largest holders first)
     whales.sort((a, b) => b.balance_usd - a.balance_usd);
 
-    const netDirection: WhaleWatchEnrichment['net_flow_direction'] =
+    const netDirection: WhaleWatchEnrichment['net_flow_direction'] = flowsUnknown ? 'unknown' :
       totalAccumulation > totalDistribution * 1.2 ? 'accumulating' :
       totalDistribution > totalAccumulation * 1.2 ? 'distributing' : 'neutral';
 
@@ -225,14 +261,17 @@ export class WhaleWatcher {
       threshold_usd: thresholdUsd,
       lookback_hours: lookbackHours,
       whales,
+      program_accounts: programAccounts,
       total_whale_volume_usd: totalAccumulation + totalDistribution,
       net_flow_direction: netDirection,
       whale_count: whales.length,
       holders_source: holdersSource,
+      data_quality: { degraded: flowsUnknown, unavailable },
       last_updated: formatTimestamp(),
     };
 
-    await this.cache.set(cacheKey, enrichment, CACHE_TTL.whaleWatch);
+    // A result without price or transactions is cached briefly, so the next call reads again.
+    await this.cache.set(cacheKey, enrichment, flowsUnknown ? 15 : CACHE_TTL.whaleWatch);
     return enrichment;
   }
 
@@ -242,10 +281,13 @@ export class WhaleWatcher {
       threshold_usd: thresholdUsd,
       lookback_hours: lookbackHours,
       whales: [],
+      program_accounts: [],
       total_whale_volume_usd: 0,
-      net_flow_direction: 'neutral',
+      // No holders read = flow not measured.
+      net_flow_direction: 'unknown',
       whale_count: 0,
       holders_source: 'unavailable',
+      data_quality: { degraded: true, unavailable: ['holders'] },
       last_updated: formatTimestamp(),
     };
   }

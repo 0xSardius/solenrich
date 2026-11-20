@@ -1183,7 +1183,7 @@ function buildDocs() {
       'whale-watch': {
         price: '0.008',
         input: { mint: 'string', threshold_usd: 'number (default 10000)', lookback_hours: 'number (default 24)', format: 'json | llm | both' },
-        description: 'Top holders with accumulation/distribution tracking and balance context',
+        description: 'Top wallet holders with accumulation/distribution tracking and balance context. Whales are wallet-owned accounts only; program-owned large holders (AMM pool vaults, bonding curves, lockers — owner is a PDA) are listed in program_accounts and NOT counted as whale flow, because their transfers are retail trading against the pool. net_flow_direction is unknown (not neutral) when the token price or the transaction read was unavailable; data_quality names it.',
       },
       'batch-enrich': {
         price: '0.015',

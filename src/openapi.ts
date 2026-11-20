@@ -79,7 +79,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'whale-watch': {
     summary: 'Track whale holders and their recent flows for a Solana token',
-    description: 'Top holders with accumulation/distribution tracking, balance context, supply percentage.',
+    description: 'Top wallet holders with accumulation/distribution tracking, balance context, supply percentage. Pool vaults, curves and lockers (program-owned) are listed apart and not counted as whale flow; flow is unknown when price or transactions were unavailable.',
     schema: {
       type: 'object',
       required: ['mint'],

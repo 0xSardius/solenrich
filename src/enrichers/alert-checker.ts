@@ -1,6 +1,6 @@
 import type { TokenAnalyzer, TokenEnrichment } from './token-analyzer';
 import type { WalletProfiler, WalletEnrichment } from './wallet-profiler';
-import type { WhaleWatcher } from './whale-watch';
+import type { WhaleWatcher, WhaleWatchEnrichment } from './whale-watch';
 import type {
   SnapshotStore,
   TokenSnapshot,
@@ -183,7 +183,7 @@ export function detectTokenAlerts(
   mint: string,
   current: TokenEnrichment | null,
   snapshots: TokenSnapshot[],
-  whale: any | null,
+  whale: WhaleWatchEnrichment | null,
   c: Required<AlertCriteria>,
   sinceMs: number,
 ): Alert[] {
@@ -241,17 +241,19 @@ export function detectTokenAlerts(
     }
   }
 
-  // Whale flow — derived live from whale-watch over the lookback window
-  if (whale && typeof whale.total_volume_usd === 'number' && whale.total_volume_usd >= c.min_whale_volume_usd) {
-    const inflow = whale.net_flow === 'accumulating';
-    const outflow = whale.net_flow === 'distributing';
+  // Whale flow — derived live from whale-watch over the lookback window. (Read total_volume_usd / net_flow before
+  // 2026-11-17: fields that do not exist on WhaleWatchEnrichment, typed `any`, so whale alerts could never fire.)
+  if (whale && whale.total_whale_volume_usd >= c.min_whale_volume_usd) {
+    const inflow = whale.net_flow_direction === 'accumulating';
+    const outflow = whale.net_flow_direction === 'distributing';
     if (inflow || outflow) {
+      const active = whale.whales.filter((w) => w.transaction_count > 0).length;
       alerts.push({
         type: inflow ? 'whale_inflow' : 'whale_outflow',
-        severity: severityFromUsd(whale.total_volume_usd, [c.min_whale_volume_usd, c.min_whale_volume_usd * 5, c.min_whale_volume_usd * 20]),
+        severity: severityFromUsd(whale.total_whale_volume_usd, [c.min_whale_volume_usd, c.min_whale_volume_usd * 5, c.min_whale_volume_usd * 20]),
         entity: ent,
-        summary: `${shorten(mint)} whales ${inflow ? 'accumulating' : 'distributing'} — $${formatNum(whale.total_volume_usd)} net volume across ${whale.whale_count ?? 0} wallets`,
-        data: { net_flow: whale.net_flow, total_volume_usd: whale.total_volume_usd, whale_count: whale.whale_count },
+        summary: `${shorten(mint)} whales ${inflow ? 'accumulating' : 'distributing'} — $${formatNum(whale.total_whale_volume_usd)} whale volume across ${active} active of ${whale.whale_count} top wallets`,
+        data: { net_flow_direction: whale.net_flow_direction, total_whale_volume_usd: whale.total_whale_volume_usd, whale_count: whale.whale_count, active_whales: active },
         detected_at: now,
       });
     }

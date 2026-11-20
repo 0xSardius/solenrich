@@ -39,7 +39,7 @@ export interface ExitSignalResult {
   flags: string[];
   metrics: ExitMetrics;
   whales: {
-    net_flow_direction: 'accumulating' | 'distributing' | 'neutral';
+    net_flow_direction: 'accumulating' | 'distributing' | 'neutral' | 'unknown';
     whale_count: number;
     distributing_count: number;
     accumulating_count: number;

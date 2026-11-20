@@ -22,7 +22,8 @@ export interface WindowTxns {
 }
 
 export interface WhaleFlowInput {
-  net_flow_direction: 'accumulating' | 'distributing' | 'neutral';
+  /** 'unknown' = not measured (no price / tx read); scored like neutral — never a flag. */
+  net_flow_direction: 'accumulating' | 'distributing' | 'neutral' | 'unknown';
   distributing_count: number;
   accumulating_count: number;
   whale_count: number;

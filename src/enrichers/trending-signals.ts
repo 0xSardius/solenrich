@@ -19,7 +19,7 @@ export interface TrendingTokenSignal {
   holder_count: number | null;
   concentration_hhi: number | null;
   // Whale signal (optional, set when include_whale_watch=true)
-  whale_net_flow?: 'accumulating' | 'distributing' | 'neutral';
+  whale_net_flow?: 'accumulating' | 'distributing' | 'neutral' | 'unknown';
   whale_count?: number;
   total_whale_volume_usd?: number;
   // Composite signal (0-1, higher = more worth paying attention)
