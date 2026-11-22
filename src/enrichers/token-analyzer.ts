@@ -49,7 +49,8 @@ export interface TokenEnrichment {
   symbol: string;
   name: string;
   decimals: number;
-  supply: number;
+  /** UI-unit supply from the mint account. Null when the mint account was not read. */
+  supply: number | null;
   /** Null when no source reported a count. Never the length of the top-20 holder list. */
   holder_count: number | null;
   holder_count_source: 'birdeye' | 'jupiter' | null;
@@ -81,6 +82,8 @@ export interface TokenEnrichment {
   verified: boolean | null;
   mint_authority: string | null;
   freeze_authority: string | null;
+  /** False when the mint account was not read: then null authorities mean "unknown", not "renounced". */
+  authorities_known: boolean;
   data_quality: DataQuality;
   last_updated: string;
 }
@@ -193,8 +196,10 @@ export class TokenAnalyzer {
       dexPrice != null ? 'dexscreener' : jupPrice != null ? 'jupiter' : bePrice != null ? 'birdeye' : null;
     const price = priceUsd ?? 0; // numeric helper for the arithmetic below; output uses priceUsd
     const decimals = mintInfo?.decimals ?? jupiterToken?.decimals ?? birdeyeOverview?.decimals ?? 0;
+    // 0 is only a numeric helper for the arithmetic below; the output reports null when the mint account was not read.
     const rawSupply = mintInfo?.supply ?? 0;
     const supply = decimals > 0 ? rawSupply / 10 ** decimals : rawSupply;
+    const authoritiesKnown = mintInfo != null;
 
     // --- Price volatility ---
     // Prefer Birdeye daily candles (real OHLCV); fall back to DexScreener multi-timeframe estimate.
@@ -428,7 +433,7 @@ export class TokenAnalyzer {
       symbol: dexData?.symbol ?? jupiterToken?.symbol ?? birdeyeOverview?.symbol ?? '',
       name: dexData?.name ?? jupiterToken?.name ?? birdeyeOverview?.name ?? '',
       decimals,
-      supply,
+      supply: authoritiesKnown ? supply : null,
       holder_count: holderCount,
       holder_count_source: holderCountSource,
       price_usd: priceUsd,
@@ -450,6 +455,7 @@ export class TokenAnalyzer {
       verified,
       mint_authority: mintInfo?.mintAuthority ?? null,
       freeze_authority: mintInfo?.freezeAuthority ?? null,
+      authorities_known: authoritiesKnown,
       data_quality: dataQuality,
       last_updated: formatTimestamp(),
     };

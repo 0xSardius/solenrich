@@ -18,6 +18,9 @@ export interface DueDiligenceEnrichment {
   last_updated: string;
 }
 
+/** Cache TTL for a verdict built from partial data. */
+const DEGRADED_TTL_SECONDS = 15;
+
 export class DueDiligenceAnalyzer {
   constructor(
     private tokenAnalyzer: TokenAnalyzer,
@@ -42,12 +45,14 @@ export class DueDiligenceAnalyzer {
 
     if (!token) throw new Error('Token analysis failed');
 
-    // Use centralized token risk scorer
+    // Use centralized token risk scorer. Authorities count only when the mint account was read
+    // (a cached result from before 2026-11-22 has no authorities_known field: treat it as read).
+    const authoritiesKnown = token.authorities_known !== false;
     const riskResult = scoreTokenRisk({
       risk_flags_count: token.risk_flags.length,
       verified: token.verified,
-      mint_authority_active: token.mint_authority !== null,
-      freeze_authority_active: token.freeze_authority !== null,
+      mint_authority_active: authoritiesKnown ? token.mint_authority !== null : null,
+      freeze_authority_active: authoritiesKnown ? token.freeze_authority !== null : null,
       liquidity: token.liquidity,
       holder_concentration_top1: token.concentration?.top1_pct,
       holder_concentration_top5: token.concentration?.top5_pct,
@@ -55,9 +60,11 @@ export class DueDiligenceAnalyzer {
       whale_distributing: whales?.net_flow_direction === 'distributing',
     });
 
-    const recommendation: DueDiligenceEnrichment['recommendation'] =
+    // SAFE needs the authority check: with unread authorities the best verdict is CAUTION.
+    const scored: DueDiligenceEnrichment['recommendation'] =
       riskResult.score > 0.6 ? 'RISKY' :
       riskResult.score > 0.3 ? 'CAUTION' : 'SAFE';
+    const recommendation = scored === 'SAFE' && !authoritiesKnown ? 'CAUTION' : scored;
 
     // Default whale data if whale watch failed
     const whaleData: WhaleWatchEnrichment = whales ?? {
@@ -74,17 +81,25 @@ export class DueDiligenceAnalyzer {
       last_updated: formatTimestamp(),
     };
 
+    // Whale flow not measured (whale-watch failed or had no prices): named, not scored.
+    const whalesMeasured = whaleData.net_flow_direction !== 'unknown';
+    const riskFactors = whalesMeasured
+      ? riskResult.factors
+      : [...riskResult.factors, 'Whale flow not measured (whale-watch did not answer) — not scored'];
+
     const enrichment: DueDiligenceEnrichment = {
       token,
       whales: whaleData,
       overall_risk_score: riskResult.score,
       risk_level: riskResult.risk_level,
-      risk_factors: riskResult.factors,
+      risk_factors: riskFactors,
       recommendation,
       last_updated: formatTimestamp(),
     };
 
-    await this.cache.set(cacheKey, enrichment, CACHE_TTL.dueDiligence);
+    // A partial verdict gets a short cache, so one upstream hiccup is not served for 10 minutes.
+    const partial = token.data_quality?.degraded === true || !authoritiesKnown || !whalesMeasured;
+    await this.cache.set(cacheKey, enrichment, partial ? DEGRADED_TTL_SECONDS : CACHE_TTL.dueDiligence);
     return enrichment;
   }
 }

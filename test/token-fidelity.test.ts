@@ -4,6 +4,8 @@ import { DexScreenerClient } from '../src/sources/dexscreener';
 import { JupiterClient, jupiterLimiter } from '../src/sources/jupiter';
 import { TokenAnalyzer } from '../src/enrichers/token-analyzer';
 import { scoreTokenRisk } from '../src/enrichers/risk-scorer';
+import { DueDiligenceAnalyzer } from '../src/enrichers/due-diligence';
+import { formatDueDiligenceBriefing } from '../src/formatters/llm-due-diligence';
 
 const noCache = { get: async () => null, set: async () => {}, mget: async (k: string[]) => k.map(() => null) } as any;
 const realFetch = globalThis.fetch;
@@ -57,14 +59,17 @@ describe('Jupiter slippage is reported in percent', () => {
 });
 
 // TokenAnalyzer with stub sources
-function analyzer(o: { dex?: any; dexThrows?: boolean; jup?: any; jupThrows?: boolean; largest?: any[]; lastMaxAge?: number }) {
+function analyzer(o: { dex?: any; dexThrows?: boolean; jup?: any; jupThrows?: boolean; mintThrows?: boolean; mint?: any; largest?: any[]; lastMaxAge?: number }) {
   const dexscreener = { getTokenData: async () => { if (o.dexThrows) throw new Error('429'); return o.dex ?? null; } };
   const jupiter = {
     getTokenInfo: async () => { if (o.jupThrows) throw new Error('429'); return o.jup ?? null; },
     getSlippage: async (_m: string, maxAge: number) => { o.lastMaxAge = maxAge; return { estimates: [], age_s: null }; },
   };
   const rpc = {
-    getMintInfo: async () => ({ decimals: 6, supply: 1_000_000_000_000, mintAuthority: null, freezeAuthority: null }),
+    getMintInfo: async () => {
+      if (o.mintThrows) throw new Error('rpc timeout');
+      return o.mint ?? { decimals: 6, supply: 1_000_000_000_000, mintAuthority: null, freezeAuthority: null };
+    },
     getTokenLargestAccounts: async () => o.largest ?? [],
     resolveTokenAccountOwners: async (a: string[]) => a.map((x) => ({ tokenAccount: x, owner: x })),
   };
@@ -153,6 +158,49 @@ describe('Slippage cache age is tiered by token age', () => {
     const refetch = await j.getSlippage('M', 120); // fresh token: 200 s is too old
     expect(calls).toBe(8);
     expect(refetch.age_s).toBe(0);
+  });
+});
+
+describe('Mint account unread → authorities unknown, not renounced (audit #28)', () => {
+  test('mint info read: renounced authorities are known; supply set', async () => {
+    const t = await analyzer({ dex: dex(), jup: { verified: true } }).enrich('M');
+    expect(t.authorities_known).toBe(true);
+    expect(t.mint_authority).toBeNull();
+    expect(t.supply).toBe(1_000_000);
+  });
+  test('mint info failed → authorities_known false, supply null, degraded, no authority flags', async () => {
+    const t = await analyzer({ dex: dex(), jup: { verified: true, decimals: 6 }, mintThrows: true, largest: top20 }).enrich('M', true);
+    expect(t.authorities_known).toBe(false);
+    expect(t.supply).toBeNull();
+    expect(t.concentration).toBeUndefined();
+    expect(t.data_quality.degraded).toBe(true);
+    expect(t.data_quality.unavailable).toContain('mint_info');
+  });
+  test('scoreTokenRisk: unknown authorities are not scored but are named', () => {
+    const r = scoreTokenRisk({ risk_flags_count: 0, verified: true, mint_authority_active: null, freeze_authority_active: null, liquidity: 100_000 });
+    expect(r.score).toBe(0);
+    expect(r.factors.some((f) => f.includes('not read'))).toBe(true);
+  });
+  test('due-diligence: unknown authorities withhold SAFE (CAUTION at most safe), short cache, LLM says unknown', async () => {
+    const sets: Array<[string, number]> = [];
+    const cache = { get: async () => null, set: async (k: string, _v: unknown, ttl: number) => { sets.push([k, ttl]); } } as any;
+    const token = await analyzer({ dex: dex(), jup: { verified: true }, mintThrows: true }).enrich('M');
+    const whales = { mint: 'M', threshold_usd: 10000, lookback_hours: 72, whales: [], program_accounts: [], total_whale_volume_usd: 0,
+      net_flow_direction: 'neutral', whale_count: 0, holders_source: 'rpc', data_quality: { degraded: false, unavailable: [] }, last_updated: '' };
+    const dd = await new DueDiligenceAnalyzer({ enrich: async () => token } as any, { enrich: async () => whales } as any, cache).enrich('M');
+    expect(dd.recommendation).toBe('CAUTION');
+    expect(sets[0][1]).toBeLessThanOrEqual(15);
+    const brief = formatDueDiligenceBriefing(dd);
+    expect(brief).toContain('could not be read');
+  });
+  test('due-diligence: whale-watch failed → LLM says not measured, not "no whale activity"; risk factor names it', async () => {
+    const cache = { get: async () => null, set: async () => {} } as any;
+    const token = await analyzer({ dex: dex(), jup: { verified: true } }).enrich('M');
+    const dd = await new DueDiligenceAnalyzer({ enrich: async () => token } as any, { enrich: async () => { throw new Error('rpc'); } } as any, cache).enrich('M');
+    const brief = formatDueDiligenceBriefing(dd);
+    expect(brief).not.toContain('No significant whale activity detected');
+    expect(brief).toContain('not measured');
+    expect(dd.risk_factors.some((f) => f.toLowerCase().includes('whale') && f.includes('not measured'))).toBe(true);
   });
 });
 

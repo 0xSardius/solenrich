@@ -88,8 +88,8 @@ export class TokenDiscovery {
         const riskResult = scoreTokenRisk({
           risk_flags_count: t.risk_flags.length,
           verified: t.verified,
-          mint_authority_active: t.mint_authority !== null,
-          freeze_authority_active: t.freeze_authority !== null,
+          mint_authority_active: t.authorities_known === false ? null : t.mint_authority !== null,
+          freeze_authority_active: t.authorities_known === false ? null : t.freeze_authority !== null,
           liquidity: t.liquidity,
           holder_concentration_top1: t.concentration?.top1_pct,
           holder_concentration_top5: t.concentration?.top5_pct,
@@ -108,8 +108,9 @@ export class TokenDiscovery {
           risk_score: riskResult.score,
           risk_level: riskResult.risk_level,
           risk_flags: t.risk_flags,
+          // SAFE needs the authority check: with unread authorities the best verdict is CAUTION.
           recommendation: riskResult.score > 0.6 ? 'RISKY' as const :
-                          riskResult.score > 0.3 ? 'CAUTION' as const : 'SAFE' as const,
+                          riskResult.score > 0.3 || t.authorities_known === false ? 'CAUTION' as const : 'SAFE' as const,
           verified: t.verified,
           holder_count: t.holder_count,
           concentration_hhi: t.concentration?.herfindahl_index ?? null,

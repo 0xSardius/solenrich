@@ -12,7 +12,7 @@ export const TokenEnrichmentSchema = z.object({
   symbol: z.string(),
   name: z.string(),
   decimals: z.number(),
-  supply: z.number(),
+  supply: z.number().nullable().describe('Null when the mint account was not read'),
   holder_count: z.number().nullable().describe('Null when no source reported a count'),
   holder_count_source: z.enum(['birdeye', 'jupiter']).nullable(),
   price_usd: z.number().nullable(),
@@ -66,6 +66,7 @@ export const TokenEnrichmentSchema = z.object({
   verified: z.boolean().nullable().describe('Null when Jupiter did not answer'),
   mint_authority: z.string().nullable(),
   freeze_authority: z.string().nullable(),
+  authorities_known: z.boolean().describe('False when the mint account was not read: null authorities then mean unknown, not renounced'),
   data_quality: z.object({
     degraded: z.boolean(),
     unavailable: z.array(z.string()),

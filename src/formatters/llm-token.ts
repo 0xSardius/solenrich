@@ -103,7 +103,9 @@ export function formatTokenBriefing(data: TokenEnrichment): string {
   }
 
   // Authorities
-  if (data.mint_authority || data.freeze_authority) {
+  if (data.authorities_known === false) {
+    lines.push('Authorities: unknown — the mint account could not be read (not the same as renounced).');
+  } else if (data.mint_authority || data.freeze_authority) {
     const authorities: string[] = [];
     if (data.mint_authority) authorities.push('mint authority active');
     if (data.freeze_authority) authorities.push('freeze authority active');

@@ -51,6 +51,9 @@ export function formatDueDiligenceBriefing(data: DueDiligenceEnrichment): string
   if (t.data_quality?.degraded) {
     lines.push(`⚠ Partial data: ${t.data_quality.unavailable.join(', ')} did not answer — the verdict uses what was read.`);
   }
+  if (t.authorities_known === false) {
+    lines.push('Mint and freeze authority **could not be read** (mint account did not answer) — treat as unknown, not renounced.');
+  }
   if (t.mint_authority) {
     lines.push('Mint authority is **active** — token supply can be inflated.');
   }
@@ -77,6 +80,8 @@ export function formatDueDiligenceBriefing(data: DueDiligenceEnrichment): string
         : 'no recent activity';
       lines.push(`  - ${w.address.slice(0, 8)}...${w.address.slice(-4)}: holds ${w.pct_supply.toFixed(1)}% — ${activity}`);
     }
+  } else if (data.whales.net_flow_direction === 'unknown') {
+    lines.push('Whale activity not measured (whale-watch did not answer).');
   } else {
     lines.push('No significant whale activity detected.');
   }

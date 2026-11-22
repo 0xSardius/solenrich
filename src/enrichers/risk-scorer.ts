@@ -136,8 +136,9 @@ export interface TokenRiskInput {
   risk_flags_count: number;
   /** null = Jupiter did not answer; no penalty for an unread value. */
   verified: boolean | null;
-  mint_authority_active: boolean;
-  freeze_authority_active: boolean;
+  /** null = the mint account was not read: not scored, but named in the factors. */
+  mint_authority_active: boolean | null;
+  freeze_authority_active: boolean | null;
   /** null = no source reported liquidity; no penalty for an unread value. */
   liquidity: number | null;
   holder_concentration_top1?: number;
@@ -173,6 +174,9 @@ export function scoreTokenRisk(data: TokenRiskInput): RiskResult {
   if (data.freeze_authority_active) {
     score += W.freeze_authority;
     factors.push('Freeze authority active — accounts can be frozen');
+  }
+  if (data.mint_authority_active == null || data.freeze_authority_active == null) {
+    factors.push('Mint and freeze authority not read (mint account did not answer) — not scored; check again before relying on the verdict');
   }
 
   // Low liquidity (null = not reported: not scored)
