@@ -75,6 +75,23 @@ describe('buys', () => {
     expect(decideIntent(input({ category: 'whale' }), { risk: risk(), buyMomentum: exit('INSUFFICIENT_DATA') }, NOW).codes).toEqual(['MOMENTUM_INSUFFICIENT_DATA']);
   });
 
+  test('a traded bonding-curve token with unreported liquidity is LIQUIDITY_UNKNOWN, not TOKEN_NO_MARKET (audit #38)', () => {
+    const curve = risk([], { liquidity: null, bonding_curve: true, data_quality: { degraded: false, unavailable: [] } });
+    const r = decideIntent(input({ category: 'whale' }), { risk: curve, buyMomentum: exit('HOLD') }, NOW);
+    expect(r.codes).toEqual(['RISK_LIQUIDITY_UNKNOWN']);
+    expect(r.verdict).toBe('HOLD');
+  });
+
+  test('extreme volatility from the 24h estimate does not block; from 7d candles it does (audit #41)', () => {
+    const est = risk(['extreme_volatility'], { volatility: { window: '24h', source: 'dexscreener_intraday', classification: 'EXTREME' } });
+    const r = decideIntent(input({ category: 'whale' }), { risk: est, buyMomentum: exit('HOLD') }, NOW);
+    expect(r.codes).toEqual([]);
+    expect(r.verdict).toBe('PROCEED');
+    expect(r.caveats.some((c) => c.includes('24h estimate'))).toBe(true);
+    const real = risk(['extreme_volatility'], { volatility: { window: '7d', source: 'birdeye_daily', classification: 'EXTREME' } });
+    expect(decideIntent(input({ category: 'whale' }), { risk: real, buyMomentum: exit('HOLD') }, NOW).codes).toEqual(['RISK_EXTREME_VOLATILITY']);
+  });
+
   test('all checks pass → PROCEED', () => {
     const r = decideIntent(input(), cleanBuy, NOW);
     expect([r.verdict, r.suggested_fraction, r.codes]).toEqual(['PROCEED', 1, []]);

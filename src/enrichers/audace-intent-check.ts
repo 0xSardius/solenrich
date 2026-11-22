@@ -143,13 +143,25 @@ function buyCheck(mint: string, legs: IntentLegs, category: string, network: Net
   let flags: string[] | null = null;
   if (legs.risk) {
     flags = legs.risk.risk_flags ?? [];
-    // No price or no liquidity = no market to read (an unknown or dead mint). The checks
+    // No price, or liquidity measured as 0 = no market to read (an unknown or dead mint). The checks
     // cannot run, so the buy holds (fail closed), like a failed read.
     // A degraded read (DexScreener/Jupiter did not answer) is a failed read, not proof that there is no market.
-    const noMarket = !((legs.risk.price_usd ?? 0) > 0) || !((legs.risk.liquidity ?? 0) > 0);
+    // A priced token whose liquidity no source reported (e.g. a bonding curve) still holds, but as
+    // RISK_LIQUIDITY_UNKNOWN: the depth check could not run; the token is not dead.
+    const priced = (legs.risk.price_usd ?? 0) > 0;
+    const liq = legs.risk.liquidity;
+    const noMarket = !priced || (liq != null && !(liq > 0));
     if (noMarket) codes.push(legs.risk.data_quality?.degraded ? 'RISK_UNAVAILABLE' : 'TOKEN_NO_MARKET');
+    else if (liq == null) codes.push('RISK_LIQUIDITY_UNKNOWN');
     const block = new Set<string>(BLOCK_FLAGS[network]);
-    for (const f of flags) if (block.has(f)) codes.push(`RISK_${f.toUpperCase()}`);
+    // Extreme volatility blocks only when measured on daily candles. The 24h estimate (four DexScreener points)
+    // reads EXTREME on most memecoins after one hourly move, so it is a caveat, not a block.
+    const estimatedVol = legs.risk.volatility?.window === '24h';
+    for (const f of flags) {
+      if (!block.has(f)) continue;
+      if (f === 'extreme_volatility' && estimatedVol) continue;
+      codes.push(`RISK_${f.toUpperCase()}`);
+    }
   } else codes.push('RISK_UNAVAILABLE');
 
   let signal: TrenchesCheckVerdict | null = null;
@@ -261,6 +273,9 @@ export function decideIntent(
     }
   }
 
+  if (buy && legs.risk?.volatility?.window === '24h' && (legs.risk.risk_flags ?? []).includes('extreme_volatility')) {
+    caveats.push('Volatility reads EXTREME on a 24h estimate (DexScreener 1h/6h/24h changes, not daily candles): reported, not used as a block.');
+  }
   if (network === 'devnet') {
     caveats.push('Devnet league: the verdicts read the mainnet market for each mint identity. Devnet pool depth is not part of the verdict.');
   } else if (direction === 'sell') {
