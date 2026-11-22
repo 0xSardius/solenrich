@@ -209,10 +209,12 @@ export class TrenchesScanOrchestrator {
       confluence_counts,
       legs: {
         runner: {
-          ok: runnerData != null,
+          ok: runnerData != null && runnerData.data_quality?.degraded !== true,
           candidates_scanned: runnerData?.candidates_scanned ?? 0,
           passed_filters: runnerData?.passed_filters ?? 0,
-          error: runnerLeg.status === 'rejected' ? String(runnerLeg.reason?.message ?? runnerLeg.reason) : null,
+          error: runnerLeg.status === 'rejected'
+            ? String(runnerLeg.reason?.message ?? runnerLeg.reason)
+            : runnerData?.data_quality?.degraded ? 'DexScreener unreachable (pair data did not answer)' : null,
         },
         smart_money: {
           ok: smartData != null,
@@ -232,7 +234,9 @@ export class TrenchesScanOrchestrator {
       last_updated: formatTimestamp(),
     };
 
-    await this.cache.set(cacheKey, result, CACHE_TTL.trenchesScan);
+    // A scan with a failed leg gets a short cache, so one upstream hiccup is not served for the full TTL.
+    const partial = !result.legs.runner.ok || !result.legs.smart_money.ok;
+    await this.cache.set(cacheKey, result, partial ? 15 : CACHE_TTL.trenchesScan);
     return result;
   }
 }

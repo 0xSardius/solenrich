@@ -1,7 +1,8 @@
 // Trenches suite fidelity (audit 2026-11-17, step 6): unread DexScreener values are null, an empty whale block is
 // not market data, unknown liquidity is flagged, not "low".
-import { describe, expect, test } from 'bun:test';
-import { aggregatePairs } from '../src/enrichers/runner-detector';
+import { afterEach, describe, expect, test } from 'bun:test';
+import { aggregatePairs, RunnerDetector } from '../src/enrichers/runner-detector';
+import { DexScreenerClient } from '../src/sources/dexscreener';
 import { assessExit } from '../src/enrichers/exit-score';
 import { assessRunner } from '../src/enrichers/runner-score';
 
@@ -47,6 +48,36 @@ describe('exit-signal verdict', () => {
   test('unknown liquidity does not raise thin_exit_liquidity', () => {
     expect(assessExit({ ...quiet, whale: null }).flags).not.toContain('thin_exit_liquidity');
     expect(assessExit({ ...quiet, liquidity_usd: 5000, whale: null }).flags).toContain('thin_exit_liquidity');
+  });
+});
+
+describe('DexScreener batch errors are failures, not "no pairs" (audit #35)', () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => { globalThis.fetch = realFetch; });
+  const noCache = { get: async () => null, set: async () => {} } as any;
+  test('every chunk non-2xx → getPairsBatch throws (callers then say "unreachable", not "untradable")', async () => {
+    globalThis.fetch = (async () => new Response('rate limited', { status: 429 })) as any;
+    await expect(new DexScreenerClient(noCache).getPairsBatch(['M'])).rejects.toThrow();
+  });
+  test('one chunk answers, one fails → the answered pairs are returned', async () => {
+    let n = 0;
+    globalThis.fetch = (async () => (n++ === 0 ? new Response(JSON.stringify([{ baseToken: { address: 'A' } }]), { status: 200 }) : new Response('', { status: 500 }))) as any;
+    const pairs = await new DexScreenerClient(noCache).getPairsBatch(Array.from({ length: 40 }, (_, i) => `m${i}`));
+    expect(pairs.length).toBe(1);
+  });
+  test('no mints → [] without a request', async () => {
+    globalThis.fetch = (async () => { throw new Error('must not fetch'); }) as any;
+    expect(await new DexScreenerClient(noCache).getPairsBatch([])).toEqual([]);
+  });
+  test('runner-scan with DexScreener down → caveat says unreachable, result not cached', async () => {
+    const sets: string[] = [];
+    const cache = { get: async () => null, set: async (k: string) => { sets.push(k); } } as any;
+    const dex = { getTrendingCandidates: async () => ['A', 'B'], getPairsBatch: async () => { throw new Error('429'); } } as any;
+    const r = await new RunnerDetector(dex, cache).scan(24, 0, 0, 10);
+    expect(r.runners).toEqual([]);
+    expect(r.caveats.join(' ')).toContain('unreachable');
+    expect(r.caveats.join(' ')).not.toContain('quiet trenches');
+    expect(sets.filter((k) => k.startsWith('runner:scan:'))).toEqual([]);
   });
 });
 

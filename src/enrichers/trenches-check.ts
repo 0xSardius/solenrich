@@ -257,7 +257,9 @@ export class TrenchesCheckAnalyzer {
       last_updated: formatTimestamp(),
     };
 
-    await this.cache.set(cacheKey, result, CACHE_TTL.trenchesCheck);
+    // A failed leg gets a short cache, so the failed read is retried soon.
+    const partial = pairsLeg.status === 'rejected' || smartLeg.status === 'rejected';
+    await this.cache.set(cacheKey, result, partial ? 15 : CACHE_TTL.trenchesCheck);
     return result;
   }
 }

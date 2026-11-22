@@ -216,22 +216,29 @@ export class DexScreenerClient {
    * Batch pair lookup — `tokens/v1/solana/{mint1,mint2,...}` accepts up to 30
    * comma-separated addresses per call, so a 45-token scan costs 2 requests
    * instead of 45. Returns the raw pairs; callers group by `baseToken.address`.
+   * Throws when no chunk answered (non-2xx or network error), so a caller can say "DexScreener unreachable"
+   * instead of "no pairs / untradable". A partial failure returns the pairs that did answer.
    */
   async getPairsBatch(mints: string[]): Promise<DexPair[]> {
     const out: DexPair[] = [];
+    let answered = 0;
+    let lastError = '';
     for (let i = 0; i < mints.length; i += 30) {
       const chunk = mints.slice(i, i + 30);
       try {
         const res = await fetch(`${this.baseUrl}/tokens/v1/solana/${chunk.join(',')}`, {
           headers: { Accept: 'application/json' },
         });
-        if (!res.ok) { await drain(res); continue; }
+        if (!res.ok) { lastError = `HTTP ${res.status}`; await drain(res); continue; }
         const pairs: unknown = await res.json();
+        answered++;
         if (Array.isArray(pairs)) out.push(...(pairs as DexPair[]));
       } catch (err) {
+        lastError = String(err);
         console.warn(`[dexscreener] batch chunk failed: ${err}`);
       }
     }
+    if (mints.length > 0 && answered === 0) throw new Error(`DexScreener pairs batch failed: ${lastError}`);
     return out;
   }
 

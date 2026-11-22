@@ -226,7 +226,8 @@ export class ExitSignalAnalyzer {
       last_updated: formatTimestamp(),
     };
 
-    await this.cache.set(cacheKey, result, CACHE_TTL.exitSignal);
+    // DexScreener did not answer: a short cache, so the failed read is retried soon.
+    await this.cache.set(cacheKey, result, pairsLeg.status === 'rejected' ? 15 : CACHE_TTL.exitSignal);
     return withPosition(result, entryPriceUsd);
   }
 }

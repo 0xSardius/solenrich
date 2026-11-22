@@ -48,6 +48,8 @@ export interface RunnerScanResult {
   /** Where the candidate pool came from, and what that biases it toward. */
   candidate_source: string;
   caveats: string[];
+  /** Present only when a core read failed: then an empty runner list means "not read", not "quiet market". */
+  data_quality?: { degraded: boolean; unavailable: string[] };
   last_updated: string;
 }
 
@@ -135,7 +137,17 @@ export class RunnerDetector {
       return this.empty(maxTokenAgeHours, minLiquidityUsd, minVolumeH1Usd, limit, candidateSource, 0);
     }
 
-    const pairs = await this.dexscreener.getPairsBatch(mints);
+    let pairs: DexPair[];
+    try {
+      pairs = await this.dexscreener.getPairsBatch(mints);
+    } catch (err) {
+      // DexScreener did not answer: report it as a failed read (not cached), never as a quiet market.
+      console.warn(`[runner-scan] pairs batch failed: ${err}`);
+      const r = this.empty(maxTokenAgeHours, minLiquidityUsd, minVolumeH1Usd, limit, candidateSource, 0);
+      r.caveats = ['DexScreener unreachable this scan (pair data did not answer) — no runners could be scored. Retry in a minute.'];
+      r.data_quality = { degraded: true, unavailable: ['dexscreener_pairs'] };
+      return r;
+    }
     const aggregated = aggregatePairs(pairs);
 
     // Step 2: filter to the tradeable, fresh, actually-moving subset
