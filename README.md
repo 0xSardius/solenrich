@@ -48,7 +48,7 @@ All paid endpoints accept POST requests to `/entrypoints/{key}/invoke` with a JS
 |----------|-------|-------|-------------|
 | `enrich-wallet-light` | $0.002 | `address`, `format` | SOL balance, token holdings, NFT breakdown, labels, risk score |
 | `enrich-wallet-full` | $0.005 | `address`, `format` | + DeFi positions, connected wallets, enhanced tx history |
-| `enrich-token-light` | $0.002 | `mint`, `format` | Price (median of 3 sources), market cap, volume, liquidity, risk flags |
+| `enrich-token-light` | $0.002 | `mint`, `format` | Price (DexScreener, then Jupiter, then Birdeye; `price_source` names it), market cap, volume, liquidity, risk flags |
 | `enrich-token-full` | $0.004 | `mint`, `format` | + Top 20 holders, HHI concentration, volatility metrics |
 | `parse-transaction` | $0.001 | `signature`, `format` | Type detection, protocol identification, transfer breakdown |
 

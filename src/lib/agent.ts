@@ -1488,7 +1488,7 @@ function buildDocs() {
         },
       },
       pricing: {
-        description: 'Token prices are the median of up to 3 sources: Helius DAS, DexScreener, and Jupiter. Median resists outliers from any single DEX.',
+        description: 'Token price is the first source that reports a USD price, in this order: DexScreener (deepest priced pair), Jupiter token API, Birdeye. price_source names the source; price_usd is null when none answered.',
       },
     },
     data_sources: {
