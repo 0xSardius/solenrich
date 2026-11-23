@@ -339,10 +339,17 @@ describe('reward risk: scoreRewardRisk', () => {
 
   test('stale payouts and concentrated holders pull the score down', () => {
     const rewards = { ...zcatRewards.rewards, lastPayoutAt: '2026-07-01T00:00:00Z' };
-    const r = scoreRewardRisk({ ...base(), rewards, top10Pct: 85 });
+    const r = scoreRewardRisk({ ...base(), rewards, top10Pct: 85, top10Basis: 'wallets' });
     expect(r.warnings.some((w) => w.includes('quiet'))).toBe(true);
     expect(r.warnings.some((w) => w.includes('concentrate'))).toBe(true);
     expect(r.score).toBeLessThan(scoreRewardRisk(base()).score);
+  });
+
+  test('top-10 from raw token accounts (owners not read) is reported, not scored — audit #24', () => {
+    const r = scoreRewardRisk({ ...base(), top10Pct: 85, top10Basis: 'token_accounts' });
+    expect(r.warnings.some((w) => w.includes('may include the pool vault'))).toBe(true);
+    expect(r.warnings.some((w) => w.includes('concentrate'))).toBe(false);
+    expect(r.holders.top10_basis).toBe('token_accounts');
   });
 });
 
@@ -1005,7 +1012,7 @@ describe('population: summary, freshness, and what the index does with it', () =
     expect(r.since).toBe(iso(NOW - 31 * D));
     expect(r.coins.map((c) => c.mint)).toEqual([known]);
     expect(r.not_found).toEqual([unknown]);
-    expect(['PAYING', 'STALE', 'NEVER', 'NOT_REWARD']).toContain(r.coins[0].payout_status);
+    expect(['PAYING', 'STALE', 'NEVER', 'NOT_REWARD', 'UNKNOWN']).toContain(r.coins[0].payout_status);
     expect(r.checked_at).toBe(iso(NOW));
     const order = { high: 0, medium: 1, low: 2 } as const;
     for (let i = 1; i < r.alerts.length; i++) expect(order[r.alerts[i - 1].severity]).toBeLessThanOrEqual(order[r.alerts[i].severity]);
@@ -1057,7 +1064,9 @@ describe('index: gems + new screener filters', () => {
     const all = idx.screen({ limit: 100 });
     expect(all.rows.length).toBeGreaterThan(0);
     for (const r of all.rows) {
-      expect(['PAYING', 'STALE', 'NEVER', 'NOT_REWARD']).toContain(r.payoutStatus);
+      // UNKNOWN = a fixture coin with no rewards-ledger row (audit #22): not read, not NEVER.
+      expect(['PAYING', 'STALE', 'NEVER', 'NOT_REWARD', 'UNKNOWN']).toContain(r.payoutStatus);
+      if (r.payoutStatus === 'UNKNOWN') expect(r.ledgerSeen).toBe(false);
       if (r.bps != null) expect(r.roundTripPct).toBe(r.bps * 2 / 100);
       expect(r.live).toBe(r.paying24h && r.volume24hUsd > 0);
     }

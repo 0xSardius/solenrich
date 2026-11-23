@@ -109,7 +109,7 @@ export function formatStonkAlertsBriefing(d: StonkAlertsResult): string {
     lines.push('');
     lines.push('### Now');
     for (const c of d.coins) {
-      lines.push(`- $${c.symbol ?? shortenAddress(c.mint)} (${c.quote_symbol}): ${c.payout_status}${c.hours_since_last_payout != null ? `, last payout ${c.hours_since_last_payout}h ago` : ''} | 24h vol ${formatUsd(c.volume_24h_usd)} | ${c.holder_count} holders | mcap ${formatUsd(c.market_cap_usd)}`);
+      lines.push(`- $${c.symbol ?? shortenAddress(c.mint)} (${c.quote_symbol}): ${c.payout_status}${c.hours_since_last_payout != null ? `, last payout ${c.hours_since_last_payout}h ago` : ''} | 24h vol ${formatUsd(c.volume_24h_usd)} | ${c.holder_count != null ? `${c.holder_count} holders` : 'holders not read yet'} | mcap ${formatUsd(c.market_cap_usd)}`);
     }
   }
   if (d.not_found.length) lines.push(`\nNot in the index: ${d.not_found.map((m) => shortenAddress(m)).join(', ')}`);
@@ -194,7 +194,7 @@ export function formatStonkScreenerBriefing(d: StonkScreenerResult): string {
       const y7 = r.yield_7d_pct != null ? `${r.yield_7d_pct.toFixed(2)}%${r.window_7d_actual_days != null && r.window_7d_actual_days < 6.5 ? '*' : ''}` : '—';
       const pay = r.payout_status === 'PAYING' ? `paying (${r.hours_since_last_payout}h)` : r.payout_status.toLowerCase();
       const chg = r.price_change_24h_pct != null ? `${r.price_change_24h_pct > 0 ? '+' : ''}${r.price_change_24h_pct.toFixed(0)}%` : '—';
-      lines.push(`| ${i + 1} | $${r.symbol} | ${r.quote_symbol} (${r.quote_category}) | ${pay} | ${r.round_trip_pct != null ? `${r.round_trip_pct}%` : 'none'} | ${r.holder_count} | ${r.rewards_usd != null ? formatUsd(r.rewards_usd) : '—'} | ${y7} | ${formatUsd(r.volume_24h_usd)} | ${formatUsd(r.market_cap_usd)} | ${chg} |`);
+      lines.push(`| ${i + 1} | $${r.symbol} | ${r.quote_symbol} (${r.quote_category}) | ${pay} | ${r.round_trip_pct != null ? `${r.round_trip_pct}%` : 'none'} | ${r.holder_count ?? 'not read yet'} | ${r.rewards_usd != null ? formatUsd(r.rewards_usd) : '—'} | ${y7} | ${formatUsd(r.volume_24h_usd)} | ${formatUsd(r.market_cap_usd)} | ${chg} |`);
     });
     lines.push('');
     lines.push('_* partial window — fewer days of history than the window length. RT cost = transfer tax on a buy + a sell, before slippage._');
@@ -271,7 +271,7 @@ export function formatStonkGemsBriefing(d: StonkGemsResult): string {
     for (const g of d.gems) {
       const pay = g.payout_status === 'PAYING' ? `${g.hours_since_last_payout}h ago` : g.payout_status.toLowerCase();
       const chg = g.price_change_24h_pct != null ? `${g.price_change_24h_pct > 0 ? '+' : ''}${g.price_change_24h_pct.toFixed(0)}%` : '—';
-      lines.push(`| ${g.rank} | $${g.symbol} | ${g.quote_symbol} | ${GEM_LINE[g.stage]} ${g.gem_score} | ${pay} | ${g.holder_count} | ${formatUsd(g.market_cap_usd)} | ${g.turnover_24h_pct != null ? `${g.turnover_24h_pct}%` : '—'} | ${chg} | ${g.round_trip_pct != null ? `${g.round_trip_pct}%` : 'none'} |`);
+      lines.push(`| ${g.rank} | $${g.symbol} | ${g.quote_symbol} | ${GEM_LINE[g.stage]} ${g.gem_score} | ${pay} | ${g.holder_count ?? 'not read yet'} | ${formatUsd(g.market_cap_usd)} | ${g.turnover_24h_pct != null ? `${g.turnover_24h_pct}%` : '—'} | ${chg} | ${g.round_trip_pct != null ? `${g.round_trip_pct}%` : 'none'} |`);
     }
     lines.push('');
     for (const g of d.gems.filter((x) => x.stage === 'GEM' || x.stage === 'WATCH').slice(0, 6)) {

@@ -22,6 +22,9 @@ export interface YieldWindow {
   annualized_pct: number | null;
   caution: boolean;
   caution_reason: string | null;
+  /** Distinct market-cap observations behind avg_market_cap_usd (launch, past days, now). Under 3 = too thin to
+   *  project from: stonk-quote will not use the window. */
+  mcap_observations?: number;
 }
 
 export interface StonkYieldResult {
@@ -102,6 +105,10 @@ export function computeYield(input: YieldInputs): Omit<StonkYieldResult, 'next_s
     if (partial && !cautionReason) cautionReason = `only ${r.actualDays} days of history behind a ${windowDays}-day window`;
     const under7 = r.actualDays < 7;
     if (under7 && !cautionReason) cautionReason = `window under 7 days (${r.actualDays}d) — annualized figure is a projection, not a track record`;
+    // Observations: points on past days (today's point is the current market cap itself) plus now.
+    const today = Math.floor(input.now / 86_400_000);
+    const obs = points.filter((p) => p.marketCapUsd > 0 && Math.floor(p.t / 86_400_000) !== today).length + (mcapNow > 0 ? 1 : 0);
+    if (obs < 3) cautionReason = 'average market cap from fewer than 3 observations';
     return {
       window_days: windowDays,
       actual_days: r.actualDays,
@@ -112,6 +119,7 @@ export function computeYield(input: YieldInputs): Omit<StonkYieldResult, 'next_s
       annualized_pct: annualize(r.yieldPct, r.actualDays),
       caution: under7 || partial || cautionReason != null,
       caution_reason: cautionReason ?? (under7 ? 'window under 7 days' : null),
+      mcap_observations: obs,
     };
   };
 
@@ -120,7 +128,10 @@ export function computeYield(input: YieldInputs): Omit<StonkYieldResult, 'next_s
     if (ageDays == null || ageDays <= 0) {
       return { window_days: 0, actual_days: null, rewards_quote: null, rewards_usd: null, avg_market_cap_usd: null, yield_pct: null, annualized_pct: null, caution: true, caution_reason: 'launch date unknown' };
     }
-    const mcaps = series.map((p) => p.marketCapUsd).filter((m) => m > 0);
+    // Past days only: today's series point is the current market cap itself (analyze() seeds it before this runs),
+    // so counting it beside mcapNow would double-count one observation.
+    const today = Math.floor(input.now / 86_400_000);
+    const mcaps = series.filter((p) => Math.floor(p.t / 86_400_000) !== today).map((p) => p.marketCapUsd).filter((m) => m > 0);
     if (mcapNow > 0) mcaps.push(mcapNow);
     if (input.launchMarketCapUsd && input.launchMarketCapUsd > 0) mcaps.unshift(input.launchMarketCapUsd);
     const avg = mcaps.length ? mcaps.reduce((a, b) => a + b, 0) / mcaps.length : 0;
@@ -137,7 +148,8 @@ export function computeYield(input: YieldInputs): Omit<StonkYieldResult, 'next_s
       yield_pct: yieldPct,
       annualized_pct: annualize(yieldPct, actual),
       caution: actual < 7 || fewPoints,
-      caution_reason: actual < 7 ? 'coin younger than 7 days' : fewPoints ? 'average market cap from fewer than 3 observations' : null,
+      caution_reason: fewPoints ? 'average market cap from fewer than 3 observations' : actual < 7 ? 'coin younger than 7 days' : null,
+      mcap_observations: mcaps.length,
     };
   })();
 

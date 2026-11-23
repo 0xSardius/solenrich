@@ -85,6 +85,9 @@ export interface StonkIndexRow {
   payoutCount: number;
   holderCount: number;
   lastPayoutAt: string | null;
+  /** False when the coin had no row in the loaded rewards ledger (newer than the ledger, or not in it): the payout
+   *  fields above are then 0 because they were not read, not because nothing was paid. Absent = seen (old rows). */
+  ledgerSeen?: boolean;
 }
 
 /** One observation per coin per day. `t` = epoch ms of the observation. */
@@ -671,5 +674,6 @@ export function toRow(t: StonkToken, l: StonkRewardsLedgerEntry | undefined): St
     payoutCount: Number(l?.payoutCount ?? 0),
     holderCount: Number(l?.holderCount ?? 0),
     lastPayoutAt: l?.lastPayoutAt ?? null,
+    ledgerSeen: l != null,
   };
 }

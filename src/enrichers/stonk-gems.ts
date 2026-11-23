@@ -47,8 +47,10 @@ export function hoursSince(iso: string | null, now: number): number | null {
  *  never reported as NEVER or NOT_REWARD, which are claims about the coin. */
 export type PayoutStatus = 'PAYING' | 'STALE' | 'NEVER' | 'NOT_REWARD' | 'UNKNOWN';
 
-export function payoutStatus(row: Pick<StonkIndexRow, 'mode' | 'payoutCount' | 'lastPayoutAt'>, now: number): PayoutStatus {
+export function payoutStatus(row: Pick<StonkIndexRow, 'mode' | 'payoutCount' | 'lastPayoutAt' | 'ledgerSeen'>, now: number): PayoutStatus {
   if (row.mode !== 'reward') return 'NOT_REWARD';
+  // Not in the loaded rewards ledger: the payout fields were not read (a coin newer than the ledger load).
+  if (row.ledgerSeen === false) return 'UNKNOWN';
   if (row.payoutCount <= 0) return 'NEVER';
   const h = hoursSince(row.lastPayoutAt, now);
   return h != null && h <= 24 ? 'PAYING' : 'STALE';
@@ -79,12 +81,14 @@ export function scoreGem(row: StonkIndexRow, now: number, quote: QuoteContext | 
   if (hSincePayout != null && hSincePayout <= 2) { score += 25; reasons.push(`paid holders ${hSincePayout}h ago`); }
   else if (hSincePayout != null && hSincePayout <= 6) { score += 22; reasons.push(`paid holders ${hSincePayout}h ago`); }
   else if (hSincePayout != null && hSincePayout <= 24) { score += 15; reasons.push(`paid holders ${hSincePayout}h ago`); }
+  else if (row.ledgerSeen === false) warnings.push('no rewards-ledger record yet (coin newer than the last ledger load) — payouts and holders not read; scored without them');
   else if (row.payoutCount > 0) { score += 3; warnings.push(`last payout ${hSincePayout != null ? `${(hSincePayout / 24).toFixed(1)}d` : 'a while'} ago`); }
   else warnings.push('has never paid holders');
 
   // --- holders (max 12): discovered by some, not by everyone ---------------
   const h = row.holderCount;
-  if (h >= 1000) { score += 8; reasons.push(`${h} holders — already discovered`); }
+  if (row.ledgerSeen === false) { /* not read: no points, no warning */ }
+  else if (h >= 1000) { score += 8; reasons.push(`${h} holders — already discovered`); }
   else if (h >= 200) { score += 12; reasons.push(`${h} holders`); }
   else if (h >= 50) { score += 9; reasons.push(`${h} holders`); }
   else if (h >= 20) { score += 4; }

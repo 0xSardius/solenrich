@@ -84,3 +84,6 @@ jobs:
       - run: bun test test/trenches-fidelity.test.ts
       # Perps + protocol fidelity (2026-11-17 audit): short borrow = stablecoin custody rate; activity rate in seconds.
       - run: bun test test/perps-protocol-fidelity.test.ts
+      # StonkFun fidelity (2026-11-22, audit Batch B): no ledger row = UNKNOWN; alerts as of the ledger load;
+      # no quote verdict from < 3 market-cap observations; top-10 excludes the pool vault.
+      - run: bun test test/stonk-fidelity.test.ts

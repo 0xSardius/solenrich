@@ -12,6 +12,29 @@ import { normalizeCategory, type StonkCategory } from './stonk-index';
 // goes nowhere — zero-rate, zero cap, unadopted mint, or a withdraw authority
 // that is not StonkFun's distributor — scores under 20 regardless of market.
 
+/**
+ * Top-10 share of supply held by wallets. Accounts whose owner is off-curve (a program PDA: the LaunchLab curve vault,
+ * the CPMM pool vault, a locker) are excluded, because they hold the unsold or pooled supply and receive no rewards.
+ * owners null (the owner read failed) → the raw token-account sum, labelled `token_accounts`. Pure, for tests.
+ */
+export function walletTop10Pct(
+  largest: Array<{ address: string; amount: number }>,
+  owners: Array<{ tokenAccount: string; owner: string | null }> | null,
+  supply: number,
+): { pct: number | null; basis: 'wallets' | 'token_accounts'; excluded_program_accounts: number } {
+  if (!(supply > 0) || !largest.length) return { pct: null, basis: owners ? 'wallets' : 'token_accounts', excluded_program_accounts: 0 };
+  const pct = (rows: Array<{ amount: number }>) => Math.round((rows.slice(0, 10).reduce((a, h) => a + h.amount, 0) / supply) * 10000) / 100;
+  if (!owners) return { pct: pct(largest), basis: 'token_accounts', excluded_program_accounts: 0 };
+  const ownerOf = new Map(owners.map((o) => [o.tokenAccount, o.owner]));
+  const isProgram = (a: { address: string }) => {
+    const o = ownerOf.get(a.address);
+    if (!o) return false; // unresolved: keep it (unknown, not proven a program)
+    try { return !PublicKey.isOnCurve(new PublicKey(o).toBytes()); } catch { return false; }
+  };
+  const wallets = largest.filter((a) => !isProgram(a));
+  return { pct: pct(wallets), basis: 'wallets', excluded_program_accounts: largest.length - wallets.length };
+}
+
 /** StonkFun's transfer-fee withdraw authority (from /launchlab/pricing modes.reward). */
 export const STONKFUN_WITHDRAW_AUTHORITY = '5KXDF6QnqhBj72hDtJNkkpFaQVUfbFXNybMsp3DiK6tD';
 
@@ -36,6 +59,8 @@ export interface RewardRiskInput {
   onchain: MintInfo;
   expectedWithdrawAuthority: string;
   top10Pct: number | null;
+  /** How top10Pct was summed (see walletTop10Pct). Absent = 'token_accounts'. */
+  top10Basis?: 'wallets' | 'token_accounts';
   /** @deprecated ignored since 2026-11-17: the top-20 largest-accounts length is a cap, not a holder count. */
   holderCountRpc?: number;
   /** Hours since the mint's first transaction, read only for unlisted StonkFun-shaped mints. null/absent = unknown. */
@@ -87,7 +112,8 @@ export interface RewardRiskResult {
   };
   flywheel_active: boolean;
   /** count: StonkFun's reward-receiving holder count, or null. ('rpc' is no longer produced.) */
-  holders: { count: number | null; top10_pct: number | null; source: 'stonkfun' | 'rpc' | 'none' };
+  /** top10_basis: 'wallets' = pool/curve vaults (program-owned accounts) excluded; 'token_accounts' = owners not read. */
+  holders: { count: number | null; top10_pct: number | null; top10_basis: 'wallets' | 'token_accounts'; source: 'stonkfun' | 'rpc' | 'none' };
   /** StonkFun reads that failed. degraded = adoption or payout status could not be judged. */
   data_quality: { degraded: boolean; unavailable: string[] };
   quote: { mint: string | null; symbol: string | null; category: StonkCategory | null; category_raw: string | null };
@@ -222,7 +248,10 @@ export function scoreRewardRisk(input: RewardRiskInput): Omit<RewardRiskResult, 
     else if (holderCount >= 20) score += 3;
     else warnings.push(`only ${holderCount} reward-receiving holders`);
   }
-  if (input.top10Pct != null) {
+  if (input.top10Pct != null && input.top10Basis !== 'wallets') {
+    // Owners not read: the sum can include the pool/curve vault, which receives no rewards. Reported, not scored.
+    warnings.push(`top-10 token accounts hold ${input.top10Pct.toFixed(1)}% of supply (owners not read — may include the pool vault; not scored)`);
+  } else if (input.top10Pct != null) {
     if (input.top10Pct < 30) { score += 5; reasons.push(`top-10 holders own ${input.top10Pct.toFixed(1)}% — distributed`); }
     else if (input.top10Pct < 50) { score += 3; }
     else if (input.top10Pct >= 70) { score -= 5; warnings.push(`top-10 holders own ${input.top10Pct.toFixed(1)}% of supply — rewards concentrate in a few wallets`); }
@@ -314,7 +343,7 @@ export function scoreRewardRisk(input: RewardRiskInput): Omit<RewardRiskResult, 
       hours_since_last_payout: hoursSince,
     },
     flywheel_active: flywheel,
-    holders: { count: holderCount, top10_pct: input.top10Pct, source: holderSource },
+    holders: { count: holderCount, top10_pct: input.top10Pct, top10_basis: input.top10Basis ?? 'token_accounts', source: holderSource },
     data_quality: { degraded: unavailable.length > 0, unavailable },
     quote: { mint: token?.quote?.mint ?? launch?.quote?.mint ?? null, symbol: token?.quote?.symbol ?? launch?.quote?.symbol ?? null, category: quoteCategory, category_raw: quoteCategoryRaw },
     market: {
@@ -368,12 +397,13 @@ export class StonkRewardRiskAnalyzer {
     const onchain = onchainRes.value;
     const largest = holdersRes.status === 'fulfilled' ? holdersRes.value : [];
 
-    let top10Pct: number | null = null;
-    if (onchain.supplyRaw && largest.length) {
-      const supply = Number(onchain.supplyRaw);
-      const top10 = largest.slice(0, 10).reduce((a, h) => a + h.amount, 0);
-      if (supply > 0) top10Pct = Math.round((top10 / supply) * 10000) / 100;
+    // Top-10 by wallet: one getMultipleAccounts call resolves the owners so pool/curve vaults drop out.
+    let owners: Array<{ tokenAccount: string; owner: string | null }> | null = null;
+    if (largest.length) {
+      owners = await this.rpc.resolveTokenAccountOwners(largest.map((a) => a.address)).catch(() => null);
     }
+    const top10 = walletTop10Pct(largest, owners, onchain.supplyRaw ? Number(onchain.supplyRaw) : 0);
+    const top10Pct = top10.pct;
 
     // Try the expected authority from the live pricing doc for this quote;
     // fall back to the recorded constant so the score never depends on it.
@@ -410,6 +440,7 @@ export class StonkRewardRiskAnalyzer {
       onchain,
       expectedWithdrawAuthority: expectedAuthority,
       top10Pct,
+      top10Basis: top10.basis,
       now,
     });
     const result: RewardRiskResult = { ...scored, llm_brief: this.brief(scored) };

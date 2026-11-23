@@ -25,7 +25,8 @@ export interface StonkAlertCoin {
   last_payout_at: string | null;
   hours_since_last_payout: number | null;
   volume_24h_usd: number;
-  holder_count: number;
+  /** Null when the coin is not in the loaded rewards ledger yet (payout_status UNKNOWN). */
+  holder_count: number | null;
   market_cap_usd: number;
 }
 
@@ -40,7 +41,8 @@ export interface StonkAlertsResult {
   not_found: string[];
   counts_by_type: Partial<Record<StonkAlertType, number>>;
   counts_by_severity: Record<StonkAlertSeverity, number>;
-  index: { rows: number; last_refresh_at: string | null; series_days: number };
+  /** ledger_loaded_at = when the payout fields were read. Payout alerts are measured as of that time. */
+  index: { rows: number; last_refresh_at: string | null; ledger_loaded_at: string | null; series_days: number };
   caveats: string[];
   next_steps: string[];
 }
@@ -71,6 +73,8 @@ export function detectStonkAlerts(
   sinceMs: number,
   now: number,
   c: StonkAlertCriteria,
+  /** When the payout fields were read (the rewards-ledger load). A stale boundary after it is not known yet. */
+  payoutAsOf: number = now,
 ): StonkAlert[] {
   const out: StonkAlert[] = [];
   const who = row.symbol ? `$${row.symbol}` : row.mint.slice(0, 6);
@@ -85,7 +89,7 @@ export function detectStonkAlerts(
   // PAYING → STALE inside the window: the stale boundary (last payout + N hours) fell between since and now.
   if (Number.isFinite(lastPayout)) {
     const boundary = lastPayout + c.staleAfterHours * 3_600_000;
-    if (boundary > sinceMs && boundary <= now) {
+    if (boundary > sinceMs && boundary <= Math.min(now, payoutAsOf)) {
       out.push({ ...base, type: 'payout_stale', severity: 'high', summary: `${who} has not paid holders for ${c.staleAfterHours}h+ (last payout ${row.lastPayoutAt}); went stale at ${new Date(boundary).toISOString()}`, data: { last_payout_at: row.lastPayoutAt, stale_since: new Date(boundary).toISOString(), stale_after_hours: c.staleAfterHours } });
     }
   }
@@ -130,6 +134,10 @@ export class StonkAlertChecker {
       caveats.push(`since was older than the ${STONK_ALERTS_MAX_LOOKBACK_DAYS}-day snapshot history; moved to ${new Date(floor).toISOString()}.`);
     }
     if (sinceMs > now) sinceMs = now;
+    // Payout fields are as old as the rewards ledger (reloaded every ~30 min). checked_at is that time, so passing
+    // it back as `since` covers payouts that landed after the load but before this poll.
+    const ledgerMs = status.ledgerLoadedAt ? Date.parse(status.ledgerLoadedAt) : NaN;
+    const asOf = Number.isFinite(ledgerMs) ? Math.min(now, ledgerMs) : now;
 
     const alerts: StonkAlert[] = [];
     const coins: StonkAlertCoin[] = [];
@@ -137,7 +145,7 @@ export class StonkAlertChecker {
     for (const mint of [...new Set(mints)]) {
       const row = this.index.getRow(mint);
       if (!row) { notFound.push(mint); continue; }
-      alerts.push(...detectStonkAlerts(row, this.index.getSeries(mint), this.index.getQuoteUsd(row.quoteMint), sinceMs, now, c));
+      alerts.push(...detectStonkAlerts(row, this.index.getSeries(mint), this.index.getQuoteUsd(row.quoteMint), sinceMs, now, c, asOf));
       coins.push({
         mint,
         symbol: row.symbol ?? null,
@@ -146,7 +154,7 @@ export class StonkAlertChecker {
         last_payout_at: row.lastPayoutAt,
         hours_since_last_payout: hoursSince(row.lastPayoutAt, now),
         volume_24h_usd: Math.round(row.volume24hUsd),
-        holder_count: row.holderCount,
+        holder_count: row.ledgerSeen === false ? null : row.holderCount,
         market_cap_usd: Math.round(row.marketCapUsd),
       });
     }
@@ -154,6 +162,7 @@ export class StonkAlertChecker {
     alerts.sort((a, b) => order[a.severity] - order[b.severity]);
 
     if (status.rows === 0) caveats.unshift('index is warming up after a restart — rows fill in within a minute; re-check shortly');
+    if (asOf < now - 60_000) caveats.push(`payout fields are from the rewards ledger loaded at ${new Date(asOf).toISOString()} (reloaded about every 30 min); checked_at is that time, so passing it back as since misses nothing.`);
     caveats.push('rewards_since and holders_change measure from the daily snapshot nearest to `since` (see measured_from); windows under a day are approximate.');
     if (notFound.length) caveats.push(`${notFound.length} mint(s) not in the index — not a reward coin, or no trade since the index started tracking it.`);
 
@@ -164,13 +173,13 @@ export class StonkAlertChecker {
     return {
       since: new Date(sinceMs).toISOString(),
       since_clamped_from: clampedFrom,
-      checked_at: new Date(now).toISOString(),
+      checked_at: new Date(asOf).toISOString(),
       alerts,
       coins,
       not_found: notFound,
       counts_by_type: countsByType,
       counts_by_severity: countsBySeverity,
-      index: { rows: status.rows, last_refresh_at: status.lastRefreshAt, series_days: status.seriesDays },
+      index: { rows: status.rows, last_refresh_at: status.lastRefreshAt, ledger_loaded_at: status.ledgerLoadedAt, series_days: status.seriesDays },
       caveats,
       next_steps: [
         'Pass checked_at as `since` on the next poll to see only new events.',

@@ -732,7 +732,7 @@ export const MCP_TOOLS: McpToolDef[] = [
   {
     name: 'stonk_screener',
     title: 'StonkFun Reward-Coin Screener',
-    description: 'Screen every StonkFun reward coin with payout status (PAYING / STALE / NEVER), a live flag (traded AND paid in 24h), and the round-trip transfer-tax cost per row. Filters: quote mint, category, holders, age (min/max), 24h volume, market cap, paying_only, live_only. Sort by volume24h (default), lastPayout, holders, priceChange24h, yield7d, yield30d, rewardsUsd. Use for "which coins on NVDAX paid holders today?" or "live xStock coins under $1M". Served from a 10-minute ingest. Use stonk_gems for a ranked shortlist.',
+    description: 'Screen every StonkFun reward coin with payout status (PAYING / STALE / NEVER / UNKNOWN = not in the rewards ledger yet), a live flag (traded AND paid in 24h), and the round-trip transfer-tax cost per row. Filters: quote mint, category, holders, age (min/max), 24h volume, market cap, paying_only, live_only. Sort by volume24h (default), lastPayout, holders, priceChange24h, yield7d, yield30d, rewardsUsd. Use for "which coins on NVDAX paid holders today?" or "live xStock coins under $1M". Served from a 10-minute ingest. Use stonk_gems for a ranked shortlist.',
     inputSchema: {
       quote_mint: z.string().optional().describe('Only coins paired against this quote mint'),
       category: z.enum(['xstock', 'prestock', 'currency', 'leverage', 'solana', 'collectible', 'custom']).optional().describe('Quote category filter'),

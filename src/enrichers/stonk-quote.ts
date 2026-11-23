@@ -96,7 +96,10 @@ export function impactAtSize(estimates: Array<{ size_usd: number; price_impact_p
 
 /** Pick the yield window with enough real history, preferring the shortest that is complete. */
 export function pickYieldBasis(y: Pick<StonkYieldResult, 'trailing_7d' | 'trailing_30d' | 'lifetime'>): { basis: StonkQuoteResult['expected_payout']['basis']; window: YieldWindow | null } {
-  const ok = (w: YieldWindow, minDays: number) => w.yield_pct != null && w.actual_days != null && w.actual_days >= minDays;
+  // Every window needs its average market cap from 3+ observations: launch + now alone is a two-point guess that can
+  // be off several-fold either way, and a verdict from it would look measured. (Absent = older cached result: allowed.)
+  const ok = (w: YieldWindow, minDays: number) =>
+    w.yield_pct != null && w.actual_days != null && w.actual_days >= minDays && (w.mcap_observations ?? 3) >= 3;
   if (ok(y.trailing_7d, 6.5)) return { basis: '7d', window: y.trailing_7d };
   if (ok(y.trailing_30d, 6.5)) return { basis: '30d', window: y.trailing_30d };
   if (ok(y.lifetime, 1)) return { basis: 'lifetime', window: y.lifetime };
@@ -183,7 +186,9 @@ export function buildStonkQuote(i: QuoteInputs): StonkQuoteResult {
     usd_over_hold: usdOverHold,
     reward_asset: yld?.reward_asset.symbol ?? risk.rewards.reward_asset ?? null,
     caution: picked.window?.caution ?? true,
-    caution_reason: picked.window?.caution_reason ?? (picked.basis ? null : 'no yield window with enough history'),
+    caution_reason: picked.window?.caution_reason ?? (picked.basis ? null
+      : yld && (yld.lifetime.mcap_observations ?? 3) < 3 ? 'lifetime average market cap from fewer than 3 observations — too thin to project from'
+      : 'no yield window with enough history'),
   };
   if (picked.basis === 'lifetime') caveats.push('Expected payout is scaled from lifetime yield because the 7d/30d snapshot windows are not complete yet.');
   if (!picked.basis) caveats.push('No payout history to project from — expected payout is unknown, not zero.');

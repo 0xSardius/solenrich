@@ -80,8 +80,10 @@ export interface StonkScreenerRowOut {
   flywheel_active: boolean;
   status: string;
   age_days: number;
-  holder_count: number;
-  payout_count: number;
+  /** Null when the coin is not in the loaded rewards ledger yet (ledger_seen false): not read, not zero. */
+  holder_count: number | null;
+  payout_count: number | null;
+  ledger_seen: boolean;
   last_payout_at: string | null;
   hours_since_last_payout: number | null;
   payout_status: PayoutStatus;
@@ -285,7 +287,7 @@ export function registerStonkEntrypoints(
   addEntrypoint({
     key: 'stonk-screener',
     description:
-      'Screen every StonkFun reward coin from a 10-minute index. Per row: payout status (PAYING / STALE / NEVER), hours since last payout, live flag (traded AND paid in 24h), round-trip transfer-tax cost, holders, rewards USD, yields, volume, mcap, 24h change. Filters: quote_mint, category, holders, age, volume, market cap, paying_only, live_only. Sort by volume24h (default), lastPayout, holders, priceChange24h, or yield. "Which coins on NVDAX paid holders today?" is one call.',
+      'Screen every StonkFun reward coin from a 10-minute index. Per row: payout status (PAYING / STALE / NEVER / UNKNOWN), hours since last payout, live flag (traded AND paid in 24h), round-trip transfer-tax cost, holders, rewards USD, yields, volume, mcap, 24h change. Filters: quote_mint, category, holders, age, volume, market cap, paying_only, live_only. Sort by volume24h (default), lastPayout, holders, priceChange24h, or yield. "Which coins on NVDAX paid holders today?" is one call.',
     input: StonkScreenerInput,
     handler: async (ctx: { input: z.infer<typeof StonkScreenerInput> }) => {
       const input = ctx.input;
@@ -379,10 +381,11 @@ export function registerStonkEntrypoints(
           warnings: r.gem.warnings,
           payout_status: r.payoutStatus,
           hours_since_last_payout: r.hoursSinceLastPayout,
-          payout_count: r.payoutCount,
+          payout_count: r.ledgerSeen === false ? null : r.payoutCount,
           transfer_fee_bps: r.bps,
           round_trip_pct: r.roundTripPct,
-          holder_count: r.holderCount,
+          holder_count: r.ledgerSeen === false ? null : r.holderCount,
+          ledger_seen: r.ledgerSeen !== false,
           age_days: r.ageDays,
           price_usd: r.priceUsd,
           market_cap_usd: r.marketCapUsd,
@@ -483,8 +486,9 @@ export function toScreenerRowOut(r: StonkScreenerRow, rank: number): StonkScreen
     flywheel_active: r.flywheelActive,
     status: r.status,
     age_days: r.ageDays,
-    holder_count: r.holderCount,
-    payout_count: r.payoutCount,
+    holder_count: r.ledgerSeen === false ? null : r.holderCount,
+    payout_count: r.ledgerSeen === false ? null : r.payoutCount,
+    ledger_seen: r.ledgerSeen !== false,
     last_payout_at: r.lastPayoutAt,
     hours_since_last_payout: r.hoursSinceLastPayout,
     payout_status: r.payoutStatus,
@@ -517,10 +521,11 @@ export interface StonkGemRowOut {
   warnings: string[];
   payout_status: PayoutStatus;
   hours_since_last_payout: number | null;
-  payout_count: number;
+  payout_count: number | null;
   transfer_fee_bps: number | null;
   round_trip_pct: number | null;
-  holder_count: number;
+  holder_count: number | null;
+  ledger_seen: boolean;
   age_days: number;
   price_usd: number;
   market_cap_usd: number;
