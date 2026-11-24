@@ -87,3 +87,5 @@ jobs:
       # StonkFun fidelity (2026-11-22, audit Batch B): no ledger row = UNKNOWN; alerts as of the ledger load;
       # no quote verdict from < 3 market-cap observations; top-10 excludes the pool vault.
       - run: bun test test/stonk-fidelity.test.ts
+      # wallet-graph fidelity (2026-11-23, audit #53): pool authorities are program nodes, never cluster peers.
+      - run: bun test test/graph-fidelity.test.ts

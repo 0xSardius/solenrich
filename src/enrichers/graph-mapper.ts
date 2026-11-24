@@ -3,6 +3,7 @@ import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 import { formatTimestamp, shortenAddress } from '../utils/normalize';
 import { lookupEntity } from '../utils/entities';
+import { isWalletAddress } from './whale-watch';
 
 export interface GraphNode {
   address: string;
@@ -10,7 +11,9 @@ export interface GraphNode {
   entity_type?: string;
   interaction_count: number;
   connection_strength: number;
-  category: 'dex' | 'whale' | 'bot' | 'unknown';
+  /** program = an off-curve address (a PDA: AMM pool authority, vault, bonding curve). Swaps with a pool are not a
+   *  wallet relationship, so program nodes never join a cluster. */
+  category: 'dex' | 'program' | 'whale' | 'bot' | 'unknown';
 }
 
 export interface GraphEdge {
@@ -120,22 +123,28 @@ export class GraphMapper {
     // Filter by minimum interactions and build nodes/edges
     const nodes: GraphNode[] = [];
     const edges: GraphEdge[] = [];
+    const programs = new Set<string>();
+    // Connection strength: normalized by max interactions (capped at 1.0)
+    const maxInteractions = Math.max(...[...edgeMap.values()].map((d) => d.outCount + d.inCount), 1);
 
     for (const [counterparty, data] of edgeMap) {
       const totalInteractions = data.outCount + data.inCount;
       if (totalInteractions < minInteractions) continue;
 
       const isBidirectional = data.outCount > 0 && data.inCount > 0;
+      // Off-curve = a program-derived address (pool authority, vault, curve): a swap venue, not a peer wallet.
+      const isProgram = !isWalletAddress(counterparty);
+      if (isProgram) programs.add(counterparty);
       const category: GraphNode['category'] = DEX_PROGRAMS.has(counterparty)
         ? 'dex'
+        : isProgram
+        ? 'program'
         : data.outCount + data.inCount > 50
         ? 'bot'
         : data.outSol + data.inSol > 100
         ? 'whale'
         : 'unknown';
 
-      // Connection strength: normalized by max interactions (capped at 1.0)
-      const maxInteractions = Math.max(...[...edgeMap.values()].map((d) => d.outCount + d.inCount), 1);
       const strength = Math.min(totalInteractions / maxInteractions, 1.0);
 
       const entity = lookupEntity(counterparty);
@@ -146,7 +155,7 @@ export class GraphMapper {
         connection_strength: Math.round(strength * 100) / 100,
         category: entity?.type === 'protocol' ? 'dex' : category,
       });
-
+      if (entity?.type === 'protocol') programs.add(counterparty);
       edges.push({
         source: address,
         target: counterparty,
@@ -160,8 +169,9 @@ export class GraphMapper {
     nodes.sort((a, b) => b.interaction_count - a.interaction_count);
     edges.sort((a, b) => b.interaction_count - a.interaction_count);
 
-    // Detect clusters: groups of addresses with bidirectional frequent transfers
-    const clusters = this.detectClusters(edges, address, minInteractions);
+    // Detect clusters: wallet peers with bidirectional frequent transfers. Program counterparties (pools, vaults)
+    // are excluded from both the peers and the density denominator: every swap is "both directions" with a pool.
+    const clusters = this.detectClusters(edges.filter((e) => !programs.has(e.target)), address, minInteractions);
 
     // Depth 2: fetch second-hop connections for top 5 nodes
     if (depth >= 2) {
@@ -183,7 +193,7 @@ export class GraphMapper {
                     address: peer,
                     interaction_count: 1,
                     connection_strength: 0.1,
-                    category: 'unknown',
+                    category: isWalletAddress(peer) ? 'unknown' : 'program',
                   });
                 }
               }
