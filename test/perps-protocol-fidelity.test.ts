@@ -3,7 +3,7 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { DefiLlamaClient } from '../src/sources/defi-llama';
 import { PerpsCrossVenueAnalyzer } from '../src/enrichers/perps-cross-venue';
-import { sampleActivity } from '../src/enrichers/protocol-analyzer';
+import { sampleActivity, tvlChainSum } from '../src/enrichers/protocol-analyzer';
 
 const noCache = { get: async () => null, set: async () => {} } as any;
 const jupiterMarket = (shortApr: number | null) => ({
@@ -61,6 +61,13 @@ describe('DeFi Llama TVL: a failed read is not $0 (audit #33)', () => {
     const d = await new DefiLlamaClient(noCache).getProtocolTvl('raydium');
     expect(d.chains).toEqual({ total: 1.5e9 });
     expect(d.chain_list).toEqual(['Solana', 'Ethereum']);
+  });
+});
+
+describe('TVL chain sum', () => {
+  test('per-chain category keys (Solana-staking) are not chains — Raydium reads 100% Solana', () => {
+    expect(tvlChainSum({ Solana: 803_698_623, 'Solana-staking': 58_567_295, staking: 58_567_295 })).toBe(803_698_623);
+    expect(tvlChainSum({ Solana: 10, Ethereum: 5, 'Ethereum-borrowed': 3, borrowed: 3 })).toBe(15);
   });
 });
 

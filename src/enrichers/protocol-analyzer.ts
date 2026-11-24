@@ -1,4 +1,15 @@
 import type { DefiLlamaClient, ProtocolDetail, YieldPool } from '../sources/defi-llama';
+
+/**
+ * Sum of real chain TVLs from DeFi Llama's currentChainTvls. Category keys ('staking', 'borrowed', 'pool2',
+ * 'vesting', 'total') and per-chain category keys ('Solana-staking', 'Ethereum-borrowed') are not chains: counting
+ * them inflated the total (Raydium 2026-11-23: Solana 803.7M + Solana-staking → 93.2% "Solana dominance"). Pure.
+ */
+export function tvlChainSum(chains: Record<string, number>): number {
+  return Object.entries(chains)
+    .filter(([k]) => !['borrowed', 'staking', 'pool2', 'vesting', 'total'].includes(k) && !k.includes('-'))
+    .reduce((s, [, v]) => s + v, 0);
+}
 import type { HeliusClient, EnhancedTransaction } from '../sources/helius';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
@@ -166,9 +177,7 @@ export class ProtocolAnalyzer {
     // tvlData.chains may have { Solana: X, Ethereum: Y, ... } from full endpoint,
     // or { total: X } from lightweight fallback
     const chains = tvlData?.chains ?? {};
-    const chainSum = Object.entries(chains)
-      .filter(([k]) => !['borrowed', 'staking', 'pool2', 'vesting', 'total'].includes(k))
-      .reduce((s, [, v]) => s + v, 0);
+    const chainSum = tvlChainSum(chains);
     const totalTvl: number | null = tvlData ? (chains.total ?? (chainSum > 0 ? chainSum : null)) : null;
     // Solana share only from a per-chain split, or when the protocol runs on Solana alone. The all-chain total is
     // never reported as the Solana figure (audit #33: multi-chain protocols showed 100% Solana dominance).
