@@ -17,6 +17,8 @@ export interface Protocol {
 export interface ProtocolDetail {
   tvl: number;
   chains: Record<string, number>;
+  /** Chains the protocol runs on (from /protocols), when known. ['Solana'] alone = all TVL is on Solana. */
+  chain_list?: string[];
   name: string;
   slug: string;
   category: string;
@@ -55,18 +57,22 @@ export class DefiLlamaClient {
 
     // Use lightweight /tvl endpoint + protocol list for metadata
     // The full /protocol/{slug} endpoint returns megabytes of historical data and times out
+    // A failed /tvl read is null, never 0 (audit #33: it used to become TVL $0, tier "micro", cached 10 min).
     const [tvlRes, protocols] = await Promise.all([
-      fetch(`${this.baseUrl}/tvl/${slug}`).then((r) => r.ok ? r.text() : '0').catch(() => '0'),
+      fetch(`${this.baseUrl}/tvl/${slug}`).then((r) => (r.ok ? r.text() : null)).catch(() => null),
       this.getSolanaProtocols().catch(() => [] as Protocol[]),
     ]);
 
-    const totalTvl = parseFloat(tvlRes) || 0;
+    const parsed = tvlRes != null ? parseFloat(tvlRes) : NaN;
+    const totalTvl = Number.isFinite(parsed) ? parsed : null;
     const meta = protocols.find((p) => p.slug.toLowerCase() === slug.toLowerCase());
 
-    // /tvl/ returns total TVL across all chains. Use protocol list's per-chain TVL if available.
+    // /tvl/ returns total TVL across all chains (so does /protocols' tvl). The Solana share comes only from the
+    // full endpoint's currentChainTvls below.
     const result: ProtocolDetail = {
-      tvl: meta?.tvl ?? totalTvl,
-      chains: { total: totalTvl },
+      tvl: meta?.tvl ?? totalTvl ?? 0,
+      chains: totalTvl != null ? { total: totalTvl } : meta?.tvl != null ? { total: meta.tvl } : {},
+      ...(meta?.chains?.length ? { chain_list: meta.chains } : {}),
       name: meta?.name ?? slug,
       slug: meta?.slug ?? slug,
       category: meta?.category ?? 'Unknown',
@@ -90,6 +96,8 @@ export class DefiLlamaClient {
       // Full endpoint timed out — proceed with lightweight data
     }
 
+    // Nothing read at all: fail (not cached), so the caller reports TVL as unknown instead of $0.
+    if (Object.keys(result.chains).length === 0) throw new Error(`DeFi Llama TVL unavailable for ${slug}`);
     await this.cache.set(cacheKey, result, CACHE_TTL.defiProtocol);
     return result;
   }

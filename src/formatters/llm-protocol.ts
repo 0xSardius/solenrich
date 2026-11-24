@@ -7,13 +7,20 @@ export function formatProtocolBriefing(data: ProtocolProfileEnrichment): string 
 
   lines.push(`## Protocol Profile: ${p.name}`);
   lines.push('');
-  lines.push(`**Category:** ${p.category} | **TVL Tier:** ${data.health_signals.tvl_tier}`);
+  lines.push(`**Category:** ${p.category} | **TVL Tier:** ${data.health_signals.tvl_tier ?? 'unknown (TVL not read)'}`);
   if (p.program_id) lines.push(`**Program ID:** \`${p.program_id}\``);
   lines.push('');
 
   // TVL breakdown
   lines.push('### TVL');
-  lines.push(`Total: ${formatUsd(data.tvl.total_usd)} | Solana: ${formatUsd(data.tvl.solana_usd)} (${data.tvl.solana_dominance_pct}%)`);
+  if (data.tvl.total_usd == null) {
+    lines.push('TVL not read — DeFi Llama did not answer. Retry in a minute; this is not a $0 TVL.');
+  } else {
+    const sol = data.tvl.solana_usd != null
+      ? `${formatUsd(data.tvl.solana_usd)}${data.tvl.solana_dominance_pct != null ? ` (${data.tvl.solana_dominance_pct}%)` : ''}`
+      : 'not split by chain this read';
+    lines.push(`Total: ${formatUsd(data.tvl.total_usd)} | Solana: ${sol}`);
+  }
 
   const otherChains = Object.entries(data.tvl.chains)
     .filter(([chain]) => chain !== 'Solana' && chain !== 'borrowed' && chain !== 'staking')
@@ -72,7 +79,7 @@ export function formatProtocolBriefing(data: ProtocolProfileEnrichment): string 
   // Health signals
   lines.push('### Health Signals');
   const signals: string[] = [];
-  signals.push(`TVL: ${data.health_signals.tvl_tier}-tier`);
+  signals.push(data.health_signals.tvl_tier ? `TVL: ${data.health_signals.tvl_tier}-tier` : 'TVL: unknown (not read)');
   if (data.health_signals.yield_attractiveness) {
     signals.push(`Yield attractiveness: ${data.health_signals.yield_attractiveness}`);
   }

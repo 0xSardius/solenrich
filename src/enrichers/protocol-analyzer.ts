@@ -40,11 +40,12 @@ export interface ProtocolProfileEnrichment {
     logo?: string;
     url?: string;
   };
+  /** Null = not read (DeFi Llama did not answer, or gave no per-chain split): unknown, not $0 / 100%. */
   tvl: {
-    total_usd: number;
-    solana_usd: number;
+    total_usd: number | null;
+    solana_usd: number | null;
     chains: Record<string, number>;
-    solana_dominance_pct: number;
+    solana_dominance_pct: number | null;
   };
   yields: {
     pool_count: number;
@@ -72,7 +73,7 @@ export interface ProtocolProfileEnrichment {
     automated_activity_pct: number; // % of signers showing automated behavior (regular_intervals or high_frequency)
   } | null;
   health_signals: {
-    tvl_tier: 'mega' | 'large' | 'mid' | 'small' | 'micro';
+    tvl_tier: 'mega' | 'large' | 'mid' | 'small' | 'micro' | null;
     yield_attractiveness: 'high' | 'moderate' | 'low' | null;
     activity_level: 'very_high' | 'high' | 'moderate' | 'low' | null;
   };
@@ -165,11 +166,15 @@ export class ProtocolAnalyzer {
     // tvlData.chains may have { Solana: X, Ethereum: Y, ... } from full endpoint,
     // or { total: X } from lightweight fallback
     const chains = tvlData?.chains ?? {};
-    const solanaTvl = chains.Solana ?? tvlData?.tvl ?? 0;
     const chainSum = Object.entries(chains)
       .filter(([k]) => !['borrowed', 'staking', 'pool2', 'vesting', 'total'].includes(k))
       .reduce((s, [, v]) => s + v, 0);
-    const totalTvl = chains.total ?? (chainSum > 0 ? chainSum : solanaTvl);
+    const totalTvl: number | null = tvlData ? (chains.total ?? (chainSum > 0 ? chainSum : null)) : null;
+    // Solana share only from a per-chain split, or when the protocol runs on Solana alone. The all-chain total is
+    // never reported as the Solana figure (audit #33: multi-chain protocols showed 100% Solana dominance).
+    const solanaOnly = tvlData?.chain_list?.length === 1 && tvlData.chain_list[0] === 'Solana';
+    const solanaTvl: number | null = chains.Solana ?? (solanaOnly ? totalTvl : null);
+    const tvlUnread = totalTvl == null;
 
     const enrichment: ProtocolProfileEnrichment = {
       protocol: {
@@ -184,19 +189,20 @@ export class ProtocolAnalyzer {
         total_usd: totalTvl,
         solana_usd: solanaTvl,
         chains: tvlData?.chains ?? {},
-        solana_dominance_pct: totalTvl > 0 ? Math.round((solanaTvl / totalTvl) * 1000) / 10 : 100,
+        solana_dominance_pct: totalTvl != null && totalTvl > 0 && solanaTvl != null ? Math.round((solanaTvl / totalTvl) * 1000) / 10 : null,
       },
       yields,
       activity,
       health_signals: {
-        tvl_tier: this.getTvlTier(totalTvl),
+        tvl_tier: totalTvl != null ? this.getTvlTier(totalTvl) : null,
         yield_attractiveness: yields ? this.getYieldAttractiveness(yields.median_apy) : null,
         activity_level: activity ? this.getActivityLevel(activity.avg_tx_per_hour) : null,
       },
       last_updated: formatTimestamp(),
     };
 
-    await this.cache.set(cacheKey, enrichment, CACHE_TTL.protocolProfile);
+    // TVL not read: a short cache, so the next call tries DeFi Llama again (was 30 min of "$0, micro").
+    await this.cache.set(cacheKey, enrichment, tvlUnread ? 15 : CACHE_TTL.protocolProfile);
     return enrichment;
   }
 

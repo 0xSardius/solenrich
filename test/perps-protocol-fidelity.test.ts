@@ -1,6 +1,7 @@
 // Perps + protocol fidelity (audit 2026-11-17, step 8): pool-venue shorts pay the stablecoin custody's rate; the
 // protocol activity rate is measured in seconds.
-import { describe, expect, test } from 'bun:test';
+import { afterEach, describe, expect, test } from 'bun:test';
+import { DefiLlamaClient } from '../src/sources/defi-llama';
 import { PerpsCrossVenueAnalyzer } from '../src/enrichers/perps-cross-venue';
 import { sampleActivity } from '../src/enrichers/protocol-analyzer';
 
@@ -42,6 +43,24 @@ describe('pool-venue short borrow rate', () => {
     expect(r.venues.find((v) => v.venue === 'jupiter-perps')!.borrow_apr_short).toBeNull();
     expect(r.venues.find((v) => v.venue === 'adrena')!.borrow_apr_short).toBeNull();
     expect(r.venues.find((v) => v.venue === 'flash')!.borrow_apr_short).toBeNull();
+  });
+});
+
+describe('DeFi Llama TVL: a failed read is not $0 (audit #33)', () => {
+  const realFetch = globalThis.fetch;
+  afterEach(() => { globalThis.fetch = realFetch; });
+  const route = (h: (url: string) => Response) => { globalThis.fetch = (async (u: any) => h(String(u))) as any; };
+  test('every read fails → throws (not cached as TVL 0 / micro)', async () => {
+    route(() => new Response('err', { status: 500 }));
+    await expect(new DefiLlamaClient(noCache).getProtocolTvl('raydium')).rejects.toThrow();
+  });
+  test('lightweight read only: total known, no Solana split; chain list carried', async () => {
+    route((u) => u.includes('/tvl/') ? new Response('1500000000', { status: 200 })
+      : u.endsWith('/protocols') ? new Response(JSON.stringify([{ name: 'Raydium', slug: 'raydium', tvl: 1.5e9, chains: ['Solana', 'Ethereum'], category: 'Dexes' }]), { status: 200 })
+      : new Response('timeout', { status: 504 }));
+    const d = await new DefiLlamaClient(noCache).getProtocolTvl('raydium');
+    expect(d.chains).toEqual({ total: 1.5e9 });
+    expect(d.chain_list).toEqual(['Solana', 'Ethereum']);
   });
 });
 
