@@ -16,6 +16,13 @@ export function formatWhaleWatchBriefing(data: WhaleWatchEnrichment): string {
 
   lines.push(`${data.whale_count} whale(s) tracked. Threshold: ${formatUsd(data.threshold_usd)} in the last ${data.lookback_hours}h.`);
   lines.push(`Total whale volume: ${formatUsd(data.total_whale_volume_usd)}. Net flow: **${data.net_flow_direction}**.`);
+  const cov = data.coverage;
+  if (cov && (cov.holders_partial > 0 || cov.signatures_not_parsed > 0)) {
+    const parts: string[] = [];
+    if (cov.holders_partial > 0) parts.push(`${cov.holders_partial} busy holder(s) read only back to ${cov.partial_from ?? 'recently'}, not the full ${data.lookback_hours}h`);
+    if (cov.signatures_not_parsed > 0) parts.push(`${cov.signatures_not_parsed} in-window transaction(s) not parsed (100 cap)`);
+    lines.push(`⚠ Partial coverage: ${parts.join('; ')}. Flow for those holders is a floor.`);
+  }
   lines.push('');
 
   // Top whales with balance context

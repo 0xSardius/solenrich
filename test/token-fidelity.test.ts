@@ -86,6 +86,10 @@ describe('TokenAnalyzer: fidelity of core fields', () => {
     expect(t.holder_count_source).toBeNull();
     expect(t.top_holders!.length).toBe(20);
   });
+  test('the HHI is labelled as a top-20 partial index (audit #40)', async () => {
+    const t = await analyzer({ dex: dex(), jup: { verified: true }, largest: top20 }).enrich('M', true);
+    expect(t.concentration?.herfindahl_scope).toBe('top_20_holders');
+  });
   test('holder_count from Jupiter is tagged', async () => {
     const t = await analyzer({ dex: dex(), jup: { verified: true, holderCount: 1027528 } }).enrich('M');
     expect(t.holder_count).toBe(1027528);

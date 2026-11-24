@@ -17,6 +17,8 @@ export interface TrendingTokenSignal {
   risk_flags: string[];
   verified: boolean | null;
   holder_count: number | null;
+  holder_count_source: 'birdeye' | 'jupiter' | null;
+  /** HHI over the 20 largest holders only (a partial index). */
   concentration_hhi: number | null;
   // Whale signal (optional, set when include_whale_watch=true)
   whale_net_flow?: 'accumulating' | 'distributing' | 'neutral' | 'unknown';
@@ -190,6 +192,7 @@ function buildSignal(t: DiscoveredToken, w?: WhaleWatchEnrichment): TrendingToke
     risk_flags: t.risk_flags,
     verified: t.verified,
     holder_count: t.holder_count,
+    holder_count_source: t.holder_count_source ?? null,
     concentration_hhi: t.concentration_hhi,
     whale_net_flow: w?.net_flow_direction,
     whale_count: w?.whale_count,

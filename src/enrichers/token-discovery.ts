@@ -21,6 +21,9 @@ export interface DiscoveredToken {
   recommendation: 'SAFE' | 'CAUTION' | 'RISKY';
   verified: boolean | null;
   holder_count: number | null;
+  /** Where holder_count came from; null when no source reported a count. */
+  holder_count_source: 'birdeye' | 'jupiter' | null;
+  /** HHI over the 20 largest holders only (a partial index). */
   concentration_hhi: number | null;
 }
 
@@ -113,6 +116,7 @@ export class TokenDiscovery {
                           riskResult.score > 0.3 || t.authorities_known === false ? 'CAUTION' as const : 'SAFE' as const,
           verified: t.verified,
           holder_count: t.holder_count,
+          holder_count_source: t.holder_count_source,
           concentration_hhi: t.concentration?.herfindahl_index ?? null,
         };
       })

@@ -18,6 +18,8 @@ export interface HolderConcentration {
   top5_pct: number;
   top10_pct: number;
   herfindahl_index: number;  // 0-10000: <1500 = distributed, 1500-2500 = moderate, >2500 = concentrated
+  /** The HHI sums only the 20 largest holders the RPC returns: a partial index (it ignores every smaller holder). */
+  herfindahl_scope: 'top_20_holders';
 }
 
 export interface PriceVolatility {
@@ -354,6 +356,7 @@ export class TokenAnalyzer {
         top5_pct: Math.round(top5 * 100) / 100,
         top10_pct: Math.round(top10 * 100) / 100,
         herfindahl_index: Math.round(hhi),
+        herfindahl_scope: 'top_20_holders',
       };
     }
 

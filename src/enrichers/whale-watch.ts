@@ -52,6 +52,18 @@ export interface WhaleWatchEnrichment {
   net_flow_direction: FlowDirection;
   whale_count: number;
   holders_source: 'rpc' | 'birdeye' | 'unavailable';
+  /**
+   * How much of lookback_hours was actually read. Each holder's token account is read to 50 signatures; a busy one
+   * (exchange, market maker) fills 50 in minutes, so its flow covers less than the window (audit #48).
+   */
+  coverage?: {
+    holders_fully_covered: number;
+    holders_partial: number;
+    /** Oldest signature read among partially covered holders — flow for them starts here, not at the window start. */
+    partial_from: string | null;
+    /** Signatures inside the window that were not parsed (the union is capped at 100). */
+    signatures_not_parsed: number;
+  };
   data_quality: { degraded: boolean; unavailable: string[] };
   last_updated: string;
 }
@@ -168,6 +180,9 @@ export class WhaleWatcher {
     // Collect unique signatures within lookback window
     const cutoff = Date.now() / 1000 - lookbackHours * 3600;
     const signatureSet = new Set<string>();
+    let fullyCovered = 0;
+    let partial = 0;
+    let partialFrom: number | null = null;
 
     for (const holder of holders) {
       const sigs = (sigResults[`sigs:${holder.tokenAccount}`] as Array<{ signature: string; blockTime: number | null }>) ?? [];
@@ -176,10 +191,17 @@ export class WhaleWatcher {
           signatureSet.add(sig.signature);
         }
       }
+      // A full page whose oldest signature is still inside the window: older activity in the window was not read.
+      const oldest = sigs.length ? Math.min(...sigs.map((s) => s.blockTime ?? Infinity)) : Infinity;
+      if (sigs.length >= 50 && oldest >= cutoff && Number.isFinite(oldest)) {
+        partial++;
+        partialFrom = partialFrom == null ? oldest : Math.max(partialFrom, oldest);
+      } else fullyCovered++;
     }
 
     // Phase 4: Batch fetch enhanced transactions
     const sigStrings = [...signatureSet].slice(0, 100);
+    const notParsed = Math.max(0, signatureSet.size - sigStrings.length);
     let txs: EnhancedTransaction[] = [];
     if (sigStrings.length > 0) {
       try {
@@ -274,6 +296,12 @@ export class WhaleWatcher {
       net_flow_direction: netDirection,
       whale_count: whales.length,
       holders_source: holdersSource,
+      coverage: {
+        holders_fully_covered: fullyCovered,
+        holders_partial: partial,
+        partial_from: partialFrom != null ? new Date(partialFrom * 1000).toISOString() : null,
+        signatures_not_parsed: notParsed,
+      },
       data_quality: { degraded: flowsUnknown || supplyUnread, unavailable: supplyUnread ? [...unavailable, 'mint_info'] : unavailable },
       last_updated: formatTimestamp(),
     };

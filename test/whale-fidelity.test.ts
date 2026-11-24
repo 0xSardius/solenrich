@@ -65,6 +65,20 @@ describe('WhaleWatcher', () => {
     expect(r.program_accounts[0].balance_usd).toBeNull();
     expect(r.whales[0].pct_supply).toBe(5);
   });
+  test('a busy holder whose 50 signatures all fall inside the window is reported as partial coverage (audit #48)', async () => {
+    const now = Math.floor(Date.now() / 1000);
+    const w = watcher({ price: 0.001, txs: [] });
+    // 50 signatures over the last 50 minutes: the 24h window is not covered.
+    (w as any).helius.getSignaturesForAddress = async () => Array.from({ length: 50 }, (_, i) => ({ signature: `b${i}`, blockTime: now - i * 60 }));
+    const r = await w.enrich(MINT, 1000, 24);
+    expect(r.coverage?.holders_partial).toBe(1);
+    expect(r.coverage?.holders_fully_covered).toBe(0);
+    expect(Date.parse(r.coverage!.partial_from!)).toBeGreaterThan(Date.now() - 2 * 3_600_000);
+  });
+  test('a quiet holder (one signature) is fully covered', async () => {
+    const r = await watcher({ price: 0.001, txs: [] }).enrich(MINT, 1000, 24);
+    expect(r.coverage).toMatchObject({ holders_fully_covered: 1, holders_partial: 0, signatures_not_parsed: 0 });
+  });
   test('mint account unread → pct_supply null and data_quality names mint_info (was 0%, not degraded)', async () => {
     const r = await watcher({ price: 0.001, txs: [], mintThrows: true }).enrich(MINT, 1000, 24);
     expect(r.whales[0].pct_supply).toBeNull();

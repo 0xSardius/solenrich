@@ -44,6 +44,7 @@ export const TokenEnrichmentSchema = z.object({
     top5_pct: z.number(),
     top10_pct: z.number(),
     herfindahl_index: z.number(),
+    herfindahl_scope: z.literal('top_20_holders').optional().describe('The HHI covers only the 20 largest holders: a partial index'),
   }).optional(),
   slippage_estimates: z.array(z.object({
     size_usd: z.number(),
