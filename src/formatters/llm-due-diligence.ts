@@ -78,7 +78,7 @@ export function formatDueDiligenceBriefing(data: DueDiligenceEnrichment): string
       const activity = w.transaction_count > 0
         ? `${w.flow_direction} (${formatUsd(w.buy_volume_usd)} in, ${formatUsd(w.sell_volume_usd)} out)`
         : 'no recent activity';
-      lines.push(`  - ${w.address.slice(0, 8)}...${w.address.slice(-4)}: holds ${w.pct_supply.toFixed(1)}% — ${activity}`);
+      lines.push(`  - ${w.address.slice(0, 8)}...${w.address.slice(-4)}: holds ${w.pct_supply != null ? `${w.pct_supply.toFixed(1)}%` : 'an unread share'} — ${activity}`);
     }
   } else if (data.whales.net_flow_direction === 'unknown') {
     lines.push('Whale activity not measured (whale-watch did not answer).');

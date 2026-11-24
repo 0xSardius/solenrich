@@ -3,6 +3,10 @@
 import { afterEach, describe, expect, test } from 'bun:test';
 import { aggregatePairs, RunnerDetector } from '../src/enrichers/runner-detector';
 import { DexScreenerClient } from '../src/sources/dexscreener';
+import { ExitSignalAnalyzer } from '../src/enrichers/exit-analyzer';
+import { DEFAULT_SMART_MONEY_SEEDS, usableSeeds, seedListKey } from '../src/enrichers/smart-money-seeds';
+import { lookupEntity } from '../src/utils/entities';
+import { isWalletAddress } from '../src/enrichers/whale-watch';
 import { assessExit } from '../src/enrichers/exit-score';
 import { assessRunner } from '../src/enrichers/runner-score';
 
@@ -78,6 +82,42 @@ describe('DexScreener batch errors are failures, not "no pairs" (audit #35)', ()
     expect(r.caveats.join(' ')).toContain('unreachable');
     expect(r.caveats.join(' ')).not.toContain('quiet trenches');
     expect(sets.filter((k) => k.startsWith('runner:scan:'))).toEqual([]);
+  });
+});
+
+describe('exit-signal whale block (audit #36)', () => {
+  const noCache = { get: async () => null, set: async () => {} } as any;
+  const holder = (o: Record<string, unknown> = {}) => ({ address: 'w', flow_direction: 'neutral', buy_volume_usd: 0, sell_volume_usd: 0, transaction_count: 0, ...o });
+  const run = async (whales: any) => {
+    const dex = { getPairsBatch: async () => [] } as any;
+    const ww = { enrich: async () => whales } as any;
+    return new ExitSignalAnalyzer(dex, ww, noCache).analyze('M');
+  };
+  test('ten holders, no transfer over the floor → whales null + caveat, not "10 whales, all neutral"', async () => {
+    const r = await run({ whales: Array(10).fill(0).map(() => holder()), whale_count: 10, net_flow_direction: 'neutral', holders_source: 'rpc' });
+    expect(r.whales).toBeNull();
+    expect(r.caveats.some((c) => c.includes('whale flow not measured'))).toBe(true);
+  });
+  test('measured selling still produces the block', async () => {
+    const r = await run({ whales: [holder({ flow_direction: 'distributing', sell_volume_usd: 50_000 })], whale_count: 1, net_flow_direction: 'distributing', holders_source: 'rpc' });
+    expect(r.whales?.distributing_count).toBe(1);
+    expect(r.whales?.total_sell_volume_usd).toBe(50_000);
+  });
+});
+
+describe('smart-money-flow seeds and cache key (audit #42, #43)', () => {
+  test('no fallback seed is a labelled entity (CEX, protocol) or a program address', () => {
+    for (const s of usableSeeds(DEFAULT_SMART_MONEY_SEEDS)) {
+      expect(lookupEntity(s)).toBeNull();
+      expect(isWalletAddress(s)).toBe(true);
+    }
+    expect(DEFAULT_SMART_MONEY_SEEDS).not.toContain('5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1'); // Raydium v4 authority
+    expect(DEFAULT_SMART_MONEY_SEEDS).not.toContain('9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM'); // Binance hot wallet
+    expect(usableSeeds(['5Q544fKrFoe6tsEbD7S8EmxGTJYAKtTVhAW5Q5pge4j1', 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg'])).toEqual(['vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg']);
+  });
+  test('two wallet lists that share the first three addresses get different cache keys; order does not matter', () => {
+    expect(seedListKey(['A', 'B', 'C', 'D'])).not.toBe(seedListKey(['A', 'B', 'C', 'E']));
+    expect(seedListKey(['D', 'C', 'B', 'A'])).toBe(seedListKey(['A', 'B', 'C', 'D']));
   });
 });
 

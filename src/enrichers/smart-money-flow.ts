@@ -5,7 +5,7 @@ import type { GraphMapper } from './graph-mapper';
 import type { TokenDiscovery } from './token-discovery';
 import { CACHE_TTL } from '../config';
 import { formatTimestamp, shortenAddress } from '../utils/normalize';
-import { DEFAULT_SMART_MONEY_SEEDS } from './smart-money-seeds';
+import { DEFAULT_SMART_MONEY_SEEDS, usableSeeds, seedListKey } from './smart-money-seeds';
 
 const DERIVED_SEEDS_CACHE_KEY = 'smart-money:derived-seeds:v1';
 const DERIVED_SEEDS_TTL = 7 * 24 * 60 * 60; // 7 days
@@ -59,6 +59,8 @@ export interface SmartMoneyFlowResult {
     include_graph: boolean;
     user_provided_wallets: boolean;
   };
+  /** Present when the result rests on something weaker than vetted seeds (the curated fallback list). */
+  caveats?: string[];
   last_updated: string;
 }
 
@@ -158,12 +160,12 @@ export class SmartMoneyAnalyzer {
         seeds = derived;
         seedSource = 'derived';
       } else {
-        seeds = DEFAULT_SMART_MONEY_SEEDS;
+        seeds = usableSeeds(DEFAULT_SMART_MONEY_SEEDS);
         seedSource = 'fallback';
       }
     }
 
-    const cacheKey = `smart-money:${seedSource}:${seeds.length}:${lookbackDays}:${minWinRate}:${topNTokens}:${includeGraph}:${seeds.slice(0, 3).join(',')}`;
+    const cacheKey = `smart-money:${seedSource}:${seeds.length}:${lookbackDays}:${minWinRate}:${topNTokens}:${includeGraph}:${seedListKey(seeds)}`;
     const cached = await this.cache.get<SmartMoneyFlowResult>(cacheKey);
     if (cached) return cached;
 
@@ -276,6 +278,9 @@ export class SmartMoneyAnalyzer {
         include_graph: includeGraph,
         user_provided_wallets: !!(userWallets && userWallets.length > 0),
       },
+      ...(seedSource === 'fallback'
+        ? { caveats: ['Seed wallets came from the curated fallback list (derivation from current whale activity returned too few). That list is not vetted on-chain; treat qualifying wallets as candidates, or pass your own `wallets`.'] }
+        : {}),
       last_updated: formatTimestamp(),
     };
     await this.cache.set(cacheKey, out, CACHE_TTL.copyTrade); // 10 min — smart money shifts over days

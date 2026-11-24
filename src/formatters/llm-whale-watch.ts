@@ -23,7 +23,10 @@ export function formatWhaleWatchBriefing(data: WhaleWatchEnrichment): string {
   if (topWhales.length > 0) {
     lines.push('### Top Holders');
     for (const whale of topWhales) {
-      const balanceStr = whale.balance_usd > 0 ? ` | Holds ${formatUsd(whale.balance_usd)} (${whale.pct_supply.toFixed(1)}% supply)` : '';
+      const pct = whale.pct_supply != null ? `${whale.pct_supply.toFixed(1)}% supply` : 'share of supply not read';
+      const balanceStr = whale.balance_usd != null && whale.balance_usd > 0
+        ? ` | Holds ${formatUsd(whale.balance_usd)} (${pct})`
+        : whale.pct_supply != null ? ` | Holds ${pct} (no price)` : '';
       const activityStr = whale.transaction_count > 0
         ? `${formatUsd(whale.total_volume_usd)} across ${whale.transaction_count} txs — ${whale.flow_direction}`
         : 'No recent activity';

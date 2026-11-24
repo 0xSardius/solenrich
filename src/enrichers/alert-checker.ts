@@ -155,7 +155,7 @@ export class AlertChecker {
     for (const addr of cap.wallets) {
       const cur = results[`wal:${addr}`] as WalletEnrichment | null;
       const snaps = (results[`walSnap:${addr}`] as WalletSnapshot[] | null) ?? [];
-      alerts.push(...detectWalletAlerts(addr, cur, snaps, c));
+      alerts.push(...detectWalletAlerts(addr, cur, snaps, c, sinceMs));
 
       const perpProfile = perpProfiles.get(addr) ?? null;
       const perpSnaps = (results[`perpSnap:${addr}`] as PerpsSnapshot[] | null) ?? [];
@@ -179,6 +179,15 @@ export class AlertChecker {
 
 // --- Pure detectors (exported for testing) ---
 
+/** The snapshot to measure a change from: the latest one at or before `since`, else the earliest after it.
+ *  (Before 2026-11-23 the oldest snapshot ≤ since was used: a 6-hour poll re-reported a 5-day-old move.) */
+export function pickBaseline<T extends { date: string }>(snapshots: T[], sinceMs: number): T | null {
+  if (!snapshots.length) return null;
+  const sorted = [...snapshots].sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+  const before = sorted.filter((s) => Date.parse(s.date) <= sinceMs);
+  return before.length ? before[before.length - 1] : sorted[0];
+}
+
 export function detectTokenAlerts(
   mint: string,
   current: TokenEnrichment | null,
@@ -194,7 +203,7 @@ export function detectTokenAlerts(
   const now = new Date().toISOString();
 
   // First-observation fires when no snapshots existed before the `since` window
-  const priorSnap = snapshots.find((s) => new Date(s.date).getTime() <= sinceMs);
+  const priorSnap = pickBaseline(snapshots, sinceMs);
   if (!priorSnap && snapshots.length === 0) {
     alerts.push({
       type: 'first_observation',
@@ -267,13 +276,14 @@ export function detectWalletAlerts(
   current: WalletEnrichment | null,
   snapshots: WalletSnapshot[],
   c: Required<AlertCriteria>,
+  sinceMs: number = Date.now(),
 ): Alert[] {
   const alerts: Alert[] = [];
   if (!current) return alerts;
 
   const ent = { kind: 'wallet' as const, address };
   const now = new Date().toISOString();
-  const priorSnap = snapshots[0]; // oldest in window
+  const priorSnap = pickBaseline(snapshots, sinceMs);
 
   if (!priorSnap) {
     alerts.push({

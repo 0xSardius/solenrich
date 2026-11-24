@@ -58,7 +58,7 @@ export interface ExitSignalResult {
   last_updated: string;
 }
 
-/** Whale-watch parameters: balance floor + how far back to read flow. */
+/** Whale-watch parameters: per-transfer USD floor (smaller transfers are not counted) + how far back to read flow. */
 const WHALE_THRESHOLD_USD = 10_000;
 const WHALE_LOOKBACK_H = 24;
 
@@ -153,8 +153,18 @@ export class ExitSignalAnalyzer {
     if (whaleLeg.status === 'rejected') {
       caveats.push('Whale leg FAILED this call — verdict omits top-holder flow.');
     }
+    // No top-holder transfer crossed the per-transfer floor (or no price): nothing was measured, so no block —
+    // ten silent holders must not read as "10 whales measured, all neutral".
+    const whaleVolume = whaleData ? whaleData.whales.reduce((s, w) => s + w.sell_volume_usd + w.buy_volume_usd, 0) : 0;
+    const whaleMeasured = whaleData != null && whaleData.holders_source !== 'unavailable'
+      && whaleData.net_flow_direction !== 'unknown' && whaleVolume > 0;
+    if (whaleData && whaleData.holders_source !== 'unavailable' && !whaleMeasured) {
+      caveats.push(whaleData.net_flow_direction === 'unknown'
+        ? 'Top-holder flow not measured (no token price for the transfers) — verdict omits whale flow.'
+        : `No top-holder transfer of $${WHALE_THRESHOLD_USD.toLocaleString()}+ in ${WHALE_LOOKBACK_H}h — whale flow not measured (quiet holders or a small token); verdict omits it.`);
+    }
     const whales: ExitSignalResult['whales'] =
-      whaleData && whaleData.holders_source !== 'unavailable'
+      whaleData && whaleMeasured
         ? {
             net_flow_direction: whaleData.net_flow_direction,
             whale_count: whaleData.whale_count,

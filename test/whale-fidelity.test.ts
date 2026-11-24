@@ -2,7 +2,7 @@
 // check-alerts whale alerts can fire.
 import { describe, expect, test } from 'bun:test';
 import { WhaleWatcher, isWalletAddress } from '../src/enrichers/whale-watch';
-import { detectTokenAlerts } from '../src/enrichers/alert-checker';
+import { detectTokenAlerts, pickBaseline } from '../src/enrichers/alert-checker';
 
 const MINT = 'Meme111111111111111111111111111111111111pump';
 const WHALE = 'vines1vzrYbzLMRdu58ou5XTby4qAqVRLmqo36NKPTg';        // a wallet (on curve)
@@ -16,14 +16,17 @@ describe('isWalletAddress', () => {
   });
 });
 
-function watcher(o: { price: number; txs: any[] }) {
+function watcher(o: { price: number; txs: any[]; mintThrows?: boolean }) {
   const noCache = { get: async () => null, set: async () => {} } as any;
   const rpc = {
     getTokenLargestAccounts: async () => [
       { address: 'poolVault', uiAmount: 400_000_000, decimals: 6 },
       { address: 'whaleAcct', uiAmount: 50_000_000, decimals: 6 },
     ],
-    getMintInfo: async () => ({ decimals: 6, supply: 1_000_000_000 * 1e6, mintAuthority: null, freezeAuthority: null }),
+    getMintInfo: async () => {
+      if (o.mintThrows) throw new Error('rpc timeout');
+      return { decimals: 6, supply: 1_000_000_000 * 1e6, mintAuthority: null, freezeAuthority: null };
+    },
     resolveTokenAccountOwners: async () => [{ tokenAccount: 'poolVault', owner: POOL }, { tokenAccount: 'whaleAcct', owner: WHALE }],
   };
   const helius = {
@@ -56,6 +59,20 @@ describe('WhaleWatcher', () => {
     expect(r.whales[0].flow_direction).toBe('unknown');
     expect(r.data_quality).toEqual({ degraded: true, unavailable: ['price'] });
   });
+  test('no token price → balance_usd null, not $0 (audit #47)', async () => {
+    const r = await watcher({ price: 0, txs: [] }).enrich(MINT, 1000, 24);
+    expect(r.whales[0].balance_usd).toBeNull();
+    expect(r.program_accounts[0].balance_usd).toBeNull();
+    expect(r.whales[0].pct_supply).toBe(5);
+  });
+  test('mint account unread → pct_supply null and data_quality names mint_info (was 0%, not degraded)', async () => {
+    const r = await watcher({ price: 0.001, txs: [], mintThrows: true }).enrich(MINT, 1000, 24);
+    expect(r.whales[0].pct_supply).toBeNull();
+    expect(r.whales[0].balance_usd).toBeCloseTo(50_000, 6);
+    expect(r.data_quality.degraded).toBe(true);
+    expect(r.data_quality.unavailable).toContain('mint_info');
+    expect(r.net_flow_direction).toBe('neutral'); // flows were still read
+  });
 });
 
 describe('check-alerts whale alerts', () => {
@@ -66,6 +83,18 @@ describe('check-alerts whale alerts', () => {
     const w = alerts.find((a: any) => a.type === 'whale_inflow');
     expect(w).toBeDefined();
     expect((w as any).data.active_whales).toBe(1);
+  });
+  test('price change is measured from the last snapshot at or before since, not the oldest (audit #51)', () => {
+    const day = 86_400_000;
+    const now = Date.parse('2026-11-23T12:00:00Z');
+    const snap = (daysAgo: number, price: number) => ({ date: new Date(now - daysAgo * day).toISOString().slice(0, 10), price_usd: price, risk_flags: [], holder_count: null }) as any;
+    // 5 days ago the price was 1.0 (a +100% move since then); yesterday it was already 2.0.
+    const snaps = [snap(5, 1.0), snap(1, 2.0)];
+    const since = now - 6 * 3_600_000; // 6h ago: the last snapshot at or before it is yesterday's
+    const alerts = detectTokenAlerts(MINT, { mint: MINT, risk_flags: [], price_usd: 2.02 } as any, snaps, null, { min_price_change_pct: 20 } as any, since);
+    expect(alerts.some((a: any) => a.type === 'price_spike')).toBe(false);
+    expect(pickBaseline(snaps, since)?.price_usd).toBe(2.0);
+    expect(pickBaseline(snaps, now - 10 * day)?.price_usd).toBe(1.0); // none before since → earliest after it
   });
   test('unknown flow never fires', () => {
     const whale = { total_whale_volume_usd: 50_000, net_flow_direction: 'unknown', whale_count: 10, whales: [] } as any;
