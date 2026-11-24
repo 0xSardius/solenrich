@@ -55,6 +55,14 @@ export interface SmartMoneyTrenchesResult {
   buys_on_older_tokens: number;
   /** Buys excluded because DexScreener exposes no launch time for the token. */
   buys_unknown_age: number;
+  /** Seeds whose reads failed this scan (Helius error): not counted in seeds_scanned. */
+  seeds_failed: number;
+  /** Distinct bought mints whose DexScreener lookup failed (error, not "no pairs"). */
+  token_lookups_failed: number;
+  /** Buys excluded because their token lookup failed — not the same as unknown age. */
+  buys_lookup_failed: number;
+  /** degraded = some seed reads or token lookups failed, so signals can be missing. */
+  data_quality: { degraded: boolean; unavailable: string[] };
   filters: {
     hours_back: number;
     max_token_age_hours: number;
@@ -106,9 +114,30 @@ export class TrenchesSmartMoneyAnalyzer {
     minBuyers: number,
     limit: number,
   ): Promise<SmartMoneyTrenchesResult> {
-    const cacheKey = `trenches:smart-money:${hoursBack}:${maxTokenAgeHours}:${minBuyers}:${limit}`;
+    const full = await this.aggregate(hoursBack, maxTokenAgeHours);
+    return {
+      ...full,
+      signals: full.signals.filter((s) => s.smart_buyers >= minBuyers).slice(0, limit),
+      filters: { hours_back: hoursBack, max_token_age_hours: maxTokenAgeHours, min_buyers: minBuyers, limit },
+      last_updated: formatTimestamp(),
+    };
+  }
+
+  /**
+   * Membership check for one mint against the FULL aggregate (audit #39: trenches-check used to search the top-25
+   * slice, so a seed buy on the 26th token read as "no proven-winner buys"). Same cache as enrich().
+   */
+  async lookup(mint: string, hoursBack: number, maxTokenAgeHours: number): Promise<{ signal: TrenchesTokenSignal | null; result: SmartMoneyTrenchesResult }> {
+    const full = await this.aggregate(hoursBack, maxTokenAgeHours);
+    return { signal: full.signals.find((s) => s.mint === mint) ?? null, result: full };
+  }
+
+  /** Every fresh-token signal with at least one smart buyer, sorted; cached per (hoursBack, maxTokenAgeHours). */
+  private async aggregate(hoursBack: number, maxTokenAgeHours: number): Promise<SmartMoneyTrenchesResult> {
+    const cacheKey = `trenches:smart-money:agg:${hoursBack}:${maxTokenAgeHours}`;
     const cached = await this.cache.get<SmartMoneyTrenchesResult>(cacheKey);
     if (cached) return cached;
+    const minBuyers = 1;
 
     const seeds: SeedInfo[] = [
       ...TRENCHES_SMART_MONEY_SEEDS.map((s) => ({
@@ -131,6 +160,7 @@ export class TrenchesSmartMoneyAnalyzer {
     const skipped: string[] = [];
     const flagged: string[] = [];
     const seedBuys: Array<{ seed: SeedInfo; buys: RecentBuy[]; elevated: boolean }> = [];
+    let seedsFailed = 0;
 
     for (let i = 0; i < seeds.length; i += 10) {
       const batch = seeds.slice(i, i + 10);
@@ -156,6 +186,7 @@ export class TrenchesSmartMoneyAnalyzer {
       );
       for (const s of settled) {
         if (s.status === 'fulfilled' && s.value) seedBuys.push(s.value);
+        else if (s.status === 'rejected') seedsFailed++;
       }
     }
 
@@ -167,6 +198,8 @@ export class TrenchesSmartMoneyAnalyzer {
       string,
       { ageHours: number | null; symbol: string | null; liquidity: number | null; marketCap: number | null; price: number | null }
     >();
+    // A rejected lookup (429, timeout) is a failed read; a fulfilled null is "DexScreener has no pairs".
+    const lookupFailed = new Set<string>();
     const mintList = [...allMints];
     for (let i = 0; i < mintList.length; i += 5) {
       const batch = mintList.slice(i, i + 5);
@@ -175,7 +208,8 @@ export class TrenchesSmartMoneyAnalyzer {
       );
       for (let j = 0; j < batch.length; j++) {
         const r = settled[j];
-        const data = r.status === 'fulfilled' ? r.value : null;
+        if (r.status === 'rejected') { lookupFailed.add(batch[j]); continue; }
+        const data = r.value;
         tokenData.set(batch[j], {
           ageHours: data?.pairCreatedAt != null ? (Date.now() - data.pairCreatedAt) / 3_600_000 : null,
           symbol: data?.symbol ?? null,
@@ -191,6 +225,7 @@ export class TrenchesSmartMoneyAnalyzer {
     let totalBuys = 0;
     let olderTokenBuys = 0;
     let unknownAgeBuys = 0;
+    let lookupFailedBuys = 0;
     const agg = new Map<
       string,
       { buyers: Set<string>; holders: Set<string>; spent: number; latestTs: number; buys: TrenchesBuy[] }
@@ -199,6 +234,10 @@ export class TrenchesSmartMoneyAnalyzer {
     for (const { seed, buys, elevated } of seedBuys) {
       for (const buy of buys) {
         totalBuys++;
+        if (lookupFailed.has(buy.mint)) {
+          lookupFailedBuys++;
+          continue;
+        }
         const info = tokenData.get(buy.mint);
         if (!info || info.ageHours == null) {
           unknownAgeBuys++;
@@ -251,22 +290,28 @@ export class TrenchesSmartMoneyAnalyzer {
         (a, b) =>
           b.smart_buyers - a.smart_buyers ||
           a.most_recent_buy_minutes_ago - b.most_recent_buy_minutes_ago,
-      )
-      .slice(0, limit);
+      );
 
+    const unavailable: string[] = [];
+    if (seedsFailed > 0) unavailable.push('helius_seed_reads');
+    if (lookupFailed.size > 0) unavailable.push('dexscreener_token_lookups');
     const out: SmartMoneyTrenchesResult = {
       signals,
-      seeds_scanned: seeds.length - skipped.length,
+      seeds_scanned: seeds.length - skipped.length - seedsFailed,
       seeds_skipped_bot_cadence: skipped,
       seeds_flagged_elevated_cadence: flagged,
       total_recent_buys: totalBuys,
       buys_on_older_tokens: olderTokenBuys,
       buys_unknown_age: unknownAgeBuys,
+      seeds_failed: seedsFailed,
+      token_lookups_failed: lookupFailed.size,
+      buys_lookup_failed: lookupFailedBuys,
+      data_quality: { degraded: unavailable.length > 0, unavailable },
       filters: {
         hours_back: hoursBack,
         max_token_age_hours: maxTokenAgeHours,
         min_buyers: minBuyers,
-        limit,
+        limit: signals.length,
       },
       seed_set: {
         derived_at: TRENCHES_SEEDS_DERIVED_AT,
@@ -277,7 +322,8 @@ export class TrenchesSmartMoneyAnalyzer {
       last_updated: formatTimestamp(),
     };
 
-    await this.cache.set(cacheKey, out, CACHE_TTL.trenches);
+    // A scan with failed reads is cached briefly, so the next call reads again.
+    await this.cache.set(cacheKey, out, out.data_quality.degraded ? 15 : CACHE_TTL.trenches);
     return out;
   }
 }

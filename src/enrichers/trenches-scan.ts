@@ -217,10 +217,14 @@ export class TrenchesScanOrchestrator {
             : runnerData?.data_quality?.degraded ? 'DexScreener unreachable (pair data did not answer)' : null,
         },
         smart_money: {
-          ok: smartData != null,
+          ok: smartData != null && smartData.data_quality?.degraded !== true,
           seeds_scanned: smartData?.seeds_scanned ?? 0,
           total_recent_buys: smartData?.total_recent_buys ?? 0,
-          error: smartLeg.status === 'rejected' ? String(smartLeg.reason?.message ?? smartLeg.reason) : null,
+          error: smartLeg.status === 'rejected'
+            ? String(smartLeg.reason?.message ?? smartLeg.reason)
+            : smartData?.data_quality?.degraded
+              ? `partial: ${smartData.seeds_failed} seed reads and ${smartData.token_lookups_failed} token lookups failed`
+              : null,
         },
         attention: {
           ok: attentionData != null,

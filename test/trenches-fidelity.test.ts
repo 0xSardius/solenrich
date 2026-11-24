@@ -7,6 +7,8 @@ import { ExitSignalAnalyzer } from '../src/enrichers/exit-analyzer';
 import { DEFAULT_SMART_MONEY_SEEDS, usableSeeds, seedListKey } from '../src/enrichers/smart-money-seeds';
 import { lookupEntity } from '../src/utils/entities';
 import { isWalletAddress } from '../src/enrichers/whale-watch';
+import { TrenchesSmartMoneyAnalyzer } from '../src/enrichers/trenches-smart-money';
+import { TRENCHES_SMART_MONEY_SEEDS, TRENCHES_CONVICTION_HOLDERS } from '../src/enrichers/trenches-smart-money-seeds';
 import { assessExit } from '../src/enrichers/exit-score';
 import { assessRunner } from '../src/enrichers/runner-score';
 
@@ -118,6 +120,48 @@ describe('smart-money-flow seeds and cache key (audit #42, #43)', () => {
   test('two wallet lists that share the first three addresses get different cache keys; order does not matter', () => {
     expect(seedListKey(['A', 'B', 'C', 'D'])).not.toBe(seedListKey(['A', 'B', 'C', 'E']));
     expect(seedListKey(['D', 'C', 'B', 'A'])).toBe(seedListKey(['A', 'B', 'C', 'D']));
+  });
+});
+
+describe('smart-money-trenches failures and full-aggregate lookup (audit #39, #44)', () => {
+  const now = Math.floor(Date.now() / 1000);
+  const seeds = TRENCHES_SMART_MONEY_SEEDS.map((s) => s.address);
+  const build = () => {
+    // Low cadence for every seed (5 txs over 10 h); the first seed's read fails.
+    const helius = { getSignaturesForAddress: async (addr: string) => {
+      if (addr === seeds[0]) throw new Error('helius 429');
+      return Array.from({ length: 5 }, (_, i) => ({ signature: `${addr}${i}`, blockTime: now - i * 7200 }));
+    } } as any;
+    // The second seed bought 30 distinct fresh tokens; the third bought token #29 too, so it ranks first.
+    const buysFor = (addr: string) => addr === seeds[1]
+      ? Array.from({ length: 30 }, (_, i) => ({ mint: `MINT${i}`, timestamp: now - 600 - i, spent_usd: 10 }))
+      : addr === seeds[2] ? [{ mint: 'MINT29', timestamp: now - 60, spent_usd: 5 }] : [];
+    const copyTrade = { getRecentBuys: async (addr: string) => buysFor(addr) } as any;
+    // MINT7's lookup fails (429); everything else is a 2-hour-old token.
+    const dex = { getTokenData: async (m: string) => {
+      if (m === 'MINT7') throw new Error('dexscreener 429');
+      return { pairCreatedAt: Date.now() - 2 * 3_600_000, symbol: m, liquidity: 5000, marketCap: 50_000, price: 0.001 };
+    } } as any;
+    const cache = { get: async () => null, set: async () => {} } as any;
+    return new TrenchesSmartMoneyAnalyzer(helius, dex, copyTrade, cache);
+  };
+  test('a failed seed read is counted, not scanned; a failed token lookup is not "unknown age"; degraded', async () => {
+    const r = await build().enrich(12, 72, 1, 25);
+    expect(r.seeds_failed).toBe(1);
+    expect(r.seeds_scanned).toBe(TRENCHES_SMART_MONEY_SEEDS.length + TRENCHES_CONVICTION_HOLDERS.length - 1 - r.seeds_skipped_bot_cadence.length);
+    expect(r.token_lookups_failed).toBe(1);
+    expect(r.buys_lookup_failed).toBe(1);
+    expect(r.buys_unknown_age).toBe(0);
+    expect(r.data_quality.degraded).toBe(true);
+    expect(r.signals.length).toBe(25);
+  });
+  test('lookup() finds a token outside the top-25 slice', async () => {
+    const a = build();
+    const top = await a.enrich(12, 72, 1, 25);
+    const outside = Array.from({ length: 30 }, (_, i) => `MINT${i}`).find((m) => m !== 'MINT7' && !top.signals.some((s) => s.mint === m))!;
+    expect(outside).toBeDefined();
+    const { signal } = await a.lookup(outside, 12, 72);
+    expect(signal?.mint).toBe(outside);
   });
 });
 

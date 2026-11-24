@@ -19,14 +19,21 @@ export function formatTrenchesBriefing(data: SmartMoneyTrenchesResult): string {
     lines.push('');
   }
 
+  if (data.data_quality?.degraded) {
+    lines.push(
+      `⚠ Partial scan: ${data.seeds_failed} seed read(s) and ${data.token_lookups_failed} token lookup(s) failed (${data.buys_lookup_failed} buys not checked) — missing signals may be missed reads. Retry in a minute.`,
+    );
+    lines.push('');
+  }
+
   if (data.signals.length === 0) {
     lines.push(
       `**No fresh-token buys from the seed set in this window.** Scanned ${data.seeds_scanned} wallets, saw ${data.total_recent_buys} recent buys — ${data.buys_on_older_tokens} were on tokens older than ${f.max_token_age_hours}h${data.buys_unknown_age > 0 ? `, ${data.buys_unknown_age} on tokens with unknown launch time` : ''}.`,
     );
     lines.push('');
-    lines.push(
-      'A quiet scan is itself a signal: the proven wallets are not aping right now. Consider widening `hours_back` or `max_token_age_hours`, or treat the trenches as cold.',
-    );
+    lines.push(data.data_quality?.degraded
+      ? 'This scan was partial, so an empty result is not proof the proven wallets are quiet. Retry before treating the trenches as cold.'
+      : 'A quiet scan is itself a signal: the proven wallets are not aping right now. Consider widening `hours_back` or `max_token_age_hours`, or treat the trenches as cold.');
     lines.push('');
     lines.push(`Data as of: ${data.last_updated}`);
     return lines.join('\n');

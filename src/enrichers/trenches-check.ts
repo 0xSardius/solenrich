@@ -98,7 +98,7 @@ export class TrenchesCheckAnalyzer {
 
     const [pairsLeg, smartLeg, attentionLeg, holderLeg, taxLeg] = await Promise.allSettled([
       this.dexscreener.getPairsBatch([mint]),
-      this.smartMoney.enrich(12, SMART_MONEY_MAX_AGE_H, 1, 25),
+      this.smartMoney.lookup(mint, 12, SMART_MONEY_MAX_AGE_H),
       this.signals.getSignal('token', mint, '6h', 1),
       this.birdeye ? this.birdeye.getTokenOverview(mint) : Promise.resolve(null),
       this.taxReader ? this.taxReader.get(mint) : Promise.resolve(null),
@@ -182,7 +182,10 @@ export class TrenchesCheckAnalyzer {
     if (smartLeg.status === 'rejected') {
       caveats.push('Smart-money leg FAILED this check — verdict omits proven-winner buys.');
     }
-    const smartSignal = smartData?.signals.find((s) => s.mint === mint) ?? null;
+    const smartSignal = smartData?.signal ?? null;
+    if (!smartSignal && smartData?.result.data_quality.degraded) {
+      caveats.push(`Smart-money leg partial (${smartData.result.seeds_failed} seed reads and ${smartData.result.token_lookups_failed} token lookups failed) — "no proven-winner buys" may be a missed read.`);
+    }
     const smart_money: TrenchesCheckResult['smart_money'] = smartSignal
       ? {
           smart_buyers: smartSignal.smart_buyers,
@@ -258,7 +261,7 @@ export class TrenchesCheckAnalyzer {
     };
 
     // A failed leg gets a short cache, so the failed read is retried soon.
-    const partial = pairsLeg.status === 'rejected' || smartLeg.status === 'rejected';
+    const partial = pairsLeg.status === 'rejected' || smartLeg.status === 'rejected' || smartData?.result.data_quality.degraded === true;
     await this.cache.set(cacheKey, result, partial ? 15 : CACHE_TTL.trenchesCheck);
     return result;
   }
