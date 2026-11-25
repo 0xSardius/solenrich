@@ -1163,7 +1163,7 @@ function buildDocs() {
       'enrich-wallet-full': {
         price: '0.005',
         input: { address: 'string', format: 'json | llm | both' },
-        description: 'Full wallet profile: adds DeFi positions, connected wallets, enhanced tx history, and automated-activity behavioral signals',
+        description: 'Full wallet profile: adds DeFi protocol activity (defi_positions = recent volume per protocol with value_basis "recent_activity_volume" and tx_count — not open position values), connected wallets, enhanced tx history, and automated-activity behavioral signals',
       },
       'enrich-token-light': {
         price: '0.002',

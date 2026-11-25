@@ -28,8 +28,8 @@ export const ENDPOINT_META: Record<string, {
     },
   },
   'enrich-wallet-full': {
-    summary: 'Profile a Solana wallet in depth: DeFi positions, connections, risk',
-    description: 'Adds DeFi positions, connected wallets, enhanced transaction history, automated-activity behavioral signals, and a wider NFT collection breakdown to the light profile.',
+    summary: 'Profile a Solana wallet in depth: DeFi activity, connections, risk',
+    description: 'Adds DeFi protocol activity (defi_positions: recent volume per protocol, not open position values), connected wallets, enhanced transaction history, automated-activity behavioral signals, and a wider NFT collection breakdown to the light profile.',
     schema: {
       type: 'object',
       required: ['address'],

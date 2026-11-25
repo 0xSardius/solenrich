@@ -83,7 +83,7 @@ export function formatWalletBriefing(data: WalletEnrichment): string {
     const totalDefi = data.defi_positions.reduce((s, p) => s + p.value_usd, 0);
     lines.push(
       `DeFi activity: ${protocols.join(', ')}` +
-        (totalDefi > 0 ? ` (~${formatUsd(totalDefi)} total).` : '.'),
+        (totalDefi > 0 ? ` (~${formatUsd(totalDefi)} moved through them in recent transactions — activity, not position value).` : '.'),
     );
     lines.push('');
   }

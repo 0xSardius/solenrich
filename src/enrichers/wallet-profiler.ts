@@ -42,6 +42,57 @@ const THIRTY_DAYS_S = 30 * 24 * 60 * 60;
 
 // --- Types ---
 
+/**
+ * One known DeFi protocol the wallet touched in its recent transactions (audit #46). value_usd is the sum of token
+ * balance changes in those transactions, priced at today's price for tokens the wallet still holds — a measure of
+ * recent activity, not the value of an open position. type is the dominant transaction type.
+ */
+export interface DefiPositionEntry {
+  protocol: string;
+  type: 'swap' | 'transfer' | 'other';
+  value_usd: number;
+  value_basis: 'recent_activity_volume';
+  /** Recent transactions that touched this protocol. */
+  tx_count: number;
+}
+
+/** Pure: protocol activity from enhanced transactions + current holdings (for prices). Exported for tests. */
+export function protocolActivity(
+  txs: EnhancedTransaction[],
+  holdings: Array<{ mint: string; balance: number; usd_value: number }>,
+): DefiPositionEntry[] {
+  const byProto = new Map<string, { volumeUsd: number; txs: Set<string>; types: Record<string, number> }>();
+  for (const tx of txs) {
+    for (const ad of tx.accountData ?? []) {
+      const proto = KNOWN_PROTOCOLS[ad.account];
+      if (!proto) continue;
+      const e = byProto.get(proto) ?? { volumeUsd: 0, txs: new Set<string>(), types: {} };
+      if (!e.txs.has(tx.signature)) {
+        e.txs.add(tx.signature);
+        // 'other' is honest: anything not a swap or transfer was labelled 'stake' before 2026-11-25.
+        const t = tx.type === 'SWAP' ? 'swap' : tx.type === 'TRANSFER' ? 'transfer' : 'other';
+        e.types[t] = (e.types[t] ?? 0) + 1;
+      }
+      for (const tbc of ad.tokenBalanceChanges ?? []) {
+        const rawAmount = Math.abs(Number((tbc as any).rawTokenAmount?.tokenAmount ?? 0));
+        const decimals = Number((tbc as any).rawTokenAmount?.decimals ?? 0);
+        const units = decimals > 0 ? rawAmount / 10 ** decimals : rawAmount;
+        const mint = (tbc as any).mint as string | undefined;
+        const holding = mint ? holdings.find((h) => h.mint === mint) : undefined;
+        if (holding && holding.balance > 0 && units > 0) e.volumeUsd += units * (holding.usd_value / holding.balance);
+      }
+      byProto.set(proto, e);
+    }
+  }
+  return [...byProto].map(([protocol, e]) => ({
+    protocol,
+    type: (Object.entries(e.types).sort((a, b) => b[1] - a[1])[0]?.[0] ?? 'other') as DefiPositionEntry['type'],
+    value_usd: Math.round(e.volumeUsd * 100) / 100,
+    value_basis: 'recent_activity_volume' as const,
+    tx_count: e.txs.size,
+  }));
+}
+
 export interface WalletEnrichment {
   address: string;
   sol_balance: number;
@@ -59,11 +110,8 @@ export interface WalletEnrichment {
   nft_summary: NftSummary;
   /** Largest collections, real holdings first. Capped at 10 (full depth) or 5 (light). */
   nft_collections: NftCollectionEntry[];
-  defi_positions: Array<{
-    protocol: string;
-    type: string;
-    value_usd: number;
-  }>;
+  /** Recent activity per known DeFi protocol — NOT open position values (see DefiPositionEntry). */
+  defi_positions: DefiPositionEntry[];
   tx_count_30d: number;
   /** True when tx_count_30d is a lower bound (more 30-day transactions than the pages read). */
   tx_count_30d_capped: boolean;
@@ -302,45 +350,9 @@ export class WalletProfiler {
       protocolsInteracted.push(...programIds);
     }
 
-    // Step 6: DeFi positions (full depth only) — estimate USD values from token balance changes
-    const defiPositions: Array<{ protocol: string; type: string; value_usd: number }> = [];
-    if (depth === 'full') {
-      const protocolData = new Map<string, { type: string; volumeUsd: number }>();
-      for (const tx of enhancedTxs) {
-        for (const ad of tx.accountData ?? []) {
-          const proto = KNOWN_PROTOCOLS[ad.account];
-          if (!proto) continue;
-
-          const txType = tx.type === 'SWAP' ? 'swap' : tx.type === 'TRANSFER' ? 'transfer' : 'stake';
-          const existing = protocolData.get(proto) ?? { type: txType, volumeUsd: 0 };
-
-          // Sum absolute token balance changes as a proxy for protocol interaction value
-          for (const tbc of ad.tokenBalanceChanges ?? []) {
-            const rawAmount = Math.abs(Number((tbc as any).rawTokenAmount?.tokenAmount ?? 0));
-            const decimals = Number((tbc as any).rawTokenAmount?.decimals ?? 0);
-            const units = decimals > 0 ? rawAmount / 10 ** decimals : rawAmount;
-            const mint = (tbc as any).mint as string | undefined;
-            if (mint && units > 0) {
-              // Use holdings price if we have it, otherwise skip
-              const holding = holdingsRaw.find((h) => h.mint === mint);
-              if (holding && holding.balance > 0) {
-                const pricePerUnit = holding.usd_value / holding.balance;
-                existing.volumeUsd += units * pricePerUnit;
-              }
-            }
-          }
-
-          protocolData.set(proto, existing);
-        }
-      }
-      for (const [protocol, data] of protocolData) {
-        defiPositions.push({
-          protocol,
-          type: data.type,
-          value_usd: Math.round(data.volumeUsd * 100) / 100,
-        });
-      }
-    }
+    // Step 6: DeFi protocol activity (full depth only). Field name `defi_positions` kept for API stability
+    // (Sardius, 2026-11-25); each entry says what value_usd is.
+    const defiPositions: DefiPositionEntry[] = depth === 'full' ? protocolActivity(enhancedTxs, holdingsRaw) : [];
 
     // Step 7: labels
     const walletAgeDays = history.wallet_age_days; // null = unknown → no age risk factor

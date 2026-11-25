@@ -1,7 +1,7 @@
 // Wallet profile fidelity (audit 2026-11-17, step 3): wallet age from real history, no penalty for unmeasured
 // factors, dormant from the last tx, and the published risk levels match the code.
 import { describe, expect, test } from 'bun:test';
-import { walletHistory } from '../src/enrichers/wallet-profiler';
+import { walletHistory, protocolActivity } from '../src/enrichers/wallet-profiler';
 import { scoreWalletRisk, getRiskLevel, riskLevelRanges, RISK_LEVELS } from '../src/enrichers/risk-scorer';
 import { labelWallet } from '../src/enrichers/labeler';
 
@@ -55,6 +55,24 @@ describe('scoreWalletRisk: unmeasured factors are not scored', () => {
   test('measured values still score', () => {
     const r = scoreWalletRisk({ ...base, concentration: 0, wallet_age_days: 3, tx_diversity: 0.05, protocol_breadth: 1 });
     expect(r.score).toBeCloseTo(0.35, 6);
+  });
+});
+
+describe('defi_positions is labelled as recent activity (audit #46, name kept)', () => {
+  const JUP = 'JUP6LkbZbjS1jKKwapdHNy74zcZ3tLUZoi5QNyVTaV4';
+  const MARINADE = 'MarBmsSgKXdrN1egZf5sqe1TMai9K1rChYNDJgjq7aD';
+  const tbc = (mint: string, amount: number) => ({ mint, rawTokenAmount: { tokenAmount: String(amount * 1e6), decimals: 6 } });
+  test('swaps through Jupiter: type swap, value_basis recent_activity_volume, tx_count counts transactions', () => {
+    const txs = [
+      { signature: 'a', type: 'SWAP', accountData: [{ account: JUP, tokenBalanceChanges: [tbc('USDC', 100)] }] },
+      { signature: 'b', type: 'SWAP', accountData: [{ account: JUP, tokenBalanceChanges: [tbc('USDC', 50)] }] },
+    ] as any;
+    const [p] = protocolActivity(txs, [{ mint: 'USDC', balance: 10, usd_value: 10 }]);
+    expect(p).toMatchObject({ type: 'swap', value_basis: 'recent_activity_volume', tx_count: 2, value_usd: 150 });
+  });
+  test('a non-swap, non-transfer interaction is "other", not an invented "stake"', () => {
+    const txs = [{ signature: 'c', type: 'UNKNOWN', accountData: [{ account: MARINADE, tokenBalanceChanges: [] }] }] as any;
+    expect(protocolActivity(txs, [])[0].type).toBe('other');
   });
 });
 

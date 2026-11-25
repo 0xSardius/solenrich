@@ -28,7 +28,7 @@ export function registerWalletEntrypoints(
 
   addEntrypoint({
     key: 'enrich-wallet-full',
-    description: 'Full wallet profile with holdings, DeFi positions, labels, risk score, and connected wallets',
+    description: 'Full wallet profile with holdings, DeFi protocol activity (defi_positions: recent volume per protocol, not open position values), labels, risk score, and connected wallets',
     input: EnrichWalletInput,
     // output schema omitted — response shape varies by format (json/llm/both)
     // price: PRICING['enrich-wallet-full'],

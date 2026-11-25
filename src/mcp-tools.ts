@@ -75,10 +75,10 @@ export const MCP_TOOLS: McpToolDef[] = [
   {
     name: 'enrich_wallet',
     title: 'Enrich Wallet',
-    description: 'Get a Solana wallet profile: SOL balance, token holdings, DeFi positions, labels (whale, active_trader, defi_user), risk score, and risk level.',
+    description: 'Get a Solana wallet profile: SOL balance, token holdings, DeFi protocol activity (full depth; recent volume per protocol, not position values), labels (whale, active_trader, defi_user), risk score, and risk level.',
     inputSchema: {
       address: z.string().describe('Solana wallet address (base58, 32-44 chars)'),
-      depth: z.enum(['light', 'full']).default('light').describe('light = basic profile, full = includes DeFi positions and connected wallets'),
+      depth: z.enum(['light', 'full']).default('light').describe('light = basic profile, full = includes DeFi protocol activity and connected wallets'),
     },
     handler: async (args) => {
       const key = args.depth === 'full' ? 'enrich-wallet-full' : 'enrich-wallet-light';
