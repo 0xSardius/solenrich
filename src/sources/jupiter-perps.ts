@@ -85,6 +85,9 @@ export interface PerpsMarketSnapshot {
     long_pct: number;
     short_pct: number;
     net_skew: 'long' | 'short' | 'balanced';
+    /** locked_x_mark = locked tokens × oracle mark (current notional; within ~5% of Σ position size, measured).
+     *  guaranteed_usd = Σ(size − collateral), used only when the oracle read failed: understates longs ~10–25%. */
+    long_basis: 'locked_x_mark' | 'guaranteed_usd';
   };
   utilization_pct: number;
   /** LONG-side borrow rate: longs borrow the asset from its own custody (SOL/BTC/ETH). */
@@ -307,7 +310,15 @@ export class JupiterPerpsClient {
 
     const markets: PerpsMarketSnapshot[] = custodies.map((custody, i) => {
       const m = TRADABLE_MARKETS[i];
-      const long_usd = bnDivScaled(custody.assets.guaranteedUsd as BN, USDC_DECIMALS);
+      const decimals = custody.decimals as number;
+      const locked_tokens = Number((custody.assets.locked as BN).toString()) / 10 ** decimals;
+      const guaranteed_usd = bnDivScaled(custody.assets.guaranteedUsd as BN, USDC_DECIMALS);
+      // Long OI = locked tokens × mark (audit #17). guaranteedUsd is Σ(size − collateral) over open longs — measured
+      // 2026-11-25 on ETH: 471 open longs, Σ size $3,959,101, Σ(size − collateral) $3,232,409 = guaranteedUsd exactly
+      // (−18%), locked × mark $3,757,118 (−5%, today's price vs entry). The custody keeps no Σ size for longs.
+      const mark = oraclePrices[i];
+      const long_basis: 'locked_x_mark' | 'guaranteed_usd' = mark != null && mark > 0 ? 'locked_x_mark' : 'guaranteed_usd';
+      const long_usd = long_basis === 'locked_x_mark' ? locked_tokens * mark! : guaranteed_usd;
       const short_usd = bnDivScaled(custody.assets.globalShortSizes as BN, USDC_DECIMALS);
       const total_usd = long_usd + short_usd;
       const long_pct = total_usd > 0 ? (long_usd / total_usd) * 100 : 0;
@@ -321,15 +332,13 @@ export class JupiterPerpsClient {
       }
 
       const rate = computeBorrowRate(custody);
-      const decimals = custody.decimals as number;
       const owned_tokens = Number((custody.assets.owned as BN).toString()) / 10 ** decimals;
-      const locked_tokens = Number((custody.assets.locked as BN).toString()) / 10 ** decimals;
 
       return {
         symbol: m.symbol,
         custody: m.custody.toBase58(),
         mark_price_usd: oraclePrices[i],
-        open_interest: { long_usd, short_usd, total_usd, long_pct, short_pct, net_skew },
+        open_interest: { long_usd, short_usd, total_usd, long_pct, short_pct, net_skew, long_basis },
         utilization_pct: rate.utilization_pct,
         borrow_rate: {
           hourly_pct: rate.hourly_pct,
@@ -340,7 +349,7 @@ export class JupiterPerpsClient {
         pool_assets: {
           owned_tokens,
           locked_tokens,
-          guaranteed_usd: long_usd,
+          guaranteed_usd,
           global_short_sizes_usd: short_usd,
         },
         limits: {
