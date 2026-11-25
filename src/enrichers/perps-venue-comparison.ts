@@ -35,16 +35,24 @@ const SPOT_MINT_FOR_SLIPPAGE: Record<CrossVenueMarket, string | null> = {
   BONK: 'DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263',    // BONK
 };
 
-// Venue fee assumptions (taker / entry fee, as percent of notional).
-// v1 uses public-disclosure constants — read from venue config later.
-const VENUE_FEE_PCT: Record<VenueId, number> = {
-  'jupiter-perps': 0.06,    // 6bps open fee
-  'adrena': 0.06,           // 6bps approximation
-  'flash': 0.06,            // 6bps approximation (pool perp, similar structure)
-  'phoenix': 0.035,         // 3.5bps taker (Phoenix market config takerFee 0.00035, 2026-11-03)
-  'hyperliquid': 0.025,     // 2.5bps taker
-  'dydx-v4': 0.05,          // 5bps taker
+// Venue fee fallback (taker / entry fee, percent of notional) when the venue quote carries no live fee.
+// published_schedule = the venue's published base-tier fee; assumed = our estimate (no published number found).
+// Audit #19 (2026-11-25): Hyperliquid was 0.025 (its pre-2025 rate); base-tier taker is 0.045.
+const VENUE_FEE_PCT: Record<VenueId, { pct: number; source: 'published_schedule' | 'assumed' }> = {
+  'jupiter-perps': { pct: 0.06, source: 'published_schedule' },  // 6bps open/close fee
+  'adrena': { pct: 0.06, source: 'assumed' },                    // pool perp, similar structure
+  'flash': { pct: 0.06, source: 'assumed' },                     // pool perp, similar structure
+  'phoenix': { pct: 0.035, source: 'published_schedule' },       // used only if the live takerFee is missing
+  'hyperliquid': { pct: 0.045, source: 'published_schedule' },   // base-tier taker
+  'dydx-v4': { pct: 0.05, source: 'published_schedule' },        // base-tier taker
 };
+
+/** Fee for one venue row: the venue's live fee when the quote carries it, else the table. Exported for tests. */
+export function venueFee(q: Pick<VenueQuote, 'venue' | 'taker_fee_pct'>): { pct: number | null; source: 'venue_data' | 'published_schedule' | 'assumed' | null } {
+  if (q.taker_fee_pct != null && Number.isFinite(q.taker_fee_pct)) return { pct: q.taker_fee_pct, source: 'venue_data' };
+  const t = VENUE_FEE_PCT[q.venue];
+  return t ? { pct: t.pct, source: t.source } : { pct: null, source: null };
+}
 
 const ARB_MIN_DELTA_PCT = 5; // recommendation flags spreads >5pt vs runner-up
 
@@ -58,8 +66,13 @@ export interface VenueComparisonRow {
   borrow_apr_short: number | null;
   open_interest_usd: number | null;
   oi_cap_headroom_usd: number | null;
+  /** The Jupiter SPOT price impact at this size, the same for every venue (see slippage_basis) — not the
+   *  venue's own fill: pool venues fill at the oracle plus a size fee, book venues walk their own book. */
   estimated_slippage_pct: number | null;
+  slippage_basis: 'jupiter_spot_reference' | null;
   fee_pct: number | null;
+  /** venue_data = read live from the venue; published_schedule = its published base tier; assumed = our estimate. */
+  fee_source: 'venue_data' | 'published_schedule' | 'assumed' | null;
   first_hour_borrow_pct: number | null;
   total_entry_cost_pct: number | null;
   health: 'HEALTHY' | 'TILTED' | 'STRESSED' | 'unknown';
@@ -74,6 +87,8 @@ export interface PerpsVenueComparison {
   spot_slippage_source: 'jupiter-quote' | 'unavailable';
   spot_slippage_pct: number | null;
   spot_slippage_tier_used: number | null; // which $-tier the estimate came from
+  /** True when size_usd is above the largest probed tier: the slippage shown is the smaller tier's, a floor. */
+  slippage_underestimate: boolean;
   checked_at: number;
   venues: VenueComparisonRow[];
   rankings: {
@@ -206,9 +221,11 @@ export class PerpsVenueComparator {
       slippagePick.pct !== null ? 'jupiter-quote' : 'unavailable';
 
     // Build per-venue comparison rows
+    const slippageUnderestimate = slippagePick.tier_used != null && slippagePick.tier_used < size_usd;
     const venues: VenueComparisonRow[] = crossData.venues.map((q) => {
       const apr = side === 'long' ? q.borrow_apr_long : q.borrow_apr_short;
-      const fee = VENUE_FEE_PCT[q.venue] ?? null;
+      const feeInfo = venueFee(q);
+      const fee = feeInfo.pct;
       const firstHourBorrowPct = apr !== null ? apr / (24 * 365) : null;
       const headroom = deriveOiCapHeadroom(market, q.venue, side, crossData, jupiterStructure);
       const slippageForVenue = q.available ? spotSlippagePct : null;
@@ -229,7 +246,9 @@ export class PerpsVenueComparator {
         open_interest_usd: q.open_interest_usd,
         oi_cap_headroom_usd: headroom,
         estimated_slippage_pct: slippageForVenue,
+        slippage_basis: slippageForVenue != null ? 'jupiter_spot_reference' : null,
         fee_pct: fee,
+        fee_source: feeInfo.source,
         first_hour_borrow_pct: firstHourBorrowPct,
         total_entry_cost_pct: totalEntryCost,
         health: classifyHealth(q, crossData),
@@ -237,6 +256,7 @@ export class PerpsVenueComparator {
         unavailable_reason: q.unavailable_reason,
       };
       row.flags = buildFlags(row, size_usd);
+      if (slippageUnderestimate && slippageForVenue != null) row.flags.push('slippage_underestimate');
       return row;
     });
 
@@ -271,6 +291,7 @@ export class PerpsVenueComparator {
       spot_slippage_source: spotSlippageSource,
       spot_slippage_pct: spotSlippagePct,
       spot_slippage_tier_used: slippagePick.tier_used,
+      slippage_underestimate: slippageUnderestimate,
       checked_at: Date.now(),
       venues,
       rankings,
@@ -325,6 +346,8 @@ export class PerpsVenueComparator {
     else if (best.health === 'TILTED') warnings.push('best_venue_tilted');
     if (best.flags.includes('low_headroom')) warnings.push('low_headroom');
     if (best.flags.includes('high_slippage')) warnings.push('high_slippage');
+    if (best.flags.includes('slippage_underestimate')) warnings.push('slippage_underestimate');
+    if (best.fee_source === 'assumed') warnings.push('fee_assumed');
 
     let reasoning = `${best.venue} cheapest at ${(best.total_entry_cost_pct ?? 0).toFixed(3)}% total entry cost`;
     if (runnerUp) {

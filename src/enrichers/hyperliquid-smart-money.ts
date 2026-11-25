@@ -9,7 +9,7 @@
 // defensible product is the cross-trader consensus, not "copy this one genius."
 
 import type { PerpReferenceClient } from '../sources/perp-reference';
-import type { HyperliquidAnalyzer, HyperliquidTraderProfile } from './hyperliquid-analyzer';
+import { HyperliquidUnavailableError, type HyperliquidAnalyzer, type HyperliquidTraderProfile } from './hyperliquid-analyzer';
 import type { Cache } from '../cache';
 import { CACHE_TTL } from '../config';
 
@@ -49,6 +49,8 @@ export interface HyperliquidSmartMoney {
     leaderboard_candidates: number; // after band + MM filter
     inspected: number;              // candidate pool actually pulled
     qualified: number;              // consistent + directional (the signal set)
+    /** Inspected traders whose positions Hyperliquid did not return (rate limit/outage): not counted as flat. */
+    unread?: number;
   };
   positioning: CoinPositioning[];
   consensus_longs: string[];
@@ -104,10 +106,16 @@ export class HyperliquidSmartMoneyAnalyzer {
     if (!candidates || candidates.length === 0) return empty;
 
     const pool = candidates.slice(0, CANDIDATE_POOL);
-    const profiles = await mapPool(pool, CONCURRENCY, async (c) => ({
+    // A trader whose state did not load is unread (counted), not a flat trader.
+    const read = await mapPool(pool, CONCURRENCY, async (c) => ({
       c,
-      p: await this.trader.analyzeTrader(c.address),
+      p: await this.trader.analyzeTrader(c.address).catch((err) => {
+        if (err instanceof HyperliquidUnavailableError) return null;
+        throw err;
+      }),
     }));
+    const unread = read.filter((r) => r.p == null).length;
+    const profiles = read.filter((r): r is { c: (typeof pool)[number]; p: NonNullable<(typeof r)['p']> } => r.p != null);
 
     // Qualified = consistent (week+month PnL > 0) AND directional (1–15 positions)
     const qualified = profiles.filter(
@@ -175,7 +183,8 @@ export class HyperliquidSmartMoneyAnalyzer {
       }))
       .sort((a, b) => (b.month_pnl_usd ?? 0) - (a.month_pnl_usd ?? 0));
 
-    const summary = buildSummary(positioning, qualified.length);
+    const summary = buildSummary(positioning, qualified.length)
+      + (unread > 0 ? ` ${unread} of ${pool.length} inspected traders could not be read from Hyperliquid this call.` : '');
 
     return {
       generated_at: now,
@@ -184,6 +193,7 @@ export class HyperliquidSmartMoneyAnalyzer {
         leaderboard_candidates: candidates.length,
         inspected: pool.length,
         qualified: qualified.length,
+        unread,
       },
       positioning,
       consensus_longs,
@@ -201,7 +211,10 @@ export class HyperliquidSmartMoneyAnalyzer {
     let full = await this.cache.get<HyperliquidSmartMoney>(cacheKey);
     if (!full) {
       full = await this.computeFull();
-      await this.cache.set(cacheKey, full, CACHE_TTL.hlSmartMoney);
+      // More than a quarter of the pool unread: cache briefly so the next call reads again.
+      const unread = full.trader_universe.unread ?? 0;
+      const partial = full.trader_universe.inspected > 0 && unread / full.trader_universe.inspected > 0.25;
+      await this.cache.set(cacheKey, full, partial ? 30 : CACHE_TTL.hlSmartMoney);
     }
 
     // Read-side filters: optional single-market focus + top-trader slice

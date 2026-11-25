@@ -57,13 +57,15 @@ export function formatCrossVenueFundingBriefing(data: CrossVenueFunding): string
     lines.push('');
   }
 
+  lines.push('### Carry Opportunities (long one venue, short another)');
   if (data.arbitrage_opportunities.length > 0) {
-    lines.push('### Arbitrage Opportunities');
     for (const a of data.arbitrage_opportunities) {
       lines.push(`- ${a.description}`);
     }
-    lines.push('');
+  } else {
+    lines.push('None: no venue pair earns 5%+/yr net. Two pool venues both charge borrow, so a long/short pair across them pays both legs.');
   }
+  lines.push('');
 
   lines.push('### Notes');
   lines.push(

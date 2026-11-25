@@ -29,7 +29,7 @@ function venueRow(v: VenueComparisonRow, side: 'long' | 'short'): string {
   if (v.estimated_slippage_pct !== null) {
     parts.push(`slip ${fmtPct(v.estimated_slippage_pct)}`);
   }
-  if (v.fee_pct !== null) parts.push(`fee ${fmtPct(v.fee_pct)}`);
+  if (v.fee_pct !== null) parts.push(`fee ${fmtPct(v.fee_pct)}${v.fee_source === 'assumed' ? ' (assumed)' : v.fee_source === 'venue_data' ? ' (live)' : ''}`);
   if (v.oi_cap_headroom_usd !== null) {
     parts.push(`headroom ${formatUsd(v.oi_cap_headroom_usd)}`);
   }
@@ -47,7 +47,7 @@ export function formatVenueComparisonBriefing(data: PerpsVenueComparison): strin
   if (data.spot_slippage_source === 'jupiter-quote' && data.spot_slippage_pct !== null) {
     const tier = data.spot_slippage_tier_used;
     const note = tier && data.size_usd > tier ? ` (extrapolated from $${tier.toLocaleString()} tier — underestimate)` : '';
-    lines.push(`Spot slippage at ${formatUsd(data.size_usd)}: ${data.spot_slippage_pct.toFixed(3)}%${note}.`);
+    lines.push(`Spot slippage at ${formatUsd(data.size_usd)}: ${data.spot_slippage_pct.toFixed(3)}%${note}. This Jupiter spot figure is applied to every venue as a reference; each venue's own fill (oracle + size fee on pool venues, own book on order-book venues) is not measured.`);
   } else {
     lines.push(`Spot slippage: unavailable.`);
   }

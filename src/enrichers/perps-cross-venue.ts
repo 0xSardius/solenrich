@@ -49,6 +49,8 @@ export interface VenueQuote {
    * (reference → funding-rate, solana-onchain → borrow-rate). Phoenix is the first Solana venue with funding.
    */
   rate_mechanism?: 'borrow-rate' | 'funding-rate';
+  /** Taker fee read from the venue's own market config (percent of notional), when the venue publishes it. */
+  taker_fee_pct?: number;
   notes?: string[];
 }
 
@@ -70,9 +72,46 @@ export interface BasisInfo {
 export interface ArbitrageOpportunity {
   type: 'venue_spread' | 'cross_chain_basis';
   description: string;
+  /** Net carry the hedged pair EARNS per year (percent): −(long APR on long_venue + short APR on short_venue). */
   spread_apr_pct: number;
   long_venue: VenueId;
   short_venue: VenueId;
+  /** What each leg pays per year (negative = the leg earns). Their sum is −spread_apr_pct. */
+  long_leg_apr_pct: number;
+  short_leg_apr_pct: number;
+}
+
+/**
+ * Delta-neutral carry: long on one venue, short on another. Carry = long APR (A) + short APR (B), where each short
+ * APR is a signed cost (pool perps: shorts pay borrow; funding venues: −funding). An opportunity exists only when the
+ * pair EARNS at least ARB_MIN_SPREAD_PCT per year. Two pool venues both charge borrow, so they never qualify.
+ * (Audit #18: the old code compared long rates only and called a pair that pays both borrows an "arbitrage".)
+ */
+export function findCarryOpportunities(venues: VenueQuote[]): ArbitrageOpportunity[] {
+  const usable = venues.filter((v) => v.available);
+  const best = new Map<string, ArbitrageOpportunity>();
+  for (const a of usable) {
+    for (const b of usable) {
+      if (a.venue === b.venue || a.borrow_apr_long == null || b.borrow_apr_short == null) continue;
+      const carry = a.borrow_apr_long + b.borrow_apr_short; // per year; negative = the pair earns
+      const earn = Math.round(-carry * 100) / 100;
+      if (earn < ARB_MIN_SPREAD_PCT) continue;
+      const key = [a.venue, b.venue].sort().join('|');
+      const prev = best.get(key);
+      if (prev && prev.spread_apr_pct >= earn) continue;
+      const crossChain = a.type === 'reference' || b.type === 'reference';
+      best.set(key, {
+        type: crossChain ? 'cross_chain_basis' : 'venue_spread',
+        spread_apr_pct: earn,
+        long_venue: a.venue,
+        short_venue: b.venue,
+        long_leg_apr_pct: Math.round(a.borrow_apr_long * 100) / 100,
+        short_leg_apr_pct: Math.round(b.borrow_apr_short * 100) / 100,
+        description: `Long ${a.venue} (pays ${a.borrow_apr_long.toFixed(2)}%/yr) + short ${b.venue} (${b.borrow_apr_short <= 0 ? `earns ${(-b.borrow_apr_short).toFixed(2)}` : `pays ${b.borrow_apr_short.toFixed(2)}`}%/yr) = net ${earn.toFixed(2)}%/yr carry before fees, slippage and basis risk.${crossChain ? ' Cross-chain: collateral on two chains.' : ''}`,
+      });
+    }
+  }
+  return [...best.values()].sort((x, y) => y.spread_apr_pct - x.spread_apr_pct);
 }
 
 export interface CrossVenueFunding {
@@ -145,6 +184,7 @@ export function phoenixQuote(market: string, snap: PhoenixSnapshot | null, sourc
     borrow_apr_short: -apr,
     open_interest_usd: snap.open_interest_usd,
     mark_price_usd: snap.mark_price_usd,
+    ...(Number.isFinite(snap.taker_fee_pct) ? { taker_fee_pct: snap.taker_fee_pct } : {}),
     notes,
   };
 }
@@ -460,45 +500,7 @@ export class PerpsCrossVenueAnalyzer {
         : 'Mark price comparison unavailable (one or more venue marks missing).',
     };
 
-    // --- Arbitrage opportunities (>5pt APR spread across Solana venues) ---
-    const arbitrage_opportunities: ArbitrageOpportunity[] = [];
-    for (let i = 0; i < solanaVenues.length; i++) {
-      for (let j = i + 1; j < solanaVenues.length; j++) {
-        const a = solanaVenues[i];
-        const b = solanaVenues[j];
-        if (a.borrow_apr_long === null || b.borrow_apr_long === null) continue;
-        const delta = aprDelta(a.borrow_apr_long, b.borrow_apr_long);
-        if (delta >= ARB_MIN_SPREAD_PCT) {
-          const cheap = a.borrow_apr_long < b.borrow_apr_long ? a : b;
-          const expensive = a.borrow_apr_long < b.borrow_apr_long ? b : a;
-          arbitrage_opportunities.push({
-            type: 'venue_spread',
-            spread_apr_pct: delta,
-            long_venue: cheap.venue,
-            short_venue: expensive.venue,
-            description: `${expensive.venue} borrows at ${(expensive.borrow_apr_long ?? 0).toFixed(2)}% APR vs ${cheap.venue} at ${(cheap.borrow_apr_long ?? 0).toFixed(2)}% APR — ${delta.toFixed(2)}pt spread for same-side hedge.`,
-          });
-        }
-      }
-    }
-
-    // Cross-chain basis (Solana onchain venue vs reference)
-    if (refSnaps?.hyperliquid && jupiterMark) {
-      const refLongApr = refSnaps.hyperliquid.annualized_pct;
-      const jupLongApr = venues.find(v => v.venue === 'jupiter-perps')?.borrow_apr_long ?? null;
-      if (jupLongApr !== null) {
-        const delta = aprDelta(jupLongApr, refLongApr);
-        if (delta >= ARB_MIN_SPREAD_PCT) {
-          arbitrage_opportunities.push({
-            type: 'cross_chain_basis',
-            spread_apr_pct: delta,
-            long_venue: jupLongApr < refLongApr ? 'jupiter-perps' : 'hyperliquid',
-            short_venue: jupLongApr < refLongApr ? 'hyperliquid' : 'jupiter-perps',
-            description: `Jupiter ${jupLongApr.toFixed(2)}% vs Hyperliquid ${refLongApr.toFixed(2)}% (${delta.toFixed(2)}pt cross-chain spread).`,
-          });
-        }
-      }
-    }
+    const arbitrage_opportunities = findCarryOpportunities(venues);
 
     const out: CrossVenueFunding = {
       market,

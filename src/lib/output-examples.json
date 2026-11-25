@@ -876,11 +876,13 @@
   },
   "arbitrage_opportunities": [
    {
-    "type": "venue_spread",
-    "spread_apr_pct": 11.089,
-    "long_venue": "adrena",
-    "short_venue": "jupiter-perps",
-    "description": "jupiter-perps borrows at 12.74% APR vs adrena at 1.65% APR — 11.09pt spread f..."
+    "type": "cross_chain_basis",
+    "spread_apr_pct": 6.76,
+    "long_venue": "jupiter-perps",
+    "short_venue": "hyperliquid",
+    "long_leg_apr_pct": 13.24,
+    "short_leg_apr_pct": -20,
+    "description": "Long jupiter-perps (pays 13.24%/yr) + short hyperliquid (earns 20.00%/yr) = net 6.76%/yr..."
    }
   ]
  },

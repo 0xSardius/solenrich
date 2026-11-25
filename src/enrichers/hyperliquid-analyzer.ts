@@ -101,6 +101,14 @@ function emptyProfile(address: string, pnl: HlPnl | null, now: number): Hyperliq
   };
 }
 
+/** Hyperliquid's clearinghouseState read failed: the trader's state is unknown. */
+export class HyperliquidUnavailableError extends Error {
+  constructor(address: string) {
+    super(`Hyperliquid did not answer for ${address} (rate limit, outage or timeout) — positions not read; retry shortly`);
+    this.name = 'HyperliquidUnavailableError';
+  }
+}
+
 export class HyperliquidAnalyzer {
   constructor(private ref: PerpReferenceClient) {}
 
@@ -111,7 +119,9 @@ export class HyperliquidAnalyzer {
       this.ref.getHlPnl(address),
     ]);
 
-    if (!state) return emptyProfile(address, pnl, now);
+    // Hyperliquid did not answer (429, outage, timeout): fail, never a "flat trader" built from zeros (audit #21).
+    // hyperliquid-trader-profile is not settle-first, so the buyer is not charged for the error.
+    if (!state) throw new HyperliquidUnavailableError(address);
 
     const positions = state.positions.map(analyzePosition);
     if (positions.length === 0) {
