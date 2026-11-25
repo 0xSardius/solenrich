@@ -184,7 +184,7 @@ export function phoenixQuote(market: string, snap: PhoenixSnapshot | null, sourc
     borrow_apr_short: -apr,
     open_interest_usd: snap.open_interest_usd,
     mark_price_usd: snap.mark_price_usd,
-    ...(Number.isFinite(snap.taker_fee_pct) ? { taker_fee_pct: snap.taker_fee_pct } : {}),
+    ...(Number.isFinite(snap.taker_fee_pct) ? { taker_fee_pct: Math.round(snap.taker_fee_pct * 1e6) / 1e6 } : {}),
     notes,
   };
 }
