@@ -13,6 +13,7 @@ export const WalletEnrichmentSchema = z.object({
   portfolio_value_usd: z.number(),
   token_count: z.number(),
   assets_truncated: z.boolean().optional().describe('True when the wallet holds more than the 3,000 assets read: counts and portfolio value are a floor'),
+  portfolio_value_partial: z.boolean().optional().describe('True when more than 200 fungibles: only 200 priced via DexScreener/Jupiter, so portfolio value is a floor'),
   top_holdings: z.array(z.object({
     mint: z.string(),
     symbol: z.string(),

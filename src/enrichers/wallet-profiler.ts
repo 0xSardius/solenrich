@@ -38,6 +38,13 @@ const STABLECOIN_MINTS = new Set([
 ]);
 
 const SOL_MINT = 'So11111111111111111111111111111111111111112';
+/**
+ * Fungibles priced through the aggregator (DexScreener + Jupiter), Helius-priced ones first; the rest use Helius's
+ * own price only. Measured 2026-11-25 on the Binance hot wallet: pricing 1,000 mints = 53 s, 300 = 22 s; the whole
+ * light profile at 300 = 38 s. The payment expires at ~60 s (1,000 was already borderline; 3,000 after paging
+ * returned HTTP 402), so 200 keeps a margin. Value moved < 2% at 300 because Helius-priced tokens go first.
+ */
+export const MAX_AGGREGATOR_PRICED = 200;
 const THIRTY_DAYS_S = 30 * 24 * 60 * 60;
 
 // --- Types ---
@@ -100,6 +107,9 @@ export interface WalletEnrichment {
   token_count: number;
   /** True when the wallet holds more than the 3,000 assets read: token_count, nft_count and portfolio value are a floor. */
   assets_truncated: boolean;
+  /** True when the wallet holds more than 200 fungibles: only 200 were priced by DexScreener/Jupiter (Helius-priced
+   *  first); the rest carry Helius's price or none, so portfolio_value_usd is a floor. */
+  portfolio_value_partial: boolean;
   top_holdings: Array<{
     mint: string;
     symbol: string;
@@ -193,7 +203,8 @@ export class WalletProfiler {
 
   async enrich(address: string, depth: 'light' | 'full'): Promise<WalletEnrichment> {
     // Step 1: cache check
-    const cacheKey = `wallet:${address}:${depth}`;
+    // v3 (2026-11-25): paged assets + pricing cap 200 + portfolio_value_partial; older entries lack those fields.
+    const cacheKey = `wallet:v3:${address}:${depth}`;
     const cached = await this.cache.get<WalletEnrichment>(cacheKey);
     if (cached) return cached;
 
@@ -235,13 +246,15 @@ export class WalletProfiler {
     const heliusPrices = new Map<string, number>();
     const mintsNeedingPrice: string[] = [SOL_MINT];
 
+    // At most MAX_AGGREGATOR_PRICED fungibles go to the price aggregator, Helius-priced first (those carry value;
+    // the unpriced tail of a huge wallet is mostly spam). The rest keep Helius's own price.
     for (const asset of fungibleAssets) {
       const heliusPrice = asset.token_info?.price_info?.price_per_token ?? 0;
-      if (heliusPrice > 0) {
-        heliusPrices.set(asset.id, heliusPrice);
-      }
-      mintsNeedingPrice.push(asset.id);
+      if (heliusPrice > 0) heliusPrices.set(asset.id, heliusPrice);
     }
+    const ordered = [...fungibleAssets].sort((a, b) => Number(heliusPrices.has(b.id)) - Number(heliusPrices.has(a.id)));
+    for (const asset of ordered.slice(0, MAX_AGGREGATOR_PRICED)) mintsNeedingPrice.push(asset.id);
+    const portfolioValuePartial = fungibleAssets.length > MAX_AGGREGATOR_PRICED;
 
     // Batch aggregate prices (Helius + DexScreener + Jupiter median)
     let aggregatedPrices = new Map<string, { price: number }>();
@@ -270,7 +283,7 @@ export class WalletProfiler {
       const rawBalance = asset.token_info?.balance ?? 0;
       const balance = decimals > 0 ? rawBalance / 10 ** decimals : rawBalance;
 
-      const price = aggregatedPrices.get(mint)?.price ?? 0;
+      const price = aggregatedPrices.get(mint)?.price ?? heliusPrices.get(mint) ?? 0;
       holdingsRaw.push({ mint, symbol, balance, usd_value: balance * price });
     }
 
@@ -440,6 +453,7 @@ export class WalletProfiler {
       portfolio_value_usd: portfolioValueUsd,
       token_count: tokenCount,
       assets_truncated: assets?.truncated === true,
+      portfolio_value_partial: portfolioValuePartial,
       top_holdings: topHoldings,
       nft_count: nftCount,
       nft_summary: nftSummary,

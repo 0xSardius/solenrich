@@ -30,7 +30,7 @@ export function formatWalletBriefing(data: WalletEnrichment): string {
   // Overview
   const age = walletAge(data.first_tx_date, data.first_seen_at_least);
   lines.push(
-    `${age} Solana wallet. Holds ${data.sol_balance.toFixed(2)} SOL and ${data.assets_truncated ? 'at least ' : ''}${data.token_count} SPL tokens.${data.assets_truncated ? ' (Over 3,000 assets: counts and portfolio value cover the first 3,000 only.)' : ''}`,
+    `${age} Solana wallet. Holds ${data.sol_balance.toFixed(2)} SOL and ${data.assets_truncated ? 'at least ' : ''}${data.token_count} SPL tokens.${data.assets_truncated ? ' (Over 3,000 assets: counts and portfolio value cover the first 3,000 only.)' : data.portfolio_value_partial ? ' (Over 200 tokens: portfolio value prices 200 of them fully; it is a floor.)' : ''}`,
   );
   lines.push(
     `Portfolio value: ~${formatUsd(data.portfolio_value_usd)} across tokens, NFTs, and DeFi positions.`,
