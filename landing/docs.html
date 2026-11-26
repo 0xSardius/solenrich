@@ -511,8 +511,10 @@
     </aside>
 
     <main class="main">
-      <h1>API Documentation</h1>
-      <p class="lede" id="lede">Solana onchain enrichment for autonomous agents and LLMs. Pay-per-call USDC via x402 or fiat via MPP/Stripe.</p>
+      <h1>API documentation</h1>
+      <!-- Written for people. The /docs JSON description is written for agents, so the script no longer copies it here. -->
+      <p class="lede" style="margin-bottom: 12px;">Everything you need to make your first call. Every endpoint is a POST that takes a token, a wallet, or a trade and returns an answer your agent can act on: JSON for your code, or a short briefing for an LLM. There's no key to request. Call any endpoint without paying and you get a 402 back with the price and how to pay. Pay in USDC on Solana or Base, and call again.</p>
+      <p class="lede">Not sure where to start? Check a token with <code>enrich-token-light</code> for $0.002, or <a href="/#demo">try one free in the demo</a> first.</p>
 
       <div id="content">
         <div class="loading">Loading docs from <code>api.solenrich.com/docs</code>...</div>
@@ -666,11 +668,6 @@
         const res = await fetch(DOCS_URL);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const docs = await res.json();
-
-        // Update lede
-        if (docs.description) {
-          document.getElementById('lede').textContent = docs.description;
-        }
 
         // Build sidebar endpoints list
         const sidebarList = document.getElementById('sidebar-endpoints');
