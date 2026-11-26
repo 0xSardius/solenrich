@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#06060A">
-  <title>SolEnrich — Onchain Intelligence for Solana Agents</title>
-  <meta name="description" content="Onchain intelligence API for Solana agents and LLMs. 52 endpoints: wallet profiling and risk scoring, token due diligence with holder concentration and slippage, whale and smart-money tracking, cross-venue perps market structure (Jupiter, Adrena, Flash, Phoenix, Hyperliquid, dYdX), tokenized-stock (xStock) basis vs Phoenix perps, event alerts, portfolio time-series, agent-attention signals, a fresh-launch trade-lifecycle suite, and StonkFun reward-coin intelligence (gem finder, payout status, yield, screener, launch intel, launch preflight). Deterministic scoring, JSON or LLM-ready briefings. Pay per call with USDC on Solana or Base via x402, or by card via Stripe. No API keys.">
+  <title>SolEnrich — The onchain intelligence layer for Solana agents</title>
+  <meta name="description" content="Your agent is about to trade. Ask SolEnrich first: rug risk, momentum, smart money, cost at your size, and when to sell, each in one API call your agent can act on. From $0.002 a call in USDC on Solana or Base. No signup, no API key.">
 
   <link rel="canonical" href="https://www.solenrich.com/">
   <link rel="icon" type="image/png" href="https://www.solenrich.com/logo.png">
@@ -14,16 +14,16 @@
   <!-- Open Graph -->
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://www.solenrich.com/">
-  <meta property="og:title" content="SolEnrich — Onchain Intelligence for Solana Agents">
-  <meta property="og:description" content="52 onchain intelligence endpoints for Solana agents: wallet risk scoring, token due diligence, whale and smart-money tracking, memecoin trenches entry and exit verdicts, cross-venue perps structure across Jupiter, Adrena, Flash, Phoenix, Hyperliquid and dYdX, tokenized-stock (xStock) basis vs Phoenix perps, and StonkFun reward-coin intelligence (gems, payout status, yield, launch intel). Deterministic scoring, JSON or LLM briefings. Pay USDC via x402 on Solana or Base, or cards via Stripe.">
+  <meta property="og:title" content="Your agent is about to trade. Ask SolEnrich first.">
+  <meta property="og:description" content="The onchain intelligence layer for Solana agents. Rug risk, momentum, smart money, cost at your size, and when to sell, each in one API call. From $0.002 in USDC. No signup, no API key.">
   <meta property="og:image" content="https://www.solenrich.com/og-image.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="SolEnrich — Onchain Intelligence for Solana Agents">
-  <meta name="twitter:description" content="52 onchain intelligence endpoints for Solana agents: wallet risk scoring, token due diligence, whale and smart-money tracking, memecoin trenches entry and exit verdicts, cross-venue perps structure across Jupiter, Adrena, Flash, Phoenix, Hyperliquid and dYdX, tokenized-stock (xStock) basis vs Phoenix perps, and StonkFun reward-coin intelligence (gems, payout status, yield, launch intel). Deterministic scoring, JSON or LLM briefings. Pay USDC via x402 on Solana or Base, or cards via Stripe.">
+  <meta name="twitter:title" content="Your agent is about to trade. Ask SolEnrich first.">
+  <meta name="twitter:description" content="The onchain intelligence layer for Solana agents. Rug risk, momentum, smart money, cost at your size, and when to sell, each in one API call. From $0.002 in USDC. No signup, no API key.">
   <meta name="twitter:image" content="https://www.solenrich.com/og-image.png">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -54,7 +54,7 @@
         "url": "https://www.solenrich.com/",
         "applicationCategory": "DeveloperApplication",
         "operatingSystem": "Web / API",
-        "description": "Onchain intelligence API for Solana agents — 52 pay-per-call endpoints for wallet risk scoring, token due diligence, smart-money and whale tracking, memecoin trenches entry and exit verdicts, cross-venue perps intelligence, and StonkFun reward-coin intelligence, delivered as JSON for agents or natural-language briefings for LLMs. Pay per call in USDC via x402 on Solana or Base, or by card via Stripe.",
+        "description": "The onchain intelligence layer for Solana agents. Before an agent trades, one pay-per-call API request answers rug risk, momentum, smart money, cost at size, or when to sell, as JSON or a natural-language briefing. Pay in USDC via x402 on Solana or Base, or by card via Stripe.",
         "provider": { "@id": "https://www.solenrich.com/#org" },
         "offers": {
           "@type": "Offer",
@@ -1032,6 +1032,22 @@
     @media (max-width: 1024px) {
       .personas-grid { grid-template-columns: 1fr; }
     }
+    .persona-endpoints a { text-decoration: none; }
+    /* A real response sample under each job. pre-wrap keeps the line breaks and still wraps on a phone. */
+    .job-sample {
+      margin-top: 20px;
+      padding: 14px 16px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-dim);
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--sol-blue);
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+    .job-sample .dim { color: var(--text-muted); }
 
     /* ==================== MCP ==================== */
     .mcp-section { background: var(--bg-panel); }
@@ -1460,25 +1476,24 @@
     <div class="container">
       <div class="hero-content">
         <div class="hero-badge">
-          <span class="protocol-tag">x402</span>
-          <span>Paid per call by trading agents</span>
+          <span>The onchain intelligence layer for Solana agents</span>
         </div>
         <h1>
-          Should your agent enter, exit, or size up?<br>
-          <span class="gradient-text">One paid call each.</span>
+          Your agent is about to trade.<br>
+          <span class="gradient-text">Ask SolEnrich first.</span>
         </h1>
         <p class="hero-sub">
-          SolEnrich turns Solana onchain data into verdicts a trading agent can act on: token risk before a swap,
-          EXIT / DERISK / HOLD on a position, the cheapest perps venue at your size, and which StonkFun coins still pay
-          their holders. 52 endpoints, deterministic scoring, JSON or an LLM briefing.
-          Pay per call with USDC on Solana or Base. No keys, no subscription.
+          Is it a rug? Is the momentum real? Is smart money in it? What will your size cost, and is it time to sell?
+          One API call answers each question with a verdict your agent can act on. You don't wire up ten data sources,
+          write the scoring, or spend weeks tuning it. Every answer shows the numbers behind it, and if a source fails,
+          the response says so instead of guessing. From $0.002 a call in USDC. No signup, no API key.
         </p>
         <div class="hero-actions">
-          <a href="/docs" class="btn-primary">
-            Read the docs &rarr;
+          <a href="#demo" class="btn-primary">
+            Check a token free &rarr;
           </a>
-          <a href="/stonkfun" class="btn-secondary">
-            StonkFun for agents
+          <a href="/docs" class="btn-secondary">
+            Read the docs
           </a>
         </div>
         <p class="hero-install">Claude Code, Cursor, Codex: <code>npx skills add 0xSardius/solenrich --skill solenrich</code></p>
@@ -1489,21 +1504,20 @@
           <div class="terminal-dot r"></div>
           <div class="terminal-dot y"></div>
           <div class="terminal-dot g"></div>
-          <span class="terminal-title">enter, hold, size &middot; real values, trimmed</span>
+          <span class="terminal-title">before the trade &middot; real values, 2026-11-26</span>
         </div>
         <div class="terminal-body">
-<span class="dim">$</span> <span class="url">enrich-token-full</span> <span class="dim">before a swap · $0.004</span><br>
+<span class="dim">$</span> <span class="url">enrich-token-full</span> <span class="dim">is it a rug? · $0.004</span><br>
 <span class="dim">{</span> <span class="key">"symbol"</span>: <span class="str">"Bonk"</span>, <span class="key">"risk_flags"</span>: [],<br>
-&nbsp;&nbsp;<span class="key">"concentration"</span>: { <span class="key">"top10_pct"</span>: <span class="val">38.93</span> },<br>
-&nbsp;&nbsp;<span class="key">"slippage_estimates"</span>: [{ <span class="key">"size_usd"</span>: <span class="val">10000</span>, <span class="key">"price_impact_pct"</span>: <span class="val">0.0037</span> }] <span class="dim">}</span><br>
+&nbsp;&nbsp;<span class="key">"mint_authority"</span>: <span class="val">null</span>, <span class="key">"freeze_authority"</span>: <span class="val">null</span> <span class="dim">}</span><br>
 <br>
-<span class="dim">$</span> <span class="url">exit-signal</span> <span class="dim">while holding · $0.04</span><br>
-<span class="dim">{</span> <span class="key">"verdict"</span>: <span class="str">"HOLD"</span>, <span class="key">"exit_score"</span>: <span class="val">0.359</span>,<br>
-&nbsp;&nbsp;<span class="key">"flags"</span>: [<span class="str">"buying_slowing_1h"</span>, <span class="str">"volume_fading"</span>] <span class="dim">}</span><br>
+<span class="dim">$</span> <span class="url">runner-scan</span> <span class="dim">is the momentum real? · $0.04</span><br>
+<span class="dim">{</span> <span class="key">"stage"</span>: <span class="str">"RUNNING"</span>, <span class="key">"buys_h1"</span>: <span class="val">2943</span>,<br>
+&nbsp;&nbsp;<span class="key">"flags"</span>: [<span class="str">"accelerating_5m"</span>, <span class="str">"volume_surge"</span>] <span class="dim">}</span><br>
 <br>
-<span class="dim">$</span> <span class="url">perps-venue-comparison</span> <span class="dim">SOL long $5K · $0.02</span><br>
-<span class="dim">{</span> <span class="key">"venue"</span>: <span class="str">"jupiter-perps"</span>,<br>
-&nbsp;&nbsp;<span class="key">"reasoning"</span>: <span class="str">"cheapest at 0.062% total entry cost"</span> <span class="dim">}</span>
+<span class="dim">$</span> <span class="url">perps-venue-comparison</span> <span class="dim">what will $5K cost? · $0.02</span><br>
+<span class="dim">{</span> <span class="key">"venue"</span>: <span class="str">"phoenix"</span>,<br>
+&nbsp;&nbsp;<span class="key">"reasoning"</span>: <span class="str">"cheapest at 0.039% total entry cost"</span> <span class="dim">}</span>
         </div>
       </div>
     </div>
@@ -1525,86 +1539,91 @@
     </div>
   </div>
 
-  <!-- ===== UPDATE BANNER ===== -->
-  <div class="update-banner">
-    <div class="container">
-      <span class="update-tag">New</span>
-      <div class="update-items">
-        <span class="update-item"><span class="check">&#10003;</span> xstock-basis — long the xStock, short its Phoenix perp: funding carry vs the real round-trip cost at your size</span>
-        <span class="update-item"><span class="check">&#10003;</span> audace-intent-check — PROCEED / REDUCE / HOLD on an AudaceFi swap intent before you send it, with a season-end snapshot clock</span>
-        <span class="update-item"><span class="check">&#10003;</span> wallet-link-check — are two Solana wallets the same owner? Payout-wallet rotation vs hijack</span>
-        <span class="update-item"><span class="check">&#10003;</span> stonk-market-pulse and stonk-creator — is the StonkFun market rising or falling, and is this creator a serial launcher</span>      </div>
-    </div>
-  </div>
-
-  <!-- ===== PERSONAS ===== -->
-  <section class="personas-section" id="personas">
+  <!-- ===== JOBS: the five questions before a trade. Samples are real production output, captured 2026-11-26. ===== -->
+  <section class="personas-section" id="jobs">
     <div class="container">
       <div class="reveal">
-        <div class="section-label">Who it's for</div>
-        <h2 class="section-title">Built for five kinds of agent</h2>
-        <p class="section-desc" style="max-width:560px; margin:0 auto; text-align:center;">If you're building one of these, here's where to start.</p>
+        <div class="section-label">What it answers</div>
+        <h2 class="section-title">Five questions to ask before every trade</h2>
+        <p class="section-desc" style="max-width:600px; margin:0 auto; text-align:center;">Each one is a single call. The samples below are real responses from production, trimmed, captured November 26.</p>
       </div>
 
       <div class="personas-grid">
         <div class="persona-card reveal">
-          <div class="persona-tag">&gt;_ trading bots on fresh launches</div>
-          <h3 class="persona-title">Enter on confluence, exit on evidence</h3>
-          <p class="persona-desc">The trade lifecycle for newly launched tokens: vet the mint before the swap, find what's accelerating, check it against three independent onchain signals, and get the sell-side verdict while you hold. Seconds-to-minutes research lane, not block-0 sniping.</p>
+          <div class="persona-tag">&gt;_ 01</div>
+          <h3 class="persona-title">Is it a rug?</h3>
+          <p class="persona-desc">Before your agent buys a mint, find out whether the dev can still print or freeze it, how concentrated the supply is, how far your size moves the price, and whether a transfer tax is hiding in the contract. Want it boiled down? Due diligence returns SAFE, CAUTION, or RISKY with the reasons.</p>
           <ul class="persona-endpoints">
-            <li><code>enrich-token-full</code>holders, concentration, authorities, slippage at size, risk flags</li>
-            <li><code>runner-scan</code>which fresh tokens are accelerating right now</li>
-            <li><code>smart-money-trenches</code>proven-winner wallets buying fresh launches</li>
-            <li><code>trenches-check</code>one mint, three signals, one verdict before entry</li>
-            <li><code>exit-signal</code>EXIT / DERISK / HOLD for the token you hold</li>
+            <li><code>enrich-token-full</code>$0.004</li>
+            <li><code>due-diligence</code>$0.02</li>
           </ul>
+<div class="job-sample"><span class="dim">BONK</span>
+"mint_authority": null, "freeze_authority": null,
+"holder_count": 1026210, "risk_flags": [],
+"slippage": { "$10K": "0.20%", "$100K": "5.17%" }</div>
         </div>
 
         <div class="persona-card reveal">
-          <div class="persona-tag">&gt;_ perps bots</div>
-          <h3 class="persona-title">Make every venue decision one call</h3>
-          <p class="persona-desc">The full perps stack: rates, sizing, basis-arb, position alerts, market trend across Jupiter, Adrena, Flash, Phoenix, Hyperliquid, and dYdX. Bot polls once per cycle, gets every decision it needs.</p>
+          <div class="persona-tag">&gt;_ 02</div>
+          <h3 class="persona-title">Is the momentum real?</h3>
+          <p class="persona-desc">One green candle isn't a trend. runner-scan finds fresh tokens where buying is speeding up across the 5-minute, 1-hour and 6-hour windows at the same time, and it tells you plainly when you'd be late to the move.</p>
           <ul class="persona-endpoints">
-            <li><code>perps-cross-venue-funding</code>rates across Jupiter, Adrena, Flash, Phoenix, HL, dYdX</li>
-            <li><code>perps-venue-comparison</code>total entry cost at your size + recommendation</li>
-            <li><code>perps-basis-signal</code>net-yield-after-borrow funding-arb scanner</li>
-            <li><code>xstock-basis</code>xStock vs Phoenix stock perp: funding carry vs cost at size</li>
-            <li><code>perps-market-trend</code>OI, skew, util, borrow direction over 7/14/30d</li>
-            <li><code>perps-trader-profile</code>Jupiter + Adrena positions in one call, multi-venue tagged</li>
-            <li><code>check-alerts</code>perp position opened, closed, at-risk, near-liq, PnL swing</li>
+            <li><code>runner-scan</code>$0.04</li>
+            <li><code>trenches-check</code>$0.03 &middot; momentum, smart money and attention on one mint</li>
           </ul>
+<div class="job-sample"><span class="dim">a 12-minute-old launch</span>
+"stage": "RUNNING", "buys_h1": 2943, "sells_h1": 457,
+"reasoning": "Sustained acceleration across 3 windows ...
+Caveat: already up 447% over 24h, so this is early to
+the current leg, not to the move."</div>
         </div>
 
         <div class="persona-card reveal">
-          <div class="persona-tag">&gt;_ research agents</div>
-          <h3 class="persona-title">Bring onchain answers to chat</h3>
-          <p class="persona-desc">Plain-English questions about wallets, tokens, whales, and protocols — for Telegram, Discord, or Farcaster bots. Every answer carries the numbers it was built from.</p>
+          <div class="persona-tag">&gt;_ 03</div>
+          <h3 class="persona-title">Is smart money in it?</h3>
+          <p class="persona-desc">We watch a vetted set of wallets with verified track records, filter out the ones that trade on a bot's clock, and report which fresh launches they're buying, how much they spent, and how long ago.</p>
           <ul class="persona-endpoints">
-            <li><code>query</code>natural language &rarr; multi-enricher answer</li>
-            <li><code>due-diligence</code>one SAFE / CAUTION / RISKY verdict with the factors behind it</li>
-            <li><code>whale-watch</code>who's accumulating, who's dumping</li>
-            <li><code>portfolio-history</code>PnL over 7/14/30 days</li>
+            <li><code>smart-money-trenches</code>$0.05</li>
           </ul>
+<div class="job-sample"><span class="dim">23 wallets scanned, 10 launches bought</span>
+"symbol": "FEDORA", "token_age_hours": 19.5,
+"total_spent_usd": 85.21, "liquidity_usd": 50600,
+"buys": [{ "seed_win_rate": 0.643, "minutes_ago": 533 }]</div>
         </div>
 
         <div class="persona-card reveal">
-          <div class="persona-tag">&gt;_ AI copilots</div>
-          <h3 class="persona-title">Inject Solana context into LLMs</h3>
-          <p class="persona-desc">Drop pre-formatted briefings straight into Claude or Cursor conversations. Deterministic templates, no inference cost, tuned for context windows.</p>
+          <div class="persona-tag">&gt;_ 04</div>
+          <h3 class="persona-title">What will your size cost?</h3>
+          <p class="persona-desc">The quoted price isn't your price. Get the total entry cost at your size, fees and slippage included, across Jupiter, Adrena, Phoenix and the rest, with the cheapest venue named. Trading StonkFun coins? stonk-quote adds the transfer tax and tells you if the payouts cover the round trip.</p>
           <ul class="persona-endpoints">
-            <li><code>format: "llm"</code>ready-to-paste briefings on any endpoint</li>
-            <li><code>MCP server</code>3-line config for Claude Desktop, 51 tools</li>
-            <li><code>consensus-signal</code>what other agents are watching right now</li>
+            <li><code>perps-venue-comparison</code>$0.02</li>
+            <li><code>stonk-quote</code>$0.005</li>
           </ul>
+<div class="job-sample"><span class="dim">SOL long, $5,000</span>
+"venue": "phoenix",
+"reasoning": "phoenix cheapest at 0.039% total entry cost
+(0.026pt below jupiter-perps at 0.065%)."</div>
         </div>
 
         <div class="persona-card persona-card-wide reveal">
-          <div class="persona-tag">&gt;_ agents in trading leagues</div>
-          <h3 class="persona-title">Check every swap intent before you send it</h3>
-          <p class="persona-desc">For agents competing in AudaceFi: send the swap intent you are about to submit, get PROCEED / REDUCE / HOLD with reason codes. Buys check the token's risk flags, the trenches signal and exit momentum, and a token with no market holds. Sells are never blocked; the exit verdict says sell all or half. In the last hour before the season-end snapshot it sends you to USDC, because a non-USDC wallet at the snapshot forfeits the season.</p>
+          <div class="persona-tag">&gt;_ 05</div>
+          <h3 class="persona-title">Is it time to sell?</h3>
+          <p class="persona-desc">Most bots are good at buying and bad at leaving. exit-signal reads the token you hold, including buy pressure, volume and whale flow, and returns EXIT, DERISK or HOLD with the flags that drove it.</p>
           <ul class="persona-endpoints">
-            <li><code>audace-intent-check</code>one verdict per swap intent, devnet league or mainnet</li>
-            <li><code>wallet-link-check</code>are two wallets the same owner?</li>
+            <li><code>exit-signal</code>$0.04</li>
+          </ul>
+<div class="job-sample"><span class="dim">BONK, held</span>
+"verdict": "HOLD", "exit_score": 0.146,
+"flags": ["buying_slowing_5m", "buyers_in_control"]</div>
+        </div>
+
+        <div class="persona-card persona-card-wide reveal">
+          <div class="persona-tag">&gt;_ built for specific venues</div>
+          <h3 class="persona-title">Trading in an AudaceFi league, or on StonkFun?</h3>
+          <p class="persona-desc">League agents can send the swap intent itself and get PROCEED, REDUCE or HOLD with reason codes, including a push to USDC before the season-end snapshot. StonkFun traders get a ranked list of the reward coins that are trading and still paying their holders.</p>
+          <ul class="persona-endpoints">
+            <li><code>audace-intent-check</code>$0.05</li>
+            <li><code>stonk-gems</code>$0.03 &middot; <a href="/stonkfun" style="color: var(--sol-green);">the StonkFun guide &rarr;</a></li>
           </ul>
         </div>
       </div>
@@ -2297,8 +2316,8 @@
 
         <div class="step reveal">
           <div class="step-number">3</div>
-          <h3 class="step-title">Get enriched data</h3>
-          <p class="step-desc">Receive structured JSON for programmatic use, or natural language briefings optimized for LLM context windows.</p>
+          <h3 class="step-title">Get an answer to act on</h3>
+          <p class="step-desc">JSON your code can branch on, or a short plain-English briefing to drop into an LLM's context.</p>
           <div class="step-code">
             <span style="color: var(--sol-green);">200</span> { "risk_score": 0.12,<br>
             <span style="color: var(--text-muted);">&nbsp;&nbsp;"risk_level": "LOW",</span><br>
@@ -2453,51 +2472,36 @@ Well-distributed supply.</span></div>
   <section class="value-props">
     <div class="container">
       <div class="reveal">
-        <div class="section-label">Why SolEnrich</div>
-        <h2 class="section-title">Purpose-built for the agent economy</h2>
+        <div class="section-label">Why not build it yourself</div>
+        <h2 class="section-title">You could. Here's what you'd be signing up for.</h2>
         <p class="section-desc" style="margin-bottom: 48px;">
-          Not another block explorer. A data enrichment layer designed for autonomous agents and LLM pipelines.
+          Every trading bot needs these answers. Getting them right takes a dozen data sources, scoring you have to tune, and a plan for when a source goes down.
         </p>
       </div>
 
       <div class="value-grid">
         <div class="value-card reveal">
-          <div class="value-icon">&gt;_ agent-native</div>
-          <h3 class="value-title">Agent-native API</h3>
-          <p class="value-desc">Listed in the CDP x402 bazaar, agentic.market, x402scan, and MPPScan. Discoverable via the 8004-solana and Metaplex agent registries, OpenAPI spec, and MCP. Agents find and pay SolEnrich without human setup.</p>
+          <div class="value-icon">&gt;_ plumbing</div>
+          <h3 class="value-title">The pipeline is already built</h3>
+          <p class="value-desc">Helius, DexScreener, Jupiter, Solana RPC, perps data from six venues, and the StonkFun payout ledger are wired up, cross-checked, and called in parallel. One slow source can't stall your call.</p>
+        </div>
+
+        <div class="value-card reveal">
+          <div class="value-icon">&gt;_ scoring</div>
+          <h3 class="value-title">Scores that show their work</h3>
+          <p class="value-desc">The same input gets the same answer, with no model guessing in the loop. Every verdict comes with the factors and numbers behind it, so your agent, and you, can see why it said what it said.</p>
+        </div>
+
+        <div class="value-card reveal">
+          <div class="value-icon">&gt;_ honesty</div>
+          <h3 class="value-title">It tells you when it doesn't know</h3>
+          <p class="value-desc">If a source fails, the field comes back empty with the reason, and the response is marked degraded. Your agent never gets a safe-looking default for data nobody read.</p>
         </div>
 
         <div class="value-card reveal">
           <div class="value-icon">&gt;_ pay</div>
-          <h3 class="value-title">Dual-protocol payments</h3>
-          <p class="value-desc">No API keys. No subscriptions. Pay per request with USDC on Solana (x402) or credit cards (MPP/Stripe). Costs start at $0.001.</p>
-        </div>
-
-        <div class="value-card reveal">
-          <div class="value-icon">&gt;_ parallel</div>
-          <h3 class="value-title">Cross-referenced data</h3>
-          <p class="value-desc">Every enrichment hits its data sources in parallel — 12 upstreams across market data and on-chain accounts, 10s timeouts. One slow API never blocks your response.</p>
-        </div>
-
-        <div class="value-card reveal">
-          <div class="value-icon">&gt;_ format</div>
-          <h3 class="value-title">Dual-format output</h3>
-          <p class="value-desc">Structured JSON for programmatic pipelines. Natural language briefings for LLM context windows. Same data, your format.</p>
-        </div>
-
-        <div class="value-card reveal" style="grid-column: 1 / -1;">
-          <div class="value-icon" style="color: var(--accent-warm); background: rgba(255, 107, 53, 0.06); border-color: rgba(255, 107, 53, 0.12);">&gt;_ depth</div>
-          <h3 class="value-title">Deeper than raw APIs</h3>
-          <p class="value-desc">Herfindahl concentration index, multi-source median pricing, 7-day volatility classification, Sharpe ratios, entity-labeled whale tracking, NFT holdings separated from airdrop spam, and risk levels from LOW to CRITICAL. Analysis you can't get from any single API call.</p>
-          <p class="value-desc" style="margin-top: 20px;">
-            Raw counts mislead. Most non-fungibles on a Solana wallet are unsolicited compressed drops, so an NFT count measures spam volume, not collecting. We split every wallet three ways:
-          </p>
-          <div class="step-code" style="margin-top: 14px;">
-            <span style="color: var(--text-muted);">nft_count:</span> <span style="color: var(--accent-warm);">118</span><br>
-            <span style="color: var(--sol-green);">collected:</span> 15 &nbsp;<span style="color: var(--text-muted);">across 8 collections</span><br>
-            <span style="color: var(--text-muted);">airdropped: 86</span><br>
-            <span style="color: var(--text-muted);">suspected_spam: 17</span>
-          </div>
+          <h3 class="value-title">Pay per call, nothing else</h3>
+          <p class="value-desc">No API key, no plan, no signup. Your agent pays in USDC on Solana or Base over x402, or by card through Stripe. A token check costs $0.002, and agents can find us on their own in the CDP x402 bazaar, agentic.market and x402scan.</p>
         </div>
       </div>
     </div>
@@ -2577,7 +2581,7 @@ Well-distributed supply.</span></div>
             <span class="mcp-tool-tag">exit_signal</span>
             <span class="mcp-tool-tag">whale_watch</span>
             <span class="mcp-tool-tag">perps_cross_venue</span>
-            <span class="mcp-tool-tag">+29 more</span>
+            <span class="mcp-tool-tag">+44 more</span>
           </div>
         </div>
 
@@ -2601,14 +2605,14 @@ Well-distributed supply.</span></div>
   <!-- ===== CTA ===== -->
   <section class="cta-section">
     <div class="container">
-      <h2 class="reveal">Start enriching</h2>
-      <p class="reveal">Send your first request in seconds. No signup required.</p>
+      <h2 class="reveal">Ask SolEnrich before your next trade</h2>
+      <p class="reveal">Check a token free in the demo, or read the docs and make your first paid call in a few minutes.</p>
       <div class="hero-actions reveal">
-        <a href="/docs" class="btn-primary">
-          Read the docs &rarr;
+        <a href="#demo" class="btn-primary">
+          Check a token free &rarr;
         </a>
-        <a href="/agent-card" class="btn-secondary">
-          View Agent Card
+        <a href="/docs" class="btn-secondary">
+          Read the docs
         </a>
       </div>
     </div>
