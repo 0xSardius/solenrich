@@ -19,7 +19,7 @@ export const TokenEnrichmentSchema = z.object({
   price_source: z.enum(['dexscreener', 'jupiter', 'birdeye']).nullable(),
   market_cap: z.number().nullable(),
   volume_24h: z.number().nullable(),
-  price_change_24h: z.number(),
+  price_change_24h: z.number().nullable().describe('Null when no source reported a 24h change'),
   bonding_curve: z.boolean().describe('True while the token trades on a pump.fun bonding curve'),
   volatility: z.object({
     window: z.enum(['7d', '24h']),

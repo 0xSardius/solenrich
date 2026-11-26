@@ -6,6 +6,7 @@ import { TokenAnalyzer } from '../src/enrichers/token-analyzer';
 import { scoreTokenRisk } from '../src/enrichers/risk-scorer';
 import { DueDiligenceAnalyzer } from '../src/enrichers/due-diligence';
 import { formatDueDiligenceBriefing } from '../src/formatters/llm-due-diligence';
+import { formatTokenBriefing } from '../src/formatters/llm-token';
 
 const noCache = { get: async () => null, set: async () => {}, mget: async (k: string[]) => k.map(() => null) } as any;
 const realFetch = globalThis.fetch;
@@ -205,6 +206,24 @@ describe('Mint account unread → authorities unknown, not renounced (audit #28)
     expect(brief).not.toContain('No significant whale activity detected');
     expect(brief).toContain('not measured');
     expect(dd.risk_factors.some((f) => f.toLowerCase().includes('whale') && f.includes('not measured'))).toBe(true);
+  });
+});
+
+describe('low findings #68 #72', () => {
+  test('#68 DexScreener gave nothing → price_change_24h null, not a measured 0', async () => {
+    const t = await analyzer({ dexThrows: true, jup: { verified: true, usdPrice: 1 } }).enrich('M');
+    expect(t.price_change_24h).toBeNull();
+    expect(formatTokenBriefing(t)).toContain('24h change unknown');
+  });
+  test('#72 worst case is the largest measured impact, not the last array entry; a missing size is named', () => {
+    const t = { mint: 'M', symbol: 'T', name: 'T', price_usd: 1, price_change_24h: 1, market_cap: 1e6, liquidity: 1e5, volume_24h: 1, bonding_curve: false,
+      risk_flags: [], verified: true, mint_authority: null, freeze_authority: null, authorities_known: true, holder_count: null, supply: 1,
+      data_quality: { degraded: false, unavailable: [] },
+      // $100K quote missing (skipped under load); $10K already shows 25% impact.
+      slippage_estimates: [{ size_usd: 100, price_impact_pct: 0.1 }, { size_usd: 1000, price_impact_pct: 2 }, { size_usd: 10_000, price_impact_pct: 25 }] } as any;
+    const b = formatTokenBriefing(t);
+    expect(b).toContain('Significant slippage');
+    expect(b).toContain('$100K not quoted');
   });
 });
 

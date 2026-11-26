@@ -9,7 +9,8 @@ function liquidityAssessment(liquidity: number | null, marketCap: number | null)
   return 'Thin';
 }
 
-function priceDirection(change: number): string {
+function priceDirection(change: number | null): string {
+  if (change == null) return '24h change unknown';
   if (change > 0) return `↑ ${change.toFixed(2)}%`;
   if (change < 0) return `↓ ${Math.abs(change).toFixed(2)}%`;
   return '→ 0.00%';
@@ -42,9 +43,13 @@ export function formatTokenBriefing(data: TokenEnrichment): string {
       const impact = Math.abs(s.price_impact_pct);
       return `${label}: ${impact < 0.01 ? '<0.01' : impact.toFixed(2)}%`;
     });
-    lines.push(`Slippage (USDC → token): ${slippageLines.join(' | ')}.`);
-    const worst = data.slippage_estimates[data.slippage_estimates.length - 1];
-    if (worst && Math.abs(worst.price_impact_pct) > 10) {
+    // Sizes whose quote was skipped or failed are named: a missing $100K must not hide the thin-liquidity warning.
+    const QUOTED_SIZES = [100, 1000, 10_000, 100_000];
+    const missing = QUOTED_SIZES.filter((s) => !data.slippage_estimates!.some((e) => e.size_usd === s));
+    const missingNote = missing.length ? ` (${missing.map((s) => (s >= 1000 ? `$${s / 1000}K` : `$${s}`)).join(', ')} not quoted this read)` : '';
+    lines.push(`Slippage (USDC → token): ${slippageLines.join(' | ')}${missingNote}.`);
+    const worstImpact = Math.max(...data.slippage_estimates.map((s) => Math.abs(s.price_impact_pct)));
+    if (worstImpact > 10) {
       lines.push('⚠ Significant slippage at larger sizes — thin liquidity.');
     }
   }

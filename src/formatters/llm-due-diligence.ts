@@ -1,7 +1,8 @@
 import type { DueDiligenceEnrichment } from '../enrichers/due-diligence';
 import { formatUsd } from '../utils/normalize';
 
-function priceDirection(change: number): string {
+function priceDirection(change: number | null): string {
+  if (change == null) return '24h change unknown';
   if (change > 0) return `up ${change.toFixed(2)}%`;
   if (change < 0) return `down ${Math.abs(change).toFixed(2)}%`;
   return 'flat';

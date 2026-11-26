@@ -60,7 +60,8 @@ export interface TokenEnrichment {
   price_source: 'dexscreener' | 'jupiter' | 'birdeye' | null;
   market_cap: number | null;
   volume_24h: number | null;
-  price_change_24h: number;
+  /** Null when no source reported a 24h change (not a measured 0%). */
+  price_change_24h: number | null;
   /** True when the token still trades on a pump.fun bonding curve (pre-migration). */
   bonding_curve: boolean;
   volatility?: PriceVolatility;
@@ -443,7 +444,7 @@ export class TokenAnalyzer {
       price_source: priceSource,
       market_cap: marketCap,
       volume_24h: volume24h,
-      price_change_24h: dexData?.priceChange24h ?? birdeyeOverview?.priceChange24h ?? 0,
+      price_change_24h: dexData?.priceChange24h ?? birdeyeOverview?.priceChange24h ?? null,
       bonding_curve: bondingCurve,
       volatility,
       top_holders: topHolders,

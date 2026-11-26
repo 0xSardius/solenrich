@@ -12,7 +12,7 @@ export function formatTokenComparisonBriefing(data: TokenComparison): string {
   out += '| Metric | ' + tokens.map((t) => `${t.symbol || shortenAddress(t.mint)}`).join(' | ') + ' |\n';
   out += '|--------|' + tokens.map(() => '--------|').join('') + '\n';
   out += `| Price | ${tokens.map((t) => formatUsd(t.price_usd)).join(' | ')} |\n`;
-  out += `| 24h Change | ${tokens.map((t) => `${t.price_change_24h >= 0 ? '+' : ''}${t.price_change_24h.toFixed(2)}%`).join(' | ')} |\n`;
+  out += `| 24h Change | ${tokens.map((t) => (t.price_change_24h == null ? 'n/a' : `${t.price_change_24h >= 0 ? '+' : ''}${t.price_change_24h.toFixed(2)}%`)).join(' | ')} |\n`;
   out += `| Market Cap | ${tokens.map((t) => formatUsd(t.market_cap)).join(' | ')} |\n`;
   out += `| 24h Volume | ${tokens.map((t) => formatUsd(t.volume_24h)).join(' | ')} |\n`;
   out += `| Liquidity | ${tokens.map((t) => formatUsd(t.liquidity)).join(' | ')} |\n`;
