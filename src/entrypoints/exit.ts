@@ -13,7 +13,7 @@ export function registerExitSignalEntrypoint(
   addEntrypoint({
     key: 'exit-signal',
     description:
-      'The sell-side verdict for a token you hold: pass a mint, get EXIT / DERISK / HOLD with an exit score and reasoning. Reads sell pressure, buy-rate deceleration, volume fade, distribution-into-strength divergence, top-holder flow (who is distributing vs accumulating), liquidity trend, and holder churn. Rug triggers (LP pull, active dump) override everything. Works on tokens of any age. Optional entry_price_usd adds unrealized-PnL context.',
+      'The sell-side verdict for a token you hold: pass a mint, get EXIT / DERISK / HOLD / INSUFFICIENT_DATA (no tape to read) with an exit score and reasoning. Reads sell pressure, buy-rate deceleration, volume fade, distribution-into-strength divergence, top-holder flow (who is distributing vs accumulating), liquidity trend, and holder churn. Rug triggers (LP pull, active dump) override everything. Works on tokens of any age. Optional entry_price_usd adds unrealized-PnL context.',
     input: ExitSignalInput,
     handler: async (ctx: { input: z.infer<typeof ExitSignalInput> }) => {
       const input = ctx.input;

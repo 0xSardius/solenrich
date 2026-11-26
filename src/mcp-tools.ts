@@ -567,7 +567,7 @@ export const MCP_TOOLS: McpToolDef[] = [
   {
     name: 'exit_signal',
     title: 'Exit Signal (Should I Sell?)',
-    description: 'The sell-side verdict for a token you hold: pass a mint, get EXIT / DERISK / HOLD with a 0-1 exit score and reasoning. Reads sell pressure, buy-rate deceleration, volume fade, distribution into strength, top-holder flow (whales distributing vs accumulating), liquidity trend, and holder churn. Rug triggers (LP pull, active dump) override everything. Works on tokens of any age. NFA.',
+    description: 'The sell-side verdict for a token you hold: pass a mint, get EXIT / DERISK / HOLD / INSUFFICIENT_DATA (no tape to read) with a 0-1 exit score and reasoning. Reads sell pressure, buy-rate deceleration, volume fade, distribution into strength, top-holder flow (whales distributing vs accumulating), liquidity trend, and holder churn. Rug triggers (LP pull, active dump) override everything. Works on tokens of any age. NFA.',
     inputSchema: {
       mint: z.string().describe('Token mint address you hold'),
       entry_price_usd: z.number().positive().optional().describe('Optional entry price in USD — adds unrealized-PnL context'),

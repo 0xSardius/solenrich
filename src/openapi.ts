@@ -440,7 +440,7 @@ export const ENDPOINT_META: Record<string, {
   },
   'exit-signal': {
     summary: 'Get an exit verdict for a token you hold',
-    description: 'The sell-side verdict: pass a mint you hold, get EXIT / DERISK / HOLD with a 0-1 exit score and reasoning. Reads sell pressure, buy-rate deceleration, volume fade, distribution-into-strength divergence, top-holder flow (distributing vs accumulating whales), liquidity trend, and holder churn. Rug triggers (LP pull, active dump) force EXIT over everything. Works on tokens of any age. Repeat calls 5+ min apart unlock liquidity/holder deltas. NFA.',
+    description: 'The sell-side verdict: pass a mint you hold, get EXIT / DERISK / HOLD / INSUFFICIENT_DATA with a 0-1 exit score and reasoning. Reads sell pressure, buy-rate deceleration, volume fade, distribution into strength, top-holder flow, liquidity trend, and holder churn. Rug triggers (LP pull, active dump) force EXIT over everything. Works on tokens of any age. Repeat calls 5+ min apart unlock liquidity/holder deltas. NFA.',
     schema: {
       type: 'object',
       required: ['mint'],
