@@ -89,3 +89,5 @@ jobs:
       - run: bun test test/stonk-fidelity.test.ts
       # wallet-graph fidelity (2026-11-23, audit #53): pool authorities are program nodes, never cluster peers.
       - run: bun test test/graph-fidelity.test.ts
+      # Wallet + tx fidelity (2026-11-25, audit low #80 #81): paged asset reads, truncation flag, protocol label.
+      - run: bun test test/wallet-tx-fidelity.test.ts

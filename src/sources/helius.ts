@@ -51,7 +51,12 @@ export interface HeliusAssetList {
   page: number;
   items: HeliusAsset[];
   nativeBalance?: { lamports: number; price_per_sol?: number; total_price?: number };
+  /** True when the wallet holds more assets than the pages read (counts and portfolio value are then a floor). */
+  truncated?: boolean;
 }
+
+/** getAssetsByOwner pages read at most (1,000 assets each). Wallets above this are reported as truncated. */
+export const MAX_ASSET_PAGES = 3;
 
 export interface TokenAccount {
   address?: string;
@@ -122,22 +127,44 @@ export class HeliusClient {
    * stale v1 entry would silently produce an empty collection breakdown.
    */
   async getAssetsByOwner(address: string): Promise<HeliusAssetList> {
-    const cacheKey = `helius:assets:v2:${address}`;
+    // v3: paged (audit #80: page 1 only cut wallets with > 1,000 assets with no flag).
+    const cacheKey = `helius:assets:v3:${address}`;
     const cached = await this.cache.get<HeliusAssetList>(cacheKey);
     if (cached) return cached;
 
-    const result = await this.dasRpc<HeliusAssetList>('getAssetsByOwner', {
+    const pageOf = (page: number) => this.dasRpc<HeliusAssetList>('getAssetsByOwner', {
       ownerAddress: address,
-      page: 1,
+      page,
       displayOptions: {
         showFungible: true,
         showNativeBalance: true,
         showCollectionMetadata: true,
       },
     });
+    const result = await pageOf(1);
+    const items = [...(result.items ?? [])];
+    const pageSize = result.limit > 0 ? result.limit : 1000;
+    let last = result;
+    let page = 1;
+    // A full page means there may be more. Read up to MAX_ASSET_PAGES; a later page that fails ends the walk.
+    while (last.items?.length === pageSize && page < MAX_ASSET_PAGES) {
+      page++;
+      try {
+        last = await pageOf(page);
+        items.push(...(last.items ?? []));
+      } catch {
+        break;
+      }
+    }
+    const out: HeliusAssetList = {
+      ...result,
+      items,
+      total: Math.max(result.total ?? 0, items.length),
+      truncated: last.items?.length === pageSize,
+    };
 
-    await this.cache.set(cacheKey, result, CACHE_TTL.walletProfile);
-    return result;
+    await this.cache.set(cacheKey, out, CACHE_TTL.walletProfile);
+    return out;
   }
 
   /** DAS API: get token accounts for a wallet */

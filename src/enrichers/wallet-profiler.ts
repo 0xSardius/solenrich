@@ -98,6 +98,8 @@ export interface WalletEnrichment {
   sol_balance: number;
   portfolio_value_usd: number;
   token_count: number;
+  /** True when the wallet holds more than the 3,000 assets read: token_count, nft_count and portfolio value are a floor. */
+  assets_truncated: boolean;
   top_holdings: Array<{
     mint: string;
     symbol: string;
@@ -437,6 +439,7 @@ export class WalletProfiler {
       sol_balance: solBalance,
       portfolio_value_usd: portfolioValueUsd,
       token_count: tokenCount,
+      assets_truncated: assets?.truncated === true,
       top_holdings: topHoldings,
       nft_count: nftCount,
       nft_summary: nftSummary,

@@ -16,6 +16,12 @@ const KNOWN_PROTOCOLS: Record<string, string> = {
   dRiftyHA39MWEi3m9aunc5MzRF1JYuBsbn6VPcn33UH: 'Drift',
 };
 
+/** Helius `source` values that name a base program or a wallet app, not a DeFi protocol. Exported for tests. */
+// A wallet-app source falls through to the program-ID match below, so a Jupiter swap made in Phantom reads "Jupiter".
+export const NON_PROTOCOL_SOURCES = new Set([
+  'UNKNOWN', 'SYSTEM_PROGRAM', 'SOLANA_PROGRAM_LIBRARY', 'STAKE_PROGRAM', 'PHANTOM', 'SOLFLARE',
+]);
+
 // --- Types ---
 
 export interface TransactionEnrichment {
@@ -94,8 +100,10 @@ export class TxParser {
   }
 
   private detectProtocol(tx: EnhancedTransaction): string | null {
-    // Check source field first (Helius often identifies the protocol)
-    if (tx.source && tx.source !== 'SYSTEM_PROGRAM' && tx.source !== 'UNKNOWN') {
+    // Check source field first (Helius often identifies the protocol). Some sources are not protocols: the token
+    // programs, and wallet apps that built the transaction (audit #81: a plain SPL transfer read
+    // "SOLANA_PROGRAM_LIBRARY", a Phantom send read "PHANTOM").
+    if (tx.source && !NON_PROTOCOL_SOURCES.has(tx.source)) {
       return tx.source;
     }
 
