@@ -1,7 +1,7 @@
 {
   "name": "SolEnrich",
   "symbol": "SOLENRICH",
-  "description": "Agent-native onchain intelligence for Solana. StonkFun reward coins: gem finder, payout status and alerts, holder yield for one coin or 25, trade cost and payback, and launch intel per quote asset. Plus wallet risk scoring, token due-diligence and rug detection, smart-money tracking across spot, perps, and fresh launches, cross-venue perps funding, and LLM-ready briefings. 52 paid endpoints plus 1 free, per-call USDC via x402 on Solana or Base. Operated by Parallax Labs.",
+  "description": "The onchain intelligence layer for Solana agents. Before your agent trades, one pay-per-call request answers: is this token a rug, is the momentum real, is smart money in it, what will this size cost, and is it time to sell. Covers Solana tokens and wallets, fresh launches, StonkFun reward coins, and perps across six venues. 52 paid endpoints plus 1 free, per-call USDC via x402 on Solana or Base. Operated by Parallax Labs.",
   "image": "https://www.solenrich.com/logo.png",
   "external_url": "https://www.solenrich.com",
   "attributes": [

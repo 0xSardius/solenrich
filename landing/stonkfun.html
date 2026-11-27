@@ -39,7 +39,7 @@
         "name": "StonkFun API for Agents — SolEnrich",
         "description": "StonkFun reward-coin intelligence for AI agents: gem finder, payout status, trade cost and payback, launch intel. Pay per call in USDC via x402.",
         "isPartOf": { "@id": "https://www.solenrich.com/#website" },
-        "dateModified": "2026-11-02"
+        "dateModified": "2026-11-26"
       },
       {
         "@type": "FAQPage",
@@ -199,8 +199,8 @@
       <div class="section-label">StonkFun reward coins · for agents</div>
       <h1>Find the StonkFun coins that <em>pay</em>, before you buy one.</h1>
       <p class="lede">
-        StonkFun lists <strong>144,552 reward coins</strong>. About <strong>one in six</strong> traded in the last
-        24 hours, and only <strong>one in 550</strong> paid its holders. One call ranks the live ones, one prices your
+        StonkFun lists <strong>149,740 reward coins</strong>. About <strong>one in 70</strong> traded in the last
+        24 hours, and only about <strong>one in 1,450</strong> paid its holders. One call ranks the live ones, one prices your
         trade net of the transfer tax, one tells you when to leave. Your agent pays per call in USDC. No account, no API key.
       </p>
       <div class="cta-row">
@@ -208,14 +208,14 @@
         <a href="https://api.solenrich.com/llms-full.txt" class="btn-secondary">Full reference for LLMs</a>
         <a href="/docs" class="btn-secondary">API docs</a>
       </div>
-      <div class="asof">Census as of 2026-11-02 16:04 UTC, a full walk of the reward-coin list (144,552 coins read)</div>
+      <div class="asof">Census as of 2026-11-26 08:53 UTC, a full walk of the reward-coin list (149,173 coins read)</div>
       <div class="stats">
-        <div class="stat"><div class="stat-value">144,552</div><div class="stat-label">reward coins on StonkFun</div></div>
-        <div class="stat"><div class="stat-value">168</div><div class="stat-label">launched in the last 24h</div></div>
-        <div class="stat"><div class="stat-value">17.2%</div><div class="stat-label">traded in the last 24h</div></div>
-        <div class="stat"><div class="stat-value">0.2%</div><div class="stat-label">paid holders in the last 24h (261 coins)</div></div>
-        <div class="stat"><div class="stat-value">17.1%</div><div class="stat-label">of coins over 3 days old still trade</div></div>
-        <div class="stat"><div class="stat-value">$4.4M</div><div class="stat-label">traded in the last 24h</div></div>
+        <div class="stat"><div class="stat-value">149,740</div><div class="stat-label">reward coins on StonkFun</div></div>
+        <div class="stat"><div class="stat-value">95</div><div class="stat-label">launched in the last 24h</div></div>
+        <div class="stat"><div class="stat-value">1.4%</div><div class="stat-label">traded in the last 24h (2,033 coins)</div></div>
+        <div class="stat"><div class="stat-value">0.1%</div><div class="stat-label">paid holders in the last 24h (103 coins)</div></div>
+        <div class="stat"><div class="stat-value">1.3%</div><div class="stat-label">of coins over 3 days old still trade</div></div>
+        <div class="stat"><div class="stat-value">$3.9M</div><div class="stat-label">traded in the last 24h</div></div>
       </div>
     </header>
 
@@ -231,8 +231,8 @@
       </p>
       <p>
         Most coins do not keep trading. On 2026-09-06, 45% of about 8,000 reward coins had traded in the last day. On
-        2026-11-02 it was 17.2% of about 145,000, launches had fallen from about 5,900 a day in September to 168, and
-        only 261 coins paid their holders that day. A holder cares about one thing: <strong>did the payout land</strong>. Nobody buys after a config audit. So the job is finding the coins that are
+        2026-11-02 it was 17.2% of about 145,000. On 2026-11-26 it was 1.4% of about 149,000, launches had fallen from
+        about 5,900 a day in September to 95, and only 103 coins paid their holders that day. A holder cares about one thing: <strong>did the payout land</strong>. Nobody buys after a config audit. So the job is finding the coins that are
         live and paying, fast, and knowing what a trade in one of them costs.
       </p>
     </section>
@@ -327,7 +327,7 @@
     <!-- ===== ENDPOINTS ===== -->
     <section id="endpoints">
       <div class="section-label">The endpoints</div>
-      <h2>Ten calls for StonkFun. Every one returns JSON or a briefing.</h2>
+      <h2>Twelve calls for StonkFun. Every one returns JSON or a briefing.</h2>
       <p>All are <code>POST https://api.solenrich.com/entrypoints/{key}/invoke</code> with a JSON body. Add <code>"format": "llm"</code> for a short deterministic briefing instead of fields.</p>
       <div class="endpoints">
         <div class="endpoint">
@@ -366,6 +366,16 @@
           <div class="endpoint-input">mints, since, min_holders_change_pct? (10), stale_after_hours? (24)</div>
         </div>
         <div class="endpoint">
+          <div class="endpoint-header"><span class="endpoint-name">stonk-market-pulse</span><span class="price">$0.005</span></div>
+          <p class="endpoint-desc">Is the StonkFun market rising or falling right now? RISK_ON, NEUTRAL, or RISK_OFF from the share of live coins up today and the median move, next to the volume-weighted move, launches per day, holder revenue this week against last, and the strongest and weakest quote shelves. Check it before any entry.</p>
+          <div class="endpoint-input">no input</div>
+        </div>
+        <div class="endpoint">
+          <div class="endpoint-header"><span class="endpoint-name">stonk-creator</span><span class="price">$0.01</span></div>
+          <p class="endpoint-desc">Who launched this coin, and do their coins survive? Established, mixed, serial launcher, or new, with launches per day, the share of their coins past day three that still trade, and their living coins. Pass the creator wallet or any coin they launched.</p>
+          <div class="endpoint-input">creator or mint</div>
+        </div>
+        <div class="endpoint">
           <div class="endpoint-header"><span class="endpoint-name">stonk-quote</span><span class="price">$0.005</span></div>
           <p class="endpoint-desc">Cost and payback of one trade at one size: entry and exit cost, breakeven move, your pro-rata payout share, expected payout over the hold, PAYS, MARGINAL, COSTS, or NOT_PAYING. No swap.</p>
           <div class="endpoint-input">mint, size_usd? (100), hold_days? (7)</div>
@@ -388,31 +398,32 @@
       <div class="section-label">What to launch against</div>
       <h2>The quote decides more than the tax does.</h2>
       <p>
-        From the 2026-11-02 census, the eight quote assets with the most 24-hour volume. On 2026-09-06 ZEC was the best
-        shelf on the platform: 505 coins, 87% traded. It now has 7,662 coins and 13.2% traded, and still carries the most
-        volume. The standout is GTA6: 231 coins, 31.6% traded and 9.5% paying holders, the highest demand score in the
-        top eight. The demand score in <code>stonk-launch-intel</code> catches that kind of shift: traders per launch,
-        survival up, crowding down.
+        From the 2026-11-26 census, the eight quote assets with the most 24-hour volume. Two shelves carry most of it:
+        SOL and FRONTIER, $2.3M of the $3.9M total. FRONTIER does it with 536 coins of which 0.4% traded, so a handful of
+        coins hold that volume. ZEC was the best shelf on 2026-09-06 (505 coins, 87% traded); it now has 7,731 coins and
+        1.0% traded. The most alive shelf in the top eight is TTWO: 7.4% traded and 265 launches in seven days. Demand
+        scores are low everywhere in this census, because few coins trade or last past day three. The demand score in
+        <code>stonk-launch-intel</code> is how you see a shelf recover: traders per launch and survival up, crowding down.
       </p>
       <div class="table-wrap">
         <table>
           <thead><tr><th>Quote</th><th>Coins</th><th>Traded today</th><th>Paid holders today</th><th>24h volume</th><th>Launches, 7d</th><th>Demand</th></tr></thead>
           <tbody>
-            <tr><td>ZEC</td><td class="num">7,662</td><td class="num">13%</td><td class="num bad">0.1%</td><td class="num">$853K</td><td class="num">25</td><td class="num">11</td></tr>
-            <tr><td>STONK</td><td class="num">6,904</td><td class="num">22%</td><td class="num bad">0.3%</td><td class="num">$336K</td><td class="num">325</td><td class="num">17</td></tr>
-            <tr><td>GTA6</td><td class="num">231</td><td class="num good">32%</td><td class="num good">9.5%</td><td class="num">$335K</td><td class="num">179</td><td class="num good">23</td></tr>
-            <tr><td>LLY</td><td class="num">195</td><td class="num bad">9%</td><td class="num">1.5%</td><td class="num">$303K</td><td class="num">6</td><td class="num bad">7</td></tr>
-            <tr><td>TTWO</td><td class="num">694</td><td class="num">20%</td><td class="num">1.3%</td><td class="num">$242K</td><td class="num">30</td><td class="num">16</td></tr>
-            <tr><td>XBTC</td><td class="num">885</td><td class="num">15%</td><td class="num">0.5%</td><td class="num">$218K</td><td class="num">5</td><td class="num">12</td></tr>
-            <tr><td>ANTHROPIC</td><td class="num">3,092</td><td class="num">25%</td><td class="num bad">0.3%</td><td class="num">$184K</td><td class="num">21</td><td class="num good">20</td></tr>
-            <tr><td>WBNB</td><td class="num">432</td><td class="num">14%</td><td class="num bad">0.2%</td><td class="num">$149K</td><td class="num">71</td><td class="num">11</td></tr>
+            <tr><td>SOL</td><td class="num">6,237</td><td class="num">1.2%</td><td class="num">0.1%</td><td class="num">$1.19M</td><td class="num">59</td><td class="num">1</td></tr>
+            <tr><td>FRONTIER</td><td class="num">536</td><td class="num bad">0.4%</td><td class="num">0.6%</td><td class="num">$1.14M</td><td class="num">5</td><td class="num">0</td></tr>
+            <tr><td>ZEC</td><td class="num">7,731</td><td class="num">1.0%</td><td class="num bad">0.0%</td><td class="num">$496K</td><td class="num">5</td><td class="num">1</td></tr>
+            <tr><td>TTWO</td><td class="num">1,106</td><td class="num good">7.4%</td><td class="num">0.6%</td><td class="num">$251K</td><td class="num">265</td><td class="num">0</td></tr>
+            <tr><td>NVDAX</td><td class="num">6,380</td><td class="num">1.1%</td><td class="num bad">0.0%</td><td class="num">$238K</td><td class="num">181</td><td class="num">0</td></tr>
+            <tr><td>STONK</td><td class="num">7,180</td><td class="num">1.1%</td><td class="num">0.1%</td><td class="num">$71K</td><td class="num">13</td><td class="num">1</td></tr>
+            <tr><td>XMR</td><td class="num">1,262</td><td class="num">2.0%</td><td class="num">0.6%</td><td class="num">$62K</td><td class="num">3</td><td class="num">2</td></tr>
+            <tr><td>PEPE</td><td class="num">1,152</td><td class="num">1.0%</td><td class="num">0.2%</td><td class="num">$50K</td><td class="num">4</td><td class="num">1</td></tr>
           </tbody>
         </table>
       </div>
       <p>
         Demand is 0 to 100. The live call returns every quote, the tax mix per quote, and recommendations in plain
-        language. Payouts are rare at either tax level in this census: 0.4% of 300 bps coins and 0.1% of 100 bps coins
-        paid holders, and both traded at about the same rate, 16.7% and 17.4%.
+        language. The 3% tax level does better in this census: 300 bps coins traded at 2.6% against 0.9% for 100 bps
+        coins, and paid holders at 0.2% against under 0.05%.
       </p>
     </section>
 
