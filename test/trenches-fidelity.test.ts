@@ -8,7 +8,7 @@ import { DEFAULT_SMART_MONEY_SEEDS, usableSeeds, seedListKey } from '../src/enri
 import { lookupEntity } from '../src/utils/entities';
 import { isWalletAddress } from '../src/enrichers/whale-watch';
 import { TrenchesSmartMoneyAnalyzer } from '../src/enrichers/trenches-smart-money';
-import { TRENCHES_SMART_MONEY_SEEDS, TRENCHES_CONVICTION_HOLDERS } from '../src/enrichers/trenches-smart-money-seeds';
+import { TRENCHES_SMART_MONEY_SEEDS, TRENCHES_CONVICTION_HOLDERS, TRENCHES_SEED_EXCLUDED } from '../src/enrichers/trenches-smart-money-seeds';
 import { assessExit } from '../src/enrichers/exit-score';
 import { assessRunner } from '../src/enrichers/runner-score';
 
@@ -170,5 +170,12 @@ describe('runner score', () => {
     const r = assessRunner({ ...quiet, age_hours: 2 });
     expect(r.flags).toContain('liquidity_unknown');
     expect(r.flags).not.toContain('low_liquidity');
+  });
+});
+
+describe('trenches seed exclusions', () => {
+  test('no excluded wallet is in the live seed set', () => {
+    const live = new Set([...TRENCHES_SMART_MONEY_SEEDS.map((s) => s.address), ...TRENCHES_CONVICTION_HOLDERS.map((s) => s.address)]);
+    expect(Object.keys(TRENCHES_SEED_EXCLUDED).filter((a) => live.has(a))).toEqual([]);
   });
 });

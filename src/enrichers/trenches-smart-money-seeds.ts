@@ -49,9 +49,20 @@ export interface ConvictionHolder {
 
 export const TRENCHES_SEEDS_DERIVED_AT = '2026-11-22';
 
+/**
+ * Wallets that passed the automatic gates but are not worth following. test/trenches-onchain-merge.ts skips them,
+ * so a daily re-run cannot add them back. Add the reason and the date checked.
+ */
+export const TRENCHES_SEED_EXCLUDED: Readonly<Record<string, string>> = {
+  // 2026-11-26: 7 of 7 recent buys were exactly 0.0015 SOL, and 47 of its last 100 txs close token accounts.
+  // A dust buyer, not a trader: $29.77 PnL over 117 trades. It was 8 of the 10 signals in one smart-money run.
+  EKfGSeHeyhCpZjDHWykbKJPCgfjEiLGFPJo9KKtsoHu6: 'fixed dust-size buys, account-closing pattern',
+};
+
 export const TRENCHES_SMART_MONEY_SEEDS: readonly TrenchesSeed[] = [
   // --- 2026-11-22 on-chain rebuild (test/trenches-onchain-seeds.ts): 17 wallets passed 10+ closed trades, ≥ 50% win, PnL > 0 over 14 d (quote-leg PnL),
   //     human cadence (< 15 tx/h, no bot flags), active in the last 7 d. Sorted by 14-day PnL.
+  //     16 live: one removed 2026-11-26 (see TRENCHES_SEED_EXCLUDED).
   { address: 'HRZhHFizBrEUhaTqhbuocaUxj9yubM7x6MER28X8JYYs', realized_1w_usd: null, win_rate: 1, tx_per_h: 1.7, pnl_14d_usd: 39457.82, closed_trades_14d: 56, vetted_at: '2026-11-22' },
   { address: '2QKECLPQWM4CRHaY55WKPFYD9YU9XzgXgK5cJYi5T51d', realized_1w_usd: null, win_rate: 0.63, tx_per_h: 0.4, pnl_14d_usd: 1401.77, closed_trades_14d: 73, vetted_at: '2026-11-22', note: 're-vetted current seed' },
   { address: 'BHEdepwWgQjcFbW25moXbSEvW14PNzLVaT4oD77xKgkD', realized_1w_usd: null, win_rate: 0.857, tx_per_h: 1.5, pnl_14d_usd: 1252.34, closed_trades_14d: 49, vetted_at: '2026-11-22', note: 're-vetted current seed' },
@@ -61,7 +72,6 @@ export const TRENCHES_SMART_MONEY_SEEDS: readonly TrenchesSeed[] = [
   { address: 'FKCszxXJtrqWdG2jfQuq7Z2cEA4BxxHSZpGUYgUh7WWv', realized_1w_usd: null, win_rate: 0.867, tx_per_h: 0.2, pnl_14d_usd: 162.12, closed_trades_14d: 15, vetted_at: '2026-11-22', note: 're-vetted current seed' },
   { address: '5ZsVoZURWzXGYtCLYp9MuyasSkhwpz7FgXmS7nSYXWy3', realized_1w_usd: null, win_rate: 0.694, tx_per_h: 0.3, pnl_14d_usd: 32.55, closed_trades_14d: 36, vetted_at: '2026-11-22' },
   { address: '6VzAGvdhP2ycigEs9xDuhahhKqZrfgMa17ebb2hMa9r9', realized_1w_usd: null, win_rate: 1, tx_per_h: 1.4, pnl_14d_usd: 32.39, closed_trades_14d: 15, vetted_at: '2026-11-22', note: 're-vetted current seed' },
-  { address: 'EKfGSeHeyhCpZjDHWykbKJPCgfjEiLGFPJo9KKtsoHu6', realized_1w_usd: null, win_rate: 0.923, tx_per_h: 0.7, pnl_14d_usd: 29.77, closed_trades_14d: 117, vetted_at: '2026-11-22' },
   { address: '5To3WPivEc8qVRMZB83ghVLAGZY8gFPMiCqrD2bae21L', realized_1w_usd: null, win_rate: 0.879, tx_per_h: 6.3, pnl_14d_usd: 25.59, closed_trades_14d: 33, vetted_at: '2026-11-22', note: 're-vetted current seed' },
   { address: 'G3yc6fe3i7YBZjghWZdPUqBi973jVyvKbM5sBjtFe8JP', realized_1w_usd: null, win_rate: 0.667, tx_per_h: 1.3, pnl_14d_usd: 15.18, closed_trades_14d: 30, vetted_at: '2026-11-22', note: 're-vetted current seed' },
   { address: '5H4EhHtPo5ngMyvyUcDZ6EGF9VgbxMC8tkTKZhWDs2x', realized_1w_usd: null, win_rate: 0.519, tx_per_h: 4.2, pnl_14d_usd: 14.68, closed_trades_14d: 133, vetted_at: '2026-11-22' },

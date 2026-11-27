@@ -8,6 +8,7 @@
  * boot in agent.ts; served on api.solenrich.com and rewritten on www.
  */
 import type { EndpointSuite } from './suites';
+import { SERVICE_TAGLINE } from './service-description';
 
 export interface LlmsFullInput {
   pricing: Record<string, string>;
@@ -97,7 +98,7 @@ export function buildLlmsFull(i: LlmsFullInput): string {
   const sections = [
     `# SolEnrich — full reference for LLMs`,
     '',
-    `> Onchain intelligence API for Solana agents and LLMs. ${paid.length} paid endpoints and ${i.free.length} free. Pay per call with USDC over x402 on Solana${i.baseAccepts ? ' or Base' : ''}, or by card via MPP/Stripe. No API key. Every verdict is deterministic: no LLM runs inside SolEnrich, so a briefing costs the same as JSON and never hallucinates.`,
+    `> ${SERVICE_TAGLINE} Before your agent trades, ask SolEnrich: is this token a rug, is the momentum real, is smart money in it, what will this size cost, is it time to sell. ${paid.length} paid endpoints and ${i.free.length} free. Pay per call with USDC over x402 on Solana${i.baseAccepts ? ' or Base' : ''}, or by card via MPP/Stripe. No API key. Every verdict is deterministic: no LLM runs inside SolEnrich, so a briefing costs the same as JSON and never hallucinates.`,
     '',
     '## How to call',
     '',

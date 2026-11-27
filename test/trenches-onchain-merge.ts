@@ -4,11 +4,14 @@
 // Run: bun run test/trenches-onchain-merge.ts
 
 import { readFileSync, writeFileSync } from 'fs';
+import { TRENCHES_SEED_EXCLUDED } from '../src/enrichers/trenches-smart-money-seeds';
 
 const LIVE_CAP = 100;
 const FILE = 'src/enrichers/trenches-smart-money-seeds.ts';
 const { summary, rows } = JSON.parse(readFileSync('test/trenches-onchain-result.json', 'utf8'));
-const pass = rows.filter((r: any) => r.pass).sort((a: any, b: any) => b.pnl_usd - a.pnl_usd).slice(0, LIVE_CAP);
+const excluded = rows.filter((r: any) => r.pass && TRENCHES_SEED_EXCLUDED[r.address]);
+for (const r of excluded) console.log(`skipped ${r.address}: ${TRENCHES_SEED_EXCLUDED[r.address]}`);
+const pass = rows.filter((r: any) => r.pass && !TRENCHES_SEED_EXCLUDED[r.address]).sort((a: any, b: any) => b.pnl_usd - a.pnl_usd).slice(0, LIVE_CAP);
 if (pass.length === 0) { console.error('no passing wallets — seed file left unchanged'); process.exit(1); }
 
 const date = String(summary.derived_at).slice(0, 10);

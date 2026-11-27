@@ -8,12 +8,14 @@
  * Accept is `*​/*` or application/json) → a small JSON index of the discovery
  * surfaces. Same content negotiation /docs uses.
  */
+import { SERVICE_DESCRIPTION } from './service-description';
+
 export const WWW = 'https://www.solenrich.com/';
 export const API = 'https://api.solenrich.com';
 
 export const ROOT_INDEX = {
   name: 'SolEnrich',
-  description: 'Onchain intelligence API for Solana agents. Pay per call with USDC (x402, Solana or Base) or by card (MPP/Stripe). No API keys.',
+  description: SERVICE_DESCRIPTION,
   site: WWW,
   discovery: {
     docs: `${API}/docs`,

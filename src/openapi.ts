@@ -3,6 +3,7 @@
 // Reference: https://mpp.dev/advanced/discovery
 
 import { PRICING, CONFIG, FREE_ENDPOINTS } from './config';
+import { SERVICE_DESCRIPTION } from './lib/service-description';
 
 // Agent wallet that receives payments
 const RECIPIENT = CONFIG.solana.walletAddress;
@@ -832,7 +833,7 @@ export function generateOpenApiDoc(mppEnabled: boolean): Record<string, unknown>
     info: {
       title: 'SolEnrich',
       version: '1.0.0',
-      description: 'Solana onchain data enrichment agent. Wallet profiling, token analysis, transaction parsing, risk scoring. All scoring is deterministic — no LLM inference in the pipeline. Returns JSON (for agents) or natural language briefings (for LLMs).',
+      description: SERVICE_DESCRIPTION,
       'x-guidance': [
         'All paid endpoints are at POST /entrypoints/{key}/invoke with JSON body.',
         'Set "format" to "json" for structured data, "llm" for natural language briefings, or "both" for JSON + llm_summary.',

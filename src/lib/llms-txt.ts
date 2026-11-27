@@ -5,6 +5,7 @@
  * the two trade loops with total prices. Pure; built once at boot.
  */
 import type { EndpointSuite } from './suites';
+import { SERVICE_TAGLINE } from './service-description';
 
 export interface LlmsTxtInput {
   pricing: Record<string, string>;
@@ -31,7 +32,7 @@ export function buildLlmsTxt(i: LlmsTxtInput): string {
 
   return `# SolEnrich
 
-> Onchain intelligence for Solana agents: verdicts, not raw data. ${paid} paid endpoints and ${i.free.length} free, pay per call with USDC over x402 (Solana${i.baseAccepts ? ' or Base' : ''}) or by card via MPP/Stripe, no API key. Suites: StonkFun reward-coin intelligence (gem finder, payout status, yield, trade cost, launch intel), the memecoin trenches lifecycle (runner-scan → trenches-check → exit-signal), smart-money and whale tracking on Solana and Hyperliquid, cross-venue perps (Jupiter, Adrena, Flash, Phoenix, Hyperliquid, dYdX), and the core wallet, token, and transaction primitives. Every score is deterministic — no LLM runs inside SolEnrich, so a briefing costs the same as JSON and never hallucinates.
+> ${SERVICE_TAGLINE} Before your agent trades, ask SolEnrich: is this token a rug, is the momentum real, is smart money in it, what will this size cost, is it time to sell. ${paid} paid endpoints and ${i.free.length} free, pay per call with USDC over x402 (Solana${i.baseAccepts ? ' or Base' : ''}) or by card via MPP/Stripe, no API key. Suites: StonkFun reward-coin intelligence (gem finder, payout status, yield, trade cost, launch intel), the memecoin trenches lifecycle (runner-scan → trenches-check → exit-signal), smart-money and whale tracking on Solana and Hyperliquid, cross-venue perps (Jupiter, Adrena, Flash, Phoenix, Hyperliquid, dYdX), and the core wallet, token, and transaction primitives. Every score is deterministic — no LLM runs inside SolEnrich, so a briefing costs the same as JSON and never hallucinates.
 
 - Base URL: ${BASE}
 - Call: POST /entrypoints/{key}/invoke with a JSON body; \`format\`: json (default) | llm (briefing) | both

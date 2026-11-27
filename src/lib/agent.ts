@@ -28,6 +28,7 @@ import { HeliusClient } from "../sources/helius";
 import { DexScreenerClient } from "../sources/dexscreener";
 import { JupiterClient } from "../sources/jupiter";
 import { SolanaRpcClient } from "../sources/solana-rpc";
+import { SERVICE_DESCRIPTION } from "./service-description";
 import { DefiLlamaClient } from "../sources/defi-llama";
 import { BirdeyeClient } from "../sources/birdeye";
 
@@ -119,8 +120,7 @@ const agent = await createAgent({
   name: process.env.AGENT_NAME ?? "SolEnrich",
   version: process.env.AGENT_VERSION ?? "1.0.0",
   description:
-    process.env.AGENT_DESCRIPTION ??
-    "Agent-native onchain intelligence for Solana traders: cross-venue perps funding (Jupiter, Adrena, Flash, Phoenix, Hyperliquid), smart-money & whale tracking, token due-diligence and rug detection, and wallet risk scoring. Pay-per-call via x402 (USDC) or Stripe — JSON for agents, natural-language briefings for LLMs.",
+    process.env.AGENT_DESCRIPTION ?? SERVICE_DESCRIPTION,
 })
   .use(http())
   .build();
@@ -1137,7 +1137,7 @@ function buildDocs() {
   return {
     name: 'SolEnrich',
     version: '1.0.0',
-    description: 'Solana onchain data enrichment agent. All scoring is deterministic — no LLM inference in the pipeline.',
+    description: SERVICE_DESCRIPTION,
     base_url: 'https://api.solenrich.com',
     payment: {
       protocol: 'x402',
@@ -1898,7 +1898,7 @@ app.get('/.well-known/x402', (c) => {
     version: 1,
     service: {
       name: 'SolEnrich',
-      description: 'Agent-native onchain intelligence for Solana traders: cross-venue perps funding (Jupiter, Adrena, Flash, Phoenix, Hyperliquid), smart-money & whale tracking, token due-diligence and rug detection, and wallet risk scoring. Pay-per-call via x402 (USDC) or Stripe.',
+      description: SERVICE_DESCRIPTION,
       provider: '@0xSardius',
       providerUrl: 'https://twitter.com/0xSardius',
       categories: ['onchain-data', 'solana', 'defi', 'risk-intelligence', 'perps'],
