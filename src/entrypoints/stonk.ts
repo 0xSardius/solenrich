@@ -359,7 +359,7 @@ export function registerStonkEntrypoints(
         limit: input.limit,
       });
       const caveats: string[] = [
-        'A ranking of what looks early and real on the tape, not a safety verdict and not a price prediction. Thresholds come from a 2026-09-06 measurement over 8,000 reward coins (45% traded in 24h, 13% paid in 24h, median holders 2). NFA.',
+        'A ranking of what looks early and real on the tape, not a safety verdict and not a price prediction. Thresholds were set on 2026-09-06, when 45% of 8,000 reward coins traded in 24h, and are not retuned since. The market is much quieter now (2026-11-26: 1.4% of 149,740 coins traded in 24h), so few coins reach GEM. NFA.',
         'round_trip_pct is the transfer tax on a buy plus a sell (2 × bps), before slippage — the hurdle a trade must clear.',
       ];
       if (status.rows === 0) caveats.unshift('index is warming up after a restart — rows fill in within a minute');
