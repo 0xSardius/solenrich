@@ -274,8 +274,8 @@
       <div class="section-label">The loop, with real output</div>
       <h2>Four calls. $0.075 end to end.</h2>
       <p>
-        Captured from production on 2026-09-20. The top gem that minute was <strong>ADOG</strong>, paired to XMR.
-        Numbers move every ten minutes; the shape does not.
+        Captured from production on 2026-11-28. The scan read 3,171 traded coins and found one GEM:
+        <strong>STATS</strong>, paired to RUSH. Numbers move every ten minutes; the shape does not.
       </p>
       <div class="loop">
         <div class="step">
@@ -288,37 +288,43 @@
           <div>
             <h3>What is worth looking at right now? <span class="price">stonk-gems · $0.03</span></h3>
             <p><code>{"limit": 3}</code> returned three ranked coins. The first:</p>
-<div class="code-block"><span class="k">"symbol"</span>: <span class="s">"ADOG"</span>, <span class="k">"quote_symbol"</span>: <span class="s">"XMR"</span>, <span class="k">"stage"</span>: <span class="s">"GEM"</span>, <span class="k">"gem_score"</span>: <span class="n">97</span>,
-<span class="k">"reasons"</span>: [<span class="s">"paid holders 1.3h ago"</span>, <span class="s">"594 holders"</span>, <span class="s">"mcap $39.9K — early"</span>,
-            <span class="s">"24h turnover 100% of mcap"</span>, <span class="s">"3.0d old"</span>, <span class="s">"XMR quote: 62% of its coins traded today"</span>],
-<span class="k">"payout_status"</span>: <span class="s">"PAYING"</span>, <span class="k">"payout_count"</span>: <span class="n">2858</span>, <span class="k">"transfer_fee_bps"</span>: <span class="n">100</span>, <span class="k">"round_trip_pct"</span>: <span class="n">2</span>,
-<span class="k">"rewards_usd"</span>: <span class="n">4491.8</span>, <span class="k">"yield_7d_pct"</span>: <span class="n">14.9</span>, <span class="k">"warnings"</span>: []</div>
+<div class="code-block"><span class="k">"symbol"</span>: <span class="s">"STATS"</span>, <span class="k">"quote_symbol"</span>: <span class="s">"RUSH"</span>, <span class="k">"stage"</span>: <span class="s">"GEM"</span>, <span class="k">"gem_score"</span>: <span class="n">87</span>,
+<span class="k">"reasons"</span>: [<span class="s">"paid holders 1.6h ago"</span>, <span class="s">"432 holders"</span>, <span class="s">"mcap $34.1K — early"</span>,
+            <span class="s">"24h turnover 439% of mcap"</span>, <span class="s">"1.7d old"</span>],
+<span class="k">"warnings"</span>: [<span class="s">"RUSH quote: only 3% of its 388 coins traded today"</span>],
+<span class="k">"payout_status"</span>: <span class="s">"PAYING"</span>, <span class="k">"payout_count"</span>: <span class="n">4631</span>, <span class="k">"transfer_fee_bps"</span>: <span class="n">300</span>, <span class="k">"round_trip_pct"</span>: <span class="n">6</span>,
+<span class="k">"rewards_usd"</span>: <span class="n">6782.92</span>, <span class="k">"yield_7d_pct"</span>: <span class="n">30.03</span></div>
           </div>
         </div>
         <div class="step">
           <div>
             <h3>What does $100 in it cost, and does it pay back? <span class="price">stonk-quote · $0.005</span></h3>
-            <p><code>{"mint": "34u7…TCaY", "size_usd": 100, "hold_days": 7}</code>:</p>
-<div class="code-block"><span class="k">"entry"</span>: {<span class="k">"tax_pct"</span>: <span class="n">1</span>, <span class="k">"price_impact_pct"</span>: <span class="n">0.05</span>, <span class="k">"total_usd"</span>: <span class="n">1.05</span>},
-<span class="k">"round_trip"</span>: {<span class="k">"cost_pct"</span>: <span class="n">2.1</span>, <span class="k">"cost_usd"</span>: <span class="n">2.1</span>, <span class="k">"breakeven_move_pct"</span>: <span class="n">2.12</span>},
-<span class="k">"eligibility"</span>: {<span class="k">"share_of_supply_pct"</span>: <span class="n">0.2323</span>, <span class="k">"dust_risk"</span>: <span class="n">false</span>},
-<span class="k">"expected_payout"</span>: {<span class="k">"usd_over_hold"</span>: <span class="n">39.98</span>, <span class="k">"reward_asset"</span>: <span class="s">"XMR"</span>, <span class="k">"caution"</span>: <span class="n">true</span>,
+            <p><code>{"mint": "Yd2W…UmB", "size_usd": 100, "hold_days": 7}</code>:</p>
+<div class="code-block"><span class="k">"entry"</span>: {<span class="k">"tax_pct"</span>: <span class="n">3</span>, <span class="k">"price_impact_pct"</span>: <span class="n">9.97</span>, <span class="k">"total_usd"</span>: <span class="n">12.97</span>},
+<span class="k">"round_trip"</span>: {<span class="k">"cost_pct"</span>: <span class="n">25.94</span>, <span class="k">"cost_usd"</span>: <span class="n">25.94</span>, <span class="k">"breakeven_move_pct"</span>: <span class="n">29.81</span>},
+<span class="k">"eligibility"</span>: {<span class="k">"share_of_supply_pct"</span>: <span class="n">0.2565</span>, <span class="k">"dust_risk"</span>: <span class="n">false</span>},
+<span class="k">"expected_payout"</span>: {<span class="k">"basis"</span>: <span class="s">"lifetime"</span>, <span class="k">"basis_actual_days"</span>: <span class="n">1.74</span>, <span class="k">"usd_over_hold"</span>: <span class="n">192.5</span>,
+                    <span class="k">"reward_asset"</span>: <span class="s">"RUSH"</span>, <span class="k">"caution"</span>: <span class="n">true</span>,
                     <span class="k">"caution_reason"</span>: <span class="s">"coin younger than 7 days"</span>},
-<span class="k">"net"</span>: {<span class="k">"usd_over_hold"</span>: <span class="n">37.88</span>, <span class="k">"breakeven_hold_days"</span>: <span class="n">0.37</span>, <span class="k">"verdict"</span>: <span class="s">"PAYS"</span>},
-<span class="k">"reasoning"</span>: <span class="s">"$ADOG at $100: round trip costs 2.1% ($2.1); at the observed lifetime payout rate the
-              position earns ≈$39.98 in XMR over 7 days, covering the trip in ≈0.37 days."</span></div>
-            <p>The caution flag is the honest part: three days of history is not seven. The verdict says PAYS; the caveat says on what evidence.</p>
+<span class="k">"net"</span>: {<span class="k">"usd_over_hold"</span>: <span class="n">166.56</span>, <span class="k">"breakeven_hold_days"</span>: <span class="n">0.94</span>, <span class="k">"verdict"</span>: <span class="s">"PAYS"</span>},
+<span class="k">"market"</span>: {<span class="k">"liquidity_usd"</span>: <span class="n">14705.24</span>, <span class="k">"holders"</span>: <span class="n">434</span>}</div>
+            <p>Two numbers matter more than the verdict. A $100 trade in a $14.7K pool costs 26% to enter and leave, so the
+              price must rise 30% before a sale breaks even. And the payout estimate comes from 1.7 days of history,
+              scaled to seven. The verdict says PAYS; the caution flag says how little evidence stands behind it.</p>
           </div>
         </div>
         <div class="step">
           <div>
             <h3>Should I still be in it? <span class="price">exit-signal · $0.04</span></h3>
-            <p>Same mint, one minute later, with the entry price:</p>
-<div class="code-block"><span class="k">"verdict"</span>: <span class="s">"DERISK"</span>, <span class="k">"exit_score"</span>: <span class="n">0.445</span>, <span class="k">"flags"</span>: [<span class="s">"buying_slowing_1h"</span>, <span class="s">"volume_fading"</span>],
-<span class="k">"price_change_h24_pct"</span>: <span class="n">102</span>, <span class="k">"buys_h1"</span>: <span class="n">16</span>, <span class="k">"sells_h1"</span>: <span class="n">14</span>,
-<span class="k">"whales"</span>: {<span class="k">"net_flow_direction"</span>: <span class="s">"neutral"</span>, <span class="k">"distributing_count"</span>: <span class="n">0</span>}</div>
-            <p>A coin up 102% in a day with buying slowing is a DERISK, not an EXIT. On taxed mints the response also carries
-              <code>net_pnl_after_exit_tax_pct</code>, which is the number to act on.</p>
+            <p>Same mint, seconds later, with the price from the gems row as the entry price:</p>
+<div class="code-block"><span class="k">"verdict"</span>: <span class="s">"HOLD"</span>, <span class="k">"exit_score"</span>: <span class="n">0</span>, <span class="k">"flags"</span>: [<span class="s">"thin_exit_liquidity"</span>, <span class="s">"buyers_in_control"</span>],
+<span class="k">"price_change_h1_pct"</span>: <span class="n">-12.27</span>, <span class="k">"price_change_h24_pct"</span>: <span class="n">52.63</span>, <span class="k">"buys_h1"</span>: <span class="n">51</span>, <span class="k">"sells_h1"</span>: <span class="n">31</span>,
+<span class="k">"whales"</span>: <span class="n">null</span>,
+<span class="k">"position"</span>: {<span class="k">"unrealized_pnl_pct"</span>: <span class="n">14.2</span>, <span class="k">"net_pnl_after_exit_tax_pct"</span>: <span class="n">10.8</span>}</div>
+            <p>Buyers still outnumber sellers, so the verdict is HOLD, with a flag that the pool is thin. <code>whales</code> is
+              null because no top holder moved $10,000 or more in 24 hours; the response says so instead of reporting a
+              neutral flow. On a taxed mint, <code>net_pnl_after_exit_tax_pct</code> is the number to act on: 14.2% on paper
+              is 10.8% after the 3% sell tax, before slippage.</p>
           </div>
         </div>
       </div>
