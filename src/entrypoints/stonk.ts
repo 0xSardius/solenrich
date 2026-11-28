@@ -175,6 +175,7 @@ export function registerStonkEntrypoints(
       'Is the StonkFun market rising or falling right now? Verdict RISK_ON / NEUTRAL / RISK_OFF from breadth (share of live coins up over 24h) and the median 24h move, plus the volume-weighted move (big coins vs the typical coin), launches per day, share of all reward coins trading and paying, survival past day 3, holder revenue for the last 7 days vs the 7 before, the strongest and weakest quote shelves, and a daily breadth trend from our own hourly record. One call, no inputs; gate entries on it or show it on a dashboard.',
     input: StonkPulseInput,
     handler: async (ctx: { input: z.infer<typeof StonkPulseInput> }) => {
+      deps.index.assertReady();
       const data = await deps.pulse.analyze();
       return { output: formatResponse(data, ctx.input.format, formatStonkPulseBriefing) };
     },
@@ -191,6 +192,8 @@ export function registerStonkEntrypoints(
     handler: async (ctx: { input: z.infer<typeof StonkCreatorInput> }) => {
       const input = ctx.input;
       if (!input.creator && !input.mint) throw new Error('Provide creator (a wallet) or mint (a StonkFun coin)');
+      // Without rows every coin of the creator reads as dead, and that report would be cached.
+      deps.index.assertReady();
       const data = await deps.creator.analyze({ creator: input.creator, mint: input.mint });
       if ('error' in data) throw new Error(data.error);
       return { output: formatResponse(data, input.format, formatStonkCreatorBriefing) };
@@ -247,6 +250,7 @@ export function registerStonkEntrypoints(
     input: StonkYieldBatchInput,
     handler: async (ctx: { input: z.infer<typeof StonkYieldBatchInput> }) => {
       const input = ctx.input;
+      deps.index.assertReady();
       const data = deps.yieldAnalyzer.batch({
         mints: input.mints,
         filters: {
@@ -278,6 +282,7 @@ export function registerStonkEntrypoints(
     input: StonkAlertsInput,
     handler: async (ctx: { input: z.infer<typeof StonkAlertsInput> }) => {
       const input = ctx.input;
+      deps.index.assertReady();
       const data = alertChecker.check(input.mints, input.since, { minHoldersChangePct: input.min_holders_change_pct, staleAfterHours: input.stale_after_hours });
       return { output: formatResponse(data, input.format, formatStonkAlertsBriefing) };
     },
@@ -291,6 +296,7 @@ export function registerStonkEntrypoints(
     input: StonkScreenerInput,
     handler: async (ctx: { input: z.infer<typeof StonkScreenerInput> }) => {
       const input = ctx.input;
+      deps.index.assertReady();
       const status: StonkIndexStatus = deps.index.status();
       const screened = deps.index.screen({
         quoteMint: input.quote_mint,
@@ -349,6 +355,7 @@ export function registerStonkEntrypoints(
     input: StonkGemsInput,
     handler: async (ctx: { input: z.infer<typeof StonkGemsInput> }) => {
       const input = ctx.input;
+      deps.index.assertReady();
       const status: StonkIndexStatus = deps.index.status();
       const found = deps.index.gems({
         quoteMint: input.quote_mint,
@@ -431,6 +438,8 @@ export function registerStonkEntrypoints(
       const input = ctx.input;
       const status: StonkIndexStatus = deps.index.status();
       const shelf = deps.index.shelfStats();
+      // The 6-hourly population summary answers without index rows; the index fallback does not.
+      if (shelf.source !== 'population') deps.index.assertReady();
       const data = buildLaunchIntel(shelf.stats, { category: input.category, minCoins: input.min_coins, sort: input.sort, limit: input.limit }, status, { source: shelf.source, population: shelf.population });
       return { output: formatResponse(data, input.format, formatStonkLaunchIntelBriefing) };
     },

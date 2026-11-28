@@ -213,6 +213,19 @@ export function trailingYield(
   };
 }
 
+/**
+ * Thrown by an index-backed endpoint while the index has no rows (about a minute after a restart, or while every
+ * refresh fails). A thrown handler answers HTTP 500 and the x402 middleware does not settle a failed call, so the
+ * buyer is not charged for an empty answer (seen 2026-11-28: a paid stonk-gems call 20 s after a deploy returned
+ * zero rows).
+ */
+export class StonkIndexNotReadyError extends Error {
+  constructor(lastError: string | null) {
+    super(`StonkFun index is not ready: it has no rows yet${lastError ? ` (last refresh error: ${lastError})` : ' (loading after a restart)'}. An x402 payment does not settle for this failed call. Retry in about a minute; GET /status shows stonk_index.rows.`);
+    this.name = 'StonkIndexNotReadyError';
+  }
+}
+
 export class StonkIndex {
   private rows = new Map<string, StonkIndexRow>();
   private series = new Map<string, DayPoint[]>();
@@ -254,6 +267,11 @@ export class StonkIndex {
     if (this.retryTimer) clearTimeout(this.retryTimer);
     this.timer = null;
     this.retryTimer = null;
+  }
+
+  /** Throws StonkIndexNotReadyError while the index has no rows. Call first in every handler that answers from rows. */
+  assertReady(): void {
+    if (this.rows.size === 0) throw new StonkIndexNotReadyError(this.lastError);
   }
 
   status(): StonkIndexStatus {
